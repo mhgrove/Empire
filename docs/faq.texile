@@ -1,0 +1,94 @@
+h1. Frequently Asked Questions
+
+* <a href="#known_bugs">Are there any known bugs or issues with Empire?</a>
+* <a href="#java_version>Which version of Java does Empire require?</a>
+* <a href="#database_support">What databases are supported by Empire?</a>
+* <a href="#query_languages">What query languages are supported by Empire?</a>
+* <a href="#why_sesame">Why is Sesame used as the internal RDF API?</a>
+* <a href="#why_sesame_one">Why is Sesame 1.x supported, but not Sesame 2?</a>
+* <a href="#what_annotation_index">What are these Annotation indexes?</a>
+* <a href="#gen_annotation_index">How do I generate Annotation indexes?</a>
+* <a href="#why_not_other">Why not use other frameworks like Elmo or JenaBeans?</a>
+* <a href="#how_much">How much have you done?</a>
+
+h3. <a name="known_bugs"></a>Are there any known bugs or issues with Empire?
+
+<p>
+The answer is probably yes to both questions.  You might want to check out the issue tracker, all known bugs and
+issues are documented there.  If you think you've found a bug, be sure to check the issue tracker first to see if
+a ticket already exists.  If not, please send an email to the mailing list with a <b>complete</b>, minimal example
+program which reproduces the bug.
+</p>
+
+h3. <a name="java_version"></a>Which version of Java does Empire require?
+
+<p>
+Empire requires a Java 5 (or greater) JVM.
+</p>
+
+h3. <a name="database_support"></a>What databases are supported by Empire?
+
+<p>
+Currently Empire provides out of the box support for "Sesame 1.x":http://www.openrdf.org , "Jena":http://openjena.org
+(in memory only -- though easily extendable to other Jena systems such as TDB or SDB) and "4Store":http://4store.org
+</p>
+
+h3. <a name="query_languages"></a>What query languages are supported by Empire?
+
+<p>
+"SPARQL":http://www.w3.org/TR/rdf-sparql-query/ and "SeRQL":http://www.openrdf.org/doc/sesame/users/ch06.html .
+</p>
+
+h3. <a name="why_sesame"></a>Why is Sesame used as the internal RDF API?
+
+<p>
+It's a lightweight RDF-centric API that I'm familiar with that we've used many times in the past
+</p>
+
+h3. <a name="#why_sesame_one"></a>Why is Sesame 1.x supported, but not Sesame 2?
+
+<p>
+The last time I checked, which was prior to the release of Sesame 2.3, Sesame 1.2.7 actually had faster query performance
+for most, if not all, of our use cases.  Since Empire will interact heavily with it's database, query performance
+was of the utmost performance.
+</p>
+
+h3. <a name="what_annotation_index"></a>What are these Annotation indexes?
+
+<p>
+They just contain some basic information about what classes have certain annotations attached to them.  Much of this
+information is not easily available at runtime without scanning the <i>entire</i> class-path, so we provide a simple
+interface to get the information at runtime, but usually collect it at compile time.  Empire will still work without
+these annotation indexes, but some features like type detection of Object typed fields/methods will not work.
+</p>
+
+h3. <a name="gen_annotation_index"></a>How do I generate Annotation indexes?
+
+<p>
+We provide some implementation of "APT":http://java.sun.com/j2se/1.5.0/docs/guide/apt/GettingStarted.html
+interfaces to generate files in a format supported by Empire.  "Here":/empire/using-apt is some more information
+on how to use APT with Empire.</p>
+<p>
+We also provide an implementation of Empire's AnnotationProvider interface backed by the "Reflections":http://code.google.com/p/reflections/
+library which will collect the annotation information at runtime, but imposes a delay to start-up while it scans the
+class-path to build the required information.
+</p>
+
+h3. <a name="why_not_other"></a>Why not use other frameworks like Elmo or JenaBeans?
+
+I briefly looked at these frameworks but I felt that neither implemented as much of the JPA API as we'd eventually need
+and I did not want to be stuck using only Sesame or Jena based solutions.
+
+h3. <a name="how_much"></a>How much have you done?
+
+Just the basics really.  We've implemented what is probably the core of the JPA framework, EntityManager, Query,
+EntityManagerFactory, etc, so it's our hope that using an Empire-backed EntityManager is no different than using
+one backed by Hibernate or TopLink.
+
+We've also implemented all the lifecycle annotations on both Java classes and through the use of @EntityListeners.
+
+Transactions are supported as long as the underlying DataSource supports them.  When it does not, we provide a naive
+implementation for *very* simple transaction support which would be suitable for small applications.
+
+Lastly, we provide a small set of Empire specific annotation for driving the convertion to/from RDF.
+See the "examples":/empire/examples for more information on how to use the Empire annotations.

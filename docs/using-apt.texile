@@ -1,0 +1,22 @@
+h1. Using the APT utility with Empire
+
+APT (Annotation Processing Tool) is provided by Sun and does compile-time scanning of Java source code to pull out
+information on the annotations used in the source.  By attaching an AnnotationProcessor & AnnotationProcessorFactory
+to APT, you can get this processing information and use it to build new files, Java source, properties, xml, etc. which
+contain information that can be used by your application at runtime.
+
+We provide implementations for the APT tool to grab information JPA & Empire annotations that are used in the system.
+This information is stored locally in simple Java properties format and when provided to Empire, will be used to enhance
+the runtime of the system.
+
+APT is distributed in tools.jar with the JDK starting with Java 5. For more information about APT, visit
+"Sun's reference page.":http://java.sun.com/j2se/1.5.0/docs/guide/apt/GettingStarted.html
+
+h1. Usage
+
+<code>
+apt -cp <path omitted for brevity> -factory com.clarkparsia.empire.util.apt.EmpireAnnotationProcessorFactory src/my/package/*.java src/my/package/api/*.java
+</code><br/><br/>
+
+This will output a file called "empire.config" into the directory where you ran APT from.  You will need to rebuild
+this file each time you change annotations on your Java classes, or add new classes.

@@ -1,0 +1,15 @@
+h1. Roadmap
+
+* Add logging
+* Support for @Temporal annotations to control serialization of Date objects into typed RDF literals.
+* Support for the mapping of result set to Java classes ala @SqlResultSetMapping and related annotations.
+* Implement the JPA lock modes.
+* Implement commit-style flush mode.
+* Use @Id instead of @RdfId to denote id properties.
+* Auto-add global namespaces to queries so you don't have to use full URI's or do the namespace clauses yourself.
+* Auto-generate Empire compliant Java classes from OWL ontologies and RDF schemas.
+* Lazy loading of resources from the database.
+* Support cascading of operations.
+* Expand core JPA annotation support, mapping to OWL/RDF constructs where appropriate.
+* Look into support JPQL queries and compiling them into SPARQL.
+* JPA 2.0 support

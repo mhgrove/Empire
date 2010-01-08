@@ -1,1 +1,1 @@
-mikeg = mhgrove <mike@clarkparsia.com>
+mikeg

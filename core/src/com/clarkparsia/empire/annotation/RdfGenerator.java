@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2009-2010 Clark & Parsia, LLC. <http://www.clarkparsia.com>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.clarkparsia.empire.annotation;
 
 import com.clarkparsia.sesame.utils.query.SesameQueryUtils;
@@ -60,7 +75,6 @@ import com.clarkparsia.empire.impl.serql.SerqlDialect;
 import javax.persistence.Entity;
 
 /**
- * <p>Title: RdfGenerator</p>
  * <p>Description: Utility for creating RDF from a compliant Java Bean, and for turning RDF (the results of a describe
  * on a given rdf:ID into a KB) into a Java bean.</p>
  * <p>Usage:<br/>
@@ -81,7 +95,8 @@ import javax.persistence.Entity;
  * Compliant classes must be annotated with the {@link Entity} JPA annotation, the {@link RdfsClass} annotation,
  * and must implement the {@link SupportsRdfId} interface.</p>
  *
- * @author Michael Grove <mike@clarkparsia.com>
+ * @author Michael Grove
+ * @since 0.1
  */
 public class RdfGenerator {
 	/**

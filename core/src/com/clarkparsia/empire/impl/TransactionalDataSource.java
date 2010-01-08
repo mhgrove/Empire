@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2009-2010 Clark & Parsia, LLC. <http://www.clarkparsia.com>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.clarkparsia.empire.impl;
 
 import org.openrdf.model.Graph;
@@ -15,15 +30,13 @@ import java.net.ConnectException;
 import com.clarkparsia.sesame.utils.ExtendedGraph;
 
 /**
- * Title: TransactionalDataSource<br/>
- * Description: *Very* simple transactional support to put on top of a database that does not already support it.
- * We do the operations lives on the database, but keep a track of what was added or deleted so on rollback we can
+ * <p><b>Very</b> simple transactional support to put on top of a database that does not already support it.
+ * We do the operations live on the database, but keep a track of what was added or deleted so on rollback we can
  * try and undo the edits.  If the rollback fails, it very well could have failed for part of the rollback
- * and you are left with an inconsistent database.  For real transactional support, use a database that supports it.<br/>
- * Company: Clark & Parsia, LLC. <http://clarkparsia.com><br/>
- * Created: Dec 14, 2009 11:13:07 AM<br/>
+ * and you are left with an inconsistent database.  For real transactional support, use a database that supports it.</p>
  *
- * @author Michael Grove <mike@clarkparsia.com><br/>
+ * @author Michael Grove
+ * @since 0.1
  */
 public class TransactionalDataSource implements DataSource, MutableDataSource, SupportsTransactions {
 

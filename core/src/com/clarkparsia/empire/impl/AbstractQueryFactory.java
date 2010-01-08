@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2009-2010 Clark & Parsia, LLC. <http://www.clarkparsia.com>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.clarkparsia.empire.impl;
 
 import com.clarkparsia.empire.DataSource;
@@ -13,13 +28,11 @@ import java.util.Map;
 import java.util.Collection;
 
 /**
- * Title: AbstractQueryFactory <br/>
- * Description: Implements the common operations of a {@link QueryFactory} and defers query language specific operations
- * to concrete implementations of this class.<br/>
- * Company: Clark & Parsia, LLC. <http://clarkparsia.com><br/>
- * Created: Dec 14, 2009 4:04:47 PM<br/>
+ * <p>Implements the common operations of a {@link QueryFactory} and defers query language specific operations
+ * to concrete implementations of this class.</p>
  *
- * @author Michael Grove <mike@clarkparsia.com><br/>
+ * @author Michael Grove
+ * @since 0.1
  */
 public abstract class AbstractQueryFactory<T extends RdfQuery> implements QueryFactory {
 	/**
@@ -44,11 +57,6 @@ public abstract class AbstractQueryFactory<T extends RdfQuery> implements QueryF
 		for (Class aClass :  aClasses) {
 			// wtf why do i need a cast here?
 			NamedQuery aNamedQuery = (NamedQuery) aClass.getAnnotation(NamedQuery.class);
-
-//			T aQuery = newQuery(aNamedQuery.query());
-//			for (QueryHint aHint : aNamedQuery.hints()) {
-//				aQuery.setHint(aHint.name(), aHint.value());
-//			}
 
 			addNamedQuery(aNamedQuery.name(), aNamedQuery);
 		}
@@ -90,7 +98,6 @@ public abstract class AbstractQueryFactory<T extends RdfQuery> implements QueryF
 	 */
 	public Query createNamedQuery(final String theName) {
 		if (mNamedQueries.containsKey(theName)) {
-//			RdfQuery aQuery = mNamedQueries.get(theName);
 			NamedQuery aNamedQuery = mNamedQueries.get(theName);
 
 			T aQuery = newQuery(aNamedQuery.query());

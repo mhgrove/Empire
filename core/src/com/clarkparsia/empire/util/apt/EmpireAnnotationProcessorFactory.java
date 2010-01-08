@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2009-2010 Clark & Parsia, LLC. <http://www.clarkparsia.com>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.clarkparsia.empire.util.apt;
 
 import com.sun.mirror.apt.AnnotationProcessorFactory;
@@ -36,15 +51,14 @@ import com.clarkparsia.empire.annotation.RdfsClass;
 import javax.persistence.NamedQuery;
 
 /**
- * Title: EmpireAnnotationProcessorFactory<br/>
- * Description: Implementation of an APT-based annotation processor to pull out Annotation information
+ * <p>Implementation of an APT-based annotation processor to pull out Annotation information
  * relevant to Empire, such as the classes using the {@link RdfsClass} or {@link NamedQuery} annotations. This
  * information is written in Java Properties format to a file called "empire.config" in the same directory APT
- * is executed from.  This file can then be put into the current dir of the application using Empire<br/>
- * Company: Clark & Parsia, LLC. <http://www.clarkparsia.com> <br/>
- * Created: Jan 4, 2010 3:44:26 PM <br/>
+ * is executed from.  This file can then be put into the current dir of the application using Empire</p>
  *
- * @author Michael Grove <mike@clarkparsia.com>
+ * @author Michael Grove
+ * @since 0.1
+ * @see <a href="http://java.sun.com/j2se/1.5.0/docs/guide/apt/GettingStarted.html">Sun APT Docs</a>
  */
 public class EmpireAnnotationProcessorFactory implements AnnotationProcessorFactory {
 

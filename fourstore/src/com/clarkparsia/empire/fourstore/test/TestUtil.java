@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2009-2010 Clark & Parsia, LLC. <http://www.clarkparsia.com>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.clarkparsia.empire.fourstore.test;
 
 import fourstore.impl.StoreFactory;
@@ -18,12 +33,12 @@ import org.openrdf.sesame.admin.DummyAdminListener;
 import org.openrdf.model.Resource;
 
 /**
- * Title: <br/>
- * Description: <br/>
- * Company: Clark & Parsia, LLC. <http://www.clarkparsia.com> <br/>
- * Created: Jan 6, 2010 12:24:54 PM <br/>
+ * <p>Takes a 4Store database and partitions its instances into separate named graphs, one for each instance.  This
+ * is required (for testing) because 4Store does not support the deletion of arbitrary triples, you can only delete
+ * a named graph.  So to delete a single individual from the kb, you would have to delete an entire named graph,
+ * so having it in it's own named graph makes this possible.</p>
  *
- * @author Michael Grove <mike@clarkparsia.com>
+ * @author Michael Grove
  */
 public class TestUtil {
 
@@ -41,7 +56,7 @@ public class TestUtil {
 		for (Resource aRes : aRepo.getSubjects(null, null)) {
 			if (aRes instanceof org.openrdf.model.URI) {
 				org.openrdf.model.URI aURI = (org.openrdf.model.URI) aRes;
-System.err.println("current: " + aURI);
+
 				StringWriter aWriter = new StringWriter();
 
 				try {

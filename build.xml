@@ -205,7 +205,7 @@
 			version="true" nodeprecatedlist="false" nodeprecated="false"
 			packagenames="com.clarkparsia.*"
 			doctitle="${project.name}-${project.version.label}"
-			bottom="Copyright &#169; 2009-2010 Clark &amp; Parsia, LLC (http://clarkparsia.com). All Rights Reserved.">
+			bottom="Copyright (c) 2009-2010 Clark &amp; Parsia, LLC (http://clarkparsia.com). All Rights Reserved.">
 			<classpath refid="project.class.path"/>
 			<fileset dir="${core.src.dir}" defaultexcludes="yes">
 				<include name="**/*.java"/>

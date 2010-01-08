@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2009-2010 Clark & Parsia, LLC. <http://www.clarkparsia.com>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.clarkparsia.empire.impl;
 
 import com.clarkparsia.sesame.utils.SesameValueFactory;
@@ -35,13 +50,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Title: RdfQuery<br/>
- * Description: Abstract implementation of the JPA {@link Query} interface for RDF based query languages.  Specific
- * query language support is left to the c<br/>
- * Company: Clark & Parsia, LLC. <http://clarkparsia.com><br/>
- * Created: Dec 14, 2009 4:06:25 PM<br/>
+ * <p>Abstract implementation of the JPA {@link Query} interface for RDF based query languages.  Specific
+ * query language support is left to the concrete implementations of the class.</p>
  *
- * @author Michael Grove <mike@clarkparsia.com><br/>
+ * @author Michael Grove
+ * @since 0.1
+ * @see com.clarkparsia.empire.impl.serql.SerqlQuery
+ * @see com.clarkparsia.empire.impl.sparql.SPARQLQuery
  */
 public abstract class RdfQuery implements Query {
 
@@ -199,7 +214,7 @@ public abstract class RdfQuery implements Query {
 	 * Return the result set limit for this query
 	 * @return the limit
 	 */
-	int getMaxResults() {
+	public int getMaxResults() {
 		return mLimit;
 	}
 
@@ -207,7 +222,7 @@ public abstract class RdfQuery implements Query {
 	 * Return the current offset of this query
 	 * @return the offset index
 	 */
-	int getFirstResult() {
+	public int getFirstResult() {
 		return mOffset;
 	}
 

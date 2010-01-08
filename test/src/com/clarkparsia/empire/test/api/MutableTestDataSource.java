@@ -11,12 +11,9 @@ import org.openrdf.sesame.config.AccessDeniedException;
 import java.io.IOException;
 
 /**
- * Title: <br/>
- * Description: <br/>
- * Company: Clark & Parsia, LLC. <http://www.clarkparsia.com> <br/>
- * Created: Dec 30, 2009 3:30:32 PM <br/>
+ * <p>Implementation of the MutableDataSource interface for testing</p>
  *
- * @author Michael Grove <mike@clarkparsia.com>
+ * @author Michael Grove
  */
 public class MutableTestDataSource extends TestDataSource implements MutableDataSource {
 
@@ -46,19 +43,9 @@ public class MutableTestDataSource extends TestDataSource implements MutableData
 	public void remove(final Graph theGraph) throws DataSourceException {
 		try {
 			getRepository().removeGraph(theGraph);
-
-            //validateRemove(theGraph);
 		}
 		catch (Exception e) {
 			throw new DataSourceException(e);
 		}
 	}
-
-    private void validateRemove(Graph theGraph) {
-        for (Statement aStmt : new ExtendedGraph(theGraph)) {
-            if (getRepository().hasStatement(aStmt.getSubject(), aStmt.getPredicate(), aStmt.getObject())) {
-                throw new IllegalStateException("Remove failed");
-            }
-        }
-    }
 }

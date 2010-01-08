@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2009-2010 Clark & Parsia, LLC. <http://www.clarkparsia.com>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.clarkparsia.empire.fourstore;
 
 import com.clarkparsia.empire.impl.AbstractResultSet;
@@ -12,12 +27,10 @@ import org.openrdf.model.Value;
 import fourstore.impl.sesame.FourStoreToSesame;
 
 /**
- * Title: FourStoreResultSet<br/>
- * Description: Implementation of an Empire ResultSet interface backed by a 4Store result set.<br/>
- * Company: Clark & Parsia, LLC. <http://www.clarkparsia.com> <br/>
- * Created: Jan 6, 2010 9:38:05 AM <br/>
+ * <p>Implementation of an Empire ResultSet interface backed by a 4Store result set.</p>
  *
- * @author Michael Grove <mike@clarkparsia.com>
+ * @author Michael Grove
+ * @since 0.1
  */
 public class FourStoreResultSet extends AbstractResultSet {
 

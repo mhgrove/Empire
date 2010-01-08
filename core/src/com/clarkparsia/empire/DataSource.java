@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2009-2010 Clark & Parsia, LLC. <http://www.clarkparsia.com>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.clarkparsia.empire;
 
 import org.openrdf.model.Graph;
@@ -10,14 +25,12 @@ import com.clarkparsia.empire.DataSourceException;
 import com.clarkparsia.empire.QueryFactory;
 
 /**
- * Title: DataSource<br/>
- * Description: Simple interface to an RDF datasource providing a set of methods to query the underyling data and a factory
- * for generating queries in the correct language supported by the data source.  Roughly analogous to
- * {@link javax.sql.DataSource}.<br/>
- * Company: Clark & Parsia, LLC. <http://clarkparsia.com><br/>
- * Created: Dec 11, 2009 9:43:14 AM<br/>
+ * <p>Simple interface to an RDF datasource providing a set of methods to query the underyling data and a factory
+ * for generating queries in the query language supported by the data source.  Roughly analogous to
+ * {@link javax.sql.DataSource}.</p>
  *
- * @author Michael Grove <mike@clarkparsia.com><br/>
+ * @author Michael Grove <mike@clarkparsia.com>
+ * @since 0.1
  */
 public interface DataSource {
 

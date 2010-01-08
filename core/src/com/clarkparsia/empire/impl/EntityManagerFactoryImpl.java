@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2009-2010 Clark & Parsia, LLC. <http://www.clarkparsia.com>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.clarkparsia.empire.impl;
 
 import com.clarkparsia.empire.MutableDataSource;
@@ -15,14 +30,12 @@ import java.util.HashSet;
 import java.net.ConnectException;
 
 /**
- * Title: EntityManagerFactoryImpl<br/>
- * Description: Implementation of the JPA {@link EntityManagerFactory} class to support creating Empire based
+ * <p>Implementation of the JPA {@link EntityManagerFactory} class to support creating Empire based
  * {@link EntityManager EntityManagers}.  Uses an instance of a {@link com.clarkparsia.empire.DataSourceFactory} to dynamically
- * create the DataSource used by the new EntityManager on the fly.<br/>
- * Company: Clark & Parsia, LLC. <http://www.clarkparsia.com> <br/>
- * Created: Dec 17, 2009 9:23:36 AM <br/>
+ * create the DataSource used by the new EntityManager on the fly.</p>
  *
- * @author Michael Grove <mike@clarkparsia.com>
+ * @author Michael Grove
+ * @since 0.1
  */
 public class EntityManagerFactoryImpl implements EntityManagerFactory {
 	public static final String FACTORY = "factory";

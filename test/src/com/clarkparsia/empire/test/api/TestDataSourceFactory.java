@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2009-2010 Clark & Parsia, LLC. <http://www.clarkparsia.com>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.clarkparsia.empire.test.api;
 
 import com.clarkparsia.empire.DataSourceFactory;
@@ -12,12 +27,9 @@ import com.clarkparsia.sesame.utils.ExtendedGraph;
 import org.openrdf.rio.ParseException;
 
 /**
- * Title: <br/>
- * Description: <br/>
- * Company: Clark & Parsia, LLC. <http://www.clarkparsia.com> <br/>
- * Created: Dec 30, 2009 10:18:52 AM <br/>
+ * <p>DataSourceFactory implementation to create a DataSource used for testing</p>
  *
- * @author Michael Grove <mike@clarkparsia.com>
+ * @author Michael Grove
  */
 public class TestDataSourceFactory implements DataSourceFactory {
 

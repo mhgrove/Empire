@@ -9,7 +9,7 @@
 	<property environment="env"/>
 
 	<property name="project.name" value="empire"/>
-	<property name="project.version" value="0.1"/>
+	<property name="project.version" value="0.5"/>
 
 	<property name="core.dir" location="core"/>
 	<property name="jena.dir" location="jena"/>

@@ -24,7 +24,8 @@ import java.util.Map;
 import java.util.HashMap;
 
 import org.openrdf.model.Value;
-import fourstore.impl.sesame.FourStoreToSesame;
+
+import com.clarkparsia.fourstore.impl.sesame.FourStoreToSesame;
 
 /**
  * <p>Implementation of an Empire ResultSet interface backed by a 4Store result set.</p>
@@ -38,8 +39,8 @@ public class FourStoreResultSet extends AbstractResultSet {
 	 * Create a new FourStoreResultSet
 	 * @param theResults the FourStore results that will back this ResultSet
 	 */
-	FourStoreResultSet(final fourstore.api.results.ResultSet theResults) {
-		super(new CollectionUtil.TransformingIterator<fourstore.api.results.Binding, Binding>(theResults.iterator(),
+	FourStoreResultSet(final com.clarkparsia.fourstore.api.results.ResultSet theResults) {
+		super(new CollectionUtil.TransformingIterator<com.clarkparsia.fourstore.api.results.Binding, Binding>(theResults.iterator(),
 																							   new ToSesameBinding()));
 	}
 
@@ -53,12 +54,12 @@ public class FourStoreResultSet extends AbstractResultSet {
 	/**
 	 * Function to transform a FourStore API binding to a Sesame binding
 	 */
-	private static class ToSesameBinding implements Function<fourstore.api.results.Binding, Binding> {
+	private static class ToSesameBinding implements Function<com.clarkparsia.fourstore.api.results.Binding, Binding> {
 
 		/**
 		 * @inheritDoc
 		 */
-		public Binding apply(final fourstore.api.results.Binding theIn) {
+		public Binding apply(final com.clarkparsia.fourstore.api.results.Binding theIn) {
 			Map<String, Value> aMap = new HashMap<String, Value>();
 
 			for (String aVar : theIn.variables()) {

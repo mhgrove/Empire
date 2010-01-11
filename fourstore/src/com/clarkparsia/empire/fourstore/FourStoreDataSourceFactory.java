@@ -25,8 +25,9 @@ import java.net.MalformedURLException;
 
 import com.clarkparsia.utils.BasicUtils;
 import com.clarkparsia.empire.fourstore.FourStoreDataSource;
-import fourstore.impl.StoreFactory;
-import fourstore.api.Store;
+
+import com.clarkparsia.fourstore.impl.StoreFactory;
+import com.clarkparsia.fourstore.api.Store;
 
 /**
  * <p>Implementation of the {@link DataSourceFactory} interface for creating instances of DataSources

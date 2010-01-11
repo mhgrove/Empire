@@ -15,10 +15,10 @@
 
 package com.clarkparsia.empire.fourstore.test;
 
-import fourstore.impl.StoreFactory;
-import fourstore.api.Store;
-import fourstore.api.StoreException;
-import fourstore.api.Format;
+import com.clarkparsia.fourstore.impl.StoreFactory;
+import com.clarkparsia.fourstore.api.Store;
+import com.clarkparsia.fourstore.api.StoreException;
+import com.clarkparsia.fourstore.api.Format;
 
 import java.net.URL;
 import java.net.URI;

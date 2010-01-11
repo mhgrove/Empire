@@ -34,11 +34,11 @@ import java.net.URI;
 import java.io.StringWriter;
 import java.io.IOException;
 
-import fourstore.api.Store;
-import fourstore.api.StoreException;
-import fourstore.api.Format;
+import com.clarkparsia.fourstore.api.Store;
+import com.clarkparsia.fourstore.api.StoreException;
+import com.clarkparsia.fourstore.api.Format;
 
-import fourstore.impl.sesame.FourStoreToSesame;
+import com.clarkparsia.fourstore.impl.sesame.FourStoreToSesame;
 
 import com.clarkparsia.sesame.utils.SesameIO;
 
@@ -107,7 +107,7 @@ public class FourStoreDataSource extends AbstractDataSource implements MutableDa
 		try {
 			return new FourStoreResultSet(mStore.query(theQuery));
 		}
-		catch (fourstore.api.QueryException e) {
+		catch (com.clarkparsia.fourstore.api.QueryException e) {
 			throw new QueryException(e);
 		}
 	}
@@ -119,7 +119,7 @@ public class FourStoreDataSource extends AbstractDataSource implements MutableDa
 		try {
 			return FourStoreToSesame.toSesameGraph(mStore.constructQuery(theQuery));
 		}
-		catch (fourstore.api.QueryException e) {
+		catch (com.clarkparsia.fourstore.api.QueryException e) {
 			throw new QueryException(e);
 		}
 	}
@@ -135,7 +135,7 @@ public class FourStoreDataSource extends AbstractDataSource implements MutableDa
 			// of it with a construct query
 			return FourStoreToSesame.toSesameGraph(mStore.constructQuery("construct { ?s ?p ?o }  where { ?s ?p ?o. filter(?s = <" + theURI + ">) } "));
 		}
-		catch (fourstore.api.QueryException e) {
+		catch (com.clarkparsia.fourstore.api.QueryException e) {
 			throw new DataSourceException(e);
 		}
 	}

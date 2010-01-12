@@ -72,6 +72,14 @@ import com.clarkparsia.empire.SupportsRdfId;
 
 import com.clarkparsia.empire.impl.serql.SerqlDialect;
 
+import static com.clarkparsia.empire.util.BeanReflectUtil.isAccessible;
+import static com.clarkparsia.empire.util.BeanReflectUtil.set;
+import static com.clarkparsia.empire.util.BeanReflectUtil.setAccessible;
+import static com.clarkparsia.empire.util.BeanReflectUtil.getAnnotatedFields;
+import static com.clarkparsia.empire.util.BeanReflectUtil.getAnnotatedGetters;
+import static com.clarkparsia.empire.util.BeanReflectUtil.getAnnotatedSetters;
+import static com.clarkparsia.empire.util.BeanReflectUtil.get;
+
 import javax.persistence.Entity;
 
 /**
@@ -273,55 +281,6 @@ public class RdfGenerator {
 		return theObj;
 	}
 
-	/**
-	 * Return whether or not the given accessor, either a {@link Field} or a {@link Method} is accessible
-	 * @param theAccess the Field or Method
-	 * @return true if its accessible, false otherwise, or if it is not a Field or Method
-	 */
-	private static boolean isAccessible(Object theAccess) {
-		if (theAccess instanceof Field) {
-			return ((Field)theAccess).isAccessible();
-		}
-		else if (theAccess instanceof Method) {
-			return ((Method)theAccess).isAccessible();
-		}
-		else {
-			return false;
-		}
-	}
-
-	/**
-	 * Set the specified value on the the given object using the provided accessor, either a {@link Field} or a
-	 * {@link Method}.  If the accessor is neither a field or a method, then no operation takes place.
-	 * @param theAccessor the accessor, a Field or a Method
-	 * @param theObj the object to set the value on
-	 * @param theValue the value to set via the aceessor
-	 * @throws InvocationTargetException thrown if there was an error setting the value on the field/method
-	 * @throws IllegalAccessException thrown if you cannot access the field/method
-	 */
-	private static void set(Object theAccessor, Object theObj, Object theValue) throws InvocationTargetException, IllegalAccessException {
-		if (theAccessor instanceof Field) {
-			((Field) theAccessor).set(theObj, theValue);
-		}
-		else if (theAccessor instanceof Method) {
-			((Method) theAccessor).invoke(theObj, theValue);
-		}
-	}
-
-	/**
-	 * Toggle the accessibility of the parameter, which should be an instance of {@link Field} or {@link Method}.  If
-	 * not, then nothing will occur.
-	 * @param theAccessor the object toggle accessibility of
-	 * @param theAccess the new accessibility level, true to make it accessible, false otherwise
-	 */
-	private static void setAccessible(Object theAccessor, boolean theAccess) {
-		if (theAccessor instanceof Field) {
-			((Field)theAccessor).setAccessible(theAccess);
-		}
-		else if (theAccessor instanceof Method) {
-			((Method)theAccessor).setAccessible(theAccess);
-		}
-	}
 
 	/**
 	 * Return the RdfClass annotation on the object.
@@ -353,7 +312,7 @@ public class RdfGenerator {
 	 */
 	private static SupportsRdfId asSupportsRdfId(Object theObj) throws InvalidRdfException {
 		if (!(theObj instanceof SupportsRdfId)) {
-			throw new InvalidRdfException("Object does not implements SupportsRdfId, anonymous instances are not supported.");
+			throw new InvalidRdfException("Object of type '" + (theObj.getClass().getName()) + "' does not implements SupportsRdfId, anonymous instances are not supported.");
 		}
 		else {
 			return (SupportsRdfId) theObj;
@@ -452,156 +411,6 @@ public class RdfGenerator {
 			NamespaceUtils.addNamespace(aPrefix, aURI);
 			aIndex += 2;
 		}
-	}
-
-	/**
-	 * Return the list of annotated setter methods on the class.  Anything with an {@link RdfProperty} annotation
-	 * that returns a (non-void) value will be found by this method.  When the infer flag is set to true, we will
-	 * inspect the getter methods, if there is a annotated getter, but no annotated setter for a property, we'll infer
-	 * the annotation for the property so you get the expected paired behavior of the annotation.
-	 * @param theClass the class
-	 * @param theInfer true to infer setters from annotated getters, false otherwise.
-	 * @return the list of annotated setter methods
-	 */
-	private static Collection<Method> getAnnotatedSetters(Class theClass, boolean theInfer) {
-		Collection<Method> aMethods = new HashSet<Method>();
-
-		for (Method aMethod : theClass.getDeclaredMethods()) {
-			if (aMethod.getAnnotation(RdfProperty.class) != null
-				&& (aMethod.getGenericReturnType().equals(Void.class) || aMethod.getGenericReturnType().toString().equals("void"))
-				&& aMethod.getParameterTypes().length == 1) {
-
-				aMethods.add(aMethod);
-			}
-		}
-
-		// now let's infer setters.  if you only applied the annotation to the getter, we'll carry it over to the
-		// setter if one exists.
-
-		if (theInfer) {
-			Collection<Method> aGetters = getAnnotatedGetters(theClass, false);
-			for (Method aGetterMethod : aGetters) {
-				String aSetterName = aGetterMethod.getName().replaceFirst("get", "set");
-				boolean tryIs = false;
-
-				try {
-					Method aSetter = theClass.getMethod(aSetterName, aGetterMethod.getReturnType());
-
-					// so we have a setter for a annotated getter, so here we will add this to the list
-					// of setters to infer the annotation on the setter even though its not explicit
-
-					if (!aMethods.contains(aSetter)) {
-						aMethods.add(aSetter);
-					}
-				}
-				catch (NoSuchMethodException e) {
-					// no biggie, setter doesn't exist, we'll just move on, try looking for isXXXX
-					tryIs = true;
-				}
-
-				if (tryIs) {
-					try {
-						Method aSetter = theClass.getMethod(aGetterMethod.getName().replaceFirst("is", "set"), aGetterMethod.getReturnType());
-
-						// so we have a setter for a annotated getter, so here we will add this to the list
-						// of setters to infer the annotation on the setter even though its not explicit
-
-						if (!aMethods.contains(aSetter)) {
-							aMethods.add(aSetter);
-						}
-					}
-					catch (NoSuchMethodException e) {
-						// no biggie, setter doesn't exist, we'll just move on
-					}
-				}
-			}
-		}
-
-		return aMethods;
-	}
-
-	/**
-	 * Return the list of annotated get style methods from the class.  Anything w/ an {@link RdfProperty} annotation
-	 * that does not return a value will be found by this method.  When the inter flag is set to true, we will inspect
-	 * the setter methods, if there is an annotated setter, but no annotatted getter for a property, we'll infer
-	 * the annotation for the property so you get the expected paired behavior of the annotation.
-	 * @param theClass the class
-	 * @param theInfer true to infer getters from annotated setters, false otherwise.
-	 * @return the list of annotated get methods
-	 */
-	private static Collection<Method> getAnnotatedGetters(Class theClass, boolean theInfer) {
-		Collection<Method> aMethods = new HashSet<Method>();
-
-		for (Method aMethod : theClass.getDeclaredMethods()) {
-			if (aMethod.getAnnotation(RdfProperty.class) != null
-				&& !aMethod.getGenericReturnType().equals(Void.class)
-				&& aMethod.getParameterTypes().length == 0) {
-
-				aMethods.add(aMethod);
-			}
-		}
-
-		if (theInfer) {
-			Collection<Method> aSetters = getAnnotatedSetters(theClass, false);
-			for (Method aSetterMethod : aSetters) {
-				String aGetterName = aSetterMethod.getName().replaceFirst("set", "get");
-				boolean tryIs = false;
-
-				try {
-					Method aGetter = theClass.getMethod(aGetterName);
-
-					// so we have a setter for a annotated getter, so here we will add this to the list
-					// of setters to infer the annotation on the setter even though its not explicit
-
-					if (!aMethods.contains(aGetter)) {
-						aMethods.add(aGetter);
-					}
-				}
-				catch (NoSuchMethodException e) {
-					// no biggie, setter doesn't exist, we'll just move on
-					tryIs = true;
-				}
-
-				if (tryIs) {
-					// didn't find a getter w/ the getXXX form, so lets try isXXXX which I think is normal (valid)
-					// convention for boolean properties
-					aGetterName = aSetterMethod.getName().replaceFirst("set", "is");
-
-					try {
-						Method aGetter = theClass.getMethod(aGetterName);
-
-						// so we have a setter for a annotated getter, so here we will add this to the list
-						// of setters to infer the annotation on the setter even though its not explicit
-
-						if (!aMethods.contains(aGetter)) {
-							aMethods.add(aGetter);
-						}
-					}
-					catch (NoSuchMethodException e) {
-						// no biggie, setter doesn't exist, we'll just move on
-					}
-				}
-			}
-		}
-
-		return aMethods;
-	}
-
-	/**
-	 * Return a list of all the fields on the given class which are annotated with the {@link RdfProperty} annotation.
-	 * @param theClass the class to scan
-	 * @return the list of annotated fields on the class
-	 */
-	private static Collection<Field> getAnnotatedFields(Class theClass) {
-		Collection<Field> aProps = new HashSet<Field>();
-
-		for (Field aField : theClass.getDeclaredFields()) {
-			if (aField.getAnnotation(RdfProperty.class) != null) {
-				aProps.add(aField);
-			}
-		}
-
-		return aProps;
 	}
 
 	/**
@@ -728,27 +537,6 @@ public class RdfGenerator {
 			}
 
 			return aAnnotation;
-		}
-		else {
-			return null;
-		}
-	}
-
-	/**
-	 * Get the value on the object from the specified accessor, either a {@link Field} or {@link Method}
-	 * @param theAccess the accessor
-	 * @param theObject the object to get a value from
-	 * @return the value of the field or (getter) method on an object.
-	 * @throws IllegalAccessException thrown if you cannot access the field or method
-	 * @throws InvocationTargetException thrown if there is an error while invoking the getter method.  Usually because
-	 * it's not a bean-style getter w/ no parameters.
-	 */
-	private static Object get(Object theAccess, Object theObject) throws IllegalAccessException, InvocationTargetException {
-		if (theAccess instanceof Field) {
-			return ((Field)theAccess).get(theObject);
-		}
-		else if (theAccess instanceof Method) {
-			return ((Method)theAccess).invoke(theObject);
 		}
 		else {
 			return null;

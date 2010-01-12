@@ -14,9 +14,9 @@ APT is distributed in tools.jar with the JDK starting with Java 5. For more info
 
 h1. Usage
 
-<code>
+<code><pre>
 apt -cp <path omitted for brevity> -factory com.clarkparsia.empire.util.apt.EmpireAnnotationProcessorFactory src/my/package/*.java src/my/package/api/*.java
-</code><br/><br/>
+</pre></code><br/><br/>
 
 This will output a file called "empire.config" into the directory where you ran APT from.  You will need to rebuild
 this file each time you change annotations on your Java classes, or add new classes.

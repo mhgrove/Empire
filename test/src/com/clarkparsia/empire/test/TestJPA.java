@@ -117,13 +117,13 @@ public class TestJPA {
 //											   "where { ?result <" + SpaceVocab.ontology().agency + "> ??. ?result <" + SpaceVocab.ontology().alternateName + "> ??altName }",
 //											   "sovietSpacecraftSPARQL" }
 
-				{ getLocalJenaTestConfigMap(), "where { ?result <urn:prop> ?y }",
-				  							   "select distinct ?result where { ?uri <" + SpaceVocab.ontology().mass.getURI() + "> ?result }",
-											   "where { ?uri <" + SpaceVocab.ontology().mass.getURI() + "> ?result }",
-											   "where { ?result <" + SpaceVocab.ontology().agency + "> \"U.S.S.R\" }",
-											   "where { ?result <" + SpaceVocab.ontology().agency + "> ?? }",
-											   "where { ?result <" + SpaceVocab.ontology().agency + "> ??. ?result <" + SpaceVocab.ontology().alternateName + "> ??altName }",
-											   "sovietSpacecraftSPARQL" }
+//				{ getLocalJenaTestConfigMap(), "where { ?result <urn:prop> ?y }",
+//				  							   "select distinct ?result where { ?uri <" + SpaceVocab.ontology().mass.getURI() + "> ?result }",
+//											   "where { ?uri <" + SpaceVocab.ontology().mass.getURI() + "> ?result }",
+//											   "where { ?result <" + SpaceVocab.ontology().agency + "> \"U.S.S.R\" }",
+//											   "where { ?result <" + SpaceVocab.ontology().agency + "> ?? }",
+//											   "where { ?result <" + SpaceVocab.ontology().agency + "> ??. ?result <" + SpaceVocab.ontology().alternateName + "> ??altName }",
+//											   "sovietSpacecraftSPARQL" }
 		});
 	}
 
@@ -267,7 +267,6 @@ public class TestJPA {
 
 		aCraft = mManager.merge(aCraft);
 
-		// TODO: this fails because it's not the same Craft object, i don't know if it's safe to assume it should be.
 		assertTrue(aCraft.preUpdateCalled);
 		assertTrue(aCraft.postUpdateCalled);
 		assertTrue(TestEntityListener.preUpdateCalled);
@@ -296,8 +295,8 @@ public class TestJPA {
 
 		mManager.persist(aNewCraft);
 
-		assertTrue(aCraft.prePersistCalled);
-		assertTrue(aCraft.postPersistCalled);
+		assertTrue(aNewCraft.prePersistCalled);
+		assertTrue(aNewCraft.postPersistCalled);
 		assertTrue(TestEntityListener.prePersistCalled);
 		assertTrue(TestEntityListener.postPersistCalled);
 	}
@@ -393,9 +392,9 @@ public class TestJPA {
 		Spacecraft aCraft = mManager.find(Spacecraft.class,
 										  URI.create("http://nasa.dataincubator.org/spacecraft/1957-002A"));
 
-		String aNewAgency = "America";
-		URI aNewHomepage = URI.create("http://nasa.gov");
-		String aNewMass = "12345";
+		String aNewAgency = "United States of America";
+		URI aNewHomepage = URI.create("http://null.gov");
+		String aNewMass = "1234567890";
 
 		aCraft.setMass(aNewMass);
 		aCraft.setAgency(aNewAgency);

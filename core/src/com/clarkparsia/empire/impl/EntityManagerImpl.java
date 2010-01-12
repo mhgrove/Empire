@@ -22,13 +22,12 @@ import com.clarkparsia.empire.SupportsRdfId;
 import com.clarkparsia.empire.SupportsTransactions;
 
 import com.clarkparsia.empire.annotation.InvalidRdfException;
+import com.clarkparsia.empire.annotation.RdfGenerator;
 import com.clarkparsia.empire.annotation.NamedGraph;
 import com.clarkparsia.empire.annotation.RdfsClass;
-import com.clarkparsia.empire.annotation.RdfGenerator;
 
 import org.openrdf.model.Graph;
 
-import javax.persistence.Entity;
 import javax.persistence.EntityExistsException;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
@@ -37,6 +36,8 @@ import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
 import javax.persistence.PersistenceException;
 import javax.persistence.Query;
+
+import javax.persistence.Entity;
 import javax.persistence.PrePersist;
 import javax.persistence.EntityListeners;
 import javax.persistence.PostPersist;
@@ -48,6 +49,7 @@ import javax.persistence.PreUpdate;
 
 import java.lang.annotation.Annotation;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import java.net.URI;
@@ -61,6 +63,12 @@ import java.util.Collections;
 import java.util.WeakHashMap;
 
 import com.clarkparsia.sesame.utils.ExtendedGraph;
+
+import static com.clarkparsia.empire.util.BeanReflectUtil.getAnnotatedFields;
+import static com.clarkparsia.empire.util.BeanReflectUtil.getAnnotatedGetters;
+import static com.clarkparsia.empire.util.BeanReflectUtil.asSetter;
+import static com.clarkparsia.empire.util.BeanReflectUtil.safeGet;
+import static com.clarkparsia.empire.util.BeanReflectUtil.safeSet;
 
 /**
  * <p>Implementation of the JPA {@link EntityManager} interface to support the persistence model over
@@ -190,10 +198,26 @@ public class EntityManagerImpl implements EntityManager {
 
 		assertContains(theObj);
 
-		// TODO: bug!  just swapping the reference does not work =(  need to calc the diff and set that on the provided
-		// object.
-		theObj = find(theObj.getClass(), asSupportsRdfId(theObj).getRdfId());
-	}
+		Object aDbObj = find(theObj.getClass(), asSupportsRdfId(theObj).getRdfId());
+
+        Collection<Object> aAccessors = new HashSet<Object>();
+
+        aAccessors.addAll(getAnnotatedFields(aDbObj.getClass()));
+        aAccessors.addAll(getAnnotatedGetters(aDbObj.getClass(), true));
+
+        try {
+            for (Object aAccess : aAccessors) {
+                Object aValue = safeGet(aAccess, aDbObj);
+
+                Object aSetter = asSetter(aDbObj.getClass(), aAccess);
+
+                safeSet(aSetter, theObj, aValue);
+            }
+        }
+        catch (InvocationTargetException e) {
+            throw new PersistenceException(e);
+        }
+    }
 
 	/**
 	 * @inheritDoc
@@ -383,7 +407,8 @@ public class EntityManagerImpl implements EntityManager {
 			postUpdate(theT);
 
 			// this should be a safe cast...
-			return find((Class<T>) theT.getClass(), asSupportsRdfId(theT).getRdfId());
+			//return find((Class<T>) theT.getClass(), asSupportsRdfId(theT).getRdfId());
+            return theT;
 		}
 		catch (DataSourceException ex) {
 			throw new PersistenceException(ex);

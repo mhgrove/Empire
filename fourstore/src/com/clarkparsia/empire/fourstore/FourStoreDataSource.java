@@ -27,6 +27,8 @@ import com.clarkparsia.empire.impl.sparql.SPARQLQueryFactory;
 
 import org.openrdf.model.Graph;
 import org.openrdf.sesame.constants.RDFFormat;
+import org.apache.log4j.Logger;
+import org.apache.log4j.LogManager;
 
 import java.net.ConnectException;
 import java.net.URI;
@@ -49,6 +51,10 @@ import com.clarkparsia.sesame.utils.SesameIO;
  * @since 0.1
  */
 public class FourStoreDataSource extends AbstractDataSource implements MutableDataSource, SupportsNamedGraphs {
+	/**
+	 * The logger
+	 */
+	private static final Logger LOGGER = LogManager.getLogger(FourStoreDataSource.class.getName());
 
 	/**
 	 * The 4Store database
@@ -95,8 +101,7 @@ public class FourStoreDataSource extends AbstractDataSource implements MutableDa
 			mStore.disconnect();
 		}
 		catch (ConnectException e) {
-			// TODO: log me
-			System.err.println("Disconnecting from 4store db failed");
+			LOGGER.warn("Disconnecting from 4store db failed");
 		}
 	}
 

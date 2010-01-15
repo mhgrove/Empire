@@ -28,6 +28,8 @@ import com.clarkparsia.empire.fourstore.FourStoreDataSource;
 
 import com.clarkparsia.fourstore.impl.StoreFactory;
 import com.clarkparsia.fourstore.api.Store;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 
 /**
  * <p>Implementation of the {@link DataSourceFactory} interface for creating instances of DataSources
@@ -37,6 +39,10 @@ import com.clarkparsia.fourstore.api.Store;
  * @since 0.1
  */
 public class FourStoreDataSourceFactory implements DataSourceFactory {
+	/**
+	 * The logger
+	 */
+	private static final Logger LOGGER = LogManager.getLogger(FourStoreDataSource.class.getName());
 
 	/**
 	 * Configuration key for the URL of the 4Store http endpoint
@@ -73,16 +79,15 @@ public class FourStoreDataSourceFactory implements DataSourceFactory {
 					aStore.setSoftLimit(Integer.parseInt(theMap.get(KEY_SOFT_LIMIT)));
 				}
 				catch (NumberFormatException e) {
-					// todo: log me
-					System.err.println("Invalid soft limit value specified: " + theMap.get(KEY_SOFT_LIMIT));
+					LOGGER.warn("Invalid soft limit value specified: " + theMap.get(KEY_SOFT_LIMIT));
 				}
 			}
 
 			return new FourStoreDataSource(aStore);
 		}
 		catch (MalformedURLException e) {
-			// todo: log me
-			System.err.println("Creating URL for 4store failed: " + e.getMessage());
+			LOGGER.error("Creating URL for 4store failed.", e);
+
 			throw new DataSourceException(e);
 		}
 	}

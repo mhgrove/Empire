@@ -27,6 +27,8 @@ import com.clarkparsia.empire.annotation.NamedGraph;
 import com.clarkparsia.empire.annotation.RdfsClass;
 
 import org.openrdf.model.Graph;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 
 import javax.persistence.EntityExistsException;
 import javax.persistence.EntityManager;
@@ -79,6 +81,10 @@ import static com.clarkparsia.empire.util.BeanReflectUtil.safeSet;
  * @see EntityManager
  */
 public class EntityManagerImpl implements EntityManager {
+	/**
+	 * The logger
+	 */
+	private static final Logger LOGGER = LogManager.getLogger(EntityManagerImpl.class.getName());
 
 	/**
 	 * Whether or not this EntityManagerImpl is open
@@ -112,7 +118,6 @@ public class EntityManagerImpl implements EntityManager {
 	EntityManagerImpl(MutableDataSource theSource) {
 
 		// TODO: resolve all other todo's =)
-		// TODO: add logging
 		// TODO: sparql for everything, just convert serql into sparql
 		// TODO: respect temporal annotations for date I/O
 		// TODO: bnode support?
@@ -775,10 +780,8 @@ public class EntityManagerImpl implements EntityManager {
 				aPrePersist.invoke(theObj);
 			}
 			catch (Exception e) {
-				// TODO: log me
-				System.err.println("There was an error during entity lifecycle notification for annotation: " +
-								   theLifecycleAnnotation + " on object: " + theObj +
-								   ". The error message was: " + e.getMessage());
+				LOGGER.error("There was an error during entity lifecycle notification for annotation: " +
+							 theLifecycleAnnotation + " on object: " + theObj +".", e);
 			}
 		}
 
@@ -790,10 +793,8 @@ public class EntityManagerImpl implements EntityManager {
 				aMethod.invoke(aListener, theObj);
 			}
 			catch (Exception e) {
-				// TODO: log me
-				System.err.println("There was an error during lifecycle notification for annotation: " +
-								   theLifecycleAnnotation + " on object: " + theObj +
-								   ". The error message was: " + e.getMessage());
+				LOGGER.error("There was an error during lifecycle notification for annotation: " +
+							 theLifecycleAnnotation + " on object: " + theObj + ".", e);
 			}
 		}
 	}
@@ -817,8 +818,7 @@ public class EntityManagerImpl implements EntityManager {
 						aListeners.add(aClass.newInstance());
 					}
 					catch (Exception e) {
-						// TODO: log me
-						System.err.println("There was an error instantiating an EntityListener: " + e.getMessage());
+						LOGGER.error("There was an error instantiating an EntityListener. ", e);
 					}
 				}
 

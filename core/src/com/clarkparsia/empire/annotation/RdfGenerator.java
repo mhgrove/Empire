@@ -15,7 +15,6 @@
 
 package com.clarkparsia.empire.annotation;
 
-import com.clarkparsia.sesame.utils.query.SesameQueryUtils;
 import com.clarkparsia.utils.AbstractDataCommand;
 import com.clarkparsia.utils.NamespaceUtils;
 
@@ -40,7 +39,9 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
+
 import java.lang.annotation.Annotation;
+
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
@@ -58,11 +59,12 @@ import com.clarkparsia.utils.collections.CollectionUtil;
 
 import org.openrdf.model.impl.URIImpl;
 
-import org.openrdf.sesame.query.MalformedQueryException;
-
 import org.openrdf.sesame.sail.StatementIterator;
 
 import org.openrdf.vocabulary.XmlSchema;
+
+import org.apache.log4j.Logger;
+import org.apache.log4j.LogManager;
 
 import com.clarkparsia.empire.DataSource;
 import com.clarkparsia.empire.DataSourceException;
@@ -107,6 +109,11 @@ import javax.persistence.Entity;
  * @since 0.1
  */
 public class RdfGenerator {
+	/**
+	 * The logger
+	 */
+	private static final Logger LOGGER = LogManager.getLogger(RdfGenerator.class.getName());
+
 	/**
 	 * Map from rdf:type URI's to the Java class which corresponds to that resource.
 	 */
@@ -229,7 +236,13 @@ public class RdfGenerator {
 				// we can skip the rdf:type property.  it's basically assigned in the @RdfsClass annotation on the
 				// java class, so we can figure it out later if need be. TODO: of course, if something has multiple types
 				// that information is lost, which is not good.
-				// TODO: we should however make sure this rdf:type matches the rdf:type on the Java class
+
+				URI aType = (URI) aGraph.getValue(aInd, aProp);
+				if (!TYPE_TO_CLASS.containsKey(aType) ||
+					!TYPE_TO_CLASS.get(aType).isAssignableFrom(theObj.getClass())) {
+					LOGGER.warn("Asserted rdf:type of the individual does not match the rdf:type annotation on the object. " + aType + " " + TYPE_TO_CLASS.get(aType) + " " + theObj.getClass());
+				}
+
 				continue;
 			}
 			else if (aAccess == null) {
@@ -848,29 +861,27 @@ public class RdfGenerator {
 			return new ExtendedGraph(theSource.describe(java.net.URI.create(theConcept.getURI()))).getType(theConcept);
 		}
 		catch (DataSourceException e) {
-			// todo: log me
+			LOGGER.error("There was an error while getting the type of a resource", e);
+
 			return null;
 		}
 	}
 
 	private static String getBNodeConstructQuery(DataSource theSource, URI theURI, URI theProperty) {
-		String aQuery = "construct * from {<" + theURI.getURI() + ">} <"+theProperty.getURI()+"> {o}, {o} po {oo}";
+		String aSerqlQuery = "construct * from {<" + theURI.getURI() + ">} <"+theProperty.getURI()+"> {o}, {o} po {oo}";
+
+		String aSparqlQuery = "CONSTRUCT  { <" + theURI.getURI() + "> <"+theProperty.getURI()+"> ?o . ?o ?po ?oo  } \n" +
+							  "WHERE\n" +
+							  "{ <" + theURI.getURI() + "> <"+theProperty.getURI()+"> ?o.\n" +
+							  "?o ?po ?oo. }";
 
 		if (theSource.getQueryFactory().getDialect() == SerqlDialect.instance()) {
-			return aQuery;
+			return aSerqlQuery;
 		}
 		else {
 			// TODO: little less hacky here, we're just assuming/hoping at this point that they support sparql.  which
 			// will most likely be the case, but possibly not always.
-			try {
-				// TODO: actually write the sparql query here rather than converting from serql.  i just dont feel like
-				// looking up the sparql syntax and i dont remember it off thetype of my head.
-				return SesameQueryUtils.convertQuery(aQuery, "serql", "sparql");
-			}
-			catch (MalformedQueryException e) {
-				// cannot happen, i hope =)
-				throw new RuntimeException(e);
-			}
+			return aSparqlQuery;
 		}
 	}
 

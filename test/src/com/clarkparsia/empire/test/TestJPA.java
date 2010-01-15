@@ -117,13 +117,13 @@ public class TestJPA {
 //											   "where { ?result <" + SpaceVocab.ontology().agency + "> ??. ?result <" + SpaceVocab.ontology().alternateName + "> ??altName }",
 //											   "sovietSpacecraftSPARQL" }
 
-//				{ getLocalJenaTestConfigMap(), "where { ?result <urn:prop> ?y }",
-//				  							   "select distinct ?result where { ?uri <" + SpaceVocab.ontology().mass.getURI() + "> ?result }",
-//											   "where { ?uri <" + SpaceVocab.ontology().mass.getURI() + "> ?result }",
-//											   "where { ?result <" + SpaceVocab.ontology().agency + "> \"U.S.S.R\" }",
-//											   "where { ?result <" + SpaceVocab.ontology().agency + "> ?? }",
-//											   "where { ?result <" + SpaceVocab.ontology().agency + "> ??. ?result <" + SpaceVocab.ontology().alternateName + "> ??altName }",
-//											   "sovietSpacecraftSPARQL" }
+				{ getLocalJenaTestConfigMap(), "where { ?result <urn:prop> ?y }",
+				  							   "select distinct ?result where { ?uri <" + SpaceVocab.ontology().mass.getURI() + "> ?result }",
+											   "where { ?uri <" + SpaceVocab.ontology().mass.getURI() + "> ?result }",
+											   "where { ?result <" + SpaceVocab.ontology().agency + "> \"U.S.S.R\" }",
+											   "where { ?result <" + SpaceVocab.ontology().agency + "> ?? }",
+											   "where { ?result <" + SpaceVocab.ontology().agency + "> ??. ?result <" + SpaceVocab.ontology().alternateName + "> ??altName }",
+											   "sovietSpacecraftSPARQL" }
 		});
 	}
 
@@ -437,7 +437,6 @@ public class TestJPA {
 
 	@Test
 	public void testQuerying() {
-        // TODO: get serql or sparql depending on supported dialect
         String aNativeQueryStr = mNativeQuery;
         String aQueryStr = mNativeFragment;
 

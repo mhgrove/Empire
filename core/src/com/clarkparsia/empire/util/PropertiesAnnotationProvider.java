@@ -28,6 +28,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.FileInputStream;
 
+import org.apache.log4j.Logger;
+import org.apache.log4j.LogManager;
+
 /**
  * <p>Implementation of the EmpireAnnotationProvider interface which reads a property file from disk and
  * uses that to create the index of classes with specified annotations.  The properties are expected to be in a simple
@@ -38,6 +41,11 @@ import java.io.FileInputStream;
  * @author Michael Grove
  */
 public class PropertiesAnnotationProvider implements EmpireAnnotationProvider {
+
+	/**
+	 * The logger
+	 */
+	private static final Logger LOGGER = LogManager.getLogger(PropertiesAnnotationProvider.class.getName());
 
 	/**
 	 * The file to read the Annotations index from
@@ -77,8 +85,7 @@ public class PropertiesAnnotationProvider implements EmpireAnnotationProvider {
 				mProperties.load(new FileInputStream(mFile));
 			}
 			catch (IOException e) {
-				// TODO: log me
-				System.err.println("Reading empire.config properties for Annotation provider failed: " + e.getMessage());
+				LOGGER.error("Reading empire.config properties for Annotation provider failed", e);
 			}
 		}
 
@@ -104,14 +111,12 @@ public class PropertiesAnnotationProvider implements EmpireAnnotationProvider {
 						aClasses.add(aClass);
 					}
 					else {
-						// TODO: log me
-						System.err.println("Class specified in AnnotationProvider file '" + aName + "' " +
-										   "does not actually have the specified annotation '" + theAnnotation + "'");
+						LOGGER.warn("Class specified in AnnotationProvider file '" + aName + "' " +
+									"does not actually have the specified annotation '" + theAnnotation + "'");
 					}
 				}
 				catch (ClassNotFoundException e) {
-					// TODO: log me
-					System.err.println("Class specified in AnnotationProvider file '" + aName + "' cannot be found.");
+					LOGGER.warn("Class specified in AnnotationProvider file '" + aName + "' cannot be found.");
 				}
 			}
 		}

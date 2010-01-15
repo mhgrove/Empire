@@ -135,8 +135,7 @@ public abstract class AbstractQueryFactory<T extends RdfQuery> implements QueryF
 	 * @inheritDoc
 	 */
 	public Query createNativeQuery(final String theQueryString, final String theResultSetMapping) {
-		// TODO: add support for this.  right now i dont know what the result set mapping does
-		// so it's hard for me to implement.  I think it refers to javax.persistence.SqlResultSetMapping
+		// TODO: add support for this.  I think it refers to javax.persistence.SqlResultSetMapping -- is the param the name of the mapping?
 		throw new UnsupportedOperationException();
 	}
 }

@@ -122,6 +122,11 @@ public abstract class RdfQuery implements Query {
 	 */
 	private boolean mIsConstruct = false;
 
+	/**
+	 * The map of asserted query hints.
+	 */
+	private Map<String, Object> mHints = new HashMap<String, Object>();
+
     /**
 	 * Create a new RdfQuery
 	 * @param theSource the data source the query is run against
@@ -376,10 +381,17 @@ public abstract class RdfQuery implements Query {
 	 * @inheritDoc
 	 */
 	public Query setHint(final String theName, final Object theObj) {
-		// TODO: figure out what hints are used for and if we want to, or should, support them.  javadocs
-		// indicate it's ok to silently ignore this if we don't know what to do with it, which is what
-		// we'll do for now.
+		mHints.put(theName, theObj);
+
 		return this;
+	}
+
+	/**
+	 * Return a map of the current query hints
+	 * @return the query hints
+	 */
+	protected Map<String, Object> getHints() {
+		return mHints;
 	}
 
 	/**

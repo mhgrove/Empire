@@ -69,16 +69,16 @@ public class FoafPerson extends BaseTestClass {
 		if (this == o) {
 			return true;
 		}
-		if (o == null || getClass() != o.getClass()) {
+		if (!(o instanceof FoafPerson)) {
 			return false;
 		}
 
 		final FoafPerson that = (FoafPerson) o;
 
-		if (name != null ? !name.equals(that.name) : that.name != null) {
+		if (getName() != null ? !getName().equals(that.getName()) : that.getName() != null) {
 			return false;
 		}
-		if (performed != null ? !performed.equals(that.performed) : that.performed != null) {
+		if (getPerformed() != null ? !getPerformed().equals(that.getPerformed()) : that.getPerformed() != null) {
 			return false;
 		}
 		if (!BasicUtils.equalsOrNull(getRdfId(), that.getRdfId())) {
@@ -90,8 +90,8 @@ public class FoafPerson extends BaseTestClass {
 
 	@Override
 	public int hashCode() {
-		int aresult = name != null ? name.hashCode() : 0;
-		aresult = 31 * aresult + (performed != null ? performed.hashCode() : 0);
+		int aresult = getName() != null ? getName().hashCode() : 0;
+		aresult = 31 * aresult + (getPerformed() != null ? getPerformed().hashCode() : 0);
 		return aresult;
 	}
 }

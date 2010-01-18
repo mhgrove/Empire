@@ -182,42 +182,42 @@ public class Spacecraft extends BaseTestClass {
 		if (this == o) {
 			return true;
 		}
-		if (o == null || getClass() != o.getClass()) {
+		if (!(o instanceof Spacecraft)) {
 			return false;
 		}
 
 		final Spacecraft that = (Spacecraft) o;
 
-		if (agency != null ? !agency.equals(that.agency) : that.agency != null) {
+		if (getAgency() != null ? !getAgency().equals(that.getAgency()) : that.getAgency() != null) {
 			return false;
 		}
-		if (!((alternateName == null && that.alternateName == null) ||
-			(alternateName != null && that.alternateName != null && CollectionUtil.contentsEqual(alternateName,that.alternateName)))) {
+		if (!((getAlternateName() == null && that.getAlternateName() == null) ||
+			(getAlternateName() != null && that.getAlternateName() != null && CollectionUtil.contentsEqual(getAlternateName(),that.getAlternateName())))) {
 			return false;
 		}
-		if (description != null ? !description.equals(that.description) : that.description != null) {
+		if (getDescription() != null ? !getDescription().equals(that.getDescription()) : that.getDescription() != null) {
 			return false;
 		}
-		if (disciplines != null ? !disciplines.equals(that.disciplines) : that.disciplines != null) {
+		if (getDisciplines() != null ? !getDisciplines().equals(that.getDisciplines()) : that.getDisciplines() != null) {
 			return false;
 		}
-		if (homepage != null ? !homepage.equals(that.homepage) : that.homepage != null) {
+		if (getHomepage() != null ? !getHomepage().equals(that.getHomepage()) : that.getHomepage() != null) {
 			return false;
 		}
-		if (internationalDesignator != null ? !internationalDesignator.equals(that.internationalDesignator) : that.internationalDesignator != null) {
+		if (getInternationalDesignator() != null ? !getInternationalDesignator().equals(that.getInternationalDesignator()) : that.getInternationalDesignator() != null) {
 			return false;
 		}
-		if (!BasicUtils.equalsOrNull(launch == null ? null : launch.getRdfId(),
-									that.launch == null ? null : that.launch.getRdfId())) {
+		if (!BasicUtils.equalsOrNull(getLaunch() == null ? null : getLaunch().getRdfId(),
+									that.getLaunch() == null ? null : that.getLaunch().getRdfId())) {
 			return false;
 		}
-		if (mass != null ? !mass.equals(that.mass) : that.mass != null) {
+		if (getMass() != null ? !getMass().equals(that.getMass()) : that.getMass() != null) {
 			return false;
 		}
-		if (mission != null ? !mission.equals(that.mission) : that.mission != null) {
+		if (getMission() != null ? !getMission().equals(that.getMission()) : that.getMission() != null) {
 			return false;
 		}
-		if (name != null ? !name.equals(that.name) : that.name != null) {
+		if (getName() != null ? !getName().equals(that.getName()) : that.getName() != null) {
 			return false;
 		}
 		if (!BasicUtils.equalsOrNull(getRdfId(), that.getRdfId())) {

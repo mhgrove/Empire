@@ -77,19 +77,19 @@ public class LaunchSite extends BaseTestClass {
 		if (this == o) {
 			return true;
 		}
-		if (o == null || getClass() != o.getClass()) {
+		if (!(o instanceof LaunchSite)) {
 			return false;
 		}
 
 		final LaunchSite that = (LaunchSite) o;
 
-		if (country != null ? !country.equals(that.country) : that.country != null) {
+		if (getCountry() != null ? !getCountry().equals(that.getCountry()) : that.getCountry() != null) {
 			return false;
 		}
-		if (label != null ? !label.equals(that.label) : that.label != null) {
+		if (getLabel() != null ? !getLabel().equals(that.getLabel()) : that.getLabel() != null) {
 			return false;
 		}
-		if (place != null ? !place.equals(that.place) : that.place != null) {
+		if (getPlace() != null ? !getPlace().equals(that.getPlace()) : that.getPlace() != null) {
 			return false;
 		}
 		if (!BasicUtils.equalsOrNull(getRdfId(), that.getRdfId())) {
@@ -101,9 +101,9 @@ public class LaunchSite extends BaseTestClass {
 
 	@Override
 	public int hashCode() {
-		int aresult = country != null ? country.hashCode() : 0;
-		aresult = 31 * aresult + (label != null ? label.hashCode() : 0);
-		aresult = 31 * aresult + (place != null ? place.hashCode() : 0);
+		int aresult = getCountry() != null ? getCountry().hashCode() : 0;
+		aresult = 31 * aresult + (getLabel() != null ? getLabel().hashCode() : 0);
+		aresult = 31 * aresult + (getPlace() != null ? getPlace().hashCode() : 0);
 		return aresult;
 	}
 }

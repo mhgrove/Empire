@@ -53,6 +53,7 @@ import java.lang.annotation.Annotation;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.AccessibleObject;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -205,16 +206,16 @@ public class EntityManagerImpl implements EntityManager {
 
 		Object aDbObj = find(theObj.getClass(), asSupportsRdfId(theObj).getRdfId());
 
-        Collection<Object> aAccessors = new HashSet<Object>();
+        Collection<AccessibleObject> aAccessors = new HashSet<AccessibleObject>();
 
         aAccessors.addAll(getAnnotatedFields(aDbObj.getClass()));
         aAccessors.addAll(getAnnotatedGetters(aDbObj.getClass(), true));
 
         try {
-            for (Object aAccess : aAccessors) {
+            for (AccessibleObject aAccess : aAccessors) {
                 Object aValue = safeGet(aAccess, aDbObj);
 
-                Object aSetter = asSetter(aDbObj.getClass(), aAccess);
+                AccessibleObject aSetter = asSetter(aDbObj.getClass(), aAccess);
 
                 safeSet(aSetter, theObj, aValue);
             }

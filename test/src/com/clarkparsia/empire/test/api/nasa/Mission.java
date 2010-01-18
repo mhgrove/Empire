@@ -56,11 +56,11 @@ public class Mission extends BaseTestClass {
 		title = theTitle;
 	}
 
-	public List<MissionRole> getIssionRoles() {
+	public List<MissionRole> getMissionRoles() {
 		return missionRoles;
 	}
 
-	public void setIssionRoles(final List<MissionRole> theIssionRoles) {
+	public void setMissionRoles(final List<MissionRole> theIssionRoles) {
 		missionRoles = theIssionRoles;
 	}
 
@@ -69,16 +69,16 @@ public class Mission extends BaseTestClass {
 		if (this == o) {
 			return true;
 		}
-		if (o == null || getClass() != o.getClass()) {
+		if (!(o instanceof Mission)) {
 			return false;
 		}
 
 		final Mission aMission = (Mission) o;
 
-		if (missionRoles != null ? !missionRoles.equals(aMission.missionRoles) : aMission.missionRoles != null) {
+		if (getMissionRoles() != null ? !getMissionRoles().equals(aMission.getMissionRoles()) : aMission.getMissionRoles() != null) {
 			return false;
 		}
-		if (title != null ? !title.equals(aMission.title) : aMission.title != null) {
+		if (getTitle() != null ? !getTitle().equals(aMission.getTitle()) : aMission.getTitle() != null) {
 			return false;
 		}
 		if (!BasicUtils.equalsOrNull(getRdfId(), aMission.getRdfId())) {
@@ -90,8 +90,8 @@ public class Mission extends BaseTestClass {
 
 	@Override
 	public int hashCode() {
-		int aresult = title != null ? title.hashCode() : 0;
-		aresult = 31 * aresult + (missionRoles != null ? missionRoles.hashCode() : 0);
+		int aresult = getTitle() != null ? getTitle().hashCode() : 0;
+		aresult = 31 * aresult + (getMissionRoles() != null ? getMissionRoles().hashCode() : 0);
 		return aresult;
 	}
 }

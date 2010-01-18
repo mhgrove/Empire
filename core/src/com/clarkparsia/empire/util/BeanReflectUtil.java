@@ -1,10 +1,14 @@
 package com.clarkparsia.empire.util;
 
 import com.clarkparsia.empire.annotation.RdfProperty;
+import com.clarkparsia.empire.annotation.InvalidRdfException;
+import com.clarkparsia.empire.annotation.RdfId;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.AccessibleObject;
+import java.lang.annotation.Annotation;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -17,6 +21,98 @@ import java.util.HashSet;
  * @since 0.5.1
  */
 public class BeanReflectUtil {
+
+	/**
+	 * Return the field on the class which has an {@link RdfId} annotation.  If the fields on the class do not have the
+	 * annotation, the super class will be checked.
+	 * @param theClass the class
+	 * @return the field with an RdfId annotation, or null if one is not found
+	 * @throws InvalidRdfException thrown if there are multiple fields with the RdfId annotation
+	 */
+	public static Field getIdField(Class theClass) throws InvalidRdfException {
+		Field aIdField = null;
+
+		for (Field aField : theClass.getDeclaredFields()) {
+			if (aField.getAnnotation(RdfId.class) != null) {
+				if (aIdField != null) {
+					throw new InvalidRdfException("Cannot have multiple id properties");
+				}
+				else {
+					aIdField = aField;
+				}
+			}
+		}
+
+		if (aIdField == null && theClass.getSuperclass() != null) {
+			aIdField = getIdField(theClass.getSuperclass());
+		}
+
+		return aIdField;
+	}
+
+	/**
+	 * Return the given annotation from the class.  If the class does not have the annotation, it's parent class and any
+	 * interfaces will also be checked.
+	 * @param theClass the class to inspect
+	 * @param theAnnotation the annotation to retrieve
+	 * @return the class's annotation, or it's "inherited" annotation, or null if the annotation cannot be found.
+	 */
+	public static <T extends Annotation> T getAnnotation(Class theClass, Class<T> theAnnotation) {
+		T aAnnotation = null;
+
+		if (theClass.isAnnotationPresent(theAnnotation)) {
+			aAnnotation = (T) theClass.getAnnotation(theAnnotation);
+		}
+		else {
+			if (theClass.getSuperclass() != null) {
+				aAnnotation = getAnnotation(theClass.getSuperclass(), theAnnotation);
+			}
+
+			if (aAnnotation == null && theClass.getInterfaces() != null) {
+				for (Class aInt : theClass.getInterfaces()) {
+					aAnnotation = getAnnotation(aInt, theAnnotation);
+
+					if (aAnnotation != null) {
+						break;
+					}
+				}
+			}
+		}
+
+		return aAnnotation;
+	}
+
+	/**
+	 * Return whether or not the class has the given annotation.  If the class itself does not have the annotation,
+	 * it's super class and the interfaces it implements are checked.
+	 * @param theClass the class to check
+	 * @param theAnnotation the annotation to look for
+	 * @return if the class has the annotation, or one of its parents does and it "inherited" the annotation, false otherwise
+	 */
+	public static boolean hasAnnotation(Class theClass, Class<? extends Annotation> theAnnotation) {
+		boolean aHasAnnotation = false;
+		if (theClass.isAnnotationPresent(theAnnotation)) {
+			aHasAnnotation = true;
+		}
+		else {
+			if (theClass.getSuperclass() != null) {
+				aHasAnnotation = hasAnnotation(theClass.getSuperclass(), theAnnotation);
+			}
+
+			if (!aHasAnnotation && theClass.getInterfaces() != null) {
+				for (Class aInt : theClass.getInterfaces()) {
+					aHasAnnotation = hasAnnotation(aInt, theAnnotation);
+
+					if (aHasAnnotation) {
+						break;
+					}
+				}
+			}
+		}
+
+		return aHasAnnotation;
+	}
+
     /**
      * Toggle the accessibility of the parameter, which should be an instance of {@link java.lang.reflect.Field} or {@link java.lang.reflect.Method}.  If
      * not, then nothing will occur.
@@ -24,15 +120,10 @@ public class BeanReflectUtil {
      * @param theAccess the new accessibility level, true to make it accessible, false otherwise
      * @return the old accessibility of the accessor
      */
-    public static boolean setAccessible(Object theAccessor, boolean theAccess) {
-        boolean aOldAccess = isAccessible(theAccessor);
+    public static boolean setAccessible(AccessibleObject theAccessor, boolean theAccess) {
+        boolean aOldAccess = theAccessor.isAccessible();
 
-        if (theAccessor instanceof Field) {
-            ((Field)theAccessor).setAccessible(theAccess);
-        }
-        else if (theAccessor instanceof Method) {
-            ((Method)theAccessor).setAccessible(theAccess);
-        }
+		theAccessor.setAccessible(theAccess);
 
         return aOldAccess;
     }
@@ -42,16 +133,9 @@ public class BeanReflectUtil {
      * @param theAccess the Field or Method
      * @return true if its accessible, false otherwise, or if it is not a Field or Method
      */
-    public static boolean isAccessible(Object theAccess) {
-        if (theAccess instanceof Field) {
-            return ((Field)theAccess).isAccessible();
-        }
-        else if (theAccess instanceof Method) {
-            return ((Method)theAccess).isAccessible();
-        }
-        else {
-            return false;
-        }
+	@Deprecated
+    public static boolean isAccessible(AccessibleObject theAccess) {
+		return theAccess.isAccessible();
     }
 
     /**
@@ -63,7 +147,7 @@ public class BeanReflectUtil {
      * @param theValue the value to set via the aceessor
      * @throws java.lang.reflect.InvocationTargetException thrown if there was an error setting the value on the field/method
      */
-    public static void safeSet(Object theAccessor, Object theObj, Object theValue) throws InvocationTargetException {
+    public static void safeSet(AccessibleObject theAccessor, Object theObj, Object theValue) throws InvocationTargetException {
         boolean aOldAccess = setAccessible(theAccessor, true);
 
         try {
@@ -91,7 +175,7 @@ public class BeanReflectUtil {
      * @throws java.lang.reflect.InvocationTargetException thrown if there was an error setting the value on the field/method
      * @throws IllegalAccessException thrown if you cannot access the field/method
      */
-    public static void set(Object theAccessor, Object theObj, Object theValue) throws InvocationTargetException, IllegalAccessException {
+    public static void set(AccessibleObject theAccessor, Object theObj, Object theValue) throws InvocationTargetException, IllegalAccessException {
         if (theAccessor instanceof Field) {
             ((Field) theAccessor).set(theObj, theValue);
         }
@@ -259,7 +343,7 @@ public class BeanReflectUtil {
 	 * @throws InvocationTargetException thrown if there is an error while invoking the getter method.  Usually because
 	 * it's not a bean-style getter w/ no parameters.
 	 */
-	public static Object safeGet(Object theAccess, Object theObject) throws InvocationTargetException {
+	public static Object safeGet(AccessibleObject theAccess, Object theObject) throws InvocationTargetException {
         boolean aOldAccess = setAccessible(theAccess, true);
 
         try {
@@ -290,7 +374,7 @@ public class BeanReflectUtil {
 	 * @throws InvocationTargetException thrown if there is an error while invoking the getter method.  Usually because
 	 * it's not a bean-style getter w/ no parameters.
 	 */
-	public static Object get(Object theAccess, Object theObject) throws IllegalAccessException, InvocationTargetException {
+	public static Object get(AccessibleObject theAccess, Object theObject) throws IllegalAccessException, InvocationTargetException {
 		if (theAccess instanceof Field) {
 			return ((Field)theAccess).get(theObject);
 		}
@@ -309,9 +393,9 @@ public class BeanReflectUtil {
      * @param theAccess the accessor
      * @return a setter object, or null if one is not found.
      */
-    public static Object asSetter(final Class<?> theClass, final Object theAccess) {
+    public static AccessibleObject asSetter(final Class<?> theClass, final AccessibleObject theAccess) {
         // field can be used for access just fine
-        if (theAccess instanceof Field && arrayContains(theClass.getDeclaredFields(), (Field) theAccess)) {
+        if (theAccess instanceof Field && arrayContains(theClass.getDeclaredFields(), theAccess)) {
             return theAccess;
         }
         else {

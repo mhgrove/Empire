@@ -39,6 +39,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.AccessibleObject;
 
 import java.lang.annotation.Annotation;
 
@@ -62,6 +63,7 @@ import org.openrdf.model.impl.URIImpl;
 import org.openrdf.sesame.sail.StatementIterator;
 
 import org.openrdf.vocabulary.XmlSchema;
+import org.openrdf.vocabulary.RDFS;
 
 import org.apache.log4j.Logger;
 import org.apache.log4j.LogManager;
@@ -71,6 +73,7 @@ import com.clarkparsia.empire.DataSourceException;
 import com.clarkparsia.empire.EmpireOptions;
 import com.clarkparsia.empire.QueryException;
 import com.clarkparsia.empire.SupportsRdfId;
+import com.clarkparsia.empire.annotation.runtime.Proxy;
 
 import com.clarkparsia.empire.impl.serql.SerqlDialect;
 
@@ -81,8 +84,12 @@ import static com.clarkparsia.empire.util.BeanReflectUtil.getAnnotatedFields;
 import static com.clarkparsia.empire.util.BeanReflectUtil.getAnnotatedGetters;
 import static com.clarkparsia.empire.util.BeanReflectUtil.getAnnotatedSetters;
 import static com.clarkparsia.empire.util.BeanReflectUtil.get;
+import com.clarkparsia.empire.util.BeanReflectUtil;
 
 import javax.persistence.Entity;
+
+import javassist.util.proxy.ProxyFactory;
+import javassist.util.proxy.MethodHandler;
 
 /**
  * <p>Description: Utility for creating RDF from a compliant Java Bean, and for turning RDF (the results of a describe
@@ -210,7 +217,7 @@ public class RdfGenerator {
 
 		addNamespaces(theObj.getClass());
 
-		final Map<URI, Object> aAccessMap = new HashMap<URI, Object>();
+		final Map<URI, AccessibleObject> aAccessMap = new HashMap<URI, AccessibleObject>();
 		
 		CollectionUtil.each(aFields, new AbstractDataCommand<Field>() {
 			public void execute() {
@@ -230,7 +237,7 @@ public class RdfGenerator {
 		});
 
 		for (URI aProp : aProps) {
-			Object aAccess = aAccessMap.get(aProp);
+			AccessibleObject aAccess = aAccessMap.get(aProp);
 
 			if (aAccess == null && URIImpl.RDF_TYPE.equals(aProp)) {
 				// we can skip the rdf:type property.  it's basically assigned in the @RdfsClass annotation on the
@@ -257,7 +264,7 @@ public class RdfGenerator {
 
 			Object aValue = aFunc.apply(CollectionUtil.list(aGraph.getValues(aInd, aProp)));
 
-			boolean aOldAccess = isAccessible(aAccess);
+			boolean aOldAccess = aAccess.isAccessible();
 
 			try {
 				setAccessible(aAccess, true);
@@ -347,18 +354,7 @@ public class RdfGenerator {
 			return SesameValueFactory.instance().createURI(aSupport.getRdfId());
 		}
 
-		Field aIdField = null;
-
-		for (Field aField : theObj.getClass().getDeclaredFields()) {
-			if (aField.getAnnotation(RdfId.class) != null) {
-				if (aIdField != null) {
-					throw new InvalidRdfException("Cannot have multiple id properties");
-				}
-				else {
-					aIdField = aField;
-				}
-			}
-		}
+		Field aIdField = BeanReflectUtil.getIdField(theObj.getClass());
 
 		String aValue = hash(BasicUtils.getRandomString(10));
 		String aNS = RdfId.DEFAULT;
@@ -441,7 +437,8 @@ public class RdfGenerator {
 
 		GraphBuilder aBuilder = new GraphBuilder();
 
-		Collection aAccessors = getAnnotatedFields(theObj.getClass());
+		Collection<AccessibleObject> aAccessors = new HashSet<AccessibleObject>();
+		aAccessors.addAll(getAnnotatedFields(theObj.getClass()));
 		aAccessors.addAll(getAnnotatedGetters(theObj.getClass(), true));
 
 		try {
@@ -449,7 +446,7 @@ public class RdfGenerator {
 													 aURI.getURI());
 
 			AsValueFunction aFunc = new AsValueFunction();
-			for (Object aAccess : aAccessors) {
+			for (AccessibleObject aAccess : aAccessors) {
 
 				RdfProperty aPropertyAnnotation = getAnnotation(aAccess, RdfProperty.class);
 				URI aProperty = aBuilder.getSesameValueFactory().createURI(NamespaceUtils.uri(aPropertyAnnotation.value()));
@@ -716,7 +713,7 @@ public class RdfGenerator {
 			if (theValue instanceof Literal) {
 				Literal aLit = (Literal) theValue;
 				String aDatatype = aLit.getDatatype() != null ? aLit.getDatatype().getURI() : null;
-				if (aDatatype == null || XmlSchema.STRING.equals(aDatatype)) {
+				if (aDatatype == null || XmlSchema.STRING.equals(aDatatype) || RDFS.LITERAL.equals(aDatatype)) {
 					return aLit.getLabel();
 				}
 				else if (XmlSchema.BOOLEAN.equals(aDatatype)) {
@@ -825,7 +822,7 @@ public class RdfGenerator {
 						}
 					}
 
-					if (aClass.getAnnotation(RdfsClass.class) == null) {
+					if (!BeanReflectUtil.hasAnnotation(aClass, RdfsClass.class)) {
 						// k, so either the parameter of the collection or the declared type of the field does
 						// not map to an instance/bean type.  this is most likely an error, but lets try and find
 						// the rdf:type of the field, and see if we can map that to a class in the path and we'll
@@ -837,14 +834,14 @@ public class RdfGenerator {
 						// k, so now we know the type, if we can match the type to a class then we're in business
 						if (aType != null) {
 							Class aTypeClass = TYPE_TO_CLASS.get(aType);
-							if (aTypeClass != null && aTypeClass.isAnnotationPresent(RdfsClass.class)) {
+							if (aTypeClass != null && BeanReflectUtil.hasAnnotation(aTypeClass, RdfsClass.class)) {
 								// lets try this one
 								aClass = aTypeClass;
 							}
 						}
 					}
 
-					return fromRdf(aClass, java.net.URI.create(aURI.getURI()), mSource);
+					return getProxyOrDbObject(aClass, java.net.URI.create(aURI.getURI()), mSource);
 				}
 				catch (Exception e) {
 					throw new RuntimeException(e);
@@ -853,6 +850,33 @@ public class RdfGenerator {
 			else {
 				throw new RuntimeException("Unexpected Value type");
 			}
+		}
+	}
+
+	private static <T> T getProxyOrDbObject(Class<T> theClass, java.net.URI theURI, DataSource theSource) throws Exception {
+		if (EmpireOptions.ENABLE_PROXY_OBJECTS) {
+			Proxy<T> aProxy = new Proxy<T>(theClass, theURI, theSource);
+
+			ProxyFactory aFactory = new ProxyFactory();
+			aFactory.setSuperclass(theClass);
+			aFactory.setHandler(new ProxyHandler<T>(aProxy));
+
+			return (T) aFactory.createClass().newInstance();
+		}
+		else {
+			return fromRdf(theClass, theURI, theSource);
+		}
+	}
+
+	private static class ProxyHandler<T> implements MethodHandler {
+		Proxy<T> mProxy;
+
+		private ProxyHandler(final Proxy<T> theProxy) {
+			mProxy = theProxy;
+		}
+
+		public Object invoke(final Object theThis, final Method theMethod, final Method theProxyMethod, final Object[] theArgs) throws Throwable {
+			return theMethod.invoke(mProxy.value(), theArgs);
 		}
 	}
 
@@ -885,7 +909,12 @@ public class RdfGenerator {
 		}
 	}
 
-    private static boolean isPrimitive(Object theObj) {
+	/**
+	 * Return whether or not the given object is a Java primitive type (String is included as a primitive).
+	 * @param theObj the object
+	 * @return true if its a primitive, false otherwise.
+	 */
+    public static boolean isPrimitive(Object theObj) {
         return (Boolean.class.isInstance(theObj) || Integer.class.isInstance(theObj) || Long.class.isInstance(theObj)
                 || Short.class.isInstance(theObj) || Double.class.isInstance(theObj) || Float.class.isInstance(theObj)
                 || Date.class.isInstance(theObj) || String.class.isInstance(theObj) || Character.class.isInstance(theObj));
@@ -933,7 +962,7 @@ public class RdfGenerator {
 			else if (Value.class.isAssignableFrom(theIn.getClass())) {
 				return Value.class.cast(theIn);
 			}
-			else if (theIn.getClass().getAnnotation(RdfsClass.class) != null) {
+			else if (BeanReflectUtil.hasAnnotation(theIn.getClass(), RdfsClass.class)) {
 				try {
 					return id(theIn);
 				}

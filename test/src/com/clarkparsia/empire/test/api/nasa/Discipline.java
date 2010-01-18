@@ -53,13 +53,14 @@ public class Discipline extends BaseTestClass {
 		if (this == o) {
 			return true;
 		}
-		if (o == null || getClass() != o.getClass()) {
+
+		if (!(o instanceof Discipline)) {
 			return false;
 		}
 
 		final Discipline that = (Discipline) o;
 
-		if (label != null ? !label.equals(that.label) : that.label != null) {
+		if (getLabel() != null ? !getLabel().equals(that.getLabel()) : that.getLabel() != null) {
 			return false;
 		}
 		if (!BasicUtils.equalsOrNull(getRdfId(), that.getRdfId())) {
@@ -71,6 +72,6 @@ public class Discipline extends BaseTestClass {
 
 	@Override
 	public int hashCode() {
-		return label != null ? label.hashCode() : 0;
+		return getLabel() != null ? getLabel().hashCode() : 0;
 	}
 }

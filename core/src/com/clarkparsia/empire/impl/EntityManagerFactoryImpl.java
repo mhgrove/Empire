@@ -69,7 +69,7 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory {
 		DataSourceFactory aFactory = null;
 
 		if (theMap.containsKey(FACTORY)) {
-			// TODO: maybe we can use some sort of IoC pattern, like Guice, for this purpose?
+			// TODO: this could be cleaner...
 			try {
 				aFactory = (DataSourceFactory) Class.forName(theMap.get(FACTORY).toString()).newInstance();
 			}

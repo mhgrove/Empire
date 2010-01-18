@@ -188,40 +188,41 @@ public class TestPerson extends BaseTestClass {
 		if (this == theObj) {
 			return true;
 		}
+		
 		if (!(theObj instanceof TestPerson)) {
 			return false;
 		}
 
 		final TestPerson aPerson = (TestPerson) theObj;
 
-		if (!BasicUtils.equalsOrNull(likesVideoGames, aPerson.likesVideoGames)) {
+		if (!BasicUtils.equalsOrNull(isLikesVideoGames(), aPerson.isLikesVideoGames())) {
 			return false;
 		}
-		if (!BasicUtils.equalsOrNull(aPerson.weight, weight)) {
+		if (!BasicUtils.equalsOrNull(aPerson.getWeight(), getWeight())) {
 			return false;
 		}
-		if (birthday != null ? !birthday.equals(aPerson.birthday) : aPerson.birthday != null) {
+		if (getBirthday() != null ? !getBirthday().equals(aPerson.getBirthday()) : aPerson.getBirthday() != null) {
 			return false;
 		}
-		if (firstName != null ? !firstName.equals(aPerson.firstName) : aPerson.firstName != null) {
+		if (getFirstName() != null ? !getFirstName().equals(aPerson.getFirstName()) : aPerson.getFirstName() != null) {
 			return false;
 		}
-		if (knows != null ? !knows.equals(aPerson.knows) : aPerson.knows != null) {
+		if (getKnows() != null ? !getKnows().equals(aPerson.getKnows()) : aPerson.getKnows() != null) {
 			return false;
 		}
-		if (lastName != null ? !lastName.equals(aPerson.lastName) : aPerson.lastName != null) {
+		if (getLastName() != null ? !getLastName().equals(aPerson.getLastName()) : aPerson.getLastName() != null) {
 			return false;
 		}
-		if (mbox != null ? !mbox.equals(aPerson.mbox) : aPerson.mbox != null) {
+		if (getMBox() != null ? !getMBox().equals(aPerson.getMBox()) : aPerson.getMBox() != null) {
 			return false;
 		}
-		if (name != null ? !name.equals(aPerson.name) : aPerson.name != null) {
+		if (getName() != null ? !getName().equals(aPerson.getName()) : aPerson.getName() != null) {
 			return false;
 		}
-		if (title != null ? !title.equals(aPerson.title) : aPerson.title != null) {
+		if (getTitle() != null ? !getTitle().equals(aPerson.getTitle()) : aPerson.getTitle() != null) {
 			return false;
 		}
-		if (weblogURI != null ? !weblogURI.equals(aPerson.weblogURI) : aPerson.weblogURI != null) {
+		if (getWeblogURI() != null ? !getWeblogURI().equals(aPerson.getWeblogURI()) : aPerson.getWeblogURI() != null) {
 			return false;
 		}
 
@@ -230,16 +231,16 @@ public class TestPerson extends BaseTestClass {
 
 	@Override
 	public int hashCode() {
-		int aResult = name != null ? name.hashCode() : 0;
-		aResult = 31 * aResult + (birthday != null ? birthday.hashCode() : 0);
-		aResult = 31 * aResult + (title != null ? title.hashCode() : 0);
-		aResult = 31 * aResult + (mbox != null ? mbox.hashCode() : 0);
-		aResult = 31 * aResult + (lastName != null ? lastName.hashCode() : 0);
-		aResult = 31 * aResult + (firstName != null ? firstName.hashCode() : 0);
-		aResult = 31 * aResult + (weblogURI != null ? weblogURI.hashCode() : 0);
-		aResult = 31 * aResult + (knows != null ? knows.hashCode() : 0);
-		aResult = 31 * aResult + (weight != null && weight != +0.0f ? Float.floatToIntBits(weight) : 0);
-		aResult = 31 * aResult + (likesVideoGames != null && likesVideoGames ? 1 : 0);
+		int aResult = getName() != null ? getName().hashCode() : 0;
+		aResult = 31 * aResult + (getBirthday() != null ? getBirthday().hashCode() : 0);
+		aResult = 31 * aResult + (getTitle() != null ? getTitle().hashCode() : 0);
+		aResult = 31 * aResult + (getMBox() != null ? getMBox().hashCode() : 0);
+		aResult = 31 * aResult + (getLastName() != null ? getLastName().hashCode() : 0);
+		aResult = 31 * aResult + (getFirstName() != null ? getFirstName().hashCode() : 0);
+		aResult = 31 * aResult + (getWeblogURI() != null ? getWeblogURI().hashCode() : 0);
+		aResult = 31 * aResult + (getKnows() != null ? getKnows().hashCode() : 0);
+		aResult = 31 * aResult + (getWeight() != null && getWeight() != +0.0f ? Float.floatToIntBits(getWeight()) : 0);
+		aResult = 31 * aResult + (isLikesVideoGames() != null && isLikesVideoGames() ? 1 : 0);
 		return aResult;
 	}
 }

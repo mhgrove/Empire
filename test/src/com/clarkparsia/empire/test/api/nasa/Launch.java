@@ -88,23 +88,23 @@ public class Launch extends BaseTestClass {
 		if (this == o) {
 			return true;
 		}
-		if (o == null || getClass() != o.getClass()) {
+		if (!(o instanceof Launch)) {
 			return false;
 		}
 
 		final Launch aLaunch = (Launch) o;
 
-		if (launchSite != null ? !launchSite.equals(aLaunch.launchSite) : aLaunch.launchSite != null) {
+		if (getLaunchSite() != null ? !getLaunchSite().equals(aLaunch.getLaunchSite()) : aLaunch.getLaunchSite() != null) {
 			return false;
 		}
-		if (launched != null ? !launched.equals(aLaunch.launched) : aLaunch.launched != null) {
+		if (getLaunched() != null ? !getLaunched().equals(aLaunch.getLaunched()) : aLaunch.getLaunched() != null) {
 			return false;
 		}
-		if (!((launchvehicle == null && aLaunch.launchvehicle == null) ||
-			(launchvehicle != null && aLaunch.launchvehicle != null && CollectionUtil.contentsEqual(launchvehicle, aLaunch.launchvehicle)))) {
+		if (!((getLaunchvehicle() == null && aLaunch.getLaunchvehicle() == null) ||
+			(getLaunchvehicle() != null && aLaunch.getLaunchvehicle() != null && CollectionUtil.contentsEqual(getLaunchvehicle(), aLaunch.getLaunchvehicle())))) {
 			return false;
 		}
-		if (spacecraft != null ? !spacecraft.equals(aLaunch.spacecraft) : aLaunch.spacecraft != null) {
+		if (getSpacecraft() != null ? !getSpacecraft().equals(aLaunch.getSpacecraft()) : aLaunch.getSpacecraft() != null) {
 			return false;
 		}
 		if (!BasicUtils.equalsOrNull(getRdfId(), aLaunch.getRdfId())) {

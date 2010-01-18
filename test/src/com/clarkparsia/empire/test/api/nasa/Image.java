@@ -78,19 +78,19 @@ public class Image extends BaseTestClass {
 		if (this == o) {
 			return true;
 		}
-		if (o == null || getClass() != o.getClass()) {
+		if (!(o instanceof Image)) {
 			return false;
 		}
 
 		final Image aImage = (Image) o;
 
-		if (depicts != null ? !depicts.equals(aImage.depicts) : aImage.depicts != null) {
+		if (getDepicts() != null ? !getDepicts().equals(aImage.getDepicts()) : aImage.getDepicts() != null) {
 			return false;
 		}
-		if (mURI != null ? !mURI.equals(aImage.mURI) : aImage.mURI != null) {
+		if (getURI() != null ? !getURI().equals(aImage.getURI()) : aImage.getURI() != null) {
 			return false;
 		}
-		if (thumbnail != null ? !thumbnail.equals(aImage.thumbnail) : aImage.thumbnail != null) {
+		if (getThumbnail() != null ? !getThumbnail().equals(aImage.getThumbnail()) : aImage.getThumbnail() != null) {
 			return false;
 		}
 		if (!BasicUtils.equalsOrNull(getRdfId(), aImage.getRdfId())) {

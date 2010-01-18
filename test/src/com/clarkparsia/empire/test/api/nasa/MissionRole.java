@@ -65,11 +65,11 @@ public class MissionRole extends BaseTestClass {
 		role = theRole;
 	}
 
-	public Mission getIssion() {
+	public Mission getMission() {
 		return mission;
 	}
 
-	public void setIssion(final Mission theIssion) {
+	public void setMission(final Mission theIssion) {
 		mission = theIssion;
 	}
 
@@ -100,16 +100,16 @@ public class MissionRole extends BaseTestClass {
 
 		final MissionRole that = (MissionRole) o;
 
-		if (actor != null ? !actor.equals(that.actor) : that.actor != null) {
+		if (getActor() != null ? !getActor().equals(that.getActor()) : that.getActor() != null) {
 			return false;
 		}
-		if (label != null ? !label.equals(that.label) : that.label != null) {
+		if (getLabel() != null ? !getLabel().equals(that.getLabel()) : that.getLabel() != null) {
 			return false;
 		}
-		if (mission != null ? !mission.equals(that.mission) : that.mission != null) {
+		if (getMission() != null ? !getMission().equals(that.getMission()) : that.getMission() != null) {
 			return false;
 		}
-		if (role != null ? !role.equals(that.role) : that.role != null) {
+		if (getRole() != null ? !getRole().equals(that.getRole()) : that.getRole() != null) {
 			return false;
 		}
 		if (!BasicUtils.equalsOrNull(getRdfId(), that.getRdfId())) {
@@ -121,10 +121,10 @@ public class MissionRole extends BaseTestClass {
 
 	@Override
 	public int hashCode() {
-		int aresult = role != null ? role.hashCode() : 0;
-		aresult = 31 * aresult + (mission != null ? mission.hashCode() : 0);
-		aresult = 31 * aresult + (label != null ? label.hashCode() : 0);
-		aresult = 31 * aresult + (actor != null ? actor.hashCode() : 0);
+		int aresult = getRole() != null ? getRole().hashCode() : 0;
+		aresult = 31 * aresult + (getMission() != null ? getMission().hashCode() : 0);
+		aresult = 31 * aresult + (getLabel() != null ? getLabel().hashCode() : 0);
+		aresult = 31 * aresult + (getActor() != null ? getActor().hashCode() : 0);
 		return aresult;
 	}
 }

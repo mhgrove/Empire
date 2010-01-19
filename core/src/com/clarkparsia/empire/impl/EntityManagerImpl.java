@@ -132,19 +132,11 @@ public class EntityManagerImpl implements EntityManager {
 		// TODO: support cascades of delete's -- when you delete a resource X, right now we just delete all the triples
 		// where X is the subject.  allow you to specify a cascade so you can remove all the triples where X is the object
 		// actually, we want all operations to be cascable (or not) via @CascadeType
-		// TODO: lazy loading of resources from database
 		// TODO: add an @RdfsLabel annotation that will use the value of a property as the label during annotation
-		// TODO: generation bean classes from rdfs/owl
-		//       -- generate interfaces, and implementations of said interfaces, which are composable to create composite instances (see use case below for the javassist framework)
 		// TODO: implement as many of the normal JPA annotations as possible/reasonable (like @Transient, @Enumerated, @ManyToOne) mapping to OWL/rdfs constructs as appropriate
 		//       -- need list of candidate annotations
 		// TODO: support for owl/rdfs annotations not mappable to JPA annotations such as min/max cardinality and others.
-		// TODO: use something like javassist to create instances of interfaces on the fly
-		// 		-- use case is instance foo is of rdf:type SportsTeam and Franchise, which have disjoint sets of properties.
-		//         we want the resulting instance to implement both of those interfaces and be able to be viewed as either
-		//         so possibly a polymorphic base class jena-style which will safely cast to each supported representation.
-		// TODO: test rdfgenerator w/ inheritance hierarchies. -- do the JPA inheritance options make sense in this context
-		// do we want to do anything special with MappedSuperclass?
+		// TODO: do we want to do anything special with MappedSuperclass?
 
 		mIsOpen = true;
 

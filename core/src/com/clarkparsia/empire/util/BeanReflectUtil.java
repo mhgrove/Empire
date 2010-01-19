@@ -3,6 +3,7 @@ package com.clarkparsia.empire.util;
 import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.InvalidRdfException;
 import com.clarkparsia.empire.annotation.RdfId;
+import com.clarkparsia.empire.EmpireOptions;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -43,7 +44,7 @@ public class BeanReflectUtil {
 			}
 		}
 
-		if (aIdField == null && theClass.getSuperclass() != null) {
+		if (EmpireOptions.INSPECT_BEAN_HIERARCHY && aIdField == null && theClass.getSuperclass() != null) {
 			aIdField = getIdField(theClass.getSuperclass());
 		}
 
@@ -64,11 +65,11 @@ public class BeanReflectUtil {
 			aAnnotation = (T) theClass.getAnnotation(theAnnotation);
 		}
 		else {
-			if (theClass.getSuperclass() != null) {
+			if (EmpireOptions.INSPECT_BEAN_HIERARCHY && theClass.getSuperclass() != null) {
 				aAnnotation = getAnnotation(theClass.getSuperclass(), theAnnotation);
 			}
 
-			if (aAnnotation == null && theClass.getInterfaces() != null) {
+			if (EmpireOptions.INSPECT_BEAN_HIERARCHY && aAnnotation == null) {
 				for (Class aInt : theClass.getInterfaces()) {
 					aAnnotation = getAnnotation(aInt, theAnnotation);
 
@@ -95,11 +96,11 @@ public class BeanReflectUtil {
 			aHasAnnotation = true;
 		}
 		else {
-			if (theClass.getSuperclass() != null) {
+			if (EmpireOptions.INSPECT_BEAN_HIERARCHY && theClass.getSuperclass() != null) {
 				aHasAnnotation = hasAnnotation(theClass.getSuperclass(), theAnnotation);
 			}
 
-			if (!aHasAnnotation && theClass.getInterfaces() != null) {
+			if (EmpireOptions.INSPECT_BEAN_HIERARCHY && !aHasAnnotation) {
 				for (Class aInt : theClass.getInterfaces()) {
 					aHasAnnotation = hasAnnotation(aInt, theAnnotation);
 
@@ -126,16 +127,6 @@ public class BeanReflectUtil {
 		theAccessor.setAccessible(theAccess);
 
         return aOldAccess;
-    }
-
-    /**
-     * Return whether or not the given accessor, either a {@link Field} or a {@link Method} is accessible
-     * @param theAccess the Field or Method
-     * @return true if its accessible, false otherwise, or if it is not a Field or Method
-     */
-	@Deprecated
-    public static boolean isAccessible(AccessibleObject theAccess) {
-		return theAccess.isAccessible();
     }
 
     /**
@@ -247,6 +238,16 @@ public class BeanReflectUtil {
 			}
 		}
 
+		if (EmpireOptions.INSPECT_BEAN_HIERARCHY) {
+			if (theClass.getSuperclass() != null) {
+				aMethods.addAll(getAnnotatedSetters(theClass.getSuperclass(), theInfer));
+			}
+
+			for (Class aInterface : theClass.getInterfaces()) {
+				aMethods.addAll(getAnnotatedSetters(aInterface, theInfer));
+			}
+		}
+
 		return aMethods;
 	}
 
@@ -314,6 +315,16 @@ public class BeanReflectUtil {
 			}
 		}
 
+		if (EmpireOptions.INSPECT_BEAN_HIERARCHY) {
+			if (theClass.getSuperclass() != null) {
+				aMethods.addAll(getAnnotatedGetters(theClass.getSuperclass(), theInfer));
+			}
+
+			for (Class aInterface : theClass.getInterfaces()) {
+				aMethods.addAll(getAnnotatedGetters(aInterface, theInfer));
+			}
+		}
+
 		return aMethods;
 	}
 
@@ -328,6 +339,16 @@ public class BeanReflectUtil {
 		for (Field aField : theClass.getDeclaredFields()) {
 			if (aField.getAnnotation(RdfProperty.class) != null) {
 				aProps.add(aField);
+			}
+		}
+
+		if (EmpireOptions.INSPECT_BEAN_HIERARCHY) {
+			if (theClass.getSuperclass() != null) {
+				aProps.addAll(getAnnotatedFields(theClass.getSuperclass()));
+			}
+
+			for (Class aInterface : theClass.getInterfaces()) {
+				aProps.addAll(getAnnotatedFields(aInterface));
 			}
 		}
 

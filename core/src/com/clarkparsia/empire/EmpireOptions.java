@@ -56,5 +56,11 @@ public class EmpireOptions {
 	 * the proxy objects are subclasses of the actual objects, you'll want to make sure that your equals method accepts
 	 * subclasses of the type rather than exact type matching.
 	 */
-	public static final boolean ENABLE_PROXY_OBJECTS = false;
+	public static boolean ENABLE_PROXY_OBJECTS = false;
+
+	/**
+	 * Controls whether or not the super class and interfaces of a bean class are inspected for annotations such as
+	 * {@link com.clarkparsia.empire.annotation.RdfProperty} or {@link com.clarkparsia.empire.annotation.RdfsClass}.
+	 */
+	public static boolean INSPECT_BEAN_HIERARCHY = true;
 }

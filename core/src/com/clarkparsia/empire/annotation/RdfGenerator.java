@@ -77,13 +77,13 @@ import com.clarkparsia.empire.annotation.runtime.Proxy;
 
 import com.clarkparsia.empire.impl.serql.SerqlDialect;
 
-import static com.clarkparsia.empire.util.BeanReflectUtil.isAccessible;
 import static com.clarkparsia.empire.util.BeanReflectUtil.set;
 import static com.clarkparsia.empire.util.BeanReflectUtil.setAccessible;
 import static com.clarkparsia.empire.util.BeanReflectUtil.getAnnotatedFields;
 import static com.clarkparsia.empire.util.BeanReflectUtil.getAnnotatedGetters;
 import static com.clarkparsia.empire.util.BeanReflectUtil.getAnnotatedSetters;
 import static com.clarkparsia.empire.util.BeanReflectUtil.get;
+
 import com.clarkparsia.empire.util.BeanReflectUtil;
 
 import javax.persistence.Entity;
@@ -162,7 +162,13 @@ public class RdfGenerator {
 		T aObj = null;
 
 		try {
-			aObj = theClass.newInstance();
+			if (theClass.isInterface()) {
+				aObj = com.clarkparsia.empire.codegen.InstanceGenerator.generateInstanceClass(theClass).newInstance();
+			}
+			else {
+				aObj = theClass.newInstance();
+			}
+
 			asSupportsRdfId(aObj).setRdfId(theURI);
 		}
 		catch (InstantiationException e) {
@@ -170,6 +176,9 @@ public class RdfGenerator {
 		}
 		catch (IllegalAccessException e) {
 			throw new InvalidRdfException("Could not access default constructor for class: " + theClass, e);
+		}
+		catch (Exception e) {
+			throw new InvalidRdfException("Cannot create an instance of bean", e);
 		}
 
 		return fromRdf(aObj, theURI, theSource);
@@ -451,7 +460,7 @@ public class RdfGenerator {
 				RdfProperty aPropertyAnnotation = getAnnotation(aAccess, RdfProperty.class);
 				URI aProperty = aBuilder.getSesameValueFactory().createURI(NamespaceUtils.uri(aPropertyAnnotation.value()));
 
-				boolean aOldAccess = isAccessible(aAccess);
+				boolean aOldAccess = aAccess.isAccessible();
 				setAccessible(aAccess, true);
 
 				Object aValue = get(aAccess, theObj);
@@ -681,6 +690,9 @@ public class RdfGenerator {
 					return new LinkedHashSet();
 				}
 			}
+			else if (Collection.class.equals(theValueType)) {
+				return new LinkedHashSet();
+			}
 			else {
 				// last option is Map, but i dunno what the hell to do in that case, it doesn't map to our use here.
 				throw new RuntimeException("Unknown or unsupported collection type for a field: " + theValueType);
@@ -799,7 +811,7 @@ public class RdfGenerator {
 					Class aClass = classFrom(mAccessor);
 
 					// TODO: this is brittle =(
-					if (java.net.URI.class.isAssignableFrom(aClass)) {
+					if (aClass.isAssignableFrom(java.net.URI.class)) {
 						return java.net.URI.create(aURI.getURI());
 					}
 					else if (Collection.class.isAssignableFrom(aClass)) {

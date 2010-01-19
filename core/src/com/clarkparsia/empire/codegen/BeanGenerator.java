@@ -35,6 +35,7 @@ import com.clarkparsia.utils.Predicate;
 import com.clarkparsia.utils.NamespaceUtils;
 import com.clarkparsia.utils.Function;
 import com.clarkparsia.utils.FunctionUtil;
+import com.clarkparsia.utils.BasicUtils;
 
 import com.clarkparsia.utils.io.IOUtil;
 
@@ -427,9 +428,28 @@ public class BeanGenerator {
 
 	public static void main(String[] args) throws Exception {
 		//aGraph.read(new URL("http://xmlns.com/foaf/spec/index.rdf").openStream());
-		File aOut = new File("/Users/mhgrove/work/GitHub/empire/core/src/com/clarkparsia/empire/codegen/test/");
+//		File aOut = new File("/Users/mhgrove/work/GitHub/empire/core/src/com/clarkparsia/empire/codegen/test/");
+//
+//		generateSourceFiles("com.clarkparsia.empire.codegen.test", new File("test/data/nasa.nt").toURI().toURL(), RDFFormat.NTRIPLES, aOut);
 
-		generateSourceFiles("com.clarkparsia.empire.codegen.test", new File("test/data/nasa.nt").toURI().toURL(), RDFFormat.NTRIPLES, aOut);
+		if (args.length < 4) {
+			System.err.println("Must provide four arguments to the program, the package name, ontology URL, rdf format of the ontology (rdfxml|turtle|ntriples), and the output directory for the source code.\n");
+			System.err.println("For example:\n");
+			System.err.println("\tBeanGenerator my.package.domain /usr/local/files/myontology.ttl turtle /usr/local/code/src/my/package/domain");
+
+			return;
+		}
+
+		URL aURL = null;
+
+		if (BasicUtils.isURL(args[1])) {
+			aURL = new URL(args[1]);
+		}
+		else {
+			aURL = new File(args[1]).toURI().toURL();
+		}
+
+		generateSourceFiles(args[0], aURL, RDFFormat.forValue(args[2]), new File(args[3]));
 	}
 
 	private static class StatementToObject implements Function<Statement, Value> {

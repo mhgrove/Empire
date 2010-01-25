@@ -53,8 +53,8 @@ public abstract class AbstractQueryFactory<T extends RdfQuery> implements QueryF
 	protected AbstractQueryFactory(final DataSource theSource) {
 		mSource = theSource;
 
-		Collection<Class> aClasses = EmpireOptions.ANNOTATION_PROVIDER.getClassesWithAnnotation(NamedQuery.class);
-		for (Class aClass :  aClasses) {
+		Collection<Class<?>> aClasses = EmpireOptions.ANNOTATION_PROVIDER.getClassesWithAnnotation(NamedQuery.class);
+		for (Class<?> aClass :  aClasses) {
 			// wtf why do i need a cast here?
 			NamedQuery aNamedQuery = (NamedQuery) aClass.getAnnotation(NamedQuery.class);
 

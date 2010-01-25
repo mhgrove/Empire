@@ -34,5 +34,5 @@ public interface EmpireAnnotationProvider {
 	 * @param theAnnotation the annotation to search for
 	 * @return the collection of classes with the given annotation
 	 */
-	public Collection<Class> getClassesWithAnnotation(Class<? extends Annotation> theAnnotation);
+	public Collection<Class<?>> getClassesWithAnnotation(Class<? extends Annotation> theAnnotation);
 }

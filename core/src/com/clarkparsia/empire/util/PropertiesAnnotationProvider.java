@@ -95,8 +95,8 @@ public class PropertiesAnnotationProvider implements EmpireAnnotationProvider {
 	/**
 	 * @inheritDoc
 	 */
-	public Collection<Class> getClassesWithAnnotation(final Class<? extends Annotation> theAnnotation) {
-		Set<Class> aClasses = new HashSet<Class>();
+	public Collection<Class<?>> getClassesWithAnnotation(final Class<? extends Annotation> theAnnotation) {
+		Set<Class<?>> aClasses = new HashSet<Class<?>>();
 
 		Properties aProps = getProperties();
 

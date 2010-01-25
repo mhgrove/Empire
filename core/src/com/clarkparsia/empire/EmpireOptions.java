@@ -17,6 +17,7 @@ package com.clarkparsia.empire;
 
 import com.clarkparsia.empire.util.PropertiesAnnotationProvider;
 import com.clarkparsia.empire.util.EmpireAnnotationProvider;
+import com.clarkparsia.empire.util.ReflectionsAnnotationProvider;
 
 /**
  * <p>Catch-all class for global Empire options and configuration</p>

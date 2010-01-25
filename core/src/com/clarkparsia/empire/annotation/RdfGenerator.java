@@ -55,6 +55,7 @@ import com.clarkparsia.sesame.utils.ExtendedGraph;
 
 import com.clarkparsia.utils.BasicUtils;
 import com.clarkparsia.utils.Function;
+import com.clarkparsia.utils.io.Encoder;
 
 import com.clarkparsia.utils.collections.CollectionUtil;
 
@@ -137,8 +138,8 @@ public class RdfGenerator {
 		NamespaceUtils.addNamespace("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#");
 		NamespaceUtils.addNamespace("owl", "http://www.w3.org/2002/07/owl#");
 
-		Collection<Class> aClasses = EmpireOptions.ANNOTATION_PROVIDER.getClassesWithAnnotation(RdfsClass.class);
-		for (Class aClass : aClasses) {
+		Collection<Class<?>> aClasses = EmpireOptions.ANNOTATION_PROVIDER.getClassesWithAnnotation(RdfsClass.class);
+		for (Class<?> aClass : aClasses) {
 			RdfsClass aAnnotation = (RdfsClass) aClass.getAnnotation(RdfsClass.class);
 
 			addNamespaces(aClass);
@@ -387,12 +388,20 @@ public class RdfGenerator {
 
 				Object aValObj = aIdField.get(theObj);
 
+				aValue = Encoder.urlEncode(aValObj.toString());
+
 				if (aValObj instanceof java.net.URI || BasicUtils.isURI(aValObj.toString())) {
-					aURI = SesameValueFactory.instance().createURI(java.net.URI.create(aValObj.toString()));
+					try {
+						aURI = SesameValueFactory.instance().createURI(java.net.URI.create(aValObj.toString()));
+					}
+					catch (IllegalArgumentException e) {
+						// sometimes sesame disagrees w/ Java about what a valid URI is.  so we'll have to try
+						// and construct a URI from the possible fragment
+						aURI = SesameValueFactory.instance().createURI(aNS + aValue);
+					}
 				}
 				else {
-					aValue = hash(aValObj);
-
+					//aValue = hash(aValObj);
 					aURI = SesameValueFactory.instance().createURI(aNS + aValue);
 				}
 			}

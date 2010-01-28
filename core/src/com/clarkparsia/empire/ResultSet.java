@@ -25,6 +25,9 @@ import java.util.Iterator;
  * are the names elements of the projection of the query and the values are the bindings for that particular
  * query solution.</p>
  *
+ * <p>Even though this implements Iterator, it is not expected for the remove method to have any result on the
+ * result set, or on the DataSource the results came from, the most likely implementation of the method is a no-op</p>
+ *
  * @author Michael Grove
  * @since 0.1
  */

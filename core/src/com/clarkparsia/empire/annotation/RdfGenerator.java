@@ -74,6 +74,7 @@ import com.clarkparsia.empire.DataSourceException;
 import com.clarkparsia.empire.EmpireOptions;
 import com.clarkparsia.empire.QueryException;
 import com.clarkparsia.empire.SupportsRdfId;
+import com.clarkparsia.empire.Empire;
 import com.clarkparsia.empire.annotation.runtime.Proxy;
 
 import com.clarkparsia.empire.impl.serql.SerqlDialect;
@@ -138,9 +139,9 @@ public class RdfGenerator {
 		NamespaceUtils.addNamespace("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#");
 		NamespaceUtils.addNamespace("owl", "http://www.w3.org/2002/07/owl#");
 
-		Collection<Class<?>> aClasses = EmpireOptions.ANNOTATION_PROVIDER.getClassesWithAnnotation(RdfsClass.class);
+		Collection<Class<?>> aClasses = Empire.get().getAnnotationProvider().getClassesWithAnnotation(RdfsClass.class);
 		for (Class<?> aClass : aClasses) {
-			RdfsClass aAnnotation = (RdfsClass) aClass.getAnnotation(RdfsClass.class);
+			RdfsClass aAnnotation = aClass.getAnnotation(RdfsClass.class);
 
 			addNamespaces(aClass);
 

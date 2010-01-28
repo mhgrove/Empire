@@ -76,7 +76,8 @@ public class SesameDataSourceFactory implements DataSourceFactory {
 	 */
 	public DataSource create(final Map<String, String> theMap) throws DataSourceException {
 		if (!canCreate(theMap)) {
-			throw new DataSourceException("Invalid parameter map");
+            // TODO: more detailed error message
+			throw new DataSourceException("Invalid parameter map: " + theMap);
 		}
 
 		String aUser = theMap.get(USER);

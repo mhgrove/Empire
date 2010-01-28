@@ -15,10 +15,14 @@
 
 package com.clarkparsia.empire.impl;
 
+import com.clarkparsia.empire.EmpireOptions;
 import com.clarkparsia.empire.MutableDataSource;
 import com.clarkparsia.empire.DataSource;
 import com.clarkparsia.empire.DataSourceFactory;
 import com.clarkparsia.empire.DataSourceException;
+import com.google.inject.Inject;
+import com.google.inject.Provider;
+import com.google.inject.assistedinject.Assisted;
 
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityManager;
@@ -38,7 +42,10 @@ import java.net.ConnectException;
  * @since 0.1
  */
 public class EntityManagerFactoryImpl implements EntityManagerFactory {
-	public static final String FACTORY = "factory";
+    public DataSourceFactory mDataSourceFactoryProvider;
+
+    //@Deprecated
+	//public static final String FACTORY = "factory";
 
 	/**
 	 * Whether or not this EntityManagerFactory is open.
@@ -52,9 +59,11 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory {
 
 	/**
 	 * Create a new AbstractEntityManagerFactory
-	 */
-	public EntityManagerFactoryImpl() {
+     * @param theProvider
+     */
+	public EntityManagerFactoryImpl(DataSourceFactory theProvider) {
 		mManagers = new HashSet<EntityManager>();
+        mDataSourceFactoryProvider = theProvider;
 	}
 
 	/**
@@ -64,25 +73,9 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory {
 	 * @throws IllegalArgumentException thrown if the map does not contain the required set of properties to
 	 * create a new instance of the EntityManager
 	 */
-	protected EntityManager newEntityManager(Map theMap) {
-		// TODO: should we re-use data source's here when possible?
-		DataSourceFactory aFactory = null;
-
-		if (theMap.containsKey(FACTORY)) {
-			// TODO: this could be cleaner...
-			try {
-				aFactory = (DataSourceFactory) Class.forName(theMap.get(FACTORY).toString()).newInstance();
-			}
-			catch (Throwable e) {
-				throw new IllegalArgumentException("There was an error while instantiating the DataSourceFactory");
-			}
-		}
-		else {
-			throw new IllegalArgumentException("No data source factory specified");
-		}
-
+	protected EntityManager newEntityManager(Map<String, String> theMap) {
 		try {
-			DataSource aSource = aFactory.create(theMap);
+			DataSource aSource = mDataSourceFactoryProvider.create(theMap);
 
 			if (!(aSource instanceof MutableDataSource)) {
 				throw new IllegalArgumentException("Cannot use Empire with a non-mutable Data source");

@@ -9,7 +9,7 @@
 	<property environment="env"/>
 
 	<property name="project.name" value="empire"/>
-	<property name="project.version" value="0.5.2"/>
+	<property name="project.version" value="0.6"/>
 
 	<property name="core.dir" location="core"/>
 	<property name="jena.dir" location="jena"/>
@@ -46,6 +46,7 @@
 		<pathelement location="${jena.build.dir}"/>
 		<pathelement location="${fourstore.build.dir}"/>
 		<pathelement location="${sesame.build.dir}"/>
+		<pathelement location="${test.build.dir}"/>
 
 		<fileset dir="${core.lib.dir}">
 			<include name="**/*.jar"/>
@@ -58,6 +59,11 @@
 		</fileset>
 
 		<fileset dir="${fourstore.lib.dir}">
+			<include name="**/*.jar"/>
+			<exclude name="**/${project.name}*.jar"/>
+		</fileset>
+
+		<fileset dir="${test.lib.dir}">
 			<include name="**/*.jar"/>
 			<exclude name="**/${project.name}*.jar"/>
 		</fileset>
@@ -232,6 +238,30 @@
 		<antcall target="zip"/>
 	</target>
 
+	<!--
+	********************* TEST **********************
+	-->
+
+	<target name="test" depends="dist">
+		<mkdir dir="dist/test-reports"/>
+  		<junit fork="yes" printsummary="no" haltonfailure="no">
+    		<batchtest fork="yes" toDir="dist/test-reports">
+      			<fileset dir="${test.src.dir}">
+       				<include name="com/clarkparsia/empire/test/Test*.java" />
+      			</fileset>
+    		</batchtest>
+    		<formatter type="xml" />
+
+    		<classpath refid="project.class.path"/>
+  		</junit>
+
+  		<junitreport todir="dist/test-reports">
+    		<fileset dir="dist/test-reports">
+      			<include name="TEST-*.xml" />
+    		</fileset>
+    		<report todir="dist/test-reports" />
+  		</junitreport>
+	</target>
 
 	<!--
 	******************** CLEAN ********************

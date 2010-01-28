@@ -15,8 +15,6 @@
 
 package com.clarkparsia.empire;
 
-import com.clarkparsia.empire.DataSource;
-
 import java.util.Map;
 
 /**

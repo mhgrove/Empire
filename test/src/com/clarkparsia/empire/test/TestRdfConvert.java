@@ -15,10 +15,14 @@
 
 package com.clarkparsia.empire.test;
 
-import com.sun.xml.internal.bind.v2.TODO;
-import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.fail;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import org.openrdf.model.impl.URIImpl;
 import com.clarkparsia.empire.EmpireOptions;
@@ -36,17 +40,11 @@ import com.clarkparsia.empire.SupportsRdfId;
 import com.clarkparsia.empire.DataSourceException;
 import com.clarkparsia.empire.test.api.TestDataSource;
 import com.clarkparsia.empire.test.api.TestVocab;
+import com.clarkparsia.empire.test.util.TestUtil;
 
 import java.net.URI;
 import java.util.Date;
 import java.util.List;
-
-import static junit.framework.Assert.assertNull;
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.fail;
-import static junit.framework.Assert.assertFalse;
-import static junit.framework.Assert.assertTrue;
-import junit.framework.TestSuite;
 
 import com.clarkparsia.utils.NamespaceUtils;
 import com.clarkparsia.utils.BasicUtils;
@@ -72,6 +70,8 @@ public class TestRdfConvert {
     @BeforeClass
     public static void beforeClass() {
         EmpireOptions.STRONG_TYPING = true;
+
+//		TestUtil.initEmpire();
     }
     
 	@Test(expected=InvalidRdfException.class)
@@ -173,7 +173,7 @@ public class TestRdfConvert {
 
 			aGraph = RdfGenerator.asRdf(aPerson);
 
-			assertEquals(Float.parseFloat(aGraph.getLiteral(aPersonURI, TestVocab.ontology().weight).getLabel()),
+			assertEquals((Float) Float.parseFloat(aGraph.getLiteral(aPersonURI, TestVocab.ontology().weight).getLabel()),
 						 aPerson.getWeight());
 
 			// this tests if "inferring" from an annotated getter works

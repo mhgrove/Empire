@@ -18,12 +18,12 @@ package com.clarkparsia.empire.test.api;
 import com.clarkparsia.empire.DataSourceFactory;
 import com.clarkparsia.empire.DataSource;
 import com.clarkparsia.empire.DataSourceException;
+import com.clarkparsia.openrdf.ExtGraph;
+import com.clarkparsia.utils.BasicUtils;
 
 import java.util.Map;
 import java.util.HashMap;
-import java.io.FileInputStream;
-
-import com.clarkparsia.sesame.utils.ExtendedGraph;
+import java.io.File;
 
 /**
  * <p>DataSourceFactory implementation which creates an instancoe of a MutableDataSource for testing.</p>
@@ -43,15 +43,15 @@ public class MutableTestDataSourceFactory implements DataSourceFactory {
 			return mSourceCache.get(theMap.get("files"));
 		}
 
-		ExtendedGraph aGraph = new ExtendedGraph();
+		ExtGraph aGraph = new ExtGraph();
 
 		if (theMap.containsKey("files")) {
-			for (String aFile : theMap.get("files").split(",")) {
+			for (String aFile : BasicUtils.split(theMap.get("files"), ",")) {
 				try {
-					aGraph.read(new FileInputStream(aFile.trim()));
+					aGraph.read(new File(aFile.trim()));
 				}
 				catch (Exception e) {
-					throw new DataSourceException(e);
+					throw new DataSourceException("Error reading file: " + aFile, e);
 				}
 			}
 		}

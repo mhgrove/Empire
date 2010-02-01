@@ -20,7 +20,7 @@ import java.util.Map;
 /**
  * <p>Factory interface for creating instances of a {@link DataSource}</p>
  *
- * @author Michael Grove <mike@clarkparsia.com>
+ * @author Michael Grove
  * @see DataSource
  * @since 0.1
  */

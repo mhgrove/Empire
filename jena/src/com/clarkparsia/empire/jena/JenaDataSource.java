@@ -60,13 +60,15 @@ public class JenaDataSource extends AbstractDataSource implements MutableDataSou
 	 * @inheritDoc
 	 */
 	public void connect() throws ConnectException {
-		// no-op
+		setConnected(true);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public void disconnect() {
+		setConnected(false);
+
 		mModel.close();
 	}
 
@@ -74,6 +76,8 @@ public class JenaDataSource extends AbstractDataSource implements MutableDataSou
 	 * @inheritDoc
 	 */
 	public ResultSet selectQuery(final String theQuery) throws QueryException {
+		assertConnected();
+
 		QueryExecution aQueryExec = query(theQuery);
 
 		return new JenaResultSet(aQueryExec, aQueryExec.execSelect());
@@ -83,6 +87,8 @@ public class JenaDataSource extends AbstractDataSource implements MutableDataSou
 	 * @inheritDoc
 	 */
 	public Graph graphQuery(final String theQuery) throws QueryException {
+		assertConnected();
+
 		QueryExecution aQueryExec = query(theQuery);
 
 		try {
@@ -94,6 +100,8 @@ public class JenaDataSource extends AbstractDataSource implements MutableDataSou
 	}
 
 	private QueryExecution query(final String theQuery) {
+		assertConnected();
+
 		return QueryExecutionFactory.create(QueryFactory.create(theQuery), mModel);
 	}
 
@@ -101,6 +109,8 @@ public class JenaDataSource extends AbstractDataSource implements MutableDataSou
 	 * @inheritDoc
 	 */
 	public Graph describe(final URI theURI) throws DataSourceException {
+		assertConnected();
+
 		QueryExecution aQueryExec = query("describe <" + theURI + ">");
 
 		try {
@@ -115,6 +125,8 @@ public class JenaDataSource extends AbstractDataSource implements MutableDataSou
 	 * @inheritDoc
 	 */
 	public void add(final Graph theGraph) throws DataSourceException {
+		assertConnected();
+
 		mModel.add(JenaSesameUtils.asJenaModel(theGraph));
 	}
 
@@ -122,6 +134,8 @@ public class JenaDataSource extends AbstractDataSource implements MutableDataSou
 	 * @inheritDoc
 	 */
 	public void remove(final Graph theGraph) throws DataSourceException {
+		assertConnected();
+
 		mModel.remove(JenaSesameUtils.asJenaModel(theGraph));
 	}
 

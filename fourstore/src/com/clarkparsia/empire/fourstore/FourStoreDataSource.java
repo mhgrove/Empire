@@ -20,13 +20,17 @@ import com.clarkparsia.empire.DataSourceException;
 import com.clarkparsia.empire.ResultSet;
 import com.clarkparsia.empire.QueryException;
 import com.clarkparsia.empire.SupportsNamedGraphs;
+import com.clarkparsia.empire.sesametwo.TupleQueryResultSet;
 
 import com.clarkparsia.empire.impl.AbstractDataSource;
-import com.clarkparsia.empire.fourstore.FourStoreResultSet;
+import com.clarkparsia.empire.impl.AbstractResultSet;
+
 import com.clarkparsia.empire.impl.sparql.SPARQLQueryFactory;
 
 import org.openrdf.model.Graph;
-import org.openrdf.sesame.constants.RDFFormat;
+import org.openrdf.model.impl.ValueFactoryImpl;
+import org.openrdf.rio.RDFFormat;
+
 import org.apache.log4j.Logger;
 import org.apache.log4j.LogManager;
 
@@ -38,11 +42,9 @@ import java.io.IOException;
 
 import com.clarkparsia.fourstore.api.Store;
 import com.clarkparsia.fourstore.api.StoreException;
-import com.clarkparsia.fourstore.api.Format;
 
-import com.clarkparsia.fourstore.impl.sesame.FourStoreToSesame;
-
-import com.clarkparsia.sesame.utils.SesameIO;
+import com.clarkparsia.openrdf.OpenRdfIO;
+import com.clarkparsia.openrdf.OpenRdfUtil;
 
 /**
  * <p>Implementation of a DataSource which is backed by a 4Store instance.</p>
@@ -110,7 +112,7 @@ public class FourStoreDataSource extends AbstractDataSource implements MutableDa
 	 */
 	public ResultSet selectQuery(final String theQuery) throws QueryException {
 		try {
-			return new FourStoreResultSet(mStore.query(theQuery));
+			return new TupleQueryResultSet(mStore.query(theQuery));
 		}
 		catch (com.clarkparsia.fourstore.api.QueryException e) {
 			throw new QueryException(e);
@@ -122,7 +124,7 @@ public class FourStoreDataSource extends AbstractDataSource implements MutableDa
 	 */
 	public Graph graphQuery(final String theQuery) throws QueryException {
 		try {
-			return FourStoreToSesame.toSesameGraph(mStore.constructQuery(theQuery));
+			return mStore.constructQuery(theQuery);
 		}
 		catch (com.clarkparsia.fourstore.api.QueryException e) {
 			throw new QueryException(e);
@@ -134,11 +136,9 @@ public class FourStoreDataSource extends AbstractDataSource implements MutableDa
 	 */
 	public Graph describe(final URI theURI) throws DataSourceException {
 		try {
-			//return FourStoreToSesame.toSesameGraph(mStore.describe(new FourStoreValueFactory().createURI(theURI.toString())));
-
 			// rasqal doesn't support describe, and thus, neither does 4store.  we'll do a poor man's implementation
 			// of it with a construct query
-			return FourStoreToSesame.toSesameGraph(mStore.constructQuery("construct { ?s ?p ?o }  where { ?s ?p ?o. filter(?s = <" + theURI + ">) } "));
+			return mStore.constructQuery("construct { ?s ?p ?o }  where { ?s ?p ?o. filter(?s = <" + theURI + ">) } ");
 		}
 		catch (com.clarkparsia.fourstore.api.QueryException e) {
 			throw new DataSourceException(e);
@@ -152,14 +152,14 @@ public class FourStoreDataSource extends AbstractDataSource implements MutableDa
 		StringWriter aWriter = new StringWriter();
 
 		try {
-			SesameIO.writeGraph(theGraph, aWriter, RDFFormat.TURTLE);
+			OpenRdfIO.writeGraph(theGraph, aWriter, RDFFormat.TURTLE);
 		}
 		catch (IOException e) {
 			throw new DataSourceException(e);
 		}
 
 		try {
-			mStore.append(aWriter.toString(), Format.Turtle, theGraphURI);
+			mStore.append(aWriter.toString(), RDFFormat.TURTLE, ValueFactoryImpl.getInstance().createURI(theGraphURI.toString()));
 		}
 		catch (StoreException e) {
 			// TODO: need a better way to detect this
@@ -167,7 +167,7 @@ public class FourStoreDataSource extends AbstractDataSource implements MutableDa
 				// kind of hacky, but if we're trying to append here and we get a not found message, this graph context
 				// does not yet exist, so lets try adding it
 				try {
-					mStore.add(aWriter.toString(), Format.Turtle, theGraphURI);
+					mStore.add(aWriter.toString(), RDFFormat.TURTLE, ValueFactoryImpl.getInstance().createURI(theGraphURI.toString()));
 				}
 				catch (StoreException ex) {
 					// now we definitely failed, but re-throw the original exception, that might be more relevant
@@ -192,7 +192,7 @@ public class FourStoreDataSource extends AbstractDataSource implements MutableDa
 	 */
 	public void remove(final URI theGraphURI, final Graph theGraph) throws DataSourceException {
 		try {
-			mStore.delete(theGraphURI);
+			mStore.delete(ValueFactoryImpl.getInstance().createURI(theGraphURI.toString()));
 		}
 		catch (StoreException e) {
 			throw new DataSourceException(e);

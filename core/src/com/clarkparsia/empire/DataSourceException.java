@@ -18,7 +18,7 @@ package com.clarkparsia.empire;
 /**
  * <p>Parent Exception for operations on a {@link com.clarkparsia.empire.DataSource}</p>
  *
- * @author Michael Grove <mike@clarkparsia.com>
+ * @author Michael Grove
  * @since 0.1
  * @see DataSource
  */

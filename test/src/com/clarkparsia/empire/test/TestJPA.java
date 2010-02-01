@@ -27,20 +27,21 @@ import org.junit.runners.Parameterized;
 import com.clarkparsia.empire.Empire;
 import com.clarkparsia.empire.DataSource;
 import com.clarkparsia.empire.EmpireOptions;
-
-import com.clarkparsia.empire.sesame.SesameDataSourceFactory;
+import com.clarkparsia.empire.jena.JenaInMemoryDataSourceFactory;
+import com.clarkparsia.empire.spi.EmpirePersistenceProvider;
+import com.clarkparsia.empire.sesametwo.RepositoryDataSourceFactory;
 
 import com.clarkparsia.empire.test.api.MutableTestDataSourceFactory;
 import com.clarkparsia.empire.test.api.TestEntityListener;
 import com.clarkparsia.empire.test.api.nasa.FoafPerson;
 import com.clarkparsia.empire.test.api.nasa.SpaceVocab;
 import com.clarkparsia.empire.test.api.nasa.Spacecraft;
-import com.clarkparsia.empire.test.util.TestUtil;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+import org.openrdf.model.impl.ValueFactoryImpl;
 
 import javax.persistence.EntityExistsException;
 import javax.persistence.EntityManager;
@@ -60,8 +61,6 @@ import java.util.Arrays;
 
 import java.net.URI;
 
-import com.clarkparsia.sesame.utils.SesameValueFactory;
-
 /**
  * <p>Tests for the JPA interface implementation bits</p>
  *
@@ -70,7 +69,8 @@ import com.clarkparsia.sesame.utils.SesameValueFactory;
 @RunWith(Parameterized.class)
 public class TestJPA  {
 	public static final String DATA_FILE = System.getProperty("test.data") != null ? System.getProperty("test.data") : "test/data/nasa.nt";
-	private static EntityManagerFactory mFactory;
+
+	private EntityManagerFactory mFactory;
 
     private EntityManager mManager;
 
@@ -86,6 +86,8 @@ public class TestJPA  {
 				   String theNativeQueryFragment, String theAgencyQuery, String theAgencyWildcardQuery,
 				   String theParameterizedQuery, String theQueryName) {
 
+		mFactory = Empire.get().persistenceProvider().createEntityManagerFactory("test", theConfig);
+
 		mManager = mFactory.createEntityManager(theConfig);
 		mTestQuery = theTestQuery;
 		mNativeQuery = theNativeQuery;
@@ -100,47 +102,51 @@ public class TestJPA  {
 	public static Collection configurations() {
 		return Arrays.asList(new Object[][] {
 				{ getLocalSesameTestConfigMap(), "from {result} <urn:prop> {y}",
-				  								 "select distinct result from {uri} <" + SpaceVocab.ontology().mass.getURI() + "> {result}",
-												 "from {uri} <" + SpaceVocab.ontology().mass.getURI() + "> {result}",
+				  								 "select distinct result from {uri} <" + SpaceVocab.ontology().mass + "> {result}",
+												 "from {uri} <" + SpaceVocab.ontology().mass + "> {result}",
 												 "from {result} <" + SpaceVocab.ontology().agency + "> {\"U.S.S.R\"}",
 												 "from {result} <" + SpaceVocab.ontology().agency + "> {??}",
 												 "from {result} <" + SpaceVocab.ontology().agency + "> {??}, {result} <" + SpaceVocab.ontology().alternateName + "> {??altName}",
 												 "sovietSpacecraft" },
+				{ getLocalSesameTwoTestConfigMap(), "from {result} <urn:prop> {y}",
+				  								 "select distinct result from {uri} <" + SpaceVocab.ontology().mass + "> {result}",
+												 "from {uri} <" + SpaceVocab.ontology().mass + "> {result}",
+												 "from {result} <" + SpaceVocab.ontology().agency + "> {\"U.S.S.R\"}",
+												 "from {result} <" + SpaceVocab.ontology().agency + "> {??}",
+												 "from {result} <" + SpaceVocab.ontology().agency + "> {??}, {result} <" + SpaceVocab.ontology().alternateName + "> {??altName}",
+												 "sovietSpacecraft" },
+
 // NOTE: don't forget to run TestUtil before testing 4store, the 4store db needs to be prepped.
 //				{ getFourStoreTestConfigMap(), "where { ?result <urn:prop> ?y }",
-//				  							   "select distinct ?result where { ?uri <" + SpaceVocab.ontology().mass.getURI() + "> ?result }",
-//											   "where { ?uri <" + SpaceVocab.ontology().mass.getURI() + "> ?result }",
+//				  							   "select distinct ?result where { ?uri <" + SpaceVocab.ontology().mass + "> ?result }",
+//											   "where { ?uri <" + SpaceVocab.ontology().mass + "> ?result }",
 //											   "where { ?result <" + SpaceVocab.ontology().agency + "> \"U.S.S.R\" }",
 //											   "where { ?result <" + SpaceVocab.ontology().agency + "> ?? }",
 //											   "where { ?result <" + SpaceVocab.ontology().agency + "> ??. ?result <" + SpaceVocab.ontology().alternateName + "> ??altName }",
 //											   "sovietSpacecraftSPARQL" }
 
-//				{ getLocalJenaTestConfigMap(), "where { ?result <urn:prop> ?y }",
-//				  							   "select distinct ?result where { ?uri <" + SpaceVocab.ontology().mass.getURI() + "> ?result }",
-//											   "where { ?uri <" + SpaceVocab.ontology().mass.getURI() + "> ?result }",
-//											   "where { ?result <" + SpaceVocab.ontology().agency + "> \"U.S.S.R\" }",
-//											   "where { ?result <" + SpaceVocab.ontology().agency + "> ?? }",
-//											   "where { ?result <" + SpaceVocab.ontology().agency + "> ??. ?result <" + SpaceVocab.ontology().alternateName + "> ??altName }",
-//											   "sovietSpacecraftSPARQL" }
+				{ getLocalJenaTestConfigMap(), "where { ?result <urn:prop> ?y }",
+				  							   "select distinct ?result where { ?uri <" + SpaceVocab.ontology().mass + "> ?result }",
+											   "where { ?uri <" + SpaceVocab.ontology().mass + "> ?result }",
+											   "where { ?result <" + SpaceVocab.ontology().agency + "> \"U.S.S.R\" }",
+											   "where { ?result <" + SpaceVocab.ontology().agency + "> ?? }",
+											   "where { ?result <" + SpaceVocab.ontology().agency + "> ??. ?result <" + SpaceVocab.ontology().alternateName + "> ??altName }",
+											   "sovietSpacecraftSPARQL" }
 		});
 	}
 
 	@BeforeClass
 	public static void beforeClass() {
+System.err.println("BEFORE CLASS");
         // our test data set doesn't type any literals, so we have to set to weak (no) typing
         // TODO: don't hard code this if we're doing tests w/ other datasets.
         EmpireOptions.STRONG_TYPING = false;
 
 //		TestUtil.initEmpire();
-
-		mFactory = Empire.get().persistenceProvider().createEntityManagerFactory("test",
-																				  Collections.singletonMap("factory", MutableTestDataSourceFactory.class.getName()));
 	}
 
 	@AfterClass
 	public static void afterClass() {
-		mFactory.close();
-
 //		Empire.close();
 	}
 
@@ -475,7 +481,7 @@ public class TestJPA  {
 
         // creating a value object here because our dataset doesnt type any literals, so the automatic typing of a
         // plain string, or double or whatever (string in this case) will not return results, so we have to do it the long way.
-        aQuery.setParameter(1, SesameValueFactory.instance().createLiteral("U.S.S.R"));
+        aQuery.setParameter(1, ValueFactoryImpl.getInstance().createLiteral("U.S.S.R"));
 
         aResults = aQuery.getResultList();
 
@@ -492,7 +498,7 @@ public class TestJPA  {
             // this is what we'd expect
         }
 
-        aQuery.setParameter(1, SesameValueFactory.instance().createLiteral("zjlkdiouasdfuoi"));
+        aQuery.setParameter(1, ValueFactoryImpl.getInstance().createLiteral("zjlkdiouasdfuoi"));
 
         try {
             aQuery.getSingleResult();
@@ -505,8 +511,8 @@ public class TestJPA  {
         aQuery = mManager.createNativeQuery(mParameterizedQuery,
                                             Spacecraft.class);
 
-        aQuery.setParameter(1, SesameValueFactory.instance().createLiteral("U.S.S.R"));
-        aQuery.setParameter("altName", SesameValueFactory.instance().createLiteral("00001"));
+        aQuery.setParameter(1, ValueFactoryImpl.getInstance().createLiteral("U.S.S.R"));
+        aQuery.setParameter("altName", ValueFactoryImpl.getInstance().createLiteral("00001"));
 
         Object aObj = aQuery.getSingleResult();
 
@@ -614,8 +620,19 @@ public class TestJPA  {
 	private static Map<String, String> getTestEMConfigMap() {
 		Map<String, String> aMap = new HashMap<String, String>();
 
-//		aMap.put(EntityManagerFactoryImpl.FACTORY, SesameDataSourceFactory.class.getName());
-		aMap.put(SesameDataSourceFactory.REPO, "test-repo");
+		aMap.put(EmpirePersistenceProvider.FACTORY, RepositoryDataSourceFactory.class.getName());
+		aMap.put(RepositoryDataSourceFactory.REPO, "test-repo");
+		aMap.put(RepositoryDataSourceFactory.FILES, "");
+
+		return aMap;
+	}
+
+	private static Map<String, String> getLocalSesameTwoTestConfigMap() {
+		Map<String, String> aMap = new HashMap<String, String>();
+
+		aMap.put(EmpirePersistenceProvider.FACTORY, RepositoryDataSourceFactory.class.getName());
+
+		aMap.put("files", DATA_FILE);
 
 		return aMap;
 	}
@@ -623,7 +640,7 @@ public class TestJPA  {
 	private static Map<String, String> getLocalSesameTestConfigMap() {
 		Map<String, String> aMap = new HashMap<String, String>();
 
-//		aMap.put(EntityManagerFactoryImpl.FACTORY, MutableTestDataSourceFactory.class.getName());
+		aMap.put(EmpirePersistenceProvider.FACTORY, MutableTestDataSourceFactory.class.getName());
 
 		aMap.put("files", DATA_FILE);
 
@@ -633,7 +650,7 @@ public class TestJPA  {
 	private static Map<String, String> getLocalJenaTestConfigMap() {
 		Map<String, String> aMap = new HashMap<String, String>();
 
-//		aMap.put(EntityManagerFactoryImpl.FACTORY, JenaInMemoryDataSourceFactory.class.getName());
+		aMap.put(EmpirePersistenceProvider.FACTORY, JenaInMemoryDataSourceFactory.class.getName());
 
 		aMap.put("files", DATA_FILE);
 
@@ -643,7 +660,7 @@ public class TestJPA  {
 //	private static Map<String, String> getFourStoreTestConfigMap() {
 //		Map<String, String> aMap = new HashMap<String, String>();
 //
-//		aMap.put(EntityManagerFactoryImpl.FACTORY, FourStoreDataSourceFactory.class.getName());
+//		aMap.put(EmpirePersistenceProvider.FACTORY, FourStoreDataSourceFactory.class.getName());
 //
 //		aMap.put(FourStoreDataSourceFactory.KEY_URL, "http://localhost:4040");
 //

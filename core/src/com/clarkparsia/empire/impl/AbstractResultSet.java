@@ -16,9 +16,10 @@
 package com.clarkparsia.empire.impl;
 
 import com.clarkparsia.empire.ResultSet;
-import com.clarkparsia.sesame.utils.query.Binding;
 
 import java.util.Iterator;
+
+import org.openrdf.query.BindingSet;
 
 /**
  * <p>Abstract implementation of the {@link ResultSet} interface that is an adapter for the underlying Iterator.</p>
@@ -31,13 +32,13 @@ public abstract class AbstractResultSet implements ResultSet {
 	/**
 	 * The underlying iterator
 	 */
-	private Iterator<Binding> mIter;
+	private Iterator<BindingSet> mIter;
 
 	/**
 	 * Create a new AbstractResultSet
 	 * @param theIter the iterator to back this result set.
 	 */
-	public AbstractResultSet(final Iterator<Binding> theIter) {
+	public AbstractResultSet(final Iterator<BindingSet> theIter) {
 		mIter = theIter;
 	}
 
@@ -51,7 +52,7 @@ public abstract class AbstractResultSet implements ResultSet {
 	/**
 	 * @inheritDoc
 	 */
-	public Binding next() {
+	public BindingSet next() {
 		return mIter.next();
 	}
 

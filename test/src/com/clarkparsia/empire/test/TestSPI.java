@@ -26,28 +26,31 @@ import com.clarkparsia.empire.test.api.TestDataSourceFactory;
 import java.util.Collections;
 
 /**
- * <p></p>
+ * <p>Test the Empire SPI code.</p>
  *
  * @author Michael Grove
+ * @since 0.6
  */
 public class TestSPI {
+	// TODO: we could use some more tests here...
+
 	@Test
 	public void testInvalidFactory() {
-		assertTrue(null == Empire.get().persistenceProvider().createEntityManagerFactory("no a factory", Collections.singletonMap("factory", "not a factory class name")));
-//		mFactory.createEntityManager(Collections.singletonMap(EntityManagerFactoryImpl.FACTORY, "Not.a.class.name"));
+		assertTrue(null == Empire.get().persistenceProvider().createEntityManagerFactory("no a factory",
+																						 Collections.singletonMap("factory",
+																												  "not a factory class name")));
 	}
 
 	@Test
 	public void testNoFactory() {
-//		mFactory.createEntityManager();
-		assertTrue(null == Empire.get().persistenceProvider().createEntityManagerFactory("no a factory", Collections.EMPTY_MAP));
+		assertTrue(null == Empire.get().persistenceProvider().createEntityManagerFactory("no a factory",
+																						 Collections.emptyMap()));
 	}
 
 	@Test
 	public void testNotMutableDataSource() {
-//		mFactory.createEntityManager(Collections.singletonMap(EntityManagerFactoryImpl.FACTORY,
-//															  TestDataSourceFactory.class.getName()));
-
-		assertTrue(null == Empire.get().persistenceProvider().createEntityManagerFactory("not mutable", Collections.singletonMap("factory", TestDataSourceFactory.class.getName())));
+		assertTrue(null == Empire.get().persistenceProvider().createEntityManagerFactory("not mutable",
+																						 Collections.singletonMap("factory",
+																												  TestDataSourceFactory.class.getName())));
 	}
 }

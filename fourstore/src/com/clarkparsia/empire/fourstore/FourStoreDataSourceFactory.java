@@ -24,7 +24,6 @@ import java.net.URL;
 import java.net.MalformedURLException;
 
 import com.clarkparsia.utils.BasicUtils;
-import com.clarkparsia.empire.fourstore.FourStoreDataSource;
 
 import com.clarkparsia.fourstore.impl.StoreFactory;
 import com.clarkparsia.fourstore.api.Store;

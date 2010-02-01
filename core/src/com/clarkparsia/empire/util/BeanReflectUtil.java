@@ -73,11 +73,11 @@ public class BeanReflectUtil {
 	 * @param theAnnotation the annotation to retrieve
 	 * @return the class's annotation, or it's "inherited" annotation, or null if the annotation cannot be found.
 	 */
-	public static <T extends Annotation> T getAnnotation(Class theClass, Class<T> theAnnotation) {
+	public static <T extends Annotation> T getAnnotation(Class<?> theClass, Class<T> theAnnotation) {
 		T aAnnotation = null;
 
 		if (theClass.isAnnotationPresent(theAnnotation)) {
-			aAnnotation = (T) theClass.getAnnotation(theAnnotation);
+			aAnnotation = theClass.getAnnotation(theAnnotation);
 		}
 		else {
 			if (EmpireOptions.INSPECT_BEAN_HIERARCHY && theClass.getSuperclass() != null) {

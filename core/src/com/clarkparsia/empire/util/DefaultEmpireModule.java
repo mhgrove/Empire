@@ -20,7 +20,7 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 import com.clarkparsia.empire.DataSourceFactory;
-import com.clarkparsia.empire.sesame.SesameDataSourceFactory;
+import com.clarkparsia.empire.sesametwo.RepositoryDataSourceFactory;
 
 import java.util.Map;
 import java.util.Properties;
@@ -80,6 +80,10 @@ public class DefaultEmpireModule extends AbstractModule {
 		}
 	}
 
+	/**
+	 * Create a new DefaultEmpireModule
+	 * @param theConfig the container config
+	 */
 	public DefaultEmpireModule(final Map<String, String> theConfig) {
 		mConfig = theConfig;
 	}
@@ -89,21 +93,9 @@ public class DefaultEmpireModule extends AbstractModule {
 	  */
 	 @Override
 	 protected void configure() {
-//            bind(Map.class).annotatedWith(Names.named("ec")).toInstance(mConfig);
 		 bind(new TypeLiteral<Map<String, String>>(){}).annotatedWith(Names.named("ec")).toInstance(mConfig);
 
-
+		 // todo: should this be based on what's in the config file?
 		 bind(EmpireAnnotationProvider.class).to(PropertiesAnnotationProvider.class);
-//            bind(EntityManagerFactory.class).to(EntityManagerFactoryImpl.class);
-
-		 // bind default data source
-		// each plugin's module would do this, but for now, lets do it all here.
-		Multibinder<DataSourceFactory> aBinder = Multibinder.newSetBinder(binder(), DataSourceFactory.class);
-
-		aBinder.addBinding().to(SesameDataSourceFactory.class);
-//            aBinder.addBinding().to(JenaInMemoryDataSourceFactory.class);
-//            aBinder.addBinding().to(FourStoreDataSourceFactory.class);
-
-//			 requestStaticInjection(EmpireOptions.class);
 	 }
  }

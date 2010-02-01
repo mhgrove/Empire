@@ -13,27 +13,28 @@
  * limitations under the License.
  */
 
-package com.clarkparsia.empire.test.api;
+package com.clarkparsia.empire.jena;
 
-import org.openrdf.model.URI;
-import com.clarkparsia.openrdf.vocabulary.Vocabulary;
+import com.google.inject.multibindings.Multibinder;
+
+import com.google.inject.AbstractModule;
+
+import com.clarkparsia.empire.DataSourceFactory;
 
 /**
- * <p>Test Vocabulary constants</a>
+ * <p>Guice module for installing the Jena 'plugin' for Empire.</p>
  *
  * @author Michael Grove
+ * @since 0.6
  */
-public class TestVocab extends Vocabulary {
-	private static final TestVocab VOCAB = new TestVocab();
+public class JenaEmpireModule extends AbstractModule {
 
-    private TestVocab() {
-        super("http://clarkparsia.com/empire/test/");
-    }
-
-    public static TestVocab ontology() {
-        return VOCAB;
-    }
-
-    public final URI weight = term("weight");
-	public final URI likesVideoGames = term("likesVideoGames");
+	/**
+	 * @inheritDoc
+	 */
+	@Override
+	protected void configure() {
+		Multibinder.newSetBinder(binder(), DataSourceFactory.class)
+				.addBinding().to(JenaInMemoryDataSourceFactory.class);
+	}
 }

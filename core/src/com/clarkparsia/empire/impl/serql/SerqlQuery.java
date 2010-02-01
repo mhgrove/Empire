@@ -15,11 +15,14 @@
 
 package com.clarkparsia.empire.impl.serql;
 
-import com.clarkparsia.sesame.utils.query.SesameQueryUtils;
 import com.clarkparsia.empire.DataSource;
+
 import org.openrdf.model.Value;
-import org.openrdf.sesame.query.MalformedQueryException;
+import org.openrdf.query.parser.serql.SeRQLParserFactory;
+import org.openrdf.query.MalformedQueryException;
+
 import com.clarkparsia.empire.impl.RdfQuery;
+import com.clarkparsia.openrdf.OpenRdfUtil;
 
 /**
  * <p>Extends the {@link com.clarkparsia.empire.impl.RdfQuery} class to provide support for queries in the
@@ -45,7 +48,7 @@ public class SerqlQuery extends RdfQuery {
 	 */
 	@Override
 	protected String asQueryString(final Value theValue) {
-		return SesameQueryUtils.getQueryString(theValue);
+		return OpenRdfUtil.getQueryString(theValue);
 	}
 
 	/**
@@ -65,15 +68,10 @@ public class SerqlQuery extends RdfQuery {
 		}
 
 		try {
-			if (aQuery.startsWith("select")) {
-				SesameQueryUtils.tableQuery(aQuery);
-			}
-			else {
-				SesameQueryUtils.graphQuery(aQuery);
-			}
+			new SeRQLParserFactory().getParser().parseQuery(aQuery, "");
 		}
 		catch (MalformedQueryException e) {
-			throw new IllegalArgumentException(e);
+			throw new IllegalArgumentException("Invalid query: " + aQuery, e);
 		}
 	}
 

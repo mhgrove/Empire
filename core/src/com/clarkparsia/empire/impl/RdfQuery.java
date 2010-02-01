@@ -15,22 +15,22 @@
 
 package com.clarkparsia.empire.impl;
 
-import com.clarkparsia.sesame.utils.SesameValueFactory;
-import com.clarkparsia.sesame.utils.query.Binding;
-
 import com.clarkparsia.utils.BasicUtils;
 import com.clarkparsia.utils.collections.CollectionUtil;
 
 import org.openrdf.model.Graph;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
-import org.openrdf.vocabulary.XmlSchema;
+import org.openrdf.model.vocabulary.XMLSchema;
+import org.openrdf.model.impl.ValueFactoryImpl;
+import org.openrdf.query.BindingSet;
 
 import com.clarkparsia.empire.DataSource;
 import com.clarkparsia.empire.ResultSet;
 import com.clarkparsia.empire.SupportsRdfId;
 import com.clarkparsia.empire.annotation.RdfGenerator;
 import com.clarkparsia.empire.annotation.RdfsClass;
+import com.clarkparsia.openrdf.ExtBindingSet;
 
 import javax.persistence.Entity;
 import javax.persistence.FlushModeType;
@@ -294,17 +294,19 @@ public abstract class RdfQuery implements Query {
 					// back as the result set, you *MUST* have a var in the projection called 'result' which is
 					// the URI of the things you want to get back; when you don't do this, we prefix your partial query
 					// with this string
-					for (Binding aBinding : CollectionUtil.iterable(aResults)) {
+					for (BindingSet aBS : CollectionUtil.iterable(aResults)) {
+						ExtBindingSet aBinding = new ExtBindingSet(aBS);
+
 						Object aObj = null;
 
-                        if (aBinding.get(MAGIC_PROJECTION_VAR) instanceof URI && isEmpireCompatible(mClass)) {
+                        if (aBinding.getValue(MAGIC_PROJECTION_VAR) instanceof URI && isEmpireCompatible(mClass)) {
                             aObj = RdfGenerator.fromRdf(mClass,
-                                                        java.net.URI.create(aBinding.getURI(MAGIC_PROJECTION_VAR).getURI()),
+                                                        java.net.URI.create(aBinding.getURI(MAGIC_PROJECTION_VAR).toString()),
                                                         getSource());
                         }
                         else {
                             aObj = new RdfGenerator.ValueToObject(getSource(), null,
-                                                                  mClass, null).apply(aBinding.get(MAGIC_PROJECTION_VAR));
+                                                                  mClass, null).apply(aBinding.getValue(MAGIC_PROJECTION_VAR));
                         }
 
 						if (aObj == null || !mClass.isInstance(aObj)) {
@@ -479,13 +481,13 @@ public abstract class RdfQuery implements Query {
 
 		switch (theTemporalType) {
 			case DATE:
-				aValue = SesameValueFactory.instance().createTypedLiteral(theDate.getTime());
+				aValue = ValueFactoryImpl.getInstance().createLiteral(BasicUtils.date(theDate.getTime()), XMLSchema.DATE);
 				break;
 			case TIME:
-				aValue = SesameValueFactory.instance().createLiteral(BasicUtils.datetime(theDate.getTime()), XmlSchema.TIME);
+				aValue = ValueFactoryImpl.getInstance().createLiteral(BasicUtils.datetime(theDate.getTime()), XMLSchema.TIME);
 				break;
 			case TIMESTAMP:
-				aValue = SesameValueFactory.instance().createLiteral("" + theDate.getTime().getTime(), XmlSchema.TIME);
+				aValue = ValueFactoryImpl.getInstance().createLiteral("" + theDate.getTime().getTime(), XMLSchema.TIME);
 				break;
 		}
 

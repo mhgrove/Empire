@@ -15,28 +15,26 @@
 
 package com.clarkparsia.empire.test.api;
 
-import com.clarkparsia.sesame.repository.ExtendedSesameRepository;
-
-import com.clarkparsia.sesame.utils.SesameUtils;
-import com.clarkparsia.sesame.utils.SesameValueFactory;
-import com.clarkparsia.sesame.utils.query.SesameQuery;
-
 import org.openrdf.model.Graph;
 
 import org.openrdf.model.impl.GraphImpl;
-
-import org.openrdf.sesame.query.MalformedQueryException;
-import org.openrdf.sesame.query.QueryEvaluationException;
+import org.openrdf.model.impl.ValueFactoryImpl;
+import org.openrdf.query.MalformedQueryException;
+import org.openrdf.query.QueryEvaluationException;
 
 import com.clarkparsia.empire.DataSource;
 import com.clarkparsia.empire.DataSourceException;
 import com.clarkparsia.empire.QueryException;
 import com.clarkparsia.empire.ResultSet;
-
-import com.clarkparsia.empire.sesame.SesameResultSet;
+import com.clarkparsia.empire.sesametwo.TupleQueryResultSet;
 
 import com.clarkparsia.empire.impl.AbstractDataSource;
+
 import com.clarkparsia.empire.impl.serql.SerqlQueryFactory;
+
+import com.clarkparsia.openrdf.ExtRepository;
+import com.clarkparsia.openrdf.OpenRdfUtil;
+import com.clarkparsia.openrdf.SesameQuery;
 
 import java.net.URI;
 import java.net.ConnectException;
@@ -47,14 +45,14 @@ import java.net.ConnectException;
  * @author Michael Grove
  */
 public class TestDataSource extends AbstractDataSource implements DataSource {
-	private ExtendedSesameRepository mRepo;
+	private ExtRepository mRepo;
 
 	public TestDataSource() {
 		this(new GraphImpl());
 	}
 
 	public TestDataSource(Graph theGraph) {
-		mRepo = new ExtendedSesameRepository(SesameUtils.createInMemSource());
+		mRepo = OpenRdfUtil.createInMemoryRepo();
 
 		try {
 			mRepo.addGraph(theGraph);
@@ -66,7 +64,7 @@ public class TestDataSource extends AbstractDataSource implements DataSource {
         setQueryFactory(new SerqlQueryFactory(this));
 	}
 
-	protected ExtendedSesameRepository getRepository() {
+	protected ExtRepository getRepository() {
 		return mRepo;
 	}
 
@@ -74,14 +72,12 @@ public class TestDataSource extends AbstractDataSource implements DataSource {
 	 * @inheritDoc
 	 */
 	public void connect() throws ConnectException {
-		//To change body of implemented methods use File | Settings | File Templates.
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public void disconnect() {
-		//To change body of implemented methods use File | Settings | File Templates.
 	}
 
 	/**
@@ -89,7 +85,7 @@ public class TestDataSource extends AbstractDataSource implements DataSource {
 	 */
 	public ResultSet selectQuery(final String theQuery) throws QueryException {
 		try {
-			return new SesameResultSet(mRepo.performSelectQuery(SesameQuery.serql(theQuery)));
+			return new TupleQueryResultSet(mRepo.selectQuery(SesameQuery.serql(theQuery)));
 		}
 		catch (MalformedQueryException e) {
 			throw new QueryException("Unsupported or invalid SeRQL query.", e);
@@ -107,7 +103,7 @@ public class TestDataSource extends AbstractDataSource implements DataSource {
 	 */
 	public Graph graphQuery(final String theQuery) throws QueryException {
 		try {
-			return mRepo.performConstructQuery(SesameQuery.serql(theQuery));
+			return mRepo.constructQuery(SesameQuery.serql(theQuery));
 		}
 		catch (MalformedQueryException e) {
 			throw new QueryException("Unsupported or invalid SeRQL query.", e);
@@ -124,6 +120,6 @@ public class TestDataSource extends AbstractDataSource implements DataSource {
 	 * @inheritDoc
 	 */
 	public Graph describe(final URI theURI) throws DataSourceException {
-		return mRepo.describe(SesameValueFactory.instance().createURI(theURI));
+		return mRepo.describe(ValueFactoryImpl.getInstance().createURI(theURI.toString()));
 	}
 }

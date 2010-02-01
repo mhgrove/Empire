@@ -13,27 +13,24 @@
  * limitations under the License.
  */
 
-package com.clarkparsia.empire.test.api;
+package com.clarkparsia.empire.sesametwo;
 
-import org.openrdf.model.URI;
-import com.clarkparsia.openrdf.vocabulary.Vocabulary;
+import com.google.inject.AbstractModule;
+import com.google.inject.multibindings.Multibinder;
+import com.clarkparsia.empire.DataSourceFactory;
 
 /**
- * <p>Test Vocabulary constants</a>
+ * <p>Guice module for the Sesame 2.x plugin.</p>
  *
  * @author Michael Grove
  */
-public class TestVocab extends Vocabulary {
-	private static final TestVocab VOCAB = new TestVocab();
-
-    private TestVocab() {
-        super("http://clarkparsia.com/empire/test/");
-    }
-
-    public static TestVocab ontology() {
-        return VOCAB;
-    }
-
-    public final URI weight = term("weight");
-	public final URI likesVideoGames = term("likesVideoGames");
+public class OpenRdfEmpireModule extends AbstractModule {
+	/**
+	 * @inheritDoc
+	 */
+	@Override
+	protected void configure() {
+		Multibinder.newSetBinder(binder(), DataSourceFactory.class)
+				.addBinding().to(RepositoryDataSourceFactory.class);
+	}
 }

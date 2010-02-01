@@ -16,6 +16,9 @@
 package com.clarkparsia.empire.test;
 
 import com.clarkparsia.empire.Empire;
+import com.clarkparsia.empire.fourstore.FourStoreEmpireModule;
+import com.clarkparsia.empire.sesametwo.OpenRdfEmpireModule;
+import com.clarkparsia.empire.jena.JenaEmpireModule;
 import com.clarkparsia.empire.util.DefaultEmpireModule;
 import com.clarkparsia.empire.test.util.TestModule;
 
@@ -29,35 +32,22 @@ import org.junit.BeforeClass;
 import org.junit.AfterClass;
 
 /**
- * <p>JUnit 3.8 style suite runner.  Also includes a main that prints the bare minimum of statistics.</p>
+ * <p>Empire test suite.</p>
  *
  * @author Michael Grove
+ * @since 0.6
  */
-//@Deprecated
 @RunWith(Suite.class)
 @Suite.SuiteClasses({TestRdfConvert.class, TestJPA.class, TestSPI.class})
 public class EmpireTestSuite {
 	@BeforeClass
 	public static void beforeClass () {
-		Empire.init(new DefaultEmpireModule(), new TestModule());
+		Empire.init(new DefaultEmpireModule(), new OpenRdfEmpireModule(), new FourStoreEmpireModule(),
+					new JenaEmpireModule(), new TestModule());
 	}
 
 	@AfterClass
 	public static void afterClass() {
 		Empire.close();
 	}
-
-//	public static void main(String[] args) {
-//		Empire.init(new DefaultEmpireModule(), new TestModule());
-//
-//		System.err.println(formatResult(JUnitCore.runClasses(TestRdfConvert.class, TestSPI.class)));
-//	}
-//
-//	private static String formatResult(final Result theResult) {
-//		StringBuffer aBuffer = new StringBuffer();
-//		aBuffer.append("Success: " ).append(theResult.getRunCount()).append("\n");
-//		aBuffer.append("Failures: " ).append(theResult.getFailureCount()).append("\n");
-//		aBuffer.append("Ignore: " ).append(theResult.getIgnoreCount()).append("\n");
-//		return aBuffer.toString();
-//	}
 }

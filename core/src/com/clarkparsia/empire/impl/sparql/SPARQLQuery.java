@@ -15,10 +15,12 @@
 
 package com.clarkparsia.empire.impl.sparql;
 
-import com.clarkparsia.sesame.utils.query.SPARQLQueryRenderer;
 import org.openrdf.model.Value;
+
 import com.clarkparsia.empire.DataSource;
 import com.clarkparsia.empire.impl.RdfQuery;
+
+import com.clarkparsia.openrdf.OpenRdfUtil;
 
 /**
  * <p>Extends the {@link com.clarkparsia.empire.impl.RdfQuery} class to provide support for queries in the SPARQL language.</p>
@@ -41,7 +43,7 @@ public class SPARQLQuery extends RdfQuery {
 	 */
 	@Override
 	protected String asQueryString(final Value theValue) {
-		return SPARQLQueryRenderer.getSPARQLQueryString(theValue);
+		return OpenRdfUtil.getQueryString(theValue);
 	}
 
 	/**

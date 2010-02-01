@@ -243,4 +243,24 @@ public class TestPerson extends BaseTestClass {
 		aResult = 31 * aResult + (isLikesVideoGames() != null && isLikesVideoGames() ? 1 : 0);
 		return aResult;
 	}
+
+	public String toString() {
+		StringBuffer aBuffer = new StringBuffer();
+
+		aBuffer.append("First name: ").append(getFirstName()).append("\n");
+		aBuffer.append("Last name: ").append(getLastName()).append("\n");
+		aBuffer.append("mbox: ").append(mbox).append("\n");
+		aBuffer.append("title: ").append(getTitle()).append("\n");
+		aBuffer.append("blog: ").append(getWeblogURI()).append("\n");
+		aBuffer.append("weight: ").append(getWeight()).append("\n");
+		aBuffer.append("birthday: ").append(getBirthday()).append("\n");
+		aBuffer.append("likes video games: ").append(isLikesVideoGames()).append("\n");
+		aBuffer.append("knows: ");
+		for (TestPerson aPerson : getKnows()) {
+			aBuffer.append(aPerson.getLabel()).append(", ");
+		}
+		aBuffer.append("\n");
+
+		return aBuffer.toString();
+	}
 }

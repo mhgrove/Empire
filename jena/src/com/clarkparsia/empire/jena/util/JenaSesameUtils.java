@@ -15,16 +15,15 @@
 
 package com.clarkparsia.empire.jena.util;
 
-import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.impl.ValueFactoryImpl;
 import org.openrdf.model.impl.GraphImpl;
 import org.openrdf.model.impl.StatementImpl;
+
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.ValueFactory;
 import org.openrdf.model.BNode;
 import org.openrdf.model.Graph;
-import org.openrdf.sesame.sail.StatementIterator;
 
 import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.RDFNode;
@@ -51,7 +50,7 @@ public class JenaSesameUtils {
 	/**
 	 * Sesame value factory for creating instances of Sesame API objects
 	 */
-	private static final ValueFactory FACTORY = new LaxSesameValueFactory();
+	private static final ValueFactory FACTORY = new ValueFactoryImpl();
 
 	/**
 	 * Convert the given Jena Resource into a Sesame Resource
@@ -164,7 +163,7 @@ public class JenaSesameUtils {
 			return null;
 		}
 		else {
-			return mInternalModel.getProperty(theURI.getURI());
+			return mInternalModel.getProperty(theURI.toString());
 		}
 	}
 
@@ -183,7 +182,7 @@ public class JenaSesameUtils {
 		}
 		else if (theLiteral.getDatatype() != null) {
 			return mInternalModel.createTypedLiteral(theLiteral.getLabel(),
-													 theLiteral.getDatatype().getURI());
+													 theLiteral.getDatatype().toString());
 		}
 		else {
 			return mInternalModel.createLiteral(theLiteral.getLabel());
@@ -198,12 +197,9 @@ public class JenaSesameUtils {
 	public static Model asJenaModel(Graph theGraph) {
 		Model aModel = ModelFactory.createDefaultModel();
 
-		StatementIterator sIter = theGraph.getStatements();
-		while (sIter.hasNext()) {
-			aModel.add(asJenaStatement(sIter.next()));
+		for (final org.openrdf.model.Statement aStmt : theGraph) {
+			aModel.add(asJenaStatement(aStmt));
 		}
-
-		sIter.close();
 
 		return aModel;
 	}
@@ -248,25 +244,25 @@ public class JenaSesameUtils {
 											  asJenaNode(theStatement.getObject()));
 	}
 
-	/**
-	 * An implementation of the Sesame ValueFactory interface which relaxes Sesame's opressive constraint that
-	 * the URI *must* be a valid URI, ie something with a namespace & a local name.
-	 */
-	private static class LaxSesameValueFactory extends ValueFactoryImpl {
-
-		/**
-		 * Creates a new Sesame URI object from the URI string, which can be just a local name, in which case the
-		 * namespace of the URI object will be the empty string.
-		 * @inheritDoc
-		 */
-		@Override
-		public URI createURI(String theURI) {
-			try {
-				return super.createURI(theURI);
-			}
-			catch (IllegalArgumentException e) {
-				return new URIImpl("", theURI);
-			}
-		}
-	}
+//	/**
+//	 * An implementation of the Sesame ValueFactory interface which relaxes Sesame's opressive constraint that
+//	 * the URI *must* be a valid URI, ie something with a namespace & a local name.
+//	 */
+//	private static class LaxSesameValueFactory extends ValueFactoryImpl {
+//
+//		/**
+//		 * Creates a new Sesame URI object from the URI string, which can be just a local name, in which case the
+//		 * namespace of the URI object will be the empty string.
+//		 * @inheritDoc
+//		 */
+//		@Override
+//		public URI createURI(String theURI) {
+//			try {
+//				return super.createURI(theURI);
+//			}
+//			catch (IllegalArgumentException e) {
+//				return new URIImpl("", theURI);
+//			}
+//		}
+//	}
 }

@@ -20,11 +20,10 @@ import com.clarkparsia.empire.DataSource;
 import com.clarkparsia.empire.DataSourceException;
 
 import java.util.Map;
-import java.io.FileInputStream;
-import java.io.IOException;
 
-import com.clarkparsia.sesame.utils.ExtendedGraph;
-import org.openrdf.rio.ParseException;
+import java.io.File;
+
+import com.clarkparsia.openrdf.ExtGraph;
 
 /**
  * <p>DataSourceFactory implementation to create a DataSource used for testing</p>
@@ -38,12 +37,12 @@ public class TestDataSourceFactory implements DataSourceFactory {
 	}
 
 	public DataSource create(final Map<String, String> theMap) throws DataSourceException {
-		ExtendedGraph aGraph = new ExtendedGraph();
+		ExtGraph aGraph = new ExtGraph();
 
 		if (theMap.containsKey("files")) {
 			for (String aFile : theMap.get("files").split(",")) {
 				try {
-					aGraph.read(new FileInputStream(aFile.trim()));
+					aGraph.read(new File(aFile.trim()));
 				}
 				catch (Exception e) {
 					throw new DataSourceException(e);

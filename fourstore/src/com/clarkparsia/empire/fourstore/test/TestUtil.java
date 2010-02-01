@@ -16,21 +16,24 @@
 package com.clarkparsia.empire.fourstore.test;
 
 import com.clarkparsia.fourstore.impl.StoreFactory;
+
 import com.clarkparsia.fourstore.api.Store;
 import com.clarkparsia.fourstore.api.StoreException;
-import com.clarkparsia.fourstore.api.Format;
 
 import java.net.URL;
-import java.net.URI;
+
 import java.io.File;
 import java.io.StringWriter;
 
-import com.clarkparsia.sesame.repository.ExtendedSesameRepository;
-import com.clarkparsia.sesame.utils.SesameUtils;
-import com.clarkparsia.sesame.utils.SesameIO;
-import org.openrdf.sesame.constants.RDFFormat;
-import org.openrdf.sesame.admin.DummyAdminListener;
+import com.clarkparsia.openrdf.OpenRdfUtil;
+import com.clarkparsia.openrdf.OpenRdfIO;
+
+import com.clarkparsia.openrdf.ExtRepository;
+
 import org.openrdf.model.Resource;
+import org.openrdf.model.impl.ValueFactoryImpl;
+
+import org.openrdf.rio.RDFFormat;
 
 /**
  * <p>Takes a 4Store database and partitions its instances into separate named graphs, one for each instance.  This
@@ -49,9 +52,9 @@ public class TestUtil {
 
 		Store aStore = StoreFactory.create(aURL);
 
-		ExtendedSesameRepository aRepo = new ExtendedSesameRepository(SesameUtils.createInMemSource());
+		ExtRepository aRepo = OpenRdfUtil.createInMemoryRepo();
 
-		aRepo.addData(new File(aLocalDataFile), "", RDFFormat.NTRIPLES, true, new DummyAdminListener());
+		OpenRdfIO.addData(aRepo, new File(aLocalDataFile));
 
 		for (Resource aRes : aRepo.getSubjects(null, null)) {
 			if (aRes instanceof org.openrdf.model.URI) {
@@ -60,16 +63,16 @@ public class TestUtil {
 				StringWriter aWriter = new StringWriter();
 
 				try {
-					SesameIO.writeGraph(aRepo.describe(aURI), aWriter, RDFFormat.TURTLE);
+					OpenRdfIO.writeGraph(aRepo.describe(aURI), aWriter, RDFFormat.TURTLE);
 
 					try {
-						aStore.delete(URI.create(aURI.getURI()));
+						aStore.delete(aURI);
 					}
 					catch (StoreException e) {
 						System.err.println("delete error: " + e.getMessage());
 					}
 
-					aStore.add(aWriter.toString(), Format.Turtle, URI.create(aURI.getURI()));
+					aStore.add(aWriter.toString(), RDFFormat.TURTLE, aURI);
 				}
 				catch (StoreException e) {
 					e.printStackTrace();
@@ -80,7 +83,7 @@ public class TestUtil {
 			}
 		}
 
-		aStore.delete(URI.create(aDefaultGraphURI));
+		aStore.delete(ValueFactoryImpl.getInstance().createURI(aDefaultGraphURI));
 		
 	}
 

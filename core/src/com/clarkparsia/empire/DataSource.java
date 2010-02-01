@@ -29,7 +29,7 @@ import com.clarkparsia.empire.QueryFactory;
  * for generating queries in the query language supported by the data source.  Roughly analogous to
  * {@link javax.sql.DataSource}.</p>
  *
- * @author Michael Grove <mike@clarkparsia.com>
+ * @author Michael Grove
  * @since 0.1
  */
 public interface DataSource {

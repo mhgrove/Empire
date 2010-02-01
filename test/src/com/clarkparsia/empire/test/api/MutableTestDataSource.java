@@ -1,14 +1,9 @@
 package com.clarkparsia.empire.test.api;
 
-import com.clarkparsia.sesame.utils.ExtendedGraph;
-import org.openrdf.model.Statement;
-import org.openrdf.sesame.admin.DummyAdminListener;
 import com.clarkparsia.empire.MutableDataSource;
 import com.clarkparsia.empire.DataSourceException;
-import org.openrdf.model.Graph;
-import org.openrdf.sesame.config.AccessDeniedException;
 
-import java.io.IOException;
+import org.openrdf.model.Graph;
 
 /**
  * <p>Implementation of the MutableDataSource interface for testing</p>

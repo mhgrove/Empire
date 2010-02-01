@@ -76,7 +76,6 @@ public class DataSourceEntityTransaction implements EntityTransaction {
 		assertActive();
 
 		if (getRollbackOnly()) {
-			// TODO: is this the right behavior?
 			throw new RollbackException("Transaction cannot be committed, it is marked as rollback only.");
 		}
 

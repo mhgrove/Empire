@@ -23,6 +23,12 @@ import org.openrdf.model.Literal;
 import org.openrdf.model.Resource;
 import org.openrdf.model.Value;
 import org.openrdf.model.URI;
+import org.openrdf.model.ValueFactory;
+import org.openrdf.model.Statement;
+
+import org.openrdf.model.vocabulary.RDF;
+import org.openrdf.model.vocabulary.XMLSchema;
+import org.openrdf.model.vocabulary.RDFS;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -47,11 +53,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
-
-import com.clarkparsia.sesame.utils.GraphBuilder;
-import com.clarkparsia.sesame.utils.ResourceBuilder;
-import com.clarkparsia.sesame.utils.SesameValueFactory;
-import com.clarkparsia.sesame.utils.ExtendedGraph;
+import java.util.Iterator;
 
 import com.clarkparsia.utils.BasicUtils;
 import com.clarkparsia.utils.Function;
@@ -59,12 +61,7 @@ import com.clarkparsia.utils.io.Encoder;
 
 import com.clarkparsia.utils.collections.CollectionUtil;
 
-import org.openrdf.model.impl.URIImpl;
-
-import org.openrdf.sesame.sail.StatementIterator;
-
-import org.openrdf.vocabulary.XmlSchema;
-import org.openrdf.vocabulary.RDFS;
+import org.openrdf.model.impl.ValueFactoryImpl;
 
 import org.apache.log4j.Logger;
 import org.apache.log4j.LogManager;
@@ -87,6 +84,9 @@ import static com.clarkparsia.empire.util.BeanReflectUtil.getAnnotatedSetters;
 import static com.clarkparsia.empire.util.BeanReflectUtil.get;
 
 import com.clarkparsia.empire.util.BeanReflectUtil;
+import com.clarkparsia.openrdf.util.ResourceBuilder;
+import com.clarkparsia.openrdf.util.GraphBuilder;
+import com.clarkparsia.openrdf.ExtGraph;
 
 import javax.persistence.Entity;
 
@@ -118,6 +118,12 @@ import javassist.util.proxy.MethodHandler;
  * @since 0.1
  */
 public class RdfGenerator {
+
+	/**
+	 * Global ValueFactory to use for converting Java values into sesame objects for serialization to RDF
+	 */
+	private static final ValueFactory FACTORY = new ValueFactoryImpl();
+
 	/**
 	 * The logger
 	 */
@@ -145,7 +151,7 @@ public class RdfGenerator {
 
 			addNamespaces(aClass);
 
-			TYPE_TO_CLASS.put(SesameValueFactory.instance().createURI(NamespaceUtils.uri(aAnnotation.value())), aClass);
+			TYPE_TO_CLASS.put(FACTORY.createURI(NamespaceUtils.uri(aAnnotation.value())), aClass);
 		}
 	}
 
@@ -161,7 +167,7 @@ public class RdfGenerator {
 	 * @throws DataSourceException thrown if there is an error while retrieving data from the graph
 	 */
 	public static <T> T fromRdf(Class<T> theClass, java.net.URI theURI, DataSource theSource) throws InvalidRdfException, DataSourceException {
-		T aObj = null;
+		T aObj;
 
 		try {
 			if (theClass.isInterface()) {
@@ -206,22 +212,21 @@ public class RdfGenerator {
 			OBJECT_M.put(theURI, theObj);
 		}
 
-		ExtendedGraph aGraph = new ExtendedGraph(theSource.describe(theURI));
+		ExtGraph aGraph = new ExtGraph(theSource.describe(theURI));
 
-		if (aGraph.numStatements() == 0) {
+		if (aGraph.size() == 0) {
 			OBJECT_M.remove(theURI);
 
 			return null;
 		}
 
-		URI aInd = aGraph.getSesameValueFactory().createURI(theURI);
+		URI aInd = aGraph.getValueFactory().createURI(theURI.toString());
 		Set<URI> aProps = new HashSet<URI>();
-		StatementIterator sIter = aGraph.getStatements(aInd, null, null);
+		Iterator<Statement> sIter = aGraph.match(aInd, null, null);
 
 		while (sIter.hasNext()) {
 			aProps.add(sIter.next().getPredicate());
 		}
-		sIter.close();
 
 		Collection<Field> aFields = getAnnotatedFields(theObj.getClass());
 		Collection<Method> aMethods = getAnnotatedSetters(theObj.getClass(), true);
@@ -232,7 +237,7 @@ public class RdfGenerator {
 		
 		CollectionUtil.each(aFields, new AbstractDataCommand<Field>() {
 			public void execute() {
-				aAccessMap.put(SesameValueFactory.instance().createURI(NamespaceUtils.uri(getData().getAnnotation(RdfProperty.class).value())),
+				aAccessMap.put(FACTORY.createURI(NamespaceUtils.uri(getData().getAnnotation(RdfProperty.class).value())),
 							  getData());
 			}
 		});
@@ -241,7 +246,7 @@ public class RdfGenerator {
 			public void execute() {
 				RdfProperty aAnnotation = getAnnotation(getData(), RdfProperty.class);
 				if (aAnnotation != null) {
-					aAccessMap.put(SesameValueFactory.instance().createURI(NamespaceUtils.uri(aAnnotation.value())),
+					aAccessMap.put(FACTORY.createURI(NamespaceUtils.uri(aAnnotation.value())),
 								   getData());
 				}
 			}
@@ -250,7 +255,7 @@ public class RdfGenerator {
 		for (URI aProp : aProps) {
 			AccessibleObject aAccess = aAccessMap.get(aProp);
 
-			if (aAccess == null && URIImpl.RDF_TYPE.equals(aProp)) {
+			if (aAccess == null && RDF.TYPE.equals(aProp)) {
 				// we can skip the rdf:type property.  it's basically assigned in the @RdfsClass annotation on the
 				// java class, so we can figure it out later if need be. TODO: of course, if something has multiple types
 				// that information is lost, which is not good.
@@ -273,7 +278,7 @@ public class RdfGenerator {
 
 			ToObjectFunction aFunc = new ToObjectFunction(theSource, aInd, aAccess, aProp);
 
-			Object aValue = aFunc.apply(CollectionUtil.list(aGraph.getValues(aInd, aProp)));
+			Object aValue = aFunc.apply(aGraph.getValues(aInd, aProp));
 
 			boolean aOldAccess = aAccess.isAccessible();
 
@@ -362,7 +367,7 @@ public class RdfGenerator {
 		SupportsRdfId aSupport = asSupportsRdfId(theObj);
 
 		if (aSupport.getRdfId() != null) {
-			return SesameValueFactory.instance().createURI(aSupport.getRdfId());
+			return FACTORY.createURI(aSupport.getRdfId().toString());
 		}
 
 		Field aIdField = BeanReflectUtil.getIdField(theObj.getClass());
@@ -370,15 +375,13 @@ public class RdfGenerator {
 		String aValue = hash(BasicUtils.getRandomString(10));
 		String aNS = RdfId.DEFAULT;
 
-		URI aURI = SesameValueFactory.instance().createURI(aNS + aValue);
+		URI aURI = FACTORY.createURI(aNS + aValue);
 
 		if (aIdField != null && !aIdField.getAnnotation(RdfId.class).namespace().equals("")) {
 			aNS = aIdField.getAnnotation(RdfId.class).namespace();
 		}
 
 		if (aIdField != null) {
-			RdfId aIdAnnotation = aIdField.getAnnotation(RdfId.class);
-
 			boolean aOldAccess = aIdField.isAccessible();
 			aIdField.setAccessible(true);
 
@@ -393,17 +396,17 @@ public class RdfGenerator {
 
 				if (aValObj instanceof java.net.URI || BasicUtils.isURI(aValObj.toString())) {
 					try {
-						aURI = SesameValueFactory.instance().createURI(java.net.URI.create(aValObj.toString()));
+						aURI = FACTORY.createURI(aValObj.toString());
 					}
 					catch (IllegalArgumentException e) {
 						// sometimes sesame disagrees w/ Java about what a valid URI is.  so we'll have to try
 						// and construct a URI from the possible fragment
-						aURI = SesameValueFactory.instance().createURI(aNS + aValue);
+						aURI = FACTORY.createURI(aNS + aValue);
 					}
 				}
 				else {
 					//aValue = hash(aValObj);
-					aURI = SesameValueFactory.instance().createURI(aNS + aValue);
+					aURI = FACTORY.createURI(aNS + aValue);
 				}
 			}
 			catch (IllegalAccessException ex) {
@@ -413,7 +416,7 @@ public class RdfGenerator {
 			aIdField.setAccessible(aOldAccess);
 		}
 
-		aSupport.setRdfId(java.net.URI.create(aURI.getURI()));
+		aSupport.setRdfId(java.net.URI.create(aURI.toString()));
 
 		return aURI;
 	}
@@ -422,8 +425,8 @@ public class RdfGenerator {
 	 * Scan the object for {@link Namespaces} annotations and add them to the current list of known namespaces
 	 * @param theObj the object to scan.
 	 */
-	private static void addNamespaces(Class theObj) {
-		Namespaces aNS = (Namespaces) theObj.getAnnotation(Namespaces.class);
+	private static void addNamespaces(Class<?> theObj) {
+		Namespaces aNS = theObj.getAnnotation(Namespaces.class);
 
 		if (aNS == null) {
 			return;
@@ -447,7 +450,7 @@ public class RdfGenerator {
 	 * @return the object represented as RDF triples
 	 * @throws InvalidRdfException thrown if the object cannot be transformed into RDF.
 	 */
-	public static ExtendedGraph asRdf(Object theObj) throws InvalidRdfException {
+	public static ExtGraph asRdf(Object theObj) throws InvalidRdfException {
 		RdfsClass aClass = asRdfClass(theObj);
 
 		URI aURI = id(theObj);
@@ -461,14 +464,14 @@ public class RdfGenerator {
 		aAccessors.addAll(getAnnotatedGetters(theObj.getClass(), true));
 
 		try {
-			ResourceBuilder aRes = aBuilder.instance(aBuilder.getSesameValueFactory().createURI(NamespaceUtils.uri(aClass.value())),
-													 aURI.getURI());
+			ResourceBuilder aRes = aBuilder.instance(aBuilder.getValueFactory().createURI(NamespaceUtils.uri(aClass.value())),
+													 aURI.toString());
 
 			AsValueFunction aFunc = new AsValueFunction();
 			for (AccessibleObject aAccess : aAccessors) {
 
 				RdfProperty aPropertyAnnotation = getAnnotation(aAccess, RdfProperty.class);
-				URI aProperty = aBuilder.getSesameValueFactory().createURI(NamespaceUtils.uri(aPropertyAnnotation.value()));
+				URI aProperty = aBuilder.getValueFactory().createURI(NamespaceUtils.uri(aPropertyAnnotation.value()));
 
 				boolean aOldAccess = aAccess.isAccessible();
 				setAccessible(aAccess, true);
@@ -624,7 +627,7 @@ public class RdfGenerator {
 			}
 			else if (Collection.class.isAssignableFrom(classFrom(mField))) {
 				try {
-					Collection aValues = instantiateCollectionFromField(classFrom(mField));
+					Collection<Object> aValues = instantiateCollectionFromField(classFrom(mField));
 
 					for (Value aValue : theIn) {
 						aValues.add(valueToObject.apply(aValue));
@@ -678,10 +681,10 @@ public class RdfGenerator {
 		}
 	}
 
-	private static Collection instantiateCollectionFromField(Class theValueType) {
+	private static Collection<Object> instantiateCollectionFromField(Class theValueType) {
 		try {
 			// try creating a new instance.  this will work if they've specified a concrete type
-			return (Collection) theValueType.newInstance();
+			return (Collection<Object>) theValueType.newInstance();
 		}
 		catch (Throwable e) {
 			// TODO: make this less brittle -- should we have some sort of facade collection or something in front
@@ -690,18 +693,18 @@ public class RdfGenerator {
 			// if the above failed, that means the type of the field is something like List, or Set, which is not
 			// directly instantiable.  If it's a known type, we'll hand instantiate something here.
 			if (List.class.isAssignableFrom(theValueType)) {
-				return new ArrayList();
+				return new ArrayList<Object>();
 			}
 			else if (Set.class.isAssignableFrom(theValueType)) {
 				if (SortedSet.class.isAssignableFrom(theValueType)) {
-					return new TreeSet();
+					return new TreeSet<Object>();
 				}
 				else {
-					return new LinkedHashSet();
+					return new LinkedHashSet<Object>();
 				}
 			}
 			else if (Collection.class.equals(theValueType)) {
-				return new LinkedHashSet();
+				return new LinkedHashSet<Object>();
 			}
 			else {
 				// last option is Map, but i dunno what the hell to do in that case, it doesn't map to our use here.
@@ -711,13 +714,13 @@ public class RdfGenerator {
 	}
 
 	public static class ValueToObject implements Function<Value, Object> {
-		static final List<String> integerTypes = Arrays.asList(XmlSchema.INT, XmlSchema.INTEGER, XmlSchema.POSITIVE_INTEGER,
-													  XmlSchema.NEGATIVE_INTEGER, XmlSchema.NON_NEGATIVE_INTEGER,
-													  XmlSchema.NON_POSITIVE_INTEGER, XmlSchema.UNSIGNED_INT);
-		static final List<String> longTypes = Arrays.asList(XmlSchema.LONG, XmlSchema.UNSIGNED_LONG);
-		static final List<String> floatTypes = Arrays.asList(XmlSchema.FLOAT, XmlSchema.DECIMAL);
-		static final List<String> shortTypes = Arrays.asList(XmlSchema.SHORT, XmlSchema.UNSIGNED_SHORT);
-		static final List<String> byteTypes = Arrays.asList(XmlSchema.BYTE, XmlSchema.UNSIGNED_BYTE);
+		static final List<URI> integerTypes = Arrays.asList(XMLSchema.INT, XMLSchema.INTEGER, XMLSchema.POSITIVE_INTEGER,
+													  XMLSchema.NEGATIVE_INTEGER, XMLSchema.NON_NEGATIVE_INTEGER,
+													  XMLSchema.NON_POSITIVE_INTEGER, XMLSchema.UNSIGNED_INT);
+		static final List<URI> longTypes = Arrays.asList(XMLSchema.LONG, XMLSchema.UNSIGNED_LONG);
+		static final List<URI> floatTypes = Arrays.asList(XMLSchema.FLOAT, XMLSchema.DECIMAL);
+		static final List<URI> shortTypes = Arrays.asList(XMLSchema.SHORT, XMLSchema.UNSIGNED_SHORT);
+		static final List<URI> byteTypes = Arrays.asList(XMLSchema.BYTE, XMLSchema.UNSIGNED_BYTE);
 
 		private URI mProperty;
 		private Object mAccessor;
@@ -734,11 +737,11 @@ public class RdfGenerator {
 		public Object apply(final Value theValue) {
 			if (theValue instanceof Literal) {
 				Literal aLit = (Literal) theValue;
-				String aDatatype = aLit.getDatatype() != null ? aLit.getDatatype().getURI() : null;
-				if (aDatatype == null || XmlSchema.STRING.equals(aDatatype) || RDFS.LITERAL.equals(aDatatype)) {
+				URI aDatatype = aLit.getDatatype() != null ? aLit.getDatatype() : null;
+				if (aDatatype == null || XMLSchema.STRING.equals(aDatatype) || RDFS.LITERAL.equals(aDatatype)) {
 					return aLit.getLabel();
 				}
-				else if (XmlSchema.BOOLEAN.equals(aDatatype)) {
+				else if (XMLSchema.BOOLEAN.equals(aDatatype)) {
 					return Boolean.valueOf(aLit.getLabel());
 				}
 				else if (integerTypes.contains(aDatatype)) {
@@ -747,7 +750,7 @@ public class RdfGenerator {
 				else if (longTypes.contains(aDatatype)) {
 					return Long.parseLong(aLit.getLabel());
 				}
-				else if (XmlSchema.DOUBLE.equals(aDatatype)) {
+				else if (XMLSchema.DOUBLE.equals(aDatatype)) {
 					return Double.valueOf(aLit.getLabel());
 				}
 				else if (floatTypes.contains(aDatatype)) {
@@ -759,13 +762,13 @@ public class RdfGenerator {
 				else if (byteTypes.contains(aDatatype)) {
 					return Byte.valueOf(aLit.getLabel());
 				}
-				else if (XmlSchema.ANYURI.equals(aDatatype)) {
+				else if (XMLSchema.ANYURI.equals(aDatatype)) {
 					return java.net.URI.create(aLit.getLabel());
 				}
-				else if (XmlSchema.DATE.equals(aDatatype) || XmlSchema.DATETIME.equals(aDatatype)) {
+				else if (XMLSchema.DATE.equals(aDatatype) || XMLSchema.DATETIME.equals(aDatatype)) {
 					return BasicUtils.asDate(aLit.getLabel());
 				}
-				else if (XmlSchema.TIME.equals(aDatatype)) {
+				else if (XMLSchema.TIME.equals(aDatatype)) {
 					return new Date(Long.parseLong(aLit.getLabel()));
 				}
 				else {
@@ -795,10 +798,10 @@ public class RdfGenerator {
 					try {
 						String aQuery = getBNodeConstructQuery(mSource, mURI, mProperty);
 						
-						ExtendedGraph aGraph = new ExtendedGraph(mSource.graphQuery(aQuery));
+						ExtGraph aGraph = new ExtGraph(mSource.graphQuery(aQuery));
 						Resource aPossibleListHead = (Resource) aGraph.getValue(mURI, mProperty);
 						if (aGraph.isList(aPossibleListHead)) {
-							List aList = aGraph.asList(aPossibleListHead);
+							List<Value> aList = aGraph.asList(aPossibleListHead);
 
 							return new ToObjectFunction(mSource, null, null, null).apply(aList);
 						}
@@ -818,11 +821,11 @@ public class RdfGenerator {
 				URI aURI = (URI) theValue;
 				try {
 					// we need to figure out what type of bean this instance maps to.
-					Class aClass = classFrom(mAccessor);
+					Class<?> aClass = classFrom(mAccessor);
 
 					// TODO: this is brittle =(
 					if (aClass.isAssignableFrom(java.net.URI.class)) {
-						return java.net.URI.create(aURI.getURI());
+						return java.net.URI.create(aURI.toString());
 					}
 					else if (Collection.class.isAssignableFrom(aClass)) {
 						// if the field we're assigning from is a collection, try and figure out the type of the thing
@@ -863,7 +866,7 @@ public class RdfGenerator {
 						}
 					}
 
-					return getProxyOrDbObject(aClass, java.net.URI.create(aURI.getURI()), mSource);
+					return getProxyOrDbObject(aClass, java.net.URI.create(aURI.toString()), mSource);
 				}
 				catch (Exception e) {
 					throw new RuntimeException(e);
@@ -904,7 +907,7 @@ public class RdfGenerator {
 
 	private static URI getType(DataSource theSource, URI theConcept) {
 		try {
-			return new ExtendedGraph(theSource.describe(java.net.URI.create(theConcept.getURI()))).getType(theConcept);
+			return new ExtGraph(theSource.describe(java.net.URI.create(theConcept.toString()))).getType(theConcept);
 		}
 		catch (DataSourceException e) {
 			LOGGER.error("There was an error while getting the type of a resource", e);
@@ -914,11 +917,11 @@ public class RdfGenerator {
 	}
 
 	private static String getBNodeConstructQuery(DataSource theSource, URI theURI, URI theProperty) {
-		String aSerqlQuery = "construct * from {<" + theURI.getURI() + ">} <"+theProperty.getURI()+"> {o}, {o} po {oo}";
+		String aSerqlQuery = "construct * from {<" + theURI.toString() + ">} <"+theProperty.toString()+"> {o}, {o} po {oo}";
 
-		String aSparqlQuery = "CONSTRUCT  { <" + theURI.getURI() + "> <"+theProperty.getURI()+"> ?o . ?o ?po ?oo  } \n" +
+		String aSparqlQuery = "CONSTRUCT  { <" + theURI.toString() + "> <"+theProperty.toString()+"> ?o . ?o ?po ?oo  } \n" +
 							  "WHERE\n" +
-							  "{ <" + theURI.getURI() + "> <"+theProperty.getURI()+"> ?o.\n" +
+							  "{ <" + theURI.toString() + "> <"+theProperty.toString()+"> ?o.\n" +
 							  "?o ?po ?oo. }";
 
 		if (theSource.getQueryFactory().getDialect() == SerqlDialect.instance()) {
@@ -948,38 +951,38 @@ public class RdfGenerator {
 				return null;
 			}
             else if (!EmpireOptions.STRONG_TYPING && isPrimitive(theIn)) {
-                return SesameValueFactory.instance().createLiteral(theIn.toString());
+                return FACTORY.createLiteral(theIn.toString());
             }
 			else if (Boolean.class.isInstance(theIn)) {
-				return SesameValueFactory.instance().createTypedLiteral(Boolean.class.cast(theIn));
+				return FACTORY.createLiteral(Boolean.class.cast(theIn));
 			}
 			else if (Integer.class.isInstance(theIn)) {
-				return SesameValueFactory.instance().createTypedLiteral(Integer.class.cast(theIn));
+				return FACTORY.createLiteral(Integer.class.cast(theIn));
 			}
 			else if (Long.class.isInstance(theIn)) {
-				return SesameValueFactory.instance().createTypedLiteral(Long.class.cast(theIn));
+				return FACTORY.createLiteral(Long.class.cast(theIn));
 			}
 			else if (Short.class.isInstance(theIn)) {
-				return SesameValueFactory.instance().createTypedLiteral(Short.class.cast(theIn));
+				return FACTORY.createLiteral(Short.class.cast(theIn));
 			}
 			else if (Double.class.isInstance(theIn)) {
-				return SesameValueFactory.instance().createTypedLiteral(Double.class.cast(theIn));
+				return FACTORY.createLiteral(Double.class.cast(theIn));
 			}
 			else if (Float.class.isInstance(theIn)) {
-				return SesameValueFactory.instance().createTypedLiteral(Float.class.cast(theIn));
+				return FACTORY.createLiteral(Float.class.cast(theIn));
 			}
 			else if (Date.class.isInstance(theIn)) {
-				return SesameValueFactory.instance().createDatetimeTypedLiteral(Date.class.cast(theIn));
+				return FACTORY.createLiteral(BasicUtils.datetime(Date.class.cast(theIn)), XMLSchema.DATETIME);
 			}
 			else if (String.class.isInstance(theIn)) {
-				return SesameValueFactory.instance().createTypedLiteral(String.class.cast(theIn));
+				return FACTORY.createLiteral(String.class.cast(theIn));
 			}
 			else if (Character.class.isInstance(theIn)) {
-				return SesameValueFactory.instance().createTypedLiteral(Character.class.cast(theIn));
+				return FACTORY.createLiteral(Character.class.cast(theIn));
 			}
 			else if (java.net.URI.class.isInstance(theIn)) {
 				//return SesameValueFactory.instance().createLiteral(theIn.toString(), SesameValueFactory.instance().createURI(XmlSchema.ANYURI));
-                return SesameValueFactory.instance().createURI(theIn.toString());
+                return FACTORY.createURI(theIn.toString());
 			}
 			else if (Value.class.isAssignableFrom(theIn.getClass())) {
 				return Value.class.cast(theIn);

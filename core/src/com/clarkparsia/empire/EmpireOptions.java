@@ -15,23 +15,6 @@
 
 package com.clarkparsia.empire;
 
-import com.clarkparsia.empire.spi.EmpirePersistenceProvider;
-import com.clarkparsia.empire.util.PropertiesAnnotationProvider;
-import com.clarkparsia.empire.util.EmpireAnnotationProvider;
-import com.clarkparsia.empire.sesame.SesameDataSourceFactory;
-
-import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-import com.google.inject.Module;
-import com.google.inject.TypeLiteral;
-import com.google.inject.name.Names;
-import com.google.inject.multibindings.Multibinder;
-
-import java.util.HashMap;
-import java.util.Map;
-
 /**
  * <p>Catch-all class for global Empire options and configuration</p>
  *

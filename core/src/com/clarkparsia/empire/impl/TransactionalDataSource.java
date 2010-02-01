@@ -23,11 +23,10 @@ import com.clarkparsia.empire.QueryException;
 import com.clarkparsia.empire.QueryFactory;
 import com.clarkparsia.empire.ResultSet;
 import com.clarkparsia.empire.SupportsTransactions;
+import com.clarkparsia.openrdf.ExtGraph;
 
 import java.net.URI;
 import java.net.ConnectException;
-
-import com.clarkparsia.sesame.utils.ExtendedGraph;
 
 /**
  * <p><b>Very</b> simple transactional support to put on top of a database that does not already support it.
@@ -48,12 +47,12 @@ public class TransactionalDataSource implements DataSource, MutableDataSource, S
 	/**
 	 * The set of triples that have been removed in the current transaction
 	 */
-	private ExtendedGraph mRemoveGraph;
+	private ExtGraph mRemoveGraph;
 
 	/**
 	 * The set of triples that have been added in the current transaction
 	 */
-	private ExtendedGraph mAddGraph;
+	private ExtGraph mAddGraph;
 
 	/**
 	 * Whether or not a transaction is currently active
@@ -66,8 +65,8 @@ public class TransactionalDataSource implements DataSource, MutableDataSource, S
 	protected TransactionalDataSource(final MutableDataSource theDataSource) {
 		mDataSource = theDataSource;
 
-		mRemoveGraph = new ExtendedGraph();
-		mAddGraph = new ExtendedGraph();
+		mRemoveGraph = new ExtGraph();
+		mAddGraph = new ExtGraph();
 	}
 
 	/**
@@ -101,11 +100,11 @@ public class TransactionalDataSource implements DataSource, MutableDataSource, S
 		assertInTransaction();
 
 		try {
-			if (mRemoveGraph.numStatements() > 0) {
+			if (mRemoveGraph.size() > 0) {
 				mDataSource.add(mRemoveGraph);
 			}
 
-			if (mAddGraph.numStatements() > 0) {
+			if (mAddGraph.size() > 0) {
 				mDataSource.remove(mAddGraph);
 			}
 		}
@@ -124,7 +123,7 @@ public class TransactionalDataSource implements DataSource, MutableDataSource, S
 	 * @inheritDoc
 	 */
 	public void add(final Graph theGraph) throws DataSourceException {
-		mAddGraph.add(theGraph);
+		mAddGraph.addAll(theGraph);
 		mDataSource.add(theGraph);
 	}
 
@@ -132,7 +131,7 @@ public class TransactionalDataSource implements DataSource, MutableDataSource, S
 	 * @inheritDoc
 	 */
 	public void remove(final Graph theGraph) throws DataSourceException {
-		mRemoveGraph.add(theGraph);
+		mRemoveGraph.addAll(theGraph);
 		mDataSource.remove(theGraph);
 	}
 

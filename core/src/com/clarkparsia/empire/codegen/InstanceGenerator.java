@@ -32,6 +32,7 @@ import com.clarkparsia.empire.SupportsRdfId;
  * <p>Generate implementations of interfaces at runtime via bytecode manipulation.</p>
  *
  * @author Michael Grove
+ * @since 0.5.1
  */
 public class InstanceGenerator {
 
@@ -48,6 +49,8 @@ public class InstanceGenerator {
 	 * @throws Exception if there is an error while generating the bytecode of the new class.
 	 */
 	public static <T> Class<T> generateInstanceClass(Class<T> theInterface) throws Exception {
+		// TODO: can we use some sort of template language for this?
+
 		ClassPool aPool = ClassPool.getDefault();
 		CtClass aInterface = aPool.get(theInterface.getName());
 

@@ -15,7 +15,7 @@
 
 package com.clarkparsia.empire.test.api.nasa;
 
-import com.clarkparsia.sesame.vocabulary.Vocabulary;
+import com.clarkparsia.openrdf.vocabulary.Vocabulary;
 
 import org.openrdf.model.URI;
 

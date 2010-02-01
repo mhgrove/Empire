@@ -18,6 +18,7 @@ package com.clarkparsia.empire.jena;
 import com.clarkparsia.empire.DataSourceFactory;
 import com.clarkparsia.empire.DataSource;
 import com.clarkparsia.empire.DataSourceException;
+import com.clarkparsia.utils.BasicUtils;
 
 import java.util.Map;
 import java.util.HashMap;
@@ -59,7 +60,7 @@ public class JenaInMemoryDataSourceFactory implements DataSourceFactory {
 		Model aModel = ModelFactory.createDefaultModel();
 
 		if (theMap.containsKey("files")) {
-			for (String aFile : theMap.get("files").split(",")) {
+			for (String aFile : BasicUtils.split(theMap.get("files"), ",")) {
 				RDFReader aReader = aModel.getReader();
 				aReader.setProperty("WARN_REDEFINITION_OF_ID","EM_IGNORE");
 

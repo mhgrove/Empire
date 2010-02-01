@@ -15,30 +15,25 @@
 
 package com.clarkparsia.empire.codegen;
 
-import org.openrdf.vocabulary.OWL;
-import org.openrdf.vocabulary.RDFS;
-import org.openrdf.vocabulary.RDF;
-import org.openrdf.vocabulary.XmlSchema;
-
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Statement;
 import org.openrdf.model.Value;
 import org.openrdf.model.Literal;
+import org.openrdf.model.vocabulary.OWL;
+import org.openrdf.model.vocabulary.XMLSchema;
+import org.openrdf.model.vocabulary.RDFS;
+import org.openrdf.model.vocabulary.RDF;
 
-import org.openrdf.model.impl.URIImpl;
+import org.openrdf.model.impl.ValueFactoryImpl;
 
-import org.openrdf.sesame.constants.RDFFormat;
+import org.openrdf.rio.RDFFormat;
+
+import org.openrdf.query.BindingSet;
+import org.openrdf.query.TupleQueryResult;
+
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
-
-import com.clarkparsia.sesame.repository.ExtendedSesameRepository;
-
-import com.clarkparsia.sesame.utils.query.IterableQueryResultsTable;
-import com.clarkparsia.sesame.utils.query.SesameQuery;
-import com.clarkparsia.sesame.utils.query.Binding;
-
-import com.clarkparsia.sesame.utils.SesameValueFactory;
 
 import static com.clarkparsia.utils.collections.CollectionUtil.filter;
 import static com.clarkparsia.utils.collections.CollectionUtil.set;
@@ -55,12 +50,14 @@ import com.clarkparsia.utils.BasicUtils;
 import com.clarkparsia.utils.io.IOUtil;
 
 import static com.clarkparsia.utils.FunctionUtil.compose;
+import com.clarkparsia.openrdf.ExtRepository;
+import com.clarkparsia.openrdf.OpenRdfUtil;
+import com.clarkparsia.openrdf.SesameQuery;
 
 import java.util.Collection;
 import java.util.Map;
 import java.util.List;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.HashSet;
 import java.util.HashMap;
 
@@ -73,6 +70,7 @@ import java.net.URL;
  * of RDF data.  The generated source code will map to the domain represented in the RDF.</p>
  *
  * @author Michael Grove
+ * @since 0.5.1
  */
 public class BeanGenerator {
 
@@ -84,34 +82,34 @@ public class BeanGenerator {
 	/**
 	 * String URI constant for the owl:Thing conccept
 	 */
-	private static final String OWL_THING = OWL.NAMESPACE + "Thing";
+	private static final URI OWL_THING = ValueFactoryImpl.getInstance().createURI(OWL.NAMESPACE + "Thing");
 
 	/**
 	 * The list of xsd datatypes which map to Integer
 	 */
-	static final List<String> integerTypes = Arrays.asList(XmlSchema.INT, XmlSchema.INTEGER, XmlSchema.POSITIVE_INTEGER,
-														   XmlSchema.NEGATIVE_INTEGER, XmlSchema.NON_NEGATIVE_INTEGER,
-														   XmlSchema.NON_POSITIVE_INTEGER, XmlSchema.UNSIGNED_INT);
+	static final List<URI> integerTypes = Arrays.asList(XMLSchema.INT, XMLSchema.INTEGER, XMLSchema.POSITIVE_INTEGER,
+														   XMLSchema.NEGATIVE_INTEGER, XMLSchema.NON_NEGATIVE_INTEGER,
+														   XMLSchema.NON_POSITIVE_INTEGER, XMLSchema.UNSIGNED_INT);
 
 	/**
 	 * The list of xsd datatypes which map to Long
 	 */
-	static final List<String> longTypes = Arrays.asList(XmlSchema.LONG, XmlSchema.UNSIGNED_LONG);
+	static final List<URI> longTypes = Arrays.asList(XMLSchema.LONG, XMLSchema.UNSIGNED_LONG);
 
 	/**
 	 * The list of xsd datatypes which map to Float
 	 */
-	static final List<String> floatTypes = Arrays.asList(XmlSchema.FLOAT, XmlSchema.DECIMAL);
+	static final List<URI> floatTypes = Arrays.asList(XMLSchema.FLOAT, XMLSchema.DECIMAL);
 
 	/**
 	 * The list of xsd datatypes which map to Short
 	 */
-	static final List<String> shortTypes = Arrays.asList(XmlSchema.SHORT, XmlSchema.UNSIGNED_SHORT);
+	static final List<URI> shortTypes = Arrays.asList(XMLSchema.SHORT, XMLSchema.UNSIGNED_SHORT);
 
 	/**
 	 * The list of xsd datatypes which map to Byte
 	 */
-	static final List<String> byteTypes = Arrays.asList(XmlSchema.BYTE, XmlSchema.UNSIGNED_BYTE);
+	static final List<URI> byteTypes = Arrays.asList(XMLSchema.BYTE, XMLSchema.UNSIGNED_BYTE);
 
 	/**
 	 * Return the Java bean source code that represents the given RDF class
@@ -122,7 +120,7 @@ public class BeanGenerator {
 	 * @return a string of the source code of the equivalent Java bean
 	 * @throws Exception if there is an error while converting
 	 */
-	private static String toSource(String thePackageName, ExtendedSesameRepository theGraph, Resource theClass, Map<Resource, Collection<URI>> theMap) throws Exception {
+	private static String toSource(String thePackageName, ExtRepository theGraph, Resource theClass, Map<Resource, Collection<URI>> theMap) throws Exception {
 		StringBuffer aSrc = new StringBuffer();
 
 		aSrc.append("package ").append(thePackageName).append(";\n\n");
@@ -193,20 +191,19 @@ public class BeanGenerator {
 	 * @return the String representation of the property type
 	 * @throws Exception if there is an error querying the data
 	 */
-	private static String functionType(final ExtendedSesameRepository theGraph, final URI theProp) throws Exception {
+	private static String functionType(final ExtRepository theGraph, final URI theProp) throws Exception {
 		String aType;
 
-		URI aRange = (URI) theGraph.getValue(theProp, URIImpl.RDFS_RANGE);
+		URI aRange = (URI) theGraph.getValue(theProp, RDFS.RANGE);
 
 		if (aRange == null) {
 			// no explicit range, try to infer it...
 			try {
-				IterableQueryResultsTable aResults = theGraph.performSelectQuery(SesameQuery.serql("select distinct r from {s} <"+theProp+"> {o}, {o} rdf:type {r}"));
+				TupleQueryResult aResults = theGraph.selectQuery(SesameQuery.serql("select distinct r from {s} <"+theProp+"> {o}, {o} rdf:type {r}"));
 
-				Iterator<Binding> aIter = aResults.iterator();
-				if (aIter.hasNext()) {
-					URI aTempRange = aIter.next().getURI("r");
-					if (!aIter.hasNext()) {
+				if (aResults.hasNext()) {
+					URI aTempRange = (URI) aResults.next().getValue("r");
+					if (!aResults.hasNext()) {
 						aRange = aTempRange;
 					}
 					else {
@@ -215,21 +212,24 @@ public class BeanGenerator {
 					}
 				}
 
+				aResults.close();
+
 				if (aRange == null) {
 					// could not get it from type usage, so maybe its a literal and we can guess it from datatype
 
-					aResults = theGraph.performSelectQuery(SesameQuery.serql("select distinct datatype(o) from {s} <"+theProp+"> {o} where isLiteral(o) and datatype(o) != null"));
+					aResults = theGraph.selectQuery(SesameQuery.serql("select distinct datatype(o) from {s} <"+theProp+"> {o} where isLiteral(o) and datatype(o) != null"));
 
-					aIter = aResults.iterator();
-					if (aIter.hasNext()) {
-						URI aTempRange = aIter.next().getURI("datatype(o)");
-						if (!aIter.hasNext()) {
+					if (aResults.hasNext()) {
+						URI aTempRange = (URI) aResults.next().getValue("datatype(o)");
+						if (!aResults.hasNext()) {
 							aRange = aTempRange;
 						}
 						else {
 							// TODO: do something here, literals of multiple types used
 						}
 					}
+
+					aResults.close();
 				}
 			}
 			catch (Exception e) {
@@ -238,42 +238,40 @@ public class BeanGenerator {
 			}
 		}
 
-		String aDatatype = aRange != null ? aRange.getURI() : null;
-
-		if (XmlSchema.STRING.equals(aDatatype) || RDFS.LITERAL.equals(aDatatype)) {
+		if (XMLSchema.STRING.equals(aRange) || RDFS.LITERAL.equals(aRange)) {
 			aType = "String";
 		}
-		else if (XmlSchema.BOOLEAN.equals(aDatatype)) {
+		else if (XMLSchema.BOOLEAN.equals(aRange)) {
 			aType = "Boolean";
 		}
-		else if (integerTypes.contains(aDatatype)) {
+		else if (integerTypes.contains(aRange)) {
 			aType = "Integer";
 		}
-		else if (longTypes.contains(aDatatype)) {
+		else if (longTypes.contains(aRange)) {
 			aType = "Long";
 		}
-		else if (XmlSchema.DOUBLE.equals(aDatatype)) {
+		else if (XMLSchema.DOUBLE.equals(aRange)) {
 			aType = "Double";
 		}
-		else if (floatTypes.contains(aDatatype)) {
+		else if (floatTypes.contains(aRange)) {
 			aType = "Float";
 		}
-		else if (shortTypes.contains(aDatatype)) {
+		else if (shortTypes.contains(aRange)) {
 			aType = "Short";
 		}
-		else if (byteTypes.contains(aDatatype)) {
+		else if (byteTypes.contains(aRange)) {
 			aType = "Byte";
 		}
-		else if (XmlSchema.ANYURI.equals(aDatatype)) {
+		else if (XMLSchema.ANYURI.equals(aRange)) {
 			aType = "java.net.URI";
 		}
-		else if (XmlSchema.DATE.equals(aDatatype) || XmlSchema.DATETIME.equals(aDatatype)) {
+		else if (XMLSchema.DATE.equals(aRange) || XMLSchema.DATETIME.equals(aRange)) {
 			aType = "Date";
 		}
-		else if (XmlSchema.TIME.equals(aDatatype)) {
+		else if (XMLSchema.TIME.equals(aRange)) {
 			aType = "Date";
 		}
-		else if (aDatatype == null || aDatatype.equals(OWL_THING)) {
+		else if (aRange == null || aRange.equals(OWL_THING)) {
 			aType = "Object";
 		}
 		else {
@@ -295,7 +293,7 @@ public class BeanGenerator {
 	 * @return true if the property has a collection as it's value, false if it's just a single valued property
 	 * @throws Exception if there is an error querying the data
 	 */
-	private static boolean isCollection(final ExtendedSesameRepository theGraph, final URI theProp) throws Exception {
+	private static boolean isCollection(final ExtRepository theGraph, final URI theProp) throws Exception {
 		// TODO: this is not fool proof.
 
 		String aCardQuery = "select distinct card from " +
@@ -304,9 +302,9 @@ public class BeanGenerator {
 					   "{s} cardProp {card} " +
 					   "where cardProp = owl:cardinality or cardProp = owl:minCardinality or cardProp = owl:maxCardinality";
 
-		IterableQueryResultsTable aResults = theGraph.performSelectQuery(SesameQuery.serql(aCardQuery));
-		if (aResults.iterator().hasNext()) {
-			Literal aCard = aResults.iterator().next().getLiteral("card");
+		TupleQueryResult aResults = theGraph.selectQuery(SesameQuery.serql(aCardQuery));
+		if (aResults.hasNext()) {
+			Literal aCard = (Literal) aResults.next().getValue("card") ;
 
 			try {
 				return Integer.parseInt(aCard.getLabel()) > 1;
@@ -316,15 +314,22 @@ public class BeanGenerator {
 			}
 		}
 
-		for (Binding aBinding : theGraph.performSelectQuery(SesameQuery.serql("select distinct s from {s} <"+theProp+"> {o}"))) {
-			Collection c = set(theGraph.getValues(aBinding.getResource("s"), theProp));
-			if (c.size() > 1) {
-				return true;
+		aResults.close();
+
+		try {
+			aResults = theGraph.selectQuery(SesameQuery.serql("select distinct s from {s} <"+theProp+"> {o}"));
+			for (BindingSet aBinding : OpenRdfUtil.iterable(aResults)) {
+				Collection aCollection = set(theGraph.getValues( (Resource) aBinding.getValue("s"), theProp));
+				if (aCollection.size() > 1) {
+					return true;
+				}
 			}
+
+			return false;
 		}
-
-
-		return false;
+		finally {
+			aResults.close();
+		}
 	}
 
 	/**
@@ -388,15 +393,15 @@ public class BeanGenerator {
 	 * @throws Exception if there is an error while generating the source
 	 */
 	public static void generateSourceFiles(String thePackageName, URL theOntology, RDFFormat theFormat, File theDirToSave) throws Exception {
-		ExtendedSesameRepository aRepository = new ExtendedSesameRepository();
+		ExtRepository aRepository = new ExtRepository();
 
 		aRepository.read(theOntology.openStream(), theFormat);
 
-		Collection<Resource> aClasses = transform(new MultiIterator<Statement>(aRepository.getStatements(null, URIImpl.RDF_TYPE, URIImpl.RDFS_CLASS).iterator(),
-																			   aRepository.getStatements(null, URIImpl.RDF_TYPE, SesameValueFactory.instance().createURI(OWL.CLASS))),
+		Collection<Resource> aClasses = transform(new MultiIterator<Statement>(OpenRdfUtil.toIterator(aRepository.getStatements(null, RDF.TYPE, RDFS.CLASS)),
+																			   OpenRdfUtil.toIterator(aRepository.getStatements(null, RDF.TYPE, OWL.CLASS))),
 												  new StatementToSubject());
 
-		Collection<Resource> aIndClasses = transform(aRepository.getStatements(null, URIImpl.RDF_TYPE, null).iterator(),
+		Collection<Resource> aIndClasses = transform(OpenRdfUtil.toIterator(aRepository.getStatements(null, RDF.TYPE, null)),
 													 compose(new StatementToObject(),
 															 new FunctionUtil.Cast<Value, Resource>(Resource.class)));
 
@@ -410,20 +415,20 @@ public class BeanGenerator {
 
 		Map<Resource, Collection<URI>> aMap = new HashMap<Resource, Collection<URI>>();
 
-		for (Resource aClass : set(aClasses)) {
-			Collection<URI> aProps = new HashSet<URI>(transform(aRepository.getStatements(null, URIImpl.RDFS_DOMAIN, aClass),
+		for (Resource aClass : aClasses) {
+			Collection<URI> aProps = new HashSet<URI>(transform(OpenRdfUtil.toIterator(aRepository.getStatements(null, RDFS.DOMAIN, aClass)),
 																compose(new StatementToSubject(),
 																		new FunctionUtil.Cast<Resource, URI>(URI.class))));
 
 			// infer properties based on usage in actual instance data
-			for (Binding aBinding : aRepository.performSelectQuery(SesameQuery.serql("select distinct p from {s} rdf:type {<" + aClass + ">}, {s} p {o}"))) {
-				aProps.add(aBinding.getURI("p"));
+			for (BindingSet aBinding : OpenRdfUtil.iterable(aRepository.selectQuery(SesameQuery.serql("select distinct p from {s} rdf:type {<" + aClass + ">}, {s} p {o}")))) {
+				aProps.add( (URI) aBinding.getValue("p"));
 			}
 
 			// don't include rdf:type as a property
 			aProps = filter(aProps, new Predicate<URI>() {
 				public boolean accept(final URI theValue) {
-					return !URIImpl.RDF_TYPE.equals(theValue);
+					return RDF.TYPE.equals(theValue);
 				}
 			});
 
@@ -455,7 +460,7 @@ public class BeanGenerator {
 			return;
 		}
 
-		URL aURL = null;
+		URL aURL;
 
 		if (BasicUtils.isURL(args[1])) {
 			aURL = new URL(args[1]);
@@ -464,7 +469,7 @@ public class BeanGenerator {
 			aURL = new File(args[1]).toURI().toURL();
 		}
 
-		generateSourceFiles(args[0], aURL, RDFFormat.forValue(args[2]), new File(args[3]));
+		generateSourceFiles(args[0], aURL, RDFFormat.valueOf(args[2]), new File(args[3]));
 	}
 
 	private static class StatementToObject implements Function<Statement, Value> {

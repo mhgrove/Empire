@@ -26,114 +26,61 @@ import com.google.inject.Inject;
 import javax.persistence.EntityManager;
 
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Arrays;
 
 /**
- * <p>Access class for the RDF ORM/JPA layer to get the local {@link EntityManager} instance.</p>
+ * <p>Access class for the RDF ORM/JPA layer to get the local {@link Empire} instance.</p>
  *
  * @author Michael Grove
  * @since 0.1
  */
 public class Empire {
 
-//	/**
-//	 * A thread-local reference to an instance of Empire
-//	 */
-//	private static ThreadLocal<Empire> mLocalInst = new ThreadLocal<Empire>();
-//
-//	/**
-//	 * The current EntityManager
-//	 */
-//	private EntityManager mEntityManager;
-//
-//	/**
-//	 * Create a new Empire instance with the given {@link EntityManager}
-//	 * @param theEntityManager the entity manager
-//	 */
-//	private Empire(final EntityManager theEntityManager) {
-//		mEntityManager = theEntityManager;
-//	}
-//
-//	/**
-//	 * Return whether or not Empire has been initialized for the local thread context
-//	 * @return true if it has been initialized, false otherwise
-//	 */
-//	public static boolean isInitialized() {
-//		return mLocalInst.get() != null;
-//	}
-//
-//	/**
-//	 * Return the thread local entity manager
-//	 * @return the entity manager
-//	 */
-//	static Empire get() {
-//		Empire aEmpire = mLocalInst.get();
-//		if (aEmpire == null) {
-//			throw new IllegalStateException("Empire not initialized.");
-//		}
-//
-//		return aEmpire;
-//	}
-//
-//	/**
-//	 * Return the current Empire EntityManager
-//	 * @return the current EntityManager
-//	 */
-//	public static EntityManager em() {
-//		return get().getEntityManager();
-//	}
-//
-//	/**
-//	 * Create an instance of Empire using the specified {@link EntityManager}.  All subsequent operations will be performed
-//	 * on the given EntityManager
-//	 * @param theManager the enw EntityManager
-//	 * @return this instance
-//	 */
-//	public static Empire create(EntityManager theManager) {
-//		if (mLocalInst.get() != null) {
-//			mLocalInst.get().em().close();
-//
-//			mLocalInst.remove();
-//		}
-//
-//		Empire aEmpire = new Empire(theManager);
-//
-//		mLocalInst.set(aEmpire);
-//
-//		return aEmpire;
-//	}
-//
-//	/**
-//	 * Return the current {@link EntityManager}.
-//	 * @return the entity manager
-//	 */
-//	private EntityManager getEntityManager() {
-//		return mEntityManager;
-//	}
-//
-//	/**
-//	 * Close Empire
-//	 */
-//	public static void close() {
-//		if (mLocalInst.get() != null) {
-//			if (mLocalInst.get().em().isOpen()) {
-//				mLocalInst.get().em().close();
-//			}
-//
-//			mLocalInst.remove();
-//		}
-//	}
-
-
-	////
-
+	/**
+	 * the local instance of Empire
+	 */
 	private static ThreadLocal<Empire> mLocalInst = new ThreadLocal<Empire>();
+
+	/**
+	 * The Guice injector used by Empire
+	 */
+	private static Injector injector = Guice.createInjector(new DefaultEmpireModule());
+
+	/**
+	 * The EmpirePersistenceProvider
+	 */
+	private EmpirePersistenceProvider mProvider;
+
+	/**
+	 * The EmpireAnnotationProvider
+	 */
+	private EmpireAnnotationProvider mAnnotationProvider;
+
+	/**
+	 * The collection of installed modules in Empire.  We only allow one module for each type.  If you install another
+	 * module of the same type later on, it will overwrite the previous module.
+	 */
+	private static Map<Class, Module> mModules = new HashMap<Class, Module>();
+
+	/**
+	 * Close the current Empire
+	 */
 	public static void close() {
 		if (mLocalInst.get() != null) {
 			mLocalInst.remove();
 		}
 	}
+
+	/**
+	 * Get a handle to Empire for the current thread
+	 * @return Empire
+	 */
 	public static Empire get() {
 		Empire aEmpire = mLocalInst.get();
+
 		if (aEmpire == null) {
 			aEmpire = injector.getInstance(Empire.class);
 			mLocalInst.set(aEmpire);
@@ -142,9 +89,21 @@ public class Empire {
 		return aEmpire;
 	}
 
-	private EmpirePersistenceProvider mProvider;
-	private EmpireAnnotationProvider mAnnotationProvider;
+	/**
+	 * Create a new Empire instance
+	 * @param theProvider the persistence provider to use
+	 * @param theAnnotationProvider the annotation provider to use
+	 */
+	@Inject
+	public Empire(EmpirePersistenceProvider theProvider, EmpireAnnotationProvider theAnnotationProvider) {
+		mProvider = theProvider;
+		mAnnotationProvider = theAnnotationProvider;
+	}
 
+	/**
+	 * Return the current PersistenceProvider for this instance of Empire
+	 * @return the persistance provider
+	 */
 	public EmpirePersistenceProvider persistenceProvider() {
 		return mProvider;
 	}
@@ -157,18 +116,38 @@ public class Empire {
 		return mAnnotationProvider;
 	}
 
-	@Inject
-	Empire(EmpirePersistenceProvider theProvider, EmpireAnnotationProvider theAnnotationProvider) {
-		mProvider = theProvider;
-		mAnnotationProvider = theAnnotationProvider;
+	/**
+	 * Initialize Empire with the given configuration
+	 * @param theConfig the container configuration for Empire
+	 */
+	public static void init(Map<String, String> theConfig) {
+		init(new DefaultEmpireModule(theConfig));
 	}
 
-	private static Injector injector = Guice.createInjector(new DefaultEmpireModule());
+	/**
+	 * Initialize Empire with the given configuration
+	 * @param theConfig the container configuration for Empire
+	 * @param theModules the modules to use with Empire
+	 */
+	public static void init(Map<String, String> theConfig, Module... theModules) {
+		Collection<Module> aModules = new HashSet<Module>(Arrays.asList(theModules));
+		aModules.add(new DefaultEmpireModule(theConfig));
 
+		init(aModules.toArray(new Module[aModules.size()]));
+	}
 
+	/**
+	 * Initialize Empire with the given set of Guice Modules
+	 * @param theModules the modules to use with Empire
+	 */
 	public static void init(Module... theModules) {
 		close();
+
+		// keep track of the modules we've "installed"
+		for (Module aModule : theModules) {
+			mModules.put(aModule.getClass(), aModule);
+		}
 		
-		injector = Guice.createInjector(theModules);
+		injector = Guice.createInjector(mModules.values());
 	}
 }

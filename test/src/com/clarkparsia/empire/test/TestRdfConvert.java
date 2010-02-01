@@ -24,8 +24,14 @@ import static org.junit.Assert.fail;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-import org.openrdf.model.impl.URIImpl;
+import org.openrdf.model.impl.GraphImpl;
+
+import org.openrdf.model.Graph;
+
+import org.openrdf.model.vocabulary.RDFS;
+
 import com.clarkparsia.empire.EmpireOptions;
+
 import com.clarkparsia.empire.annotation.InvalidRdfException;
 import com.clarkparsia.empire.annotation.RdfGenerator;
 import com.clarkparsia.empire.annotation.Namespaces;
@@ -40,7 +46,6 @@ import com.clarkparsia.empire.SupportsRdfId;
 import com.clarkparsia.empire.DataSourceException;
 import com.clarkparsia.empire.test.api.TestDataSource;
 import com.clarkparsia.empire.test.api.TestVocab;
-import com.clarkparsia.empire.test.util.TestUtil;
 
 import java.net.URI;
 import java.util.Date;
@@ -50,9 +55,9 @@ import com.clarkparsia.utils.NamespaceUtils;
 import com.clarkparsia.utils.BasicUtils;
 import com.clarkparsia.utils.collections.CollectionUtil;
 
-import com.clarkparsia.sesame.utils.ExtendedGraph;
-import com.clarkparsia.sesame.vocabulary.FOAF;
-import com.clarkparsia.sesame.vocabulary.DC;
+import com.clarkparsia.openrdf.vocabulary.FOAF;
+import com.clarkparsia.openrdf.vocabulary.DC;
+import com.clarkparsia.openrdf.ExtGraph;
 
 import javax.persistence.Entity;
 
@@ -143,19 +148,17 @@ public class TestRdfConvert {
 		aPerson.setMBox("mailto:bob@example.org");
 
 		try {
-			ExtendedGraph aGraph = RdfGenerator.asRdf(aPerson);
+			ExtGraph aGraph = RdfGenerator.asRdf(aPerson);
 
 			org.openrdf.model.URI aPersonURI = aGraph.getValueFactory().createURI(aPerson.getRdfId().toString());
 
-			assertEquals(aGraph.numStatements(), 2);
+			assertEquals(aGraph.size(), 2);
 
 			// the statements should assert that the person is of type foaf:TestPerson
-			assertEquals(aGraph.getValue(aPersonURI,
-										 URIImpl.RDF_TYPE),
-						 FOAF.Person);
+			assertEquals(aGraph.getType(aPersonURI), FOAF.ontology().Person);
 
 			// and that the mbox is correct
-			assertEquals(aGraph.getLiteral(aPersonURI, FOAF.mbox).getLabel(), aPerson.getMBox());
+			assertEquals(aGraph.getLiteral(aPersonURI, FOAF.ontology().mbox).getLabel(), aPerson.getMBox());
 
 			// now lets try with some more properties
 
@@ -188,21 +191,21 @@ public class TestRdfConvert {
 			assertEquals(URI.create(aGraph.getValue(aPersonURI, DC.ontology().publisher).toString()),
 						 aPerson.getWeblogURI());
 
-			assertEquals(aGraph.getLiteral(aPersonURI, FOAF.firstName).getLabel(),
+			assertEquals(aGraph.getLiteral(aPersonURI, FOAF.ontology().firstName).getLabel(),
 						 aPerson.getFirstName());
 
-			assertEquals(aGraph.getLiteral(aPersonURI, FOAF.surname).getLabel(),
+			assertEquals(aGraph.getLiteral(aPersonURI, FOAF.ontology().surname).getLabel(),
 						 aPerson.getLastName());
 
-			assertEquals(aGraph.getLiteral(aPersonURI, URIImpl.RDFS_LABEL).getLabel(),
+			assertEquals(aGraph.getLiteral(aPersonURI, RDFS.LABEL).getLabel(),
 						 aPerson.getLabel());
 
-			List aKnows = CollectionUtil.list(aGraph.getValues(aPersonURI, FOAF.knows));
+			List aKnows = CollectionUtil.list(aGraph.getValues(aPersonURI, FOAF.ontology().knows));
 
 			assertEquals(aKnows.size(), 2);
 
-			assertTrue(aKnows.contains(aGraph.getSesameValueFactory().createURI(aJane.getRdfId())));
-			assertTrue(aKnows.contains(aGraph.getSesameValueFactory().createURI(aJoe.getRdfId())));
+			assertTrue(aKnows.contains(aGraph.getValueFactory().createURI(aJane.getRdfId().toString())));
+			assertTrue(aKnows.contains(aGraph.getValueFactory().createURI(aJoe.getRdfId().toString())));
 		}
 		catch (InvalidRdfException e) {
 			e.printStackTrace();
@@ -235,13 +238,13 @@ public class TestRdfConvert {
 		aBob.getKnows().add(aJane);
 
 		try {
-			ExtendedGraph aGraph = RdfGenerator.asRdf(aBob);
+			Graph aGraph = RdfGenerator.asRdf(aBob);
 
 			// this is the set of data that would normally be in the database
-			ExtendedGraph aSourceGraph = new ExtendedGraph();
-			aSourceGraph.add(aGraph);
-			aSourceGraph.add(RdfGenerator.asRdf(aJoe));
-			aSourceGraph.add(RdfGenerator.asRdf(aJane));
+			Graph aSourceGraph = new GraphImpl();
+			aSourceGraph.addAll(aGraph);
+			aSourceGraph.addAll(RdfGenerator.asRdf(aJoe));
+			aSourceGraph.addAll(RdfGenerator.asRdf(aJane));
 
 			TestPerson aPerson = RdfGenerator.fromRdf(TestPerson.class, aBob.getRdfId(), new TestDataSource(aSourceGraph));
 
@@ -253,10 +256,10 @@ public class TestRdfConvert {
 			aGraph = RdfGenerator.asRdf(aBob);
 
 			// this is the set of data that would normally be in the database
-			aSourceGraph = new ExtendedGraph();
-			aSourceGraph.add(aGraph);
-			aSourceGraph.add(RdfGenerator.asRdf(aJoe));
-			aSourceGraph.add(RdfGenerator.asRdf(aJane));
+			aSourceGraph = new GraphImpl();
+			aSourceGraph.addAll(aGraph);
+			aSourceGraph.addAll(RdfGenerator.asRdf(aJoe));
+			aSourceGraph.addAll(RdfGenerator.asRdf(aJane));
 
 			aPerson = RdfGenerator.fromRdf(TestPerson.class, aBob.getRdfId(), new TestDataSource(aSourceGraph));
 

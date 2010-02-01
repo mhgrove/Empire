@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2009-2010 Clark & Parsia, LLC. <http://www.clarkparsia.com>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.clarkparsia.empire.spi;
 
 import com.clarkparsia.empire.DataSourceFactory;
@@ -18,7 +33,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * <p></p>
+ * <p>Implementation of the JPA {@link PersistenceProvider} interface.</p>
  *
  * @author Michael Grove
  * @since 0.6
@@ -26,11 +41,26 @@ import java.util.Set;
 public class EmpirePersistenceProvider implements PersistenceProvider {
     // TODO: should we keep factories created so that to factories created w/ the same name are == ?
 
+	/**
+	 * Current DataSourceFactory "plugins"
+	 */
     private Set<DataSourceFactory> mFactories = new HashSet<DataSourceFactory>();
+
+	/**
+	 * Application container configuration
+	 */
     private Map<String, String> mContainerConfig;
 
-    private static final String FACTORY = "factory";
+	/**
+	 * Key constant for finding the class name of the factory we want to create
+	 */
+    public static final String FACTORY = "factory";
 
+	/**
+	 * Create a new EmpirePersistenceProvider
+	 * @param theFactories the list of DataSourceFactory objects available
+	 * @param theContainerConfig the current empire configuration
+	 */
     @Inject
     public EmpirePersistenceProvider(Set<DataSourceFactory> theFactories,
                               @Named("ec") Map<String, String> theContainerConfig) {
@@ -38,14 +68,19 @@ public class EmpirePersistenceProvider implements PersistenceProvider {
         mContainerConfig = theContainerConfig;
     }
 
+	/**
+	 * @inheritDoc
+	 */
     public EntityManagerFactory createEntityManagerFactory(final String theUnitName, final Map theMap) {
         Map<String, String> aConfig = new HashMap<String, String>(mContainerConfig);
+
         aConfig.putAll(mapOfStrings(theMap));
 
         if (!aConfig.containsKey(FACTORY)) {
             return null;
         }
 
+		// TODO: is there a better way to do this?
         final String aName = aConfig.get(FACTORY);
 
         for (DataSourceFactory aFactory  : mFactories) {
@@ -57,12 +92,20 @@ public class EmpirePersistenceProvider implements PersistenceProvider {
         return null;
     }
 
+	/**
+	 * @inheritDoc
+	 */
     public EntityManagerFactory createContainerEntityManagerFactory(final PersistenceUnitInfo thePersistenceUnitInfo,
                                                                     final Map theMap) {
         // TODO: there's a lot more options on PersistenceUnitInfo that we can use here.
         return createEntityManagerFactory(thePersistenceUnitInfo.getPersistenceUnitName(), theMap);
     }
 
+	/**
+	 * Convert a Map to a Map of String's
+	 * @param theMap the map to convert
+	 * @return the original map copied as a map of strings (calling toString on all keys and values).
+	 */
     private Map<String, String> mapOfStrings(Map theMap) {
         Map<String, String> aMap = new HashMap<String, String>();
 
@@ -83,43 +126,5 @@ public class EmpirePersistenceProvider implements PersistenceProvider {
         }
 
         return aSubMap;
-    }
-
-    public static void main(String[] args) {
-
-//        Injector injector = Guice.createInjector(new EmpireOptions.DefaultEmpireModule());
-//
-//        TestDI test = injector.createChildInjector(new CustomModule()).getInstance(TestDI.class);
-//
-//        System.err.println(test.mgr);
-
-//        System.err.println(injector.createChildInjector(new CustomModule()).getInstance(EntityManagerFactoryImpl.class).mDataSourceFactoryProvider);
-//
-//        System.err.println(injector.createChildInjector(new CustomModule()).getInstance(EntityManagerFactoryImpl.class).mDataSourceFactoryProvider.get());
-//
-//        System.err.println(((EntityManagerFactoryImpl)injector.createChildInjector(new CustomModule()).getInstance(EmpirePersistenceProvider.class).createEntityManagerFactory("", new HashMap())).mDataSourceFactoryProvider.get());
-
-        Map<String, String> m = new HashMap<String, String>();
-        Map<String, String> sub = new HashMap<String, String>();
-        String prefix = "testdb";
-
-        m.put("testdb.one", "one");
-        m.put("testdb.two", "two");
-        m.put("three.testdb", "three");
-        m.put("test.db.three.testdb", "four");
-
-        for (String aKey : m.keySet()) {
-            if (aKey.startsWith(prefix)) {
-                sub.put(aKey.substring(prefix.length() + 1), m.get(aKey));
-            }
-        }
-
-        System.err.println(sub);
-    }
-
-    public static class TestDI {
-        @PersistenceContext(properties={@PersistenceProperty(name="property.name", value="property value")
-})
-        EntityManager mgr;
     }
 }

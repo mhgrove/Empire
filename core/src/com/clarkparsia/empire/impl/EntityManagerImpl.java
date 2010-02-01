@@ -65,8 +65,6 @@ import java.util.HashSet;
 import java.util.Collections;
 import java.util.WeakHashMap;
 
-import com.clarkparsia.sesame.utils.ExtendedGraph;
-
 import static com.clarkparsia.empire.util.BeanReflectUtil.getAnnotatedFields;
 import static com.clarkparsia.empire.util.BeanReflectUtil.getAnnotatedGetters;
 import static com.clarkparsia.empire.util.BeanReflectUtil.asSetter;
@@ -118,7 +116,6 @@ public class EntityManagerImpl implements EntityManager {
 	 */
 	EntityManagerImpl(MutableDataSource theSource) {
 
-		// TODO: resolve all other todo's =)
 		// TODO: sparql for everything, just convert serql into sparql
 		// TODO: respect temporal annotations for date I/O
 		// TODO: bnode support?
@@ -542,7 +539,7 @@ public class EntityManagerImpl implements EntityManager {
 
 		Graph aGraph = getDataSource().describe(theURI);
 
-		return aGraph != null && new ExtendedGraph(aGraph).numStatements() > 0;
+		return aGraph != null && aGraph.size() > 0;
 
 	}
 

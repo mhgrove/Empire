@@ -5,11 +5,11 @@ h1. Frequently Asked Questions
 * <a href="#database_support">What databases are supported by Empire?</a>
 * <a href="#query_languages">What query languages are supported by Empire?</a>
 * <a href="#why_sesame">Why is Sesame used as the internal RDF API?</a>
-* <a href="#why_sesame_one">Why is Sesame 1.x supported, but not Sesame 2?</a>
 * <a href="#what_annotation_index">What are these Annotation indexes?</a>
 * <a href="#gen_annotation_index">How do I generate Annotation indexes?</a>
 * <a href="#why_not_other">Why not use other frameworks like Elmo or JenaBeans?</a>
 * <a href="#how_much">How much have you done?</a>
+* <a href="#why_guice">Why Guice?</a>
 
 h3. <a name="known_bugs"></a>Are there any known bugs or issues with Empire?
 
@@ -29,7 +29,7 @@ Empire requires a Java 5 (or greater) JVM.
 h3. <a name="database_support"></a>What databases are supported by Empire?
 
 <p>
-Currently Empire provides out of the box support for "Sesame 1.x":http://www.openrdf.org , "Jena":http://openjena.org
+Currently Empire provides out of the box support for "Sesame 2.x":http://www.openrdf.org , "Jena":http://openjena.org
 (in memory only -- though easily extendable to other Jena systems such as TDB or SDB) and "4Store":http://4store.org
 </p>
 
@@ -42,15 +42,7 @@ h3. <a name="query_languages"></a>What query languages are supported by Empire?
 h3. <a name="why_sesame"></a>Why is Sesame used as the internal RDF API?
 
 <p>
-It's a lightweight RDF-centric API that I'm familiar with that we've used many times in the past
-</p>
-
-h3. <a name="#why_sesame_one"></a>Why is Sesame 1.x supported, but not Sesame 2?
-
-<p>
-The last time I checked, which was prior to the release of Sesame 2.3, Sesame 1.2.7 actually had faster query performance
-for most, if not all, of our use cases.  Since Empire will interact heavily with it's database, query performance
-was of the utmost performance.
+It's a lightweight RDF-centric API that I'm familiar with that we've used many times in the past.
 </p>
 
 h3. <a name="what_annotation_index"></a>What are these Annotation indexes?
@@ -92,3 +84,10 @@ implementation for *very* simple transaction support which would be suitable for
 
 Lastly, we provide a small set of Empire specific annotation for driving the convertion to/from RDF.
 See the "examples":/empire/examples for more information on how to use the Empire annotations.
+
+h3. <a name="why_guice">Why Guice?</a>
+
+Well, some parts of JPA allow for dependency injection, such as @PersistenceContext or @PersistenceUnit, so I had been
+planning on integrating some sort of DI framework to handle this.  Guice seemed like a good choice, it was relatively
+lightweight, well documented, and could easily accomplish that I wanted to do.  It also gave me a cleaner way for
+users of Empire to specify at runtime which database support they wanted to use in their application.

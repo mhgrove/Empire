@@ -74,7 +74,7 @@ public class RepositoryDataSourceFactory implements DataSourceFactory {
 
 	public DataSource create(final Map<String, String> theMap) throws DataSourceException {
 		if (!canCreate(theMap)) {
-			throw new DataSourceException("Invalid configuration map");
+			throw new DataSourceException("Invalid configuration map: " + theMap);
 		}
 
 		String aURL = theMap.get(URL);

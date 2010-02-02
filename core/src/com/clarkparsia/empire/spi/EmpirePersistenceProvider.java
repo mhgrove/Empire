@@ -80,12 +80,14 @@ public class EmpirePersistenceProvider implements PersistenceProvider {
             return null;
         }
 
+		// TODO: use the unit name.  app properties should be broken up by unit name, only pass in the unit's props to the factory
+
 		// TODO: is there a better way to do this?
         final String aName = aConfig.get(FACTORY);
 
         for (DataSourceFactory aFactory  : mFactories) {
             if (aFactory.getClass().getName().equals(aName)) {
-                return new EntityManagerFactoryImpl(aFactory);
+                return new EntityManagerFactoryImpl(aFactory, aConfig);
             }
         }
 

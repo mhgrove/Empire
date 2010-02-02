@@ -42,10 +42,11 @@ import java.net.ConnectException;
  * @since 0.1
  */
 public class EntityManagerFactoryImpl implements EntityManagerFactory {
-    public DataSourceFactory mDataSourceFactoryProvider;
 
-    //@Deprecated
-	//public static final String FACTORY = "factory";
+	/**
+	 * Factory for creating the DataSources backed by EntityManagers from this factory.
+	 */
+    private DataSourceFactory mDataSourceFactoryProvider;
 
 	/**
 	 * Whether or not this EntityManagerFactory is open.
@@ -58,12 +59,27 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory {
 	private Collection<EntityManager> mManagers;
 
 	/**
+	 * Factory configuration parameters
+	 */
+	private Map<String, String> mConfig;
+
+	/**
 	 * Create a new AbstractEntityManagerFactory
-     * @param theProvider
+     * @param theProvider the DataSourceFactory to use with this
      */
 	public EntityManagerFactoryImpl(DataSourceFactory theProvider) {
+		this(theProvider, new HashMap<String, String>());
+	}
+
+	/**
+	 * Create a new AbstractEntityManagerFactory
+     * @param theProvider the DataSourceFactory to use with this
+	 * @param theConfig the container configuration to be used by this EntityManagerFactory
+     */
+	public EntityManagerFactoryImpl(DataSourceFactory theProvider, final Map<String, String> theConfig) {
 		mManagers = new HashSet<EntityManager>();
         mDataSourceFactoryProvider = theProvider;
+		mConfig = theConfig;
 	}
 
 	/**
@@ -75,7 +91,10 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory {
 	 */
 	protected EntityManager newEntityManager(Map<String, String> theMap) {
 		try {
-			DataSource aSource = mDataSourceFactoryProvider.create(theMap);
+			Map<String, String> aConfig = new HashMap<String, String>(theMap);
+			aConfig.putAll(mConfig);
+
+			DataSource aSource = mDataSourceFactoryProvider.create(aConfig);
 
 			if (!(aSource instanceof MutableDataSource)) {
 				throw new IllegalArgumentException("Cannot use Empire with a non-mutable Data source");

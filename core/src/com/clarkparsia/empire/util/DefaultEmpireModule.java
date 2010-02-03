@@ -19,8 +19,8 @@ import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
+
 import com.clarkparsia.empire.DataSourceFactory;
-import com.clarkparsia.empire.sesametwo.RepositoryDataSourceFactory;
 
 import java.util.Map;
 import java.util.Properties;

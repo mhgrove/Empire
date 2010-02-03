@@ -14,7 +14,7 @@
 	<property name="core.dir" location="core"/>
 	<property name="jena.dir" location="jena"/>
 	<property name="fourstore.dir" location="fourstore"/>
-	<property name="sesame.dir" location="sesame"/>
+	<property name="sesame.dir" location="sesame2"/>
 	<property name="test.dir" location="test"/>
 
 	<property name="core.src.dir" location="${core.dir}/src"/>

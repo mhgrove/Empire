@@ -17,12 +17,15 @@ package com.clarkparsia.empire.impl.serql;
 
 import com.clarkparsia.empire.DataSource;
 
+import com.clarkparsia.openrdf.query.SesameQueryUtils;
+
 import org.openrdf.model.Value;
+
 import org.openrdf.query.parser.serql.SeRQLParserFactory;
+
 import org.openrdf.query.MalformedQueryException;
 
 import com.clarkparsia.empire.impl.RdfQuery;
-import com.clarkparsia.openrdf.OpenRdfUtil;
 
 /**
  * <p>Extends the {@link com.clarkparsia.empire.impl.RdfQuery} class to provide support for queries in the
@@ -48,7 +51,7 @@ public class SerqlQuery extends RdfQuery {
 	 */
 	@Override
 	protected String asQueryString(final Value theValue) {
-		return OpenRdfUtil.getQueryString(theValue);
+		return SesameQueryUtils.getQueryString(theValue);
 	}
 
 	/**

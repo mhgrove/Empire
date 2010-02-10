@@ -20,15 +20,16 @@ import com.clarkparsia.empire.DataSourceException;
 import com.clarkparsia.empire.ResultSet;
 import com.clarkparsia.empire.QueryException;
 import com.clarkparsia.empire.SupportsNamedGraphs;
-import com.clarkparsia.empire.sesametwo.TupleQueryResultSet;
 
 import com.clarkparsia.empire.impl.AbstractDataSource;
-import com.clarkparsia.empire.impl.AbstractResultSet;
 
+import com.clarkparsia.empire.impl.AbstractResultSet;
 import com.clarkparsia.empire.impl.sparql.SPARQLQueryFactory;
 
 import org.openrdf.model.Graph;
 import org.openrdf.model.impl.ValueFactoryImpl;
+import org.openrdf.query.QueryEvaluationException;
+import org.openrdf.query.TupleQueryResult;
 import org.openrdf.rio.RDFFormat;
 
 import org.apache.log4j.Logger;
@@ -44,7 +45,8 @@ import com.clarkparsia.fourstore.api.Store;
 import com.clarkparsia.fourstore.api.StoreException;
 
 import com.clarkparsia.openrdf.OpenRdfIO;
-import com.clarkparsia.openrdf.OpenRdfUtil;
+
+import static com.clarkparsia.openrdf.OpenRdfUtil.toIterator;
 
 /**
  * <p>Implementation of a DataSource which is backed by a 4Store instance.</p>
@@ -112,7 +114,17 @@ public class FourStoreDataSource extends AbstractDataSource implements MutableDa
 	 */
 	public ResultSet selectQuery(final String theQuery) throws QueryException {
 		try {
-			return new TupleQueryResultSet(mStore.query(theQuery));
+			final TupleQueryResult aResult = mStore.query(theQuery);
+            return new AbstractResultSet(toIterator(aResult)) {
+                public void close() {
+                    try {
+                        aResult.close();
+                    }
+                    catch (QueryEvaluationException e) {
+                        e.printStackTrace();
+                    }
+                }
+            };
 		}
 		catch (com.clarkparsia.fourstore.api.QueryException e) {
 			throw new QueryException(e);

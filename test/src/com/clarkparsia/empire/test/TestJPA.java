@@ -137,17 +137,13 @@ public class TestJPA  {
 
 	@BeforeClass
 	public static void beforeClass() {
-System.err.println("BEFORE CLASS");
         // our test data set doesn't type any literals, so we have to set to weak (no) typing
         // TODO: don't hard code this if we're doing tests w/ other datasets.
         EmpireOptions.STRONG_TYPING = false;
-
-//		TestUtil.initEmpire();
 	}
 
 	@AfterClass
 	public static void afterClass() {
-//		Empire.close();
 	}
 
 	@Test

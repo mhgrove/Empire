@@ -183,15 +183,15 @@
 				<isset property="project.dirname"/>
 			</not>
 		</condition>
-		<!-- Copy the javadocs -->
+
 		<copy todir="${dist.dir}">
 			<fileset dir="">
-				<include name="doc/**"/>
+				<include name="docs/**"/>
 			</fileset>
 		</copy>
 		<zip destfile="${dist.dir}/${project.dirname}.zip">
 			<zipfileset dir="dist" prefix="${project.dirname}"
-				excludes="${project.name}*.zip"/>
+				excludes="${project.name}*.zip, dist/test-reports"/>
 		</zip>
 	</target>
 

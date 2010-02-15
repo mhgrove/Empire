@@ -45,9 +45,4 @@ public class EmpireTestSuite {
 		Empire.init(new DefaultEmpireModule(), new OpenRdfEmpireModule(), new FourStoreEmpireModule(),
 					new JenaEmpireModule(), new TestModule());
 	}
-
-	@AfterClass
-	public static void afterClass() {
-		Empire.close();
-	}
 }

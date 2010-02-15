@@ -18,6 +18,8 @@ package com.clarkparsia.empire;
 import com.clarkparsia.empire.spi.EmpirePersistenceProvider;
 import com.clarkparsia.empire.util.EmpireAnnotationProvider;
 import com.clarkparsia.empire.util.DefaultEmpireModule;
+import com.clarkparsia.utils.Predicate;
+import static com.clarkparsia.utils.collections.CollectionUtil.find;
 import com.google.inject.Injector;
 import com.google.inject.Guice;
 import com.google.inject.Module;
@@ -40,9 +42,9 @@ import java.util.Arrays;
 public class Empire {
 
 	/**
-	 * the local instance of Empire
+	 * "the" instance of Empire
 	 */
-	private static ThreadLocal<Empire> mLocalInst = new ThreadLocal<Empire>();
+	private static Empire INSTANCE;
 
 	/**
 	 * The Guice injector used by Empire
@@ -66,27 +68,15 @@ public class Empire {
 	private static Map<Class, Module> mModules = new HashMap<Class, Module>();
 
 	/**
-	 * Close the current Empire
-	 */
-	public static void close() {
-		if (mLocalInst.get() != null) {
-			mLocalInst.remove();
-		}
-	}
-
-	/**
 	 * Get a handle to Empire for the current thread
 	 * @return Empire
 	 */
 	public static Empire get() {
-		Empire aEmpire = mLocalInst.get();
-
-		if (aEmpire == null) {
-			aEmpire = injector.getInstance(Empire.class);
-			mLocalInst.set(aEmpire);
+		if (INSTANCE == null) {
+			INSTANCE = injector.getInstance(Empire.class);
 		}
 
-		return aEmpire;
+		return INSTANCE;
 	}
 
 	/**
@@ -131,7 +121,10 @@ public class Empire {
 	 */
 	public static void init(Map<String, String> theConfig, Module... theModules) {
 		Collection<Module> aModules = new HashSet<Module>(Arrays.asList(theModules));
-		aModules.add(new DefaultEmpireModule(theConfig));
+
+		if (!find(aModules, new Predicate<Module>(){ public boolean accept(Module theModule) { return theModule instanceof DefaultEmpireModule; }})) {
+			aModules.add(new DefaultEmpireModule(theConfig));
+		}
 
 		init(aModules.toArray(new Module[aModules.size()]));
 	}
@@ -141,7 +134,7 @@ public class Empire {
 	 * @param theModules the modules to use with Empire
 	 */
 	public static void init(Module... theModules) {
-		close();
+		mModules.clear();
 
 		// keep track of the modules we've "installed"
 		for (Module aModule : theModules) {
@@ -149,5 +142,9 @@ public class Empire {
 		}
 		
 		injector = Guice.createInjector(mModules.values());
+	}
+
+	public <T> T instance(Class<T> theClass) {
+		return injector.getInstance(theClass);
 	}
 }

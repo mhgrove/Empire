@@ -21,6 +21,7 @@ import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 
 import com.clarkparsia.empire.DataSourceFactory;
+import com.clarkparsia.empire.spi.guice.PersistenceInjectionModule;
 
 import java.util.Map;
 import java.util.Properties;
@@ -93,6 +94,8 @@ public class DefaultEmpireModule extends AbstractModule {
 	  */
 	 @Override
 	 protected void configure() {
+		 install(new PersistenceInjectionModule());
+
 		 bind(new TypeLiteral<Map<String, String>>(){}).annotatedWith(Names.named("ec")).toInstance(mConfig);
 
 		 // todo: should this be based on what's in the config file?

@@ -87,29 +87,32 @@ public class BeanGenerator {
 	/**
 	 * The list of xsd datatypes which map to Integer
 	 */
-	static final List<URI> integerTypes = Arrays.asList(XMLSchema.INT, XMLSchema.INTEGER, XMLSchema.POSITIVE_INTEGER,
+	private static final List<URI> integerTypes = Arrays.asList(XMLSchema.INT, XMLSchema.INTEGER, XMLSchema.POSITIVE_INTEGER,
 														   XMLSchema.NEGATIVE_INTEGER, XMLSchema.NON_NEGATIVE_INTEGER,
 														   XMLSchema.NON_POSITIVE_INTEGER, XMLSchema.UNSIGNED_INT);
 
 	/**
 	 * The list of xsd datatypes which map to Long
 	 */
-	static final List<URI> longTypes = Arrays.asList(XMLSchema.LONG, XMLSchema.UNSIGNED_LONG);
+	private static final List<URI> longTypes = Arrays.asList(XMLSchema.LONG, XMLSchema.UNSIGNED_LONG);
 
 	/**
 	 * The list of xsd datatypes which map to Float
 	 */
-	static final List<URI> floatTypes = Arrays.asList(XMLSchema.FLOAT, XMLSchema.DECIMAL);
+	private static final List<URI> floatTypes = Arrays.asList(XMLSchema.FLOAT, XMLSchema.DECIMAL);
 
 	/**
 	 * The list of xsd datatypes which map to Short
 	 */
-	static final List<URI> shortTypes = Arrays.asList(XMLSchema.SHORT, XMLSchema.UNSIGNED_SHORT);
+	private static final List<URI> shortTypes = Arrays.asList(XMLSchema.SHORT, XMLSchema.UNSIGNED_SHORT);
 
 	/**
 	 * The list of xsd datatypes which map to Byte
 	 */
-	static final List<URI> byteTypes = Arrays.asList(XMLSchema.BYTE, XMLSchema.UNSIGNED_BYTE);
+	private static final List<URI> byteTypes = Arrays.asList(XMLSchema.BYTE, XMLSchema.UNSIGNED_BYTE);
+
+	private static final Map<Resource, String> NAMES = new HashMap<Resource, String>();
+	private static final Map<String, Integer> NAMES_TO_COUNT = new HashMap<String, Integer>();
 
 	/**
 	 * Return the Java bean source code that represents the given RDF class
@@ -217,10 +220,14 @@ public class BeanGenerator {
 				if (aRange == null) {
 					// could not get it from type usage, so maybe its a literal and we can guess it from datatype
 
-					aResults = theGraph.selectQuery(SesameQuery.serql("select distinct datatype(o) from {s} <"+theProp+"> {o} where isLiteral(o) and datatype(o) != null"));
+					aResults = theGraph.selectQuery(SesameQuery.serql("select distinct datatype(o) as dt from {s} <"+theProp+"> {o} where isLiteral(o)"));
 
 					if (aResults.hasNext()) {
-						URI aTempRange = (URI) aResults.next().getValue("datatype(o)");
+						URI aTempRange = null;
+						while (aTempRange == null && aResults.hasNext()) {
+							aTempRange = ((Literal) aResults.next().getValue("o")).getDatatype();
+						}
+						
 						if (!aResults.hasNext()) {
 							aRange = aTempRange;
 						}
@@ -355,10 +362,6 @@ public class BeanGenerator {
 			aProps.addAll(theMap.get(theRes));
 		}
 
-//		for (Resource aSuper : theGraph.getSuperclasses(theRes)) {
-//			aProps.addAll(props(theGraph, aSuper, theMap));
-//		}
-
 		return aProps;
 	}
 
@@ -368,18 +371,35 @@ public class BeanGenerator {
 	 * @return the name of the Java class
 	 */
 	private static String className(Resource theClass) {
+		if (NAMES.containsKey(theClass)) {
+			return NAMES.get(theClass);
+		}
+
 		String aLabel;
 
 		if (theClass instanceof URI) {
 			aLabel = NamespaceUtils.getLocalName(theClass.toString());
 		}
 		else {
-			aLabel = theClass.toString();
+			aLabel = theClass.stringValue();
 		}
 
 		aLabel = String.valueOf(aLabel.charAt(0)).toUpperCase() + aLabel.substring(1);
 
 		aLabel = aLabel.replaceAll(" ", "");
+
+		if (NAMES_TO_COUNT.containsKey(aLabel)) {
+			String aNewLabel = aLabel + NAMES_TO_COUNT.get(aLabel);
+
+			NAMES_TO_COUNT.put(aLabel, NAMES_TO_COUNT.get(aLabel)+1);
+
+			aLabel = aNewLabel;
+		}
+		else {
+			NAMES_TO_COUNT.put(aLabel, 0);
+		}
+
+		NAMES.put(theClass, aLabel);
 
 		return aLabel;
 	}
@@ -393,7 +413,11 @@ public class BeanGenerator {
 	 * @throws Exception if there is an error while generating the source
 	 */
 	public static void generateSourceFiles(String thePackageName, URL theOntology, RDFFormat theFormat, File theDirToSave) throws Exception {
+		NAMES_TO_COUNT.clear();
+
 		ExtRepository aRepository = new ExtRepository();
+		
+		aRepository.initialize();
 
 		aRepository.read(theOntology.openStream(), theFormat);
 
@@ -405,13 +429,15 @@ public class BeanGenerator {
 													 compose(new StatementToObject(),
 															 new FunctionUtil.Cast<Value, Resource>(Resource.class)));
 
-		aClasses.addAll(filter(aIndClasses, new Predicate<Resource>() {
+		aClasses.addAll(aIndClasses);
+
+		aClasses = filter(aClasses, new Predicate<Resource>() {
 			public boolean accept(final Resource theValue) {
-				return !theValue.toString().startsWith(RDFS.NAMESPACE)
-					   && !theValue.toString().startsWith(RDF.NAMESPACE)
-					   && !theValue.toString().startsWith(OWL.NAMESPACE);
+				return !theValue.stringValue().startsWith(RDFS.NAMESPACE)
+					   && !theValue.stringValue().startsWith(RDF.NAMESPACE)
+					   && !theValue.stringValue().startsWith(OWL.NAMESPACE);
 			}
-		}));
+		});
 
 		Map<Resource, Collection<URI>> aMap = new HashMap<Resource, Collection<URI>>();
 
@@ -428,15 +454,23 @@ public class BeanGenerator {
 			// don't include rdf:type as a property
 			aProps = filter(aProps, new Predicate<URI>() {
 				public boolean accept(final URI theValue) {
-					return RDF.TYPE.equals(theValue);
+					return !RDF.TYPE.equals(theValue);
 				}
 			});
 
 			aMap.put(aClass, aProps);
 		}
 
+		if (!theDirToSave.exists()) {
+			theDirToSave.mkdirs();
+		}
+
 		for (Resource aClass :  aMap.keySet()) {
 			String aSrc = toSource(thePackageName, aRepository, aClass, aMap);
+
+			if (aSrc == null) {
+				continue;
+			}
 
 			File aFile = new File(theDirToSave, className(aClass) + ".java");
 
@@ -453,7 +487,7 @@ public class BeanGenerator {
 //		generateSourceFiles("com.clarkparsia.empire.codegen.test", new File("test/data/nasa.nt").toURI().toURL(), RDFFormat.NTRIPLES, aOut);
 
 		if (args.length < 4) {
-			System.err.println("Must provide four arguments to the program, the package name, ontology URL, rdf format of the ontology (rdfxml|turtle|ntriples), and the output directory for the source code.\n");
+			System.err.println("Must provide four arguments to the program, the package name, ontology URL, rdf format of the ontology (rdf/xml|turtle|ntriples), and the output directory for the source code.\n");
 			System.err.println("For example:\n");
 			System.err.println("\tBeanGenerator my.package.domain /usr/local/files/myontology.ttl turtle /usr/local/code/src/my/package/domain");
 

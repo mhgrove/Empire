@@ -46,6 +46,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.AccessibleObject;
+import java.lang.reflect.Modifier;
 
 import java.lang.annotation.Annotation;
 
@@ -90,6 +91,7 @@ import com.clarkparsia.openrdf.util.GraphBuilder;
 import com.clarkparsia.openrdf.ExtGraph;
 
 import javax.persistence.Entity;
+import javax.persistence.Transient;
 
 import javassist.util.proxy.ProxyFactory;
 import javassist.util.proxy.MethodHandler;
@@ -214,7 +216,7 @@ public class RdfGenerator {
 			OBJECT_M.put(theURI, theObj);
 		}
 
-		ExtGraph aGraph = new ExtGraph(EmpireUtil.describe(theSource, theURI));
+		ExtGraph aGraph = new ExtGraph(EmpireUtil.describe(theSource, theObj));
 
 		if (aGraph.size() == 0) {
 			OBJECT_M.remove(theURI);
@@ -471,6 +473,14 @@ public class RdfGenerator {
 
 			AsValueFunction aFunc = new AsValueFunction();
 			for (AccessibleObject aAccess : aAccessors) {
+
+				if (aAccess.isAnnotationPresent(Transient.class)
+					|| (aAccess instanceof Field
+						&& Modifier.isTransient( ((Field)aAccess).getModifiers() ))) {
+
+					// transient fields or accessors with the Transient annotation do not get converted.
+					continue;
+				}
 
 				RdfProperty aPropertyAnnotation = getAnnotation(aAccess, RdfProperty.class);
 				URI aProperty = aBuilder.getValueFactory().createURI(NamespaceUtils.uri(aPropertyAnnotation.value()));

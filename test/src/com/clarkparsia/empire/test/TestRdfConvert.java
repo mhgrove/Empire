@@ -25,6 +25,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 import org.openrdf.model.impl.GraphImpl;
+import org.openrdf.model.impl.ValueFactoryImpl;
 
 import org.openrdf.model.Graph;
 
@@ -60,6 +61,7 @@ import com.clarkparsia.openrdf.vocabulary.DC;
 import com.clarkparsia.openrdf.ExtGraph;
 
 import javax.persistence.Entity;
+import javax.persistence.Transient;
 
 /**
  * <p>Test cases for classes in the com.clarkparsia.empire.annotation package.</p>
@@ -307,6 +309,29 @@ public class TestRdfConvert {
 		assertFalse(aImpl.equals(new SupportsRdfIdImpl(URI.create("urn:new:id"))));
 	}
 
+	@Test
+	public void testTransience() {
+		TransientTest aObj = new TransientTest();
+
+		aObj.foo = "foo";
+		aObj.bar = "bar";
+		aObj.baz = "baz";
+
+		try {
+			ExtGraph aGraph = RdfGenerator.asRdf(aObj);
+
+			// we should have the normal field
+			assertTrue(aGraph.contains(null, ValueFactoryImpl.getInstance().createURI("urn:foo"), null));
+
+			// but neither of the transient ones
+			assertFalse(aGraph.contains(null, ValueFactoryImpl.getInstance().createURI("urn:bar"), null));
+			assertFalse(aGraph.contains(null, ValueFactoryImpl.getInstance().createURI("urn:baz"), null));
+		}
+		catch (InvalidRdfException e) {
+			fail(e.getMessage());
+		}
+	}
+
 	@RdfsClass("urn:TestClass")
 	@Entity
 	private class NoDefaultConstructor extends BaseTestClass {
@@ -363,5 +388,19 @@ public class TestRdfConvert {
 		@RdfId
 		@RdfProperty("foaf:name")
 		public String name;
+	}
+
+	@RdfsClass("urn:TestClass")
+	@Entity
+	public class TransientTest extends BaseTestClass {
+		@RdfProperty("urn:foo")
+		private String foo;
+
+		@RdfProperty("urn:bar")
+		private transient String bar;
+
+		@Transient
+		@RdfProperty("urn:baz")
+		private String baz;
 	}
 }

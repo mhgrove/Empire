@@ -11,6 +11,7 @@ import com.clarkparsia.empire.impl.serql.SerqlDialect;
 import javax.persistence.Entity;
 
 import org.openrdf.model.Graph;
+import org.openrdf.model.impl.GraphImpl;
 
 import java.net.URI;
 
@@ -54,8 +55,16 @@ public class EmpireUtil {
 
 		String aNG = null;
 
+		if (asSupportsRdfId(theObj).getRdfId() == null) {
+			return new GraphImpl();
+		}
+
 		if (theSource instanceof SupportsNamedGraphs && hasNamedGraphSpecified(theObj)) {
-			aNG = getNamedGraph(theObj).toString();
+			java.net.URI aURI = getNamedGraph(theObj);
+
+			if (aURI != null) {
+				aNG = aURI.toString();
+			}
 		}
 
 		String aSPARQL = "construct {?s ?p ?o}\n" +

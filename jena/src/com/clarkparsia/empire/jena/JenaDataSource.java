@@ -69,7 +69,8 @@ public class JenaDataSource extends AbstractDataSource implements MutableDataSou
 	public void disconnect() {
 		setConnected(false);
 
-		mModel.close();
+		// TODO: should we close the model here?
+		//mModel.close();
 	}
 
 	/**

@@ -36,6 +36,7 @@ import java.net.ConnectException;
  *
  * @author Michael Grove
  * @since 0.1
+ * @version 0.6.1
  */
 public class TransactionalDataSource implements DataSource, MutableDataSource, SupportsTransactions {
 
@@ -168,13 +169,6 @@ public class TransactionalDataSource implements DataSource, MutableDataSource, S
 	 */
 	public Graph graphQuery(final String theQuery) throws QueryException {
 		return mDataSource.graphQuery(theQuery);
-	}
-
-	/**
-	 * @inheritDoc
-	 */
-	public Graph describe(final URI theURI) throws DataSourceException {
-		return mDataSource.describe(theURI);
 	}
 
 	/**

@@ -37,6 +37,7 @@ import java.util.Set;
  *
  * @author Michael Grove
  * @since 0.6
+ * @version 0.6.1
  */
 public class EmpirePersistenceProvider implements PersistenceProvider {
     // TODO: should we keep factories created so that to factories created w/ the same name are == ?
@@ -116,17 +117,5 @@ public class EmpirePersistenceProvider implements PersistenceProvider {
         }
 
         return aMap;
-    }
-
-    private Map<String, String> subMap(String thePrefix, Map<String, String> theMap) {
-        Map<String, String> aSubMap = new HashMap<String, String>();
-
-        for (String aKey : theMap.keySet()) {
-            if (aKey.startsWith(thePrefix)) {
-                aSubMap.put(aKey.substring(thePrefix.length() + 1), theMap.get(aKey));
-            }
-        }
-
-        return aSubMap;
     }
 }

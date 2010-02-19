@@ -18,14 +18,17 @@ package com.clarkparsia.empire.test.util;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.AbstractModule;
 import com.clarkparsia.empire.DataSourceFactory;
+import com.clarkparsia.empire.util.EmpireModule;
 import com.clarkparsia.empire.test.api.MutableTestDataSourceFactory;
 
 /**
  * <p>Guice module for the test suite</p>
  *
  * @author Michael Grove
+ * @since 0.6
+ * @version 0.6.1
  */
-public class TestModule extends AbstractModule {
+public class TestModule extends AbstractModule implements EmpireModule {
 	@Override
 	protected void configure() {
 		Multibinder.newSetBinder(binder(), DataSourceFactory.class)

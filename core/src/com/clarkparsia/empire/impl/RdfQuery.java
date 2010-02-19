@@ -27,12 +27,10 @@ import org.openrdf.query.BindingSet;
 
 import com.clarkparsia.empire.DataSource;
 import com.clarkparsia.empire.ResultSet;
-import com.clarkparsia.empire.SupportsRdfId;
+import com.clarkparsia.empire.util.EmpireUtil;
 import com.clarkparsia.empire.annotation.RdfGenerator;
-import com.clarkparsia.empire.annotation.RdfsClass;
 import com.clarkparsia.openrdf.ExtBindingSet;
 
-import javax.persistence.Entity;
 import javax.persistence.FlushModeType;
 import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
@@ -55,6 +53,7 @@ import java.util.regex.Pattern;
  *
  * @author Michael Grove
  * @since 0.1
+ * @version 0.6.1
  * @see com.clarkparsia.empire.impl.serql.SerqlQuery
  * @see com.clarkparsia.empire.impl.sparql.SPARQLQuery
  */
@@ -299,7 +298,7 @@ public abstract class RdfQuery implements Query {
 
 						Object aObj = null;
 
-                        if (aBinding.getValue(MAGIC_PROJECTION_VAR) instanceof URI && isEmpireCompatible(mClass)) {
+                        if (aBinding.getValue(MAGIC_PROJECTION_VAR) instanceof URI && EmpireUtil.isEmpireCompatible(mClass)) {
                             aObj = RdfGenerator.fromRdf(mClass,
                                                         java.net.URI.create(aBinding.getURI(MAGIC_PROJECTION_VAR).toString()),
                                                         getSource());
@@ -331,14 +330,7 @@ public abstract class RdfQuery implements Query {
 		return aList;
 	}
 
-    private boolean isEmpireCompatible(final Class theClass) {
-        // todo: probably want to move this somewhere common, this might be useful elsewhere
-        return theClass.isAnnotationPresent(Entity.class) &&
-               theClass.isAnnotationPresent(RdfsClass.class) &&
-               SupportsRdfId.class.isAssignableFrom(theClass);
-    }
-
-    /**
+	/**
 	 * @inheritDoc
 	 */
 	public Object getSingleResult() {

@@ -18,14 +18,15 @@ package com.clarkparsia.empire;
 import com.clarkparsia.empire.spi.EmpirePersistenceProvider;
 import com.clarkparsia.empire.util.EmpireAnnotationProvider;
 import com.clarkparsia.empire.util.DefaultEmpireModule;
+import com.clarkparsia.empire.util.EmpireModule;
 import com.clarkparsia.utils.Predicate;
+
 import static com.clarkparsia.utils.collections.CollectionUtil.find;
+
 import com.google.inject.Injector;
 import com.google.inject.Guice;
 import com.google.inject.Module;
 import com.google.inject.Inject;
-
-import javax.persistence.EntityManager;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -38,6 +39,7 @@ import java.util.Arrays;
  *
  * @author Michael Grove
  * @since 0.1
+ * @version 0.6.1
  */
 public class Empire {
 
@@ -119,32 +121,58 @@ public class Empire {
 	 * @param theConfig the container configuration for Empire
 	 * @param theModules the modules to use with Empire
 	 */
-	public static void init(Map<String, String> theConfig, Module... theModules) {
-		Collection<Module> aModules = new HashSet<Module>(Arrays.asList(theModules));
+	public static void init(Map<String, String> theConfig, EmpireModule... theModules) {
+		Collection<EmpireModule> aModules = new HashSet<EmpireModule>(Arrays.asList(theModules));
 
-		if (!find(aModules, new Predicate<Module>(){ public boolean accept(Module theModule) { return theModule instanceof DefaultEmpireModule; }})) {
+		if (!find(aModules, new FindDefaultEmpireModulePredicate())) {
 			aModules.add(new DefaultEmpireModule(theConfig));
 		}
 
-		init(aModules.toArray(new Module[aModules.size()]));
+		init(aModules.toArray(new EmpireModule[aModules.size()]));
 	}
 
 	/**
 	 * Initialize Empire with the given set of Guice Modules
 	 * @param theModules the modules to use with Empire
 	 */
-	public static void init(Module... theModules) {
+	public static void init(EmpireModule... theModules) {
 		mModules.clear();
 
+		Collection<EmpireModule> aModules = new HashSet<EmpireModule>(Arrays.asList(theModules));
+
+		if (!find(aModules, new FindDefaultEmpireModulePredicate())) {
+			aModules.add(new DefaultEmpireModule());
+		}
+
 		// keep track of the modules we've "installed"
-		for (Module aModule : theModules) {
+		for (Module aModule : aModules) {
 			mModules.put(aModule.getClass(), aModule);
 		}
 		
 		injector = Guice.createInjector(mModules.values());
 	}
 
+	/**
+	 * Create an instance of the given class in the current Empire context.  The provided class usually should
+	 * have a default constructor, but if all of its constructor parameters are marked with @Inject and appropriately
+	 * instantiated from a plugin module, that is also sufficient.
+	 * @param theClass the class to create
+	 * @param <T> the type of object that will be created
+	 * @return the new instance
+	 */
 	public <T> T instance(Class<T> theClass) {
 		return injector.getInstance(theClass);
+	}
+
+	/**
+	 * Predicate to use for finding an instance of {@link DefaultEmpireModule}
+	 */
+	private static class FindDefaultEmpireModulePredicate implements Predicate<EmpireModule> {
+		/**
+		 * @inheritDoc
+		 */
+		public boolean accept(EmpireModule theModule) {
+			return theModule instanceof DefaultEmpireModule;
+		}
 	}
 }

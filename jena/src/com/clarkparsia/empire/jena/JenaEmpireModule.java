@@ -20,14 +20,16 @@ import com.google.inject.multibindings.Multibinder;
 import com.google.inject.AbstractModule;
 
 import com.clarkparsia.empire.DataSourceFactory;
+import com.clarkparsia.empire.util.EmpireModule;
 
 /**
  * <p>Guice module for installing the Jena 'plugin' for Empire.</p>
  *
  * @author Michael Grove
  * @since 0.6
+ * @version 0.6.1
  */
-public class JenaEmpireModule extends AbstractModule {
+public class JenaEmpireModule extends AbstractModule implements EmpireModule {
 
 	/**
 	 * @inheritDoc

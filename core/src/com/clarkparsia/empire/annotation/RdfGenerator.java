@@ -84,6 +84,7 @@ import static com.clarkparsia.empire.util.BeanReflectUtil.getAnnotatedSetters;
 import static com.clarkparsia.empire.util.BeanReflectUtil.get;
 
 import com.clarkparsia.empire.util.BeanReflectUtil;
+import com.clarkparsia.empire.util.EmpireUtil;
 import com.clarkparsia.openrdf.util.ResourceBuilder;
 import com.clarkparsia.openrdf.util.GraphBuilder;
 import com.clarkparsia.openrdf.ExtGraph;
@@ -116,6 +117,7 @@ import javassist.util.proxy.MethodHandler;
  *
  * @author Michael Grove
  * @since 0.1
+ * @version 0.6.1
  */
 public class RdfGenerator {
 
@@ -212,7 +214,7 @@ public class RdfGenerator {
 			OBJECT_M.put(theURI, theObj);
 		}
 
-		ExtGraph aGraph = new ExtGraph(theSource.describe(theURI));
+		ExtGraph aGraph = new ExtGraph(EmpireUtil.describe(theSource, theURI));
 
 		if (aGraph.size() == 0) {
 			OBJECT_M.remove(theURI);
@@ -893,6 +895,10 @@ public class RdfGenerator {
 		}
 	}
 
+	/**
+	 * Javassist {@link MethodHandler} implementation for method proxying.
+	 * @param <T> the proxy class type
+	 */
 	private static class ProxyHandler<T> implements MethodHandler {
 		Proxy<T> mProxy;
 
@@ -907,7 +913,7 @@ public class RdfGenerator {
 
 	private static URI getType(DataSource theSource, URI theConcept) {
 		try {
-			return new ExtGraph(theSource.describe(java.net.URI.create(theConcept.toString()))).getType(theConcept);
+			return new ExtGraph(EmpireUtil.describe(theSource, java.net.URI.create(theConcept.toString()))).getType(theConcept);
 		}
 		catch (DataSourceException e) {
 			LOGGER.error("There was an error while getting the type of a resource", e);

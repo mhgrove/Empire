@@ -31,6 +31,7 @@ import com.clarkparsia.empire.QueryFactory;
  *
  * @author Michael Grove
  * @since 0.1
+ * @version 0.6.1
  */
 public interface DataSource {
 
@@ -69,16 +70,6 @@ public interface DataSource {
 	 * @throws IllegalStateException thrown if the connection to the data source is not open.
 	 */
 	public Graph graphQuery(String theQuery) throws QueryException;
-
-	/**
-	 * Perform a simple describe query on the given URI.  This is slightly different than the describe as detailed
-	 * in the SPARQL specs.
-	 * @param theURI the URI to describe.
-	 * @return the RDF graph describing the given instance
-	 * @throws DataSourceException thrown if there was an error performing the query
-	 * @throws IllegalStateException thrown if the connection to the data source is not open.
-	 */
-	public Graph describe(java.net.URI theURI) throws DataSourceException;
 
 	/**
 	 * Return a {@link QueryFactory} for creating executable {@link javax.persistence.Query} instances against this data source

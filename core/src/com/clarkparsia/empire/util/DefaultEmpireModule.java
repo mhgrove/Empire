@@ -38,8 +38,9 @@ import org.apache.log4j.Logger;
  *
  * @author Michael Grove
  * @since 0.6
+ * @version 0.6.1
  */
-public class DefaultEmpireModule extends AbstractModule {
+public class DefaultEmpireModule extends AbstractModule implements EmpireModule {
 
 	/**
 	 * The logger

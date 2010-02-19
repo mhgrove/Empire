@@ -18,14 +18,16 @@ package com.clarkparsia.empire.fourstore;
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
 import com.clarkparsia.empire.DataSourceFactory;
+import com.clarkparsia.empire.util.EmpireModule;
 
 /**
  * <p>Guice module for installing the FourStore 'plugin' for Empire.</p>
  *
  * @author Michael Grove
  * @since 0.6
+ * @version 0.6.1
  */
-public class FourStoreEmpireModule extends AbstractModule {
+public class FourStoreEmpireModule extends AbstractModule implements EmpireModule {
 
 	/**
 	 * @inheritDoc

@@ -23,10 +23,10 @@ import com.clarkparsia.empire.SupportsTransactions;
 
 import com.clarkparsia.empire.annotation.InvalidRdfException;
 import com.clarkparsia.empire.annotation.RdfGenerator;
-import com.clarkparsia.empire.annotation.NamedGraph;
 import com.clarkparsia.empire.annotation.RdfsClass;
 
 import org.openrdf.model.Graph;
+
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
@@ -70,6 +70,7 @@ import static com.clarkparsia.empire.util.BeanReflectUtil.getAnnotatedGetters;
 import static com.clarkparsia.empire.util.BeanReflectUtil.asSetter;
 import static com.clarkparsia.empire.util.BeanReflectUtil.safeGet;
 import static com.clarkparsia.empire.util.BeanReflectUtil.safeSet;
+import com.clarkparsia.empire.util.EmpireUtil;
 
 /**
  * <p>Implementation of the JPA {@link EntityManager} interface to support the persistence model over
@@ -77,7 +78,9 @@ import static com.clarkparsia.empire.util.BeanReflectUtil.safeSet;
  *
  * @author Michael Grove
  * @since 0.1
+ * @version 0.6.1
  * @see EntityManager
+ * @see DataSource
  */
 public class EntityManagerImpl implements EntityManager {
 	/**
@@ -117,14 +120,8 @@ public class EntityManagerImpl implements EntityManager {
 	EntityManagerImpl(MutableDataSource theSource) {
 
 		// TODO: sparql for everything, just convert serql into sparql
-		// TODO: respect temporal annotations for date I/O
 		// TODO: bnode support?
 		// TODO: locking support
-		// TODO: result set mapping
-		// TODO: query hints
-        // TODO: consider auto adding namespace/prefix declarations to the queries based on the namespaces used
-        // in the Empire classes so you don't have to use fully qualified names -- because right now, adding namespaces
-        // in your native or partial queries would just break the whole damned thing, at a minimum we should address that.
 		// TODO: work like JPA/hibernate -- if something does not have a @Transient on it, convert it.  we'll just need to coin a URI in those cases
 		// TODO: support cascades of delete's -- when you delete a resource X, right now we just delete all the triples
 		// where X is the subject.  allow you to specify a cascade so you can remove all the triples where X is the object
@@ -193,7 +190,7 @@ public class EntityManagerImpl implements EntityManager {
 
 		assertContains(theObj);
 
-		Object aDbObj = find(theObj.getClass(), asSupportsRdfId(theObj).getRdfId());
+		Object aDbObj = find(theObj.getClass(), EmpireUtil.asSupportsRdfId(theObj).getRdfId());
 
         Collection<AccessibleObject> aAccessors = new HashSet<AccessibleObject>();
 
@@ -230,7 +227,11 @@ public class EntityManagerImpl implements EntityManager {
 		assertStateOk(theObj);
 
 		try {
-			return contains(asSupportsRdfId(theObj).getRdfId());
+//			return contains(asSupportsRdfId(theObj).getRdfId());
+
+			Graph aGraph = EmpireUtil.describe(getDataSource(), theObj);
+
+			return aGraph != null && aGraph.size() > 0;
 		}
 		catch (DataSourceException e) {
 			throw new PersistenceException(e);
@@ -348,15 +349,15 @@ public class EntityManagerImpl implements EntityManager {
 
 			Graph aData = RdfGenerator.asRdf(theObj);
 
-			if (doesSupportNamedGraphs() && hasNamedGraphSpecified(theObj)) {
-				asSupportsNamedGraphs().add(getNamedGraph(theObj), aData);
+			if (doesSupportNamedGraphs() && EmpireUtil.hasNamedGraphSpecified(theObj)) {
+				asSupportsNamedGraphs().add(EmpireUtil.getNamedGraph(theObj), aData);
 			}
 			else {
 				getDataSource().add(aData);
 			}
 
 			if (!contains(theObj)) {
-				throw new PersistenceException("Addition failed for object: " + asSupportsRdfId(theObj).getRdfId());
+				throw new PersistenceException("Addition failed for object: " + EmpireUtil.asSupportsRdfId(theObj).getRdfId());
 			}
 
 			postPersist(theObj);
@@ -385,17 +386,18 @@ public class EntityManagerImpl implements EntityManager {
 		try {
 			preUpdate(theT);
 
-			Graph aExistingData = getDataSource().describe(asSupportsRdfId(theT).getRdfId());
+			Graph aExistingData = EmpireUtil.describe(getDataSource(), theT);
 			Graph aData = RdfGenerator.asRdf(theT);
 
-			if (doesSupportNamedGraphs() && hasNamedGraphSpecified(theT)) {
-				java.net.URI aGraphURI = getNamedGraph(theT);
+			if (doesSupportNamedGraphs() && EmpireUtil.hasNamedGraphSpecified(theT)) {
+				java.net.URI aGraphURI = EmpireUtil.getNamedGraph(theT);
 
 				asSupportsNamedGraphs().remove(aGraphURI, aExistingData);
 				asSupportsNamedGraphs().add(aGraphURI, aData);
 			}
 			else {
 				getDataSource().remove(aExistingData);
+
 				getDataSource().add(aData);
 			}
 
@@ -426,15 +428,15 @@ public class EntityManagerImpl implements EntityManager {
 
 			Graph aData = RdfGenerator.asRdf(theObj);
 
-			if (doesSupportNamedGraphs() && hasNamedGraphSpecified(theObj)) {
-				asSupportsNamedGraphs().remove(getNamedGraph(theObj), aData);
+			if (doesSupportNamedGraphs() && EmpireUtil.hasNamedGraphSpecified(theObj)) {
+				asSupportsNamedGraphs().remove(EmpireUtil.getNamedGraph(theObj), aData);
 			}
 			else {
 				getDataSource().remove(aData);
 			}
 
 			if (contains(theObj)) {
-				throw new PersistenceException("Remove failed for object: " + asSupportsRdfId(theObj).getRdfId());
+				throw new PersistenceException("Remove failed for object: " + EmpireUtil.asSupportsRdfId(theObj).getRdfId());
 			}
 
 			postRemove(theObj);
@@ -484,29 +486,13 @@ public class EntityManagerImpl implements EntityManager {
 	}
 
 	/**
-	 * Return the object as an instanceof {@link SupportsRdfId}
-	 * @param theObj the object
-	 * @return the object as SupportsRdfId
-	 * @throws ClassCastException if the object is not a valid SupportsRdfId
-	 * @see SupportsRdfId
-	 */
-	private SupportsRdfId asSupportsRdfId(Object theObj) {
-		return SupportsRdfId.class.cast(theObj);
-	}
-
-	/**
 	 * Enforce that the object exists in the database
 	 * @param theObj the object that should exist
 	 * @throws IllegalArgumentException thrown if the object does not exist in the database
 	 */
 	private void assertContains(Object theObj) {
-		try {
-			if (!contains(asSupportsRdfId(theObj).getRdfId())) {
-				throw new IllegalArgumentException("Entity does not exist: " + theObj);
-			}
-		}
-		catch (DataSourceException e) {
-			throw new IllegalArgumentException("Entity does not exist: " + theObj, e);
+		if (!contains(theObj)) {
+			throw new IllegalArgumentException("Entity does not exist: " + theObj);
 		}
 	}
 
@@ -516,31 +502,9 @@ public class EntityManagerImpl implements EntityManager {
 	 * @throws IllegalArgumentException thrown if the object already exists in the database
 	 */
 	private void assertNotContains(Object theObj) {
-		try {
-			if (contains(asSupportsRdfId(theObj).getRdfId())) {
-				throw new IllegalArgumentException("Entity already exists: " + theObj);
-			}
+		if (contains(theObj)) {
+			throw new IllegalArgumentException("Entity already exists: " + theObj);
 		}
-		catch (DataSourceException e) {
-			throw new IllegalArgumentException("Entity already exists: " + theObj, e);
-		}
-	}
-
-	/**
-	 * Return whether or not a resource with the given rdf:ID is in the database
-	 * @param theURI the rdf:ID to look for
-	 * @return true if a resource with the given id exists, false otherwise
-	 * @throws DataSourceException thrown if there is an error while querying the database
-	 */
-	private boolean contains(java.net.URI theURI) throws DataSourceException {
-		if (theURI == null) {
-			return false;
-		}
-
-		Graph aGraph = getDataSource().describe(theURI);
-
-		return aGraph != null && aGraph.size() > 0;
-
 	}
 
 	/**
@@ -657,43 +621,6 @@ public class EntityManagerImpl implements EntityManager {
 	 */
 	private SupportsNamedGraphs asSupportsNamedGraphs() {
 		return (SupportsNamedGraphs) getDataSource();
-	}
-
-	/**
-	 * Returns whether or not a NamedGraph context has been specified for the type of the specified instance.
-	 * When a named graph is specified, all operations which mutate the data source will attempt to operate
-	 * on the specified named graph.
-	 * @param theObj the object to check
-	 * @return true if it has a named graph specified, false otherwise
-	 */
-	private boolean hasNamedGraphSpecified(Object theObj) {
-		NamedGraph aAnnotation = theObj.getClass().getAnnotation(NamedGraph.class);
-
-		return aAnnotation != null &&
-			   (aAnnotation.type() == NamedGraph.NamedGraphType.Instance || (aAnnotation.type() == NamedGraph.NamedGraphType.Static
-																			 && !aAnnotation.value().equals("")));
-	}
-
-	/**
-	 * Returns the URI of the named graph that operations involving instances should be performed.  If null is returned
-	 * operations will be performed on the data source without a specified context.
-	 * @param theObj the instance
-	 * @return the URI of the instance's named graph, or null if there isn't one
-	 * @throws URISyntaxException if the named graph specified (when the type is {@link NamedGraph.NamedGraphType#Static}) is not a valid URI
-	 */
-	private java.net.URI getNamedGraph(Object theObj) {
-		if (!hasNamedGraphSpecified(theObj)) {
-			return null;
-		}
-
-		NamedGraph aAnnotation = theObj.getClass().getAnnotation(NamedGraph.class);
-
-		if (aAnnotation.type() == NamedGraph.NamedGraphType.Instance) {
-			return asSupportsRdfId(theObj).getRdfId();
-		}
-		else {
-			return URI.create(aAnnotation.value());
-		}
 	}
 
 	/**

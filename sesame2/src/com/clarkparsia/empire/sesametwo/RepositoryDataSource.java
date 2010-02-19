@@ -20,6 +20,7 @@ import com.clarkparsia.empire.MutableDataSource;
 import com.clarkparsia.empire.DataSourceException;
 import com.clarkparsia.empire.ResultSet;
 import com.clarkparsia.empire.QueryException;
+import com.clarkparsia.empire.SupportsTransactions;
 
 import com.clarkparsia.empire.impl.AbstractDataSource;
 
@@ -75,6 +76,15 @@ public class RepositoryDataSource extends AbstractDataSource implements MutableD
 	RepositoryDataSource(final Repository theRepository) {
 		mRepository = theRepository;
 
+		// TODO: add the SupportsTransactions interface to this class so Empire notices it natively supports
+		// transactions.  right now, changes within a transaction are not "live", even within the same
+		// connection, so it looks like adds & deletes fail.  not good.  need a different isolation level
+		// for the transactions for it to work right.  or i go back to the drawing board on some parts of entitymanager
+		// sesame 3 will have different transaction isolation levels, settable for each repo, which is what we need
+		// i think.  really, the catch is that transactions behave differently (different isolation levels) depending
+		// on the repository implementation.  so its' not easy to do *one* solution that will work for all of them
+		// so we have to rely on our naive poor-man's transaction implementation.
+
 		// TODO: change which query factory is used through some sort of config parameter
 		// this will require us to not hard code serql as the query language later on in the code
 		setQueryFactory(new SerqlQueryFactory(this));
@@ -104,8 +114,6 @@ public class RepositoryDataSource extends AbstractDataSource implements MutableD
 
 		try {
 			mConnection.remove(theGraph);
-
-			mConnection.commit();
 		}
 		catch (RepositoryException e) {
 			throw new DataSourceException(e);
@@ -135,7 +143,7 @@ public class RepositoryDataSource extends AbstractDataSource implements MutableD
 			try {
 				mConnection = mRepository.getConnection();
 
-				// TODO: disable this and do support for more real transactions
+				// TODO: disable this when enabling sesame's native transaction support
 				mConnection.setAutoCommit(true);
 			}
 			catch (RepositoryException e) {
@@ -192,15 +200,6 @@ public class RepositoryDataSource extends AbstractDataSource implements MutableD
 		catch (Exception e) {
 			throw new QueryException(e);
 		}
-	}
-
-	/**
-	 * @inheritDoc
-	 */
-	public Graph describe(final URI theURI) throws DataSourceException {
-		assertConnected();
-
-		return graphQuery("construct * from {<" + theURI + ">} p {o}");
 	}
 
 	/**

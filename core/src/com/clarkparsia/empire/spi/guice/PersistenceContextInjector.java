@@ -66,7 +66,7 @@ public class PersistenceContextInjector<T> implements MembersInjector<T> {
 
         try {
             mField.set(theT,
-					   Empire.get().persistenceProvider().createEntityManagerFactory(aContext.unitName(),
+					   Empire.get().persistenceProvider().createEntityManagerFactory(aContext.name(),
 																					 aMap).createEntityManager());
         }
         catch (IllegalAccessException e) {

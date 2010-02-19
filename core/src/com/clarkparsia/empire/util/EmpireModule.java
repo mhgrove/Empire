@@ -11,29 +11,20 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
 
-package com.clarkparsia.empire.sesametwo;
+package com.clarkparsia.empire.util;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.Multibinder;
-import com.clarkparsia.empire.DataSourceFactory;
-import com.clarkparsia.empire.util.EmpireModule;
+import com.google.inject.Module;
 
 /**
- * <p>Guice module for the Sesame 2.x plugin.</p>
+ * <p>Marker interface for Empire Guice modules.  Just to denote modules for empire rather than arbitrary Guice modules.</p>
  *
  * @author Michael Grove
- * @since 0.6
+ * @since 0.6.1
  * @version 0.6.1
  */
-public class OpenRdfEmpireModule extends AbstractModule implements EmpireModule {
-	/**
-	 * @inheritDoc
-	 */
-	@Override
-	protected void configure() {
-		Multibinder.newSetBinder(binder(), DataSourceFactory.class)
-				.addBinding().to(RepositoryDataSourceFactory.class);
-	}
+public interface EmpireModule extends Module {
+
 }

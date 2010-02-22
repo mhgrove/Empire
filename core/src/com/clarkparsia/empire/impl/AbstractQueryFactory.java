@@ -17,7 +17,6 @@ package com.clarkparsia.empire.impl;
 
 import com.clarkparsia.empire.DataSource;
 import com.clarkparsia.empire.QueryFactory;
-import com.clarkparsia.empire.EmpireOptions;
 import com.clarkparsia.empire.Empire;
 
 import javax.persistence.Query;
@@ -56,8 +55,7 @@ public abstract class AbstractQueryFactory<T extends RdfQuery> implements QueryF
 
 		Collection<Class<?>> aClasses = Empire.get().getAnnotationProvider().getClassesWithAnnotation(NamedQuery.class);
 		for (Class<?> aClass :  aClasses) {
-			// wtf why do i need a cast here?
-			NamedQuery aNamedQuery = (NamedQuery) aClass.getAnnotation(NamedQuery.class);
+			NamedQuery aNamedQuery = aClass.getAnnotation(NamedQuery.class);
 
 			addNamedQuery(aNamedQuery.name(), aNamedQuery);
 		}

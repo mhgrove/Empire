@@ -65,7 +65,7 @@ public class SPARQLQuery extends RdfQuery {
                 aQuery = " " + patternKeyword() + " " + aQuery;
             }
 
-			aQuery = "select " + asProjectionVar(MAGIC_PROJECTION_VAR) + " " + aQuery;
+			aQuery = "select " + asProjectionVar(getProjectionVarName()) + " " + aQuery;
 		}
 
 		StringBuffer aBuffer = new StringBuffer(aQuery);

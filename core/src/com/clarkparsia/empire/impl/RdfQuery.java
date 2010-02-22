@@ -24,6 +24,8 @@ import org.openrdf.model.Value;
 import org.openrdf.model.vocabulary.XMLSchema;
 import org.openrdf.model.impl.ValueFactoryImpl;
 import org.openrdf.query.BindingSet;
+import org.apache.log4j.Logger;
+import org.apache.log4j.LogManager;
 
 import com.clarkparsia.empire.DataSource;
 import com.clarkparsia.empire.ResultSet;
@@ -58,6 +60,10 @@ import java.util.regex.Pattern;
  * @see com.clarkparsia.empire.impl.sparql.SPARQLQuery
  */
 public abstract class RdfQuery implements Query {
+	/**
+	 * The logger
+	 */
+	private static final Logger LOGGER = LogManager.getLogger(RdfQuery.class.getName());
 
 	/**
 	 * Variable parameter token in queries
@@ -70,13 +76,24 @@ public abstract class RdfQuery implements Query {
 	public static final String VT_RE = "\\?\\?";
 
 	/**
-	 * The name expected to be used in queries to denote what is to be returned as objects from the result set of
-	 * the query.
+	 * The default name expected to be used in queries to denote what is to be returned as objects from the result
+     * set of the query.  Can by changed by specifying a QueryHint with the key {@link #HINT_PROJECTION_VAR}
 	 */
     protected static final String MAGIC_PROJECTION_VAR = "result";
 
+    /**
+     * Key of the {@link javax.persistence.QueryHint} to specify a different projection var
+     * than specified by the default {@link #MAGIC_PROJECTION_VAR}
+     */
+    public static final String HINT_PROJECTION_VAR = "projection-var";
+
+    /**
+     * Key of the {@link javax.persistence.QueryHint} to specify the bean/entity class to be returned by the query.
+     */
+    public static final String HINT_ENTITY_CLASS = "entity-class";
+
 	/**
-	 * The DataSourct the query will be executed against
+	 * The DataSource the query will be executed against
 	 */
 	private DataSource mSource;
 
@@ -97,7 +114,7 @@ public abstract class RdfQuery implements Query {
 	private Map<Integer, Value> mIndexedParameters = new HashMap<Integer, Value>();
 
 	/**
-	 * Map of parameter names to thier values
+	 * Map of parameter names to their values
 	 */
 	private Map<String, Value> mNamedParameters = new HashMap<String, Value>();
 
@@ -177,11 +194,31 @@ public abstract class RdfQuery implements Query {
 
 	/**
 	 * Returns the class of Java beans returned as the results of the executed query.  When no bean class is specified,
-	 * raw {@link Binding} objects are returned.
+	 * raw {@link BindingSet} objects are returned.
 	 * @return the class, or null if one is not specified.
 	 */
 	public Class getBeanClass() {
-		return mClass;
+        if (mClass != null) {
+		    return mClass;
+        }
+        else if (getHints().containsKey(HINT_ENTITY_CLASS)) {
+			Object aValue = getHints().get(HINT_ENTITY_CLASS);
+            if (aValue instanceof Class) {
+                return (Class) aValue;
+            }
+            else {
+                try {
+                    return Class.forName(aValue.toString());
+                }
+                catch (ClassNotFoundException e) {
+                    LOGGER.error("Invalid Entity class query set, value not found: " + aValue);
+                    return null;
+                }
+            }
+        }
+        else {
+            return null;
+        }
 	}
 
 	/**
@@ -271,7 +308,7 @@ public abstract class RdfQuery implements Query {
 	 * Return whether or not this is a construct query.  If this is an instance of a construct query, getSingleResult
 	 * will return a {@link Graph} and getResultList will return a List with a single element which is an instance of
 	 * Graph.  Otherwise, when it's a select query, these will return a single
-	 * {@link com.clarkparsia.sesame.utils.query.Binding}, or a list of Bindings (or instances of
+	 * {@link BindingSet}, or a list of Bindings (or instances of
 	 * the Bean class, when specified) respectively.
 	 * @return true if this is a construct query, false otherwise.
 	 */
@@ -294,7 +331,7 @@ public abstract class RdfQuery implements Query {
 			else {
 				ResultSet aResults = getSource().selectQuery(query());
 
-				if (mClass != null) {
+				if (getBeanClass() != null) {
 					// for now, by convention, for this to work like the JPQL stuff where you do something like
 					// "from Product pr join pr.poc as p where p.id = ?" and expect to get a list of Product instances
 					// back as the result set, you *MUST* have a var in the projection called 'result' which is
@@ -305,17 +342,19 @@ public abstract class RdfQuery implements Query {
 
 						Object aObj = null;
 
-                        if (aBinding.getValue(MAGIC_PROJECTION_VAR) instanceof URI && EmpireUtil.isEmpireCompatible(mClass)) {
-                            aObj = RdfGenerator.fromRdf(mClass,
-                                                        java.net.URI.create(aBinding.getURI(MAGIC_PROJECTION_VAR).toString()),
-                                                        getSource());
+						String aVarName = getProjectionVarName();
+
+						if (aBinding.getValue(aVarName) instanceof URI && EmpireUtil.isEmpireCompatible(getBeanClass())) {
+							aObj = RdfGenerator.fromRdf(getBeanClass(),
+														java.net.URI.create(aBinding.getURI(aVarName).toString()),
+														getSource());
                         }
                         else {
                             aObj = new RdfGenerator.ValueToObject(getSource(), null,
-                                                                  mClass, null).apply(aBinding.getValue(MAGIC_PROJECTION_VAR));
+                                                                  getBeanClass(), null).apply(aBinding.getValue(aVarName));
                         }
 
-						if (aObj == null || !mClass.isInstance(aObj)) {
+						if (aObj == null || !getBeanClass().isInstance(aObj)) {
 							throw new PersistenceException("Cannot bind query result to bean: " + mClass);
 						}
 						else {
@@ -336,6 +375,21 @@ public abstract class RdfQuery implements Query {
 
 		return aList;
 	}
+
+	/**
+	 * Returns the name of the projection variable that is to represent the return value of the query.  By default
+	 * this is {@link #MAGIC_PROJECTION_VAR} but you can override this by setting the {@link #HINT_PROJECTION_VAR}
+	 * QueryHint value.
+	 * @return the name of the projection variable to grab
+	 */
+	protected String getProjectionVarName() {
+        if (getHints().containsKey(HINT_PROJECTION_VAR)) {
+            return getHints().get(HINT_PROJECTION_VAR).toString();
+        }
+        else {
+            return MAGIC_PROJECTION_VAR;
+        }
+    }
 
 	/**
 	 * @inheritDoc
@@ -635,7 +689,7 @@ public abstract class RdfQuery implements Query {
 				aStart.append(" * ");
 			}
 			else {
-				aStart.append(asProjectionVar(MAGIC_PROJECTION_VAR)).append(" ");
+				aStart.append(asProjectionVar(getProjectionVarName())).append(" ");
 			}
 		}
 

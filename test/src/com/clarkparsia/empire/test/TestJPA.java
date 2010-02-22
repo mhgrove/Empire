@@ -102,19 +102,20 @@ public class TestJPA  {
 	public static Collection configurations() {
 		return Arrays.asList(new Object[][] {
 				{ getLocalSesameTestConfigMap(), "from {result} <urn:prop> {y}",
-				  								 "select distinct result from {uri} <" + SpaceVocab.ontology().mass + "> {result}",
+				  								 "select distinct result from {uri} space:mass {result}",
 												 "from {uri} <" + SpaceVocab.ontology().mass + "> {result}",
 												 "from {result} <" + SpaceVocab.ontology().agency + "> {\"U.S.S.R\"}",
 												 "from {result} <" + SpaceVocab.ontology().agency + "> {??}",
 												 "from {result} <" + SpaceVocab.ontology().agency + "> {??}, {result} <" + SpaceVocab.ontology().alternateName + "> {??altName}",
 												 "sovietSpacecraft" },
+
 				{ getLocalSesameTwoTestConfigMap(), "from {result} <urn:prop> {y}",
-				  								 "select distinct result from {uri} <" + SpaceVocab.ontology().mass + "> {result}",
-												 "from {uri} <" + SpaceVocab.ontology().mass + "> {result}",
-												 "from {result} <" + SpaceVocab.ontology().agency + "> {\"U.S.S.R\"}",
-												 "from {result} <" + SpaceVocab.ontology().agency + "> {??}",
-												 "from {result} <" + SpaceVocab.ontology().agency + "> {??}, {result} <" + SpaceVocab.ontology().alternateName + "> {??altName}",
-												 "sovietSpacecraft" },
+				  						  		    "select distinct result from {uri} space:mass {result}",
+												    "from {uri} <" + SpaceVocab.ontology().mass + "> {result}",
+												    "from {result} <" + SpaceVocab.ontology().agency + "> {\"U.S.S.R\"}",
+												    "from {result} <" + SpaceVocab.ontology().agency + "> {??}",
+												    "from {result} <" + SpaceVocab.ontology().agency + "> {??}, {result} <" + SpaceVocab.ontology().alternateName + "> {??altName}",
+												    "sovietSpacecraft" },
 
 // NOTE: don't forget to run TestUtil before testing 4store, the 4store db needs to be prepped.
 //				{ getFourStoreTestConfigMap(), "where { ?result <urn:prop> ?y }",
@@ -126,7 +127,7 @@ public class TestJPA  {
 //											   "sovietSpacecraftSPARQL" }
 
 				{ getLocalJenaTestConfigMap(), "where { ?result <urn:prop> ?y }",
-				  							   "select distinct ?result where { ?uri <" + SpaceVocab.ontology().mass + "> ?result }",
+				  							   "select distinct ?result where { ?uri space:mass ?result }",
 											   "where { ?uri <" + SpaceVocab.ontology().mass + "> ?result }",
 											   "where { ?result <" + SpaceVocab.ontology().agency + "> \"U.S.S.R\" }",
 											   "where { ?result <" + SpaceVocab.ontology().agency + "> ?? }",

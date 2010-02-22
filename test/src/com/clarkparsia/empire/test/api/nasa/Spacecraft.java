@@ -39,9 +39,10 @@ import com.clarkparsia.utils.collections.CollectionUtil;
  * @author Michael Grove
  */
 @NamedQuery(name="sovietSpacecraft",
-			query="from {result} <http://purl.org/net/schemas/space/agency> {\"U.S.S.R\"}")
+			query="from {result} space:agency {\"U.S.S.R\"}")
 
 @Namespaces({"", "http://purl.org/net/schemas/space/",
+			 "space", "http://purl.org/net/schemas/space/",
 			 "foaf", "http://xmlns.com/foaf/0.1/",
 			 "dc", "http://purl.org/dc/elements/1.1/"})
 @Entity

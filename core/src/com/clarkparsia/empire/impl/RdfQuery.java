@@ -169,6 +169,13 @@ public abstract class RdfQuery implements Query {
 	protected abstract String patternKeyword();
 
 	/**
+	 * Insert all of the global namespaces into the query string so that declared namespace prefixes are available
+	 * in all queries.
+	 * @param theBuffer the buffer containing the current, complete query without namespaces.
+	 */
+	protected abstract void insertNamespaces(StringBuffer theBuffer);
+
+	/**
 	 * Returns the class of Java beans returned as the results of the executed query.  When no bean class is specified,
 	 * raw {@link Binding} objects are returned.
 	 * @return the class, or null if one is not specified.
@@ -620,6 +627,7 @@ public abstract class RdfQuery implements Query {
         if (!aQuery.toString().startsWith(patternKeyword()) && !aQuery.toString().startsWith("select") && !aQuery.toString().startsWith("construct")) {
             aQuery.insert(0, patternKeyword());
         }
+
         StringBuffer aStart = new StringBuffer();
 		if (!getQueryString().toLowerCase().startsWith("select") && !getQueryString().toLowerCase().startsWith("construct")) {
 			aStart.insert(0, isConstruct() ? "construct " : "select ").append(isDistinct() ? " distinct " : "").append(" ");
@@ -640,6 +648,8 @@ public abstract class RdfQuery implements Query {
 		if (getFirstResult() != -1) {
 			aQuery.append(" offset ").append(getFirstResult());
 		}
+
+		insertNamespaces(aQuery);
 
 		return aQuery.toString();
 	}

@@ -18,15 +18,21 @@ package com.clarkparsia.empire.impl.sparql;
 import com.clarkparsia.openrdf.query.SesameQueryUtils;
 import org.openrdf.model.Value;
 
+import org.openrdf.query.parser.sparql.SPARQLParserFactory;
+
+import org.openrdf.query.MalformedQueryException;
+
 import com.clarkparsia.empire.DataSource;
 
 import com.clarkparsia.empire.impl.RdfQuery;
+import com.clarkparsia.utils.NamespaceUtils;
 
 /**
  * <p>Extends the {@link com.clarkparsia.empire.impl.RdfQuery} class to provide support for queries in the SPARQL language.</p>
  *
  * @author Michael Grove
  * @since 0.1
+ * @version 0.6.1
  */
 public class SPARQLQuery extends RdfQuery {
 	/**
@@ -51,11 +57,30 @@ public class SPARQLQuery extends RdfQuery {
 	 */
 	@Override
 	protected void validateQueryFormat() {
-		// TODO: actually validate the partial format
-		// We don't have a query parser like we do w/ serql, so there's no easy way to do this for now.
-		// this means query exceptions that should be caught when the query is created will instead be caught when
-		// its executed.  this violates the semantics of the JPA stuff, but it will do for now since you at least
-		// "correctly" get a failure with an invalid query.
+		String aQuery = getQueryString().toLowerCase().trim();
+		aQuery = aQuery.replaceAll(VT_RE, asProjectionVar("x"));
+
+		if (!aQuery.startsWith("select") && !aQuery.startsWith("construct")) {
+            if (!aQuery.contains(patternKeyword())) {
+                aQuery = " " + patternKeyword() + " " + aQuery;
+            }
+
+			aQuery = "select " + asProjectionVar(MAGIC_PROJECTION_VAR) + " " + aQuery;
+		}
+
+		StringBuffer aBuffer = new StringBuffer(aQuery);
+
+		insertNamespaces(aBuffer);
+
+		try {
+			new SPARQLParserFactory().getParser().parseQuery(aBuffer.toString(), "http://example.org");
+		}
+		catch (IllegalArgumentException e) {
+			throw new IllegalArgumentException("Invalid query: " + aBuffer.toString(), e);
+		}
+		catch (MalformedQueryException e) {
+			throw new IllegalArgumentException("Invalid query: " + aBuffer.toString(), e);
+		}
 	}
 
 	/**
@@ -72,5 +97,26 @@ public class SPARQLQuery extends RdfQuery {
 	@Override
 	protected String patternKeyword() {
 		return "where";
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	protected void insertNamespaces(final StringBuffer theBuffer) {
+		StringBuffer aNS = new StringBuffer();
+
+		for (String aPrefix : NamespaceUtils.prefixes()) {
+			if (aPrefix.trim().equals("")) {
+				continue;
+			}
+
+			aNS.append("PREFIX ").append(aPrefix).append(": <").append(NamespaceUtils.namespace(aPrefix)).append(">\n");
+		}
+
+		if (aNS.length() > 0) {
+			aNS.append("\n");
+		}
+
+		theBuffer.insert(0, aNS);
 	}
 }

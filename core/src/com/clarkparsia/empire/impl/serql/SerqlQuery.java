@@ -80,7 +80,7 @@ public class SerqlQuery extends RdfQuery {
 			new SeRQLParserFactory().getParser().parseQuery(aBuffer.toString(), "");
 		}
 		catch (MalformedQueryException e) {
-			throw new IllegalArgumentException("Invalid query: " + aQuery, e);
+			throw new IllegalArgumentException("Invalid query: " + aBuffer.toString(), e);
 		}
 	}
 

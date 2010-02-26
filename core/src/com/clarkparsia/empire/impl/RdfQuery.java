@@ -108,7 +108,7 @@ public abstract class RdfQuery implements Query {
 	private Class mClass;
 
 	/**
-	 * Map of parameter index (not string index, their numbered index, eg the first parameter (0), the second (1))
+	 * Map of parameter index (not string index, their numbered index, eg the first parameter (1), the second (2))
 	 * to the value of that parameter
 	 */
 	private Map<Integer, Value> mIndexedParameters = new HashMap<Integer, Value>();
@@ -640,7 +640,7 @@ public abstract class RdfQuery implements Query {
 		mNamedParameters.clear();
 		mIndexedParameters.clear();
 
-		String aUnamedVarRegex = VT_RE + "[^a-zA-Z0-9_-]";
+		String aUnamedVarRegex = VT_RE + "[^a-zA-Z0-9_-]?";
 
 		Matcher aMatcher = Pattern.compile(aUnamedVarRegex).matcher(getQueryString());
 

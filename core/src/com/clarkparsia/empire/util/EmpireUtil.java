@@ -7,13 +7,26 @@ import com.clarkparsia.empire.QueryException;
 import com.clarkparsia.empire.DataSource;
 import com.clarkparsia.empire.SupportsNamedGraphs;
 import com.clarkparsia.empire.impl.serql.SerqlDialect;
+import com.clarkparsia.empire.impl.sparql.SPARQLDialect;
+import com.clarkparsia.openrdf.query.builder.QueryBuilder;
+import com.clarkparsia.openrdf.query.builder.QueryBuilderFactory;
+import com.clarkparsia.openrdf.query.sparql.SPARQLQueryRenderer;
+import com.clarkparsia.openrdf.query.serql.SeRQLQueryRenderer;
+import com.clarkparsia.utils.NamespaceUtils;
 
 import javax.persistence.Entity;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceException;
 
 import org.openrdf.model.Graph;
+import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.impl.GraphImpl;
+import org.openrdf.model.impl.ValueFactoryImpl;
+import org.openrdf.query.parser.ParsedTupleQuery;
 
 import java.net.URI;
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * <p>A collection of utility functions for Empire.k</p>
@@ -134,5 +147,45 @@ public class EmpireUtil {
 		else {
 			return URI.create(aAnnotation.value());
 		}
+	}
+
+	public static <T> List<T> all(EntityManager theManager, Class<T> theClass) {
+		List<T> aList = new ArrayList<T>();
+
+		if (!isEmpireCompatible(theClass) || !(theManager.getDelegate() instanceof DataSource)) {
+			return aList;
+		}
+
+		RdfsClass aClass = theClass.getAnnotation(RdfsClass.class);
+
+		QueryBuilder<ParsedTupleQuery> aQuery = QueryBuilderFactory.select("result").distinct()
+				.group().atom("result", RDF.TYPE, ValueFactoryImpl.getInstance().createURI(NamespaceUtils.uri(aClass.value()))).closeGroup();
+
+		String aQueryStr = null;
+
+		try {
+			DataSource aSource = (DataSource) theManager.getDelegate();
+			if (aSource.getQueryFactory().getDialect().equals(SPARQLDialect.instance())) {
+				aQueryStr = new SPARQLQueryRenderer().render(aQuery.query());
+			}
+			else if (aSource.getQueryFactory().getDialect().equals(SerqlDialect.instance())) {
+				aQueryStr = new SeRQLQueryRenderer().render(aQuery.query());
+			}
+		}
+		catch (Exception e) {
+			throw new PersistenceException(e);
+		}
+
+		List aResults = theManager.createNativeQuery(aQueryStr, theClass).getResultList();
+		for (Object aObj : aResults) {
+			try {
+				aList.add( theClass.cast(aObj));
+			}
+			catch (ClassCastException e) {
+				throw new PersistenceException(e);
+			}
+		}
+
+		return aList;
 	}
 }

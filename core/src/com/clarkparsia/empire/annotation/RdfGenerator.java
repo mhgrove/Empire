@@ -221,7 +221,7 @@ public class RdfGenerator {
 		if (aGraph.size() == 0) {
 			OBJECT_M.remove(theURI);
 
-			return null;
+			return theObj;
 		}
 
 		URI aInd = aGraph.getValueFactory().createURI(theURI.toString());
@@ -267,7 +267,15 @@ public class RdfGenerator {
 				URI aType = (URI) aGraph.getValue(aInd, aProp);
 				if (!TYPE_TO_CLASS.containsKey(aType) ||
 					!TYPE_TO_CLASS.get(aType).isAssignableFrom(theObj.getClass())) {
-					LOGGER.warn("Asserted rdf:type of the individual does not match the rdf:type annotation on the object. " + aType + " " + TYPE_TO_CLASS.get(aType) + " " + theObj.getClass());
+
+					if (TYPE_TO_CLASS.containsKey(aType) && !TYPE_TO_CLASS.get(aType).getName().equals(theObj.getClass().getName())) {
+						// TODO: this might just be an error
+						LOGGER.warn("Asserted rdf:type of the individual does not match the rdf:type annotation on the object. " + aType + " " + TYPE_TO_CLASS.get(aType) + " " + theObj.getClass() + " " +TYPE_TO_CLASS.get(aType).isAssignableFrom(theObj.getClass())+ " " +TYPE_TO_CLASS.get(aType).equals(theObj.getClass()) + " " + TYPE_TO_CLASS.get(aType).getName().equals(theObj.getClass().getName()));
+					}
+					else {
+						// if they're not equals() or isAssignableFrom, but have the same name, this is usually
+						// means that the class loaders don't match.  so probably not an error, so no warning.
+					}
 				}
 
 				continue;
@@ -642,7 +650,13 @@ public class RdfGenerator {
 					Collection<Object> aValues = instantiateCollectionFromField(classFrom(mField));
 
 					for (Value aValue : theIn) {
-						aValues.add(valueToObject.apply(aValue));
+						Object aListValue = valueToObject.apply(aValue);
+
+						if (aListValue == null) {
+							throw new RuntimeException("Error converting a list value.");
+						}
+
+						aValues.add(aListValue);
 					}
 
 					return aValues;
@@ -795,8 +809,8 @@ public class RdfGenerator {
 				}
 			}
 			else if (theValue instanceof BNode) {
-				// TODO: make this less fragile
-				
+				// TODO: this is not bulletproof, clean this up
+
 				if (mAccessor != null && Collection.class.isAssignableFrom(classFrom(mAccessor))) {
 					// the field takes a collection, lets create a new instance of said collection, and hopefully the
 					// bnode is a list.  this approach will only work if the property is a singleton value, eg
@@ -835,7 +849,7 @@ public class RdfGenerator {
 					// we need to figure out what type of bean this instance maps to.
 					Class<?> aClass = classFrom(mAccessor);
 
-					// TODO: this is brittle =(
+					// TODO: need a better method for this situation
 					if (aClass.isAssignableFrom(java.net.URI.class)) {
 						return java.net.URI.create(aURI.toString());
 					}

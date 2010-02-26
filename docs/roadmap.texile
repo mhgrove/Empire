@@ -7,7 +7,6 @@ h1. Roadmap
 * Implement the JPA lock modes.
 * Implement commit-style flush mode.
 * Use @Id instead of @RdfId to denote id properties.
-* Auto-add global namespaces to queries so you don't have to use full URI's or do the namespace clauses yourself.
 * Support cascading of operations.
 * Expand core JPA annotation support, mapping to OWL/RDF constructs where appropriate.
 * Look into support JPQL queries and compiling them into SPARQL.

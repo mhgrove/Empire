@@ -6,7 +6,7 @@ h3. What your Java bean probably looks like now...
 
 You might have the concept of a Person in your application, which might be represented like so:
 
-<code><pre>
+<pre><code>
 public class Person {
 	private String firstName;
 	private String lastName;
@@ -19,12 +19,12 @@ public class Person {
 
 	// normal bean-style getters and setters...
 }
-</pre>
-</code>
+
+</code></pre>
 
 If you're using the class with something like Hibernate, it might look something like this:
 
-<code><pre>
+<pre><code>
 @Entity
 public class Person {
 
@@ -44,18 +44,16 @@ public class Person {
 
 	// normal bean-style getters and setters...
 }
-</pre>
-</code>
 
-This will get your Person instances into a single table with columns for each field, except age, maybe that's being
-calculated during a pre/post persist phase.  All of this probably looks very familiar.
+</code></pre>
+
+<p>This will get your Person instances into a single table with columns for each field, except age, maybe that's being calculated during a pre/post persist phase.  All of this probably looks very familiar.</p>
 
 h3. Persistence with Empire
 
-Now if we want to map this class to the concept foaf:Person and have it persisted by Empire into an RDF database,
-we just apply a few extra annotations:
+<p>Now if we want to map this class to the concept foaf:Person and have it persisted by Empire into an RDF database, we just apply a few extra annotations:</p>
 
-<code><pre>
+<pre><code>
 @Entity
 @Namespaces({"foaf", "http://xmlns.com/foaf/0.1/"})
 @RdfsClass("foaf:Person")
@@ -88,42 +86,26 @@ public class Person implements SupportsRdfId {
 
 	// normal bean-style getters and setters...
 }
-</pre>
-</code>
 
-Note that I've left off some of the JPA annotations we don't support, such as @ManyToMany and @OneToOne.  You could
-leave these on the class and be able to use with a normal JPA solution and Empire at the same time, we just ignore the
-annotations that are not yet supported, and when we do support them, we're not going to change the semantics, so
-there's no harm in leaving them.  But if you're starting from scratch you'd only use the stuff supported by Empire.
+</code></pre>
 
-Let's go over a few of the significant annotations:
+<p>Note that I've left off some of the JPA annotations we don't support, such as @ManyToMany and @OneToOne.  You could leave these on the class and be able to use with a normal JPA solution and Empire at the same time, we just ignore the annotations that are not yet supported, and when we do support them, we're not going to change the semantics, so there's no harm in leaving them.  But if you're starting from scratch you'd only use the stuff supported by Empire.</p>
+
+<p>Let's go over a few of the significant annotations:</p>
 
 <code>@Namespaces({"foaf", "http://xmlns.com/foaf/0.1/"})</code>
 
-This is an array of key-value pairs where the first value is the prefix of the namespace and the second is the URI.
-We provide this so you don't have to put full URI's into all the Empire tags.  Since this is array, we encourage you
-to be careful and make sure the key's and values are properly balanced or you may end up with namespace assertions
-you did not mean.
+<p>This is an array of key-value pairs where the first value is the prefix of the namespace and the second is the URI. We provide this so you don't have to put full URI's into all the Empire tags.  Since this is array, we encourage you to be careful and make sure the key's and values are properly balanced or you may end up with namespace assertions you did not mean.</p>
 
 <code>@RdfsClass("foaf:Person")</code>
 
-This simply says that all instances of this class are instances of foaf:Person; in the resulting RDF output for an
-instance of Person, you'd see a rdf:type triple whose object is foaf:Person.
+<p>This simply says that all instances of this class are instances of foaf:Person; in the resulting RDF output for an instance of Person, you'd see a rdf:type triple whose object is foaf:Person.</p>
 
-This annotation is required in order for Empire to know what to turn your Java class into, and similarly, what Java
-class to create from a set of triples describing a resource.  We also require @Entity like a normal JPA system, so
-remember to include both of these annotations on your classes.
-
+<p>This annotation is required in order for Empire to know what to turn your Java class into, and similarly, what Java class to create from a set of triples describing a resource.  We also require @Entity like a normal JPA system, so remember to include both of these annotations on your classes.</p>
 
 <code>implements SupportsRdfId</code>
 
-<p>Empire does not support anonymous instances, so everything persisted by Empire must have an rdf:ID.  The
-<code>SupportsRdfId</code> interface marks that a class can have an rdf:ID and provides a getter and setter to get
-and assign the rdf:ID of the object.  We provide a default implementation of the interface <code>SupportsRdfIdImpl</code>
-which provides a basic write-once implementation that you can use in your code.  You don't have to assign the
-rdf:ID yourself, Empire will generate one and set the value of it on your class when it's reading/writing data from
-the database.</p>
-
+<p>Empire does not support anonymous instances, so everything persisted by Empire must have an rdf:ID.  The <code>SupportsRdfId</code> interface marks that a class can have an rdf:ID and provides a getter and setter to get and assign the rdf:ID of the object.  We provide a default implementation of the interface <code>SupportsRdfIdImpl</code> which provides a basic write-once implementation that you can use in your code.  You don't have to assign the rdf:ID yourself, Empire will generate one and set the value of it on your class when it's reading/writing data from the database.</p>
 
 <code>@RdfId</code>
 
@@ -134,83 +116,61 @@ a random rdf:ID will be generated for your instances.</p>
 
 <code>@RdfProperty(...)</code>
 
-This annotation tells Empire what property to use when saving, or reading, RDF data.  In this example, the value of
-the field "lastName" will be persisted to a triple whose predicate is foaf:surname, and when the data is getting read
-back in, the object of the triple with the predicate of foaf:surname will get assigned to this field.
+<p>This annotation tells Empire what property to use when saving, or reading, RDF data.  In this example, the value of the field "lastName" will be persisted to a triple whose predicate is foaf:surname, and when the data is getting read back in, the object of the triple with the predicate of foaf:surname will get assigned to this field.</p>
 
-Empire enforces datatypes for literals, so fields using primitive types, such as long, short, boolean, etc. that
-correspond to xml datatypes will get serialized/deserialized using a datatype.  You can disable this datatyping
-by setting <code>EmpireOptions.STRONG_TYPING</code> to false.
+<p>Empire enforces datatypes for literals, so fields using primitive types, such as long, short, boolean, etc. that correspond to xml datatypes will get serialized/deserialized using a datatype.  You can disable this datatyping by setting <code>EmpireOptions.STRONG_TYPING</code> to false.</p>
 
-In the case where the value of the field is an Object, that Object must be persistable, i.e. it must be an @Entity,
-have an @RdfsClass anntotation, have an rdf:ID, etc.
+<p>In the case where the value of the field is an Object, that Object must be persistable, i.e. it must be an @Entity, have an @RdfsClass anntotation, have an rdf:ID, etc.</p>
 
-When it's a Collection, the collection must be of primitives which can be converted to literals, or Objects which are
-persistable.
+<p>When it's a Collection, the collection must be of primitives which can be converted to literals, or Objects which are persistable.</p>
 
-<code><pre>
+<pre><code>
 	private int age;
 
 	@RdfProperty("foaf:age")
 	public int getAge() {
 		// return the calculated age of the person
 	}
-</pre>
-</code><br/>
 
-Lastly, Empire works a little differently from other JPA implementations like Hibernate.  Usually a field is persisted
-to the database no matter what, the presence of the @Basic annotation is implied.  Empire is the opposite, the @Transient
-annotation is implied.  So without the presence of the getter method with an annotation, age would not get persisted.
+</code></pre><br/>
 
-But this example serves to show that you can annotate a method and the value returned by that method will get persisted
-just as if the field itself was annotated.  The field does not even need to exist in these cases.  So you could
-calculate age on the fly from the current date and the person's birthday and the value saved into their database would
-always be their current age.
+<p>Lastly, Empire works a little differently from other JPA implementations like Hibernate.  Usually a field is persisted to the database no matter what, the presence of the @Basic annotation is implied.  Empire is the opposite, the @Transient annotation is implied.  So without the presence of the getter method with an annotation, age would not get persisted.</p>
+
+<p>But this example serves to show that you can annotate a method and the value returned by that method will get persisted just as if the field itself was annotated.  The field does not even need to exist in these cases.  So you could calculate age on the fly from the current date and the person's birthday and the value saved into their database would always be their current age.</p>
 
 h3. The extras
 
 <code>@NamedGraph</code>
 
-If your database supports named graphs, this annotation gives you control over which named graph instances of the class
-are stored.  There are two types of storage, NamedGraphType.Instance and NamedGraphType.Static.  When the type is
-"Instance" each instance will be stored in it's own named graph, when the value it static, you must provide a URI for
-the value field, and all instances of the class will be stored in the specified named graph.
+<p>If your database supports named graphs, this annotation gives you control over which named graph instances of the class are stored.  There are two types of storage, NamedGraphType.Instance and NamedGraphType.Static.  When the type is "Instance" each instance will be stored in it's own named graph, when the value it static, you must provide a URI for the value field, and all instances of the class will be stored in the specified named graph.</p>
 
 h2. Getting an Empire EntityManager.
 
-Coming Soon.
+<pre><code>
+PersistenceProvider aProvider = Empire.get().persistenceProvider();
+EntityManager aManager = aProvider.createEntityManagerFactory("", new HashMap()).createEntityManager();
+</code></pre>
 
 h2. Queries
 
-Currently, Empire supports both the SPARQL and SERQL query languages, just use whatever language is supported by the
-database you are using as the backend.  The JPQL dialect is not supported, or any dialect of SQL, however, you can use
-the partial queries you are using to seeing in a normal JPA application.  For example:
+<p>Currently, Empire supports both the SPARQL and SERQL query languages, just use whatever language is supported by the database you are using as the backend.  The JPQL dialect is not supported, or any dialect of SQL, however, you can use the partial queries you are using to seeing in a normal JPA application.  For example:</p>
 
-<code><pre>
+<pre><code>
 Query aQuery = mManager.createNativeQuery("from " +
                                           "{result} <" + SpaceVocab.ontology().agency + "> {??}," +
                                           "{result} <" + SpaceVocab.ontology().alternateName + "> {??altName}",
                                           Spacecraft.class);
-</pre></code><br/>
+</code></pre><br/>
 
-This will return a set of Spacecraft instances which are bound to the "result" variable in the query.  For now,
-you have to use the name "result" for what you want returned as the results of your query since we don't yet support
-any of the mapping constructs.
+<p>This will return a set of Spacecraft instances which are bound to the "result" variable in the query.  For now, you have to use the name "result" for what you want returned as the results of your query since we don't yet support any of the mapping constructs.</p>
 
-You'll also notice that parameters, both named and unamed have a different syntax than in JPQL.  Unamed parameters are
-marked by the token "??" while named parameters are marked by the same token followed by the name of the parameter;
-as the example shows "??altName".
+<p>You'll also notice that parameters, both named and unnamed have a different syntax than in JPQL.  Unamed parameters are marked by the token "??" while named parameters are marked by the same token followed by the name of the parameter; as the example shows "??altName".</p>
 
-This is a departure from using ?1, ?2, ?3, etc for unamed parameters and :name for named parameters in JPQL.  This is
-because this clashes with the syntax for variables and qnames.
+<p>This is a departure from using ?1, ?2, ?3, etc for unnamed parameters and :name for named parameters in JPQL.  This is because this clashes with the syntax for variables and qnames.</p>
 
-However, you still would bind the paramters to values in the same way:
+<p>However, you still would bind the parameters to values in the same way:</p>
 
-<code><pre>
+<pre><code>
         aQuery.setParameter(1, "U.S.S.R");
         aQuery.setParameter("altName", "00001");
-</pre></code><br/>
-
-h2. Annotation indexes
-
-Coming Soon.
+</code></pre>

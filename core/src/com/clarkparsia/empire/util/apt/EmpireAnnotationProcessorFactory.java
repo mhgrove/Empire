@@ -204,7 +204,7 @@ public class EmpireAnnotationProcessorFactory implements AnnotationProcessorFact
 	 * APT Visitor implementation that will inspect the class declarations with the given annotation and collect
 	 * the list of classes with the annotation.
 	 */
-	private class CollectorVisitor extends SimpleDeclarationVisitor {
+	private static class CollectorVisitor extends SimpleDeclarationVisitor {
 
 		/**
 		 * The list of class names with the annotation

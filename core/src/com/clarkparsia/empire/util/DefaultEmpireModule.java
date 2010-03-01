@@ -22,6 +22,7 @@ import com.google.inject.name.Names;
 
 import com.clarkparsia.empire.DataSourceFactory;
 import com.clarkparsia.empire.spi.guice.PersistenceInjectionModule;
+import com.clarkparsia.utils.io.IOUtil;
 
 import java.util.Map;
 import java.util.Properties;
@@ -29,6 +30,8 @@ import java.util.HashMap;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.File;
+import java.io.InputStream;
+import java.io.FileNotFoundException;
 
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -59,21 +62,39 @@ public class DefaultEmpireModule extends AbstractModule implements EmpireModule 
 		this(new HashMap<String, String>());
 
 		Properties aProps = new Properties();
+		InputStream aStream = null;
 
 		if (System.getProperty("empire.configuration.file") != null) {
 			try {
-				aProps.load(new FileInputStream(System.getProperty("empire.configuration.file")));
+				aStream = new FileInputStream(System.getProperty("empire.configuration.file"));
 			}
-			catch (IOException e) {
-				LOGGER.error("Error while reading default Empire configuration file from the path", e);
+			catch (FileNotFoundException e) {
+				LOGGER.error("Could not find specified empire configuration file", e);
 			}
 		}
 		else if (new File("empire.properties").exists()) {
 			try {
-				aProps.load(new FileInputStream("empire.properties"));
+				aStream = new FileInputStream("empire.properties");
+			}
+			catch (IOException e) {
+				LOGGER.error("Could not find specified empire configuration file", e);
+			}
+		}
+
+		if (aStream != null) {
+			try {
+				aProps.load(aStream);
 			}
 			catch (IOException e) {
 				LOGGER.error("Error while reading default Empire configuration file from the path", e);
+			}
+			finally {
+				try {
+					aStream.close();
+				}
+				catch (IOException e) {
+					LOGGER.error("Failed to close properties input stream", e);
+				}
 			}
 		}
 

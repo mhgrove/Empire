@@ -189,6 +189,7 @@
 				<include name="docs/**"/>
 			</fileset>
 		</copy>
+
 		<zip destfile="${dist.dir}/${project.dirname}.zip">
 			<zipfileset dir="dist" prefix="${project.dirname}"
 				excludes="${project.name}*.zip, dist/test-reports"/>

@@ -62,6 +62,7 @@ import java.util.HashSet;
 import java.util.HashMap;
 
 import java.io.File;
+import java.io.IOException;
 
 import java.net.URL;
 
@@ -462,7 +463,9 @@ public class BeanGenerator {
 		}
 
 		if (!theDirToSave.exists()) {
-			theDirToSave.mkdirs();
+			if (!theDirToSave.mkdirs()) {
+				throw new IOException("Could not create output directory");
+			}
 		}
 
 		for (Resource aClass :  aMap.keySet()) {

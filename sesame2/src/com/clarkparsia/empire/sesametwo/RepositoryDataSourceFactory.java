@@ -130,7 +130,7 @@ public class RepositoryDataSourceFactory implements DataSourceFactory {
 		}
 	}
 
-	private class SailBuilderRDFHandler extends RDFHandlerBase {
+	private static class SailBuilderRDFHandler extends RDFHandlerBase {
 		private RepositoryConnection mConnection;
 
 		private SailBuilderRDFHandler(final RepositoryConnection theConnection) {

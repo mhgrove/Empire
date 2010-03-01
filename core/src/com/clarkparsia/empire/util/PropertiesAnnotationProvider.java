@@ -27,6 +27,7 @@ import java.lang.annotation.Annotation;
 import java.io.File;
 import java.io.IOException;
 import java.io.FileInputStream;
+import java.io.InputStream;
 
 import org.apache.log4j.Logger;
 import org.apache.log4j.LogManager;
@@ -81,11 +82,22 @@ public class PropertiesAnnotationProvider implements EmpireAnnotationProvider {
 		if (mProperties == null) {
 			mProperties = new Properties();
 
+			InputStream aStream = null;
 			try {
-				mProperties.load(new FileInputStream(mFile));
+				aStream = new FileInputStream(mFile);
+
+				mProperties.load(aStream);
 			}
 			catch (IOException e) {
 				LOGGER.error("Reading empire.config properties for Annotation provider failed", e);
+			}
+			finally {
+				try {
+					if (aStream != null) aStream.close();
+				}
+				catch (IOException e) {
+					LOGGER.warn("Error while closing annotation index properties stream", e);
+				}
 			}
 		}
 

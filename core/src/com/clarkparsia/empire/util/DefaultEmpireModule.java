@@ -98,8 +98,8 @@ public class DefaultEmpireModule extends AbstractModule implements EmpireModule 
 			}
 		}
 
-		for (String aKey : aProps.stringPropertyNames()) {
-			mConfig.put(aKey, aProps.getProperty(aKey));
+		for (Object aKey : aProps.keySet()) {
+			mConfig.put(aKey.toString(), aProps.getProperty(aKey.toString()));
 		}
 	}
 

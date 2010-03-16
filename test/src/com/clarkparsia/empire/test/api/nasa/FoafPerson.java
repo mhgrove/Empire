@@ -81,7 +81,7 @@ public class FoafPerson extends BaseTestClass {
 		if (getPerformed() != null ? !getPerformed().equals(that.getPerformed()) : that.getPerformed() != null) {
 			return false;
 		}
-		if (!BasicUtils.equalsOrNull(getRdfId(), that.getRdfId())) {
+		if (!BasicUtils.equalsOrNull(getId(), that.getId())) {
 			return false;
 		}
 

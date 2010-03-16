@@ -93,7 +93,7 @@ public class Image extends BaseTestClass {
 		if (getThumbnail() != null ? !getThumbnail().equals(aImage.getThumbnail()) : aImage.getThumbnail() != null) {
 			return false;
 		}
-		if (!BasicUtils.equalsOrNull(getRdfId(), aImage.getRdfId())) {
+		if (!BasicUtils.equalsOrNull(getId(), aImage.getId())) {
 			return false;
 		}
 
@@ -102,6 +102,6 @@ public class Image extends BaseTestClass {
 
 	@Override
 	public int hashCode() {
-		return getRdfId().hashCode();
+		return getId().hashCode();
 	}
 }

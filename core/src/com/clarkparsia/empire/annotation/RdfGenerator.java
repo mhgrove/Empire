@@ -89,6 +89,7 @@ import com.clarkparsia.empire.util.EmpireUtil;
 import com.clarkparsia.openrdf.util.ResourceBuilder;
 import com.clarkparsia.openrdf.util.GraphBuilder;
 import com.clarkparsia.openrdf.ExtGraph;
+import com.clarkparsia.openrdf.query.SesameQueryUtils;
 
 import javax.persistence.Entity;
 import javax.persistence.Transient;
@@ -119,7 +120,7 @@ import javassist.util.proxy.MethodHandler;
  *
  * @author Michael Grove
  * @since 0.1
- * @version 0.6.1
+ * @version 0.6.2
  */
 public class RdfGenerator {
 
@@ -139,9 +140,10 @@ public class RdfGenerator {
 	private final static Map<URI, Class> TYPE_TO_CLASS = new HashMap<URI, Class>();
 
 	/**
-	 * Map to keep a record of what instances are currently being created in order to prevent cycles
+	 * Map to keep a record of what instances are currently being created in order to prevent cycles.  Keys are the
+	 * identifiers of the instances and the values are the instances
 	 */
-	private final static Map<java.net.URI, Object> OBJECT_M = Collections.synchronizedMap(new HashMap<java.net.URI, Object>());
+	private final static Map<Object, Object> OBJECT_M = Collections.synchronizedMap(new HashMap<Object, Object>());
 
 	static {
 		// add default namespaces
@@ -163,7 +165,22 @@ public class RdfGenerator {
 	 * Create an instance of the specified class and instantiate it's data from the given data source using the RDF
 	 * instance specified by the given URI
 	 * @param theClass the class to create
-	 * @param theURI the URI of the RDF individual containing the data for the new instance
+	 * @param theKey the id of the RDF individual containing the data for the new instance
+	 * @param theSource the KB to get the RDF data from
+	 * @param <T> the type of the instance to create
+	 * @return a new instance
+	 * @throws InvalidRdfException thrown if the class does not support RDF JPA operations, or does not provide sufficient access to its fields/data.
+	 * @throws DataSourceException thrown if there is an error while retrieving data from the graph
+	 */
+	public static <T> T fromRdf(Class<T> theClass, String theKey, DataSource theSource) throws InvalidRdfException, DataSourceException {
+		return fromRdf(theClass, EmpireUtil.asPrimaryKey(theKey), theSource);
+	}
+
+	/**
+	 * Create an instance of the specified class and instantiate it's data from the given data source using the RDF
+	 * instance specified by the given URI
+	 * @param theClass the class to create
+	 * @param theURI the id of the RDF individual containing the data for the new instance
 	 * @param theSource the KB to get the RDF data from
 	 * @param <T> the type of the instance to create
 	 * @return a new instance
@@ -171,6 +188,21 @@ public class RdfGenerator {
 	 * @throws DataSourceException thrown if there is an error while retrieving data from the graph
 	 */
 	public static <T> T fromRdf(Class<T> theClass, java.net.URI theURI, DataSource theSource) throws InvalidRdfException, DataSourceException {
+		return fromRdf(theClass, new SupportsRdfId.URIKey(theURI), theSource);
+	}
+
+	/**
+	 * Create an instance of the specified class and instantiate it's data from the given data source using the RDF
+	 * instance specified by the given URI
+	 * @param theClass the class to create
+	 * @param theId the id of the RDF individual containing the data for the new instance
+	 * @param theSource the KB to get the RDF data from
+	 * @param <T> the type of the instance to create
+	 * @return a new instance
+	 * @throws InvalidRdfException thrown if the class does not support RDF JPA operations, or does not provide sufficient access to its fields/data.
+	 * @throws DataSourceException thrown if there is an error while retrieving data from the graph
+	 */
+	public static <T> T fromRdf(Class<T> theClass, SupportsRdfId.RdfKey theId, DataSource theSource) throws InvalidRdfException, DataSourceException {
 		T aObj;
 
 		try {
@@ -181,7 +213,7 @@ public class RdfGenerator {
 				aObj = theClass.newInstance();
 			}
 
-			asSupportsRdfId(aObj).setRdfId(theURI);
+			asSupportsRdfId(aObj).setId(theId);
 		}
 		catch (InstantiationException e) {
 			throw new InvalidRdfException("Cannot create instance of bean, should have a default constructor.", e);
@@ -193,40 +225,41 @@ public class RdfGenerator {
 			throw new InvalidRdfException("Cannot create an instance of bean", e);
 		}
 
-		return fromRdf(aObj, theURI, theSource);
+		return fromRdf(aObj, theSource);
 	}
 
 	/**
 	 * Populate the fields of the current instance from the RDF indiviual with the given URI
 	 * @param theObj the Java object to populate
-	 * @param theURI the URI of the equivalent RDF individual
 	 * @param theSource the KB to get the RDF data from
 	 * @param <T> the type of the class being populated
 	 * @return theObj, populated from the specified DataSource
 	 * @throws InvalidRdfException thrown if the object does not support the RDF JPA API.
 	 * @throws DataSourceException thrown if there is an error retrieving data from the database
 	 */
-	public static <T> T fromRdf(T theObj, java.net.URI theURI, DataSource theSource) throws InvalidRdfException, DataSourceException {
-		if (OBJECT_M.containsKey(theURI)) {
+	private static <T> T fromRdf(T theObj, DataSource theSource) throws InvalidRdfException, DataSourceException {
+		SupportsRdfId.RdfKey theKeyObj = asSupportsRdfId(theObj).getId();
+
+		if (OBJECT_M.containsKey(theKeyObj)) {
 			// TODO: this is probably a safe cast, i dont see how something w/ the same URI, which should be the same
 			// object would change types
-			return (T) OBJECT_M.get(theURI);
+			return (T) OBJECT_M.get(theKeyObj);
 		}
 		else {
-			OBJECT_M.put(theURI, theObj);
+			OBJECT_M.put(theKeyObj, theObj);
 		}
 
 		ExtGraph aGraph = new ExtGraph(EmpireUtil.describe(theSource, theObj));
 
 		if (aGraph.size() == 0) {
-			OBJECT_M.remove(theURI);
+			OBJECT_M.remove(theKeyObj);
 
 			return theObj;
 		}
 
-		URI aInd = aGraph.getValueFactory().createURI(theURI.toString());
+		Resource aRes = EmpireUtil.asResource(asSupportsRdfId(theObj));
 		Set<URI> aProps = new HashSet<URI>();
-		Iterator<Statement> sIter = aGraph.match(aInd, null, null);
+		Iterator<Statement> sIter = aGraph.match(aRes, null, null);
 
 		while (sIter.hasNext()) {
 			aProps.add(sIter.next().getPredicate());
@@ -264,7 +297,7 @@ public class RdfGenerator {
 				// java class, so we can figure it out later if need be. TODO: of course, if something has multiple types
 				// that information is lost, which is not good.
 
-				URI aType = (URI) aGraph.getValue(aInd, aProp);
+				URI aType = (URI) aGraph.getValue(aRes, aProp);
 				if (!TYPE_TO_CLASS.containsKey(aType) ||
 					!TYPE_TO_CLASS.get(aType).isAssignableFrom(theObj.getClass())) {
 
@@ -288,9 +321,9 @@ public class RdfGenerator {
 				continue;
 			}
 
-			ToObjectFunction aFunc = new ToObjectFunction(theSource, aInd, aAccess, aProp);
+			ToObjectFunction aFunc = new ToObjectFunction(theSource, aRes, aAccess, aProp);
 
-			Object aValue = aFunc.apply(aGraph.getValues(aInd, aProp));
+			Object aValue = aFunc.apply(aGraph.getValues(aRes, aProp));
 
 			boolean aOldAccess = aAccess.isAccessible();
 
@@ -324,7 +357,7 @@ public class RdfGenerator {
 			}
 		}
 
-		OBJECT_M.remove(theURI);
+		OBJECT_M.remove(theKeyObj);
 		
 		return theObj;
 	}
@@ -375,11 +408,12 @@ public class RdfGenerator {
 	 * @throws InvalidRdfException thrown if the object does not support the minimum to create or retrieve an rdf:ID
 	 * @see SupportsRdfId
 	 */
-	private static URI id(Object theObj) throws InvalidRdfException {
+	private static Resource id(Object theObj) throws InvalidRdfException {
 		SupportsRdfId aSupport = asSupportsRdfId(theObj);
 
-		if (aSupport.getRdfId() != null) {
-			return FACTORY.createURI(aSupport.getRdfId().toString());
+		if (aSupport.getId() != null) {
+			//return FACTORY.createURI(aSupport.getRdfId().toString());
+			return EmpireUtil.asResource(aSupport);
 		}
 
 		Field aIdField = BeanReflectUtil.getIdField(theObj.getClass());
@@ -428,7 +462,7 @@ public class RdfGenerator {
 			aIdField.setAccessible(aOldAccess);
 		}
 
-		aSupport.setRdfId(java.net.URI.create(aURI.toString()));
+		aSupport.setId(new SupportsRdfId.URIKey(java.net.URI.create(aURI.toString())));
 
 		return aURI;
 	}
@@ -465,7 +499,7 @@ public class RdfGenerator {
 	public static ExtGraph asRdf(Object theObj) throws InvalidRdfException {
 		RdfsClass aClass = asRdfClass(theObj);
 
-		URI aURI = id(theObj);
+		Resource aSubj = id(theObj);
 
 		addNamespaces(theObj.getClass());
 
@@ -477,7 +511,7 @@ public class RdfGenerator {
 
 		try {
 			ResourceBuilder aRes = aBuilder.instance(aBuilder.getValueFactory().createURI(NamespaceUtils.uri(aClass.value())),
-													 aURI.toString());
+													 aSubj);
 
 			AsValueFunction aFunc = new AsValueFunction();
 			for (AccessibleObject aAccess : aAccessors) {
@@ -635,8 +669,8 @@ public class RdfGenerator {
 		 */
 		private Object mField;
 
-		public ToObjectFunction(final DataSource theSource, URI theURI, final Object theField, final URI theProp) {
-			valueToObject = new ValueToObject(theSource, theURI, theField, theProp);
+		public ToObjectFunction(final DataSource theSource, Resource theResource, final Object theField, final URI theProp) {
+			valueToObject = new ValueToObject(theSource, theResource, theField, theProp);
 
 			mField = theField;
 		}
@@ -751,10 +785,10 @@ public class RdfGenerator {
 		private URI mProperty;
 		private Object mAccessor;
 		private DataSource mSource;
-		private URI mURI;
+		private Resource mResource;
 
-		public ValueToObject(final DataSource theSource, URI theURI, final Object theAccessor, final URI theProp) {
-			mURI = theURI;
+		public ValueToObject(final DataSource theSource, Resource theResource, final Object theAccessor, final URI theProp) {
+			mResource = theResource;
 			mSource = theSource;
 			mAccessor = theAccessor;
 			mProperty = theProp;
@@ -822,10 +856,10 @@ public class RdfGenerator {
 
 
 					try {
-						String aQuery = getBNodeConstructQuery(mSource, mURI, mProperty);
+						String aQuery = getBNodeConstructQuery(mSource, mResource, mProperty);
 						
 						ExtGraph aGraph = new ExtGraph(mSource.graphQuery(aQuery));
-						Resource aPossibleListHead = (Resource) aGraph.getValue(mURI, mProperty);
+						Resource aPossibleListHead = (Resource) aGraph.getValue(mResource, mProperty);
 						if (aGraph.isList(aPossibleListHead)) {
 							List<Value> aList = aGraph.asList(aPossibleListHead);
 
@@ -915,7 +949,7 @@ public class RdfGenerator {
 			return (T) aFactory.createClass().newInstance();
 		}
 		else {
-			return fromRdf(theClass, theURI, theSource);
+			return fromRdf(theClass, new SupportsRdfId.URIKey(theURI), theSource);
 		}
 	}
 
@@ -946,19 +980,19 @@ public class RdfGenerator {
 		}
 	}
 
-	private static String getBNodeConstructQuery(DataSource theSource, URI theURI, URI theProperty) {
-		String aSerqlQuery = "construct * from {<" + theURI.toString() + ">} <"+theProperty.toString()+"> {o}, {o} po {oo}";
+	private static String getBNodeConstructQuery(DataSource theSource, Resource theRes, URI theProperty) {
+		String aSerqlQuery = "construct * from {" + SesameQueryUtils.getQueryString(theRes) + "} <"+theProperty.toString()+"> {o}, {o} po {oo}";
 
-		String aSparqlQuery = "CONSTRUCT  { <" + theURI.toString() + "> <"+theProperty.toString()+"> ?o . ?o ?po ?oo  } \n" +
+		String aSparqlQuery = "CONSTRUCT  { " + SesameQueryUtils.getQueryString(theRes) + " <"+theProperty.toString()+"> ?o . ?o ?po ?oo  } \n" +
 							  "WHERE\n" +
-							  "{ <" + theURI.toString() + "> <"+theProperty.toString()+"> ?o.\n" +
+							  "{ " + SesameQueryUtils.getQueryString(theRes) + " <"+theProperty.toString()+"> ?o.\n" +
 							  "?o ?po ?oo. }";
 
 		if (theSource.getQueryFactory().getDialect() == SerqlDialect.instance()) {
 			return aSerqlQuery;
 		}
 		else {
-			// TODO: little less hacky here, we're just assuming/hoping at this point that they support sparql.  which
+			// TODO: we're just assuming/hoping at this point that they support sparql.  which
 			// will most likely be the case, but possibly not always.
 			return aSparqlQuery;
 		}

@@ -28,6 +28,7 @@ import org.openrdf.model.impl.GraphImpl;
 import org.openrdf.model.impl.ValueFactoryImpl;
 
 import org.openrdf.model.Graph;
+import org.openrdf.model.Statement;
 
 import org.openrdf.model.vocabulary.RDFS;
 
@@ -45,6 +46,8 @@ import com.clarkparsia.empire.test.api.BaseTestClass;
 import com.clarkparsia.empire.test.api.TestPerson;
 import com.clarkparsia.empire.SupportsRdfId;
 import com.clarkparsia.empire.DataSourceException;
+import com.clarkparsia.empire.util.EmpireUtil;
+import static com.clarkparsia.empire.util.EmpireUtil.asPrimaryKey;
 import com.clarkparsia.empire.test.api.TestDataSource;
 import com.clarkparsia.empire.test.api.TestVocab;
 
@@ -119,7 +122,8 @@ public class TestRdfConvert {
 
 	@Test
 	public void testNoStatements() throws InvalidRdfException, DataSourceException {
-		assertTrue(RdfGenerator.fromRdf(TestPerson.class, URI.create("urn:foo"), new TestDataSource()) == null);
+		// we should at least return an object in these cases.
+		assertFalse(RdfGenerator.fromRdf(TestPerson.class, URI.create("urn:foo"), new TestDataSource()) == null);
 	}
 
 	@Test
@@ -151,8 +155,10 @@ public class TestRdfConvert {
 
 		try {
 			ExtGraph aGraph = RdfGenerator.asRdf(aPerson);
-
-			org.openrdf.model.URI aPersonURI = aGraph.getValueFactory().createURI(aPerson.getRdfId().toString());
+for (Statement s : aGraph) {
+	System.err.println(s);
+}
+			org.openrdf.model.URI aPersonURI = aGraph.getValueFactory().createURI(aPerson.getId().toString());
 
 			assertEquals(aGraph.size(), 2);
 
@@ -206,8 +212,8 @@ public class TestRdfConvert {
 
 			assertEquals(aKnows.size(), 2);
 
-			assertTrue(aKnows.contains(aGraph.getValueFactory().createURI(aJane.getRdfId().toString())));
-			assertTrue(aKnows.contains(aGraph.getValueFactory().createURI(aJoe.getRdfId().toString())));
+			assertTrue(aKnows.contains(aGraph.getValueFactory().createURI(aJane.getId().toString())));
+			assertTrue(aKnows.contains(aGraph.getValueFactory().createURI(aJoe.getId().toString())));
 		}
 		catch (InvalidRdfException e) {
 			e.printStackTrace();
@@ -248,7 +254,7 @@ public class TestRdfConvert {
 			aSourceGraph.addAll(RdfGenerator.asRdf(aJoe));
 			aSourceGraph.addAll(RdfGenerator.asRdf(aJane));
 
-			TestPerson aPerson = RdfGenerator.fromRdf(TestPerson.class, aBob.getRdfId(), new TestDataSource(aSourceGraph));
+			TestPerson aPerson = RdfGenerator.fromRdf(TestPerson.class, aBob.getId(), new TestDataSource(aSourceGraph));
 
 			assertEquals(aBob, aPerson);
 
@@ -263,7 +269,7 @@ public class TestRdfConvert {
 			aSourceGraph.addAll(RdfGenerator.asRdf(aJoe));
 			aSourceGraph.addAll(RdfGenerator.asRdf(aJane));
 
-			aPerson = RdfGenerator.fromRdf(TestPerson.class, aBob.getRdfId(), new TestDataSource(aSourceGraph));
+			aPerson = RdfGenerator.fromRdf(TestPerson.class, aBob.getId(), new TestDataSource(aSourceGraph));
 
 			// should still be equal, should have re-used Jane
 			assertEquals(aBob, aPerson);
@@ -280,14 +286,14 @@ public class TestRdfConvert {
 
 		URI aTestURI = URI.create("urn:some:identifier");
 
-		assertNull(aImpl.getRdfId());
+		assertNull(aImpl.getId());
 
-		aImpl.setRdfId(aTestURI);
+		aImpl.setId(asPrimaryKey(aTestURI));
 
-		assertEquals(aImpl.getRdfId(), aTestURI);
+		assertEquals(aImpl.getId(), asPrimaryKey(aTestURI));
 
 		try {
-			aImpl.setRdfId(URI.create("urn:new:id"));
+			aImpl.setId(asPrimaryKey(URI.create("urn:new:id")));
 			fail("IllegalStateException expected");
 		}
 		catch (IllegalStateException e) {
@@ -336,7 +342,7 @@ public class TestRdfConvert {
 	@Entity
 	private class NoDefaultConstructor extends BaseTestClass {
 		NoDefaultConstructor(String foo) {
-			setRdfId(URI.create("urn:test:no:default"));
+			setId(asPrimaryKey(URI.create("urn:test:no:default")));
 		}
 	}
 
@@ -344,7 +350,7 @@ public class TestRdfConvert {
 	@Entity
 	private class UnreachableConstructor extends BaseTestClass {
 		private UnreachableConstructor() {
-			setRdfId(URI.create("urn:test:unreachable"));
+			setId(asPrimaryKey(URI.create("urn:test:unreachable")));
 		}
 	}
 
@@ -357,7 +363,7 @@ public class TestRdfConvert {
 	@Entity
 	private class UnbalancedNamespaces extends BaseTestClass {
 		UnbalancedNamespaces() {
-			setRdfId(URI.create("urn:test:unbalanced"));
+			setId(asPrimaryKey(URI.create("urn:test:unbalanced")));
 		}
 	}
 

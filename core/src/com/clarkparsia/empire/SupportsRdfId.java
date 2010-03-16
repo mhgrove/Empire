@@ -15,22 +15,93 @@
 
 package com.clarkparsia.empire;
 
+import java.net.URI;
+
 /**
  * <p>Interface for anything that can support having an rdf:ID</p>
  *
  * @author Michael Grove
  * @since 0.1
+ * @since 0.6.2
  */
 public interface SupportsRdfId {
 	/**
 	 * Return the rdf:ID of this instance
 	 * @return the rdf:ID
 	 */
-	public java.net.URI getRdfId();
+	public RdfKey getId();
 
 	/**
 	 * Set the rdf:ID for this object
 	 * @param theId the new rdf:ID
 	 */
-	void setRdfId(java.net.URI theId);
+	void setId(RdfKey theId);
+
+	public interface RdfKey<T> {
+		public T value();
+	}
+
+	public class URIKey implements RdfKey<java.net.URI> {
+		private final java.net.URI mURI;
+
+		public URIKey(final URI theURI) {
+			mURI = theURI;
+		}
+
+		public java.net.URI value() { return mURI; }
+
+		@Override
+		public int hashCode() {
+			return mURI.hashCode();
+		}
+		@Override
+		public String toString() {
+			return mURI.toASCIIString();
+		}
+
+		@Override
+		public boolean equals(Object theObj) {
+			if (theObj == null) {
+				return false;
+			}
+			else if (this == theObj) {
+				return true;
+			}
+			else {
+				return theObj instanceof URIKey && mURI.equals(((URIKey) theObj).value());
+			}
+		}
+	}
+
+	public class BNodeKey implements RdfKey<String> {
+		private final String mId;
+
+		public BNodeKey(final String theId) {
+			mId = theId;
+		}
+
+		public String value() { return mId; }
+
+		@Override
+		public int hashCode() {
+			return mId.hashCode();
+		}
+		@Override
+		public String toString() {
+			return mId;
+		}
+
+		@Override
+		public boolean equals(Object theObj) {
+			if (theObj == null) {
+				return false;
+			}
+			else if (this == theObj) {
+				return true;
+			}
+			else {
+				return theObj instanceof BNodeKey && mId.equals(((BNodeKey) theObj).value());
+			}
+		}	
+	}
 }

@@ -16,22 +16,23 @@
 package com.clarkparsia.empire.util;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.TypeLiteral;
-import com.google.inject.multibindings.Multibinder;
+
 import com.google.inject.name.Names;
 
-import com.clarkparsia.empire.DataSourceFactory;
-import com.clarkparsia.empire.spi.guice.PersistenceInjectionModule;
-import com.clarkparsia.utils.io.IOUtil;
+import com.clarkparsia.empire.EmpireException;
 
-import java.util.Map;
-import java.util.Properties;
-import java.util.HashMap;
+import com.clarkparsia.empire.config.EmpireConfiguration;
+
+import com.clarkparsia.empire.config.io.ConfigReader;
+
+import com.clarkparsia.empire.config.io.impl.PropertiesConfigReader;
+
+import com.clarkparsia.empire.spi.guice.PersistenceInjectionModule;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.File;
 import java.io.InputStream;
-import java.io.FileNotFoundException;
 
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -41,7 +42,7 @@ import org.apache.log4j.Logger;
  *
  * @author Michael Grove
  * @since 0.6
- * @version 0.6.1
+ * @version 0.6.2
  */
 public class DefaultEmpireModule extends AbstractModule implements EmpireModule {
 
@@ -53,61 +54,100 @@ public class DefaultEmpireModule extends AbstractModule implements EmpireModule 
 	/**
 	 * Application configuration properties
 	 */
-	private Map<String, String> mConfig;
+	private EmpireConfiguration mConfig;
 
 	/**
 	 * Create a new DefaultEmpireModule
 	 */
 	public DefaultEmpireModule() {
-		this(new HashMap<String, String>());
+		//this(new HashMap<String, String>());
 
-		Properties aProps = new Properties();
-		InputStream aStream = null;
+		//InputStream aStream = null;
+		File aConfigFile = null;
 
-		if (System.getProperty("empire.configuration.file") != null) {
-			try {
-				aStream = new FileInputStream(System.getProperty("empire.configuration.file"));
-			}
-			catch (FileNotFoundException e) {
-				LOGGER.error("Could not find specified empire configuration file", e);
-			}
+		// not ideal, really we want just a single standard config file name with the system property which can override
+		// that.  but since we don't have a standard yet, we'll check a bunch of them.
+		if (System.getProperty("empire.configuration.file") != null && new File(System.getProperty("empire.configuration.file")).exists()) {
+			aConfigFile = new File(System.getProperty("empire.configuration.file"));
 		}
 		else if (new File("empire.properties").exists()) {
-			try {
-				aStream = new FileInputStream("empire.properties");
+			aConfigFile = new File("empire.properties");
+		}
+		else if (new File("empire.config.properties").exists()) {
+			aConfigFile = new File("empire.config.properties");
+		}
+		else if (new File("empire.xml").exists()) {
+			aConfigFile = new File("empire.xml");
+		}
+		else if (new File("empire.config.xml").exists()) {
+			aConfigFile = new File("empire.config.xml");
+		}
+
+		ConfigReader aReader = null;
+
+		if (aConfigFile == null) {
+			// TODO: should this just be an Error -- throw a RTE?
+			mConfig = new EmpireConfiguration();
+
+			LOGGER.warn("No configuration found or specified, Empire may not start or function correctly.");
+		}
+		else {
+			// TODO: need a more sophisticated method of selection which reader to use =)
+			if (System.getProperty("empire.config.reader") != null) {
+				try {
+					aReader = (ConfigReader) Class.forName(System.getProperty("empire.config.reader")).newInstance();
+				}
+				catch (Exception e) {
+					LOGGER.error("Unable to find or create specified configuration reader class: " + System.getProperty("empire.config.reader"), e);
+				}
 			}
-			catch (IOException e) {
-				LOGGER.error("Could not find specified empire configuration file", e);
+			else if (aConfigFile.getName().endsWith(".properties")) {
+				aReader = new PropertiesConfigReader();
 			}
 		}
 
-		if (aStream != null) {
+		InputStream aStream = null;
+		if (aReader != null) {
 			try {
-				aProps.load(aStream);
+				aStream = new FileInputStream(aConfigFile);
+				mConfig = aReader.read(aStream);
 			}
 			catch (IOException e) {
 				LOGGER.error("Error while reading default Empire configuration file from the path", e);
 			}
+			catch (EmpireException e) {
+				LOGGER.error("There was an error while reading the Empire configuration file, file appears to be invalid: " + e.getMessage());
+			}
 			finally {
 				try {
-					aStream.close();
+					if (aStream != null) {
+						aStream.close();
+					}
 				}
 				catch (IOException e) {
-					LOGGER.error("Failed to close properties input stream", e);
+					LOGGER.info("Failed to close configuration input stream", e);
 				}
 			}
 		}
+		else {
+			if (mConfig == null) {
+				mConfig = new EmpireConfiguration();
 
-		for (Object aKey : aProps.keySet()) {
-			mConfig.put(aKey.toString(), aProps.getProperty(aKey.toString()));
+				LOGGER.warn("No appropriate reader found, unable to read Empire configuration.");
+			}
 		}
 	}
+
+//
+//	public DefaultEmpireModule(final Map<String, String> theConfig) {
+//		this(new EmpireConfiguration("default", theConfig));
+//	}
 
 	/**
 	 * Create a new DefaultEmpireModule
 	 * @param theConfig the container config
 	 */
-	public DefaultEmpireModule(final Map<String, String> theConfig) {
+	public DefaultEmpireModule(final EmpireConfiguration theConfig) {
 		mConfig = theConfig;
 	}
 
@@ -118,9 +158,10 @@ public class DefaultEmpireModule extends AbstractModule implements EmpireModule 
 	 protected void configure() {
 		 install(new PersistenceInjectionModule());
 
-		 bind(new TypeLiteral<Map<String, String>>(){}).annotatedWith(Names.named("ec")).toInstance(mConfig);
+		 bind(EmpireConfiguration.class).annotatedWith(Names.named("ec")).toInstance(mConfig);
 
-		 // todo: should this be based on what's in the config file?
-		 bind(EmpireAnnotationProvider.class).to(PropertiesAnnotationProvider.class);
+		 mConfig.installBindings(this.binder());
+
+		 bind(EmpireAnnotationProvider.class).to(mConfig.getAnnotationProvider());
 	 }
  }

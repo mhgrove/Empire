@@ -16,6 +16,8 @@
 package com.clarkparsia.empire.util;
 
 import com.clarkparsia.utils.BasicUtils;
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
 import java.util.Collection;
 import java.util.Set;
@@ -40,6 +42,8 @@ import org.apache.log4j.LogManager;
  * the specified annotation.</p>
  *
  * @author Michael Grove
+ * @since 0.1
+ * @version 0.6.2
  */
 public class PropertiesAnnotationProvider implements EmpireAnnotationProvider {
 
@@ -60,17 +64,18 @@ public class PropertiesAnnotationProvider implements EmpireAnnotationProvider {
 
 	/**
 	 * Create a new PropertiesAnnotationProvider which will read it's Annotation information from the default location,
-	 * a file in the top level of the application called "empire.config"
+	 * a file in the top level of the application called "empire.annotation.index"
 	 */
-	public PropertiesAnnotationProvider() {
-		this(new File("empire.config"));
+	private PropertiesAnnotationProvider() {
+		this(new File("empire.annotation.index"));
 	}
 
 	/**
 	 * Create a new PropertiesAnnotationProvider
 	 * @param theFile the file to read the annotation properties from
 	 */
-	public PropertiesAnnotationProvider(File theFile) {
+	@Inject
+	private PropertiesAnnotationProvider(@Named("annotation.index") File theFile) {
 		mFile = theFile;
 	}
 

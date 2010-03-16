@@ -119,7 +119,7 @@ public class TestRdfConvert {
 
 	@Test
 	public void testNoStatements() throws InvalidRdfException, DataSourceException {
-		assertTrue(RdfGenerator.fromRdf(TestPerson.class, URI.create("urn:foo"), new TestDataSource()) == null);
+		assertFalse(RdfGenerator.fromRdf(TestPerson.class, URI.create("urn:foo"), new TestDataSource()) == null);
 	}
 
 	@Test

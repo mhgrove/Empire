@@ -20,9 +20,10 @@ package com.clarkparsia.empire;
  *
  * @author Michael Grove
  * @since 0.1
+ * @version 0.6.2
  * @see DataSource
  */
-public class DataSourceException extends Exception {
+public class DataSourceException extends EmpireException {
 
 	/**
 	 * Create a new DataSourceException

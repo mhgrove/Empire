@@ -19,6 +19,7 @@ import com.clarkparsia.empire.spi.EmpirePersistenceProvider;
 import com.clarkparsia.empire.util.EmpireAnnotationProvider;
 import com.clarkparsia.empire.util.DefaultEmpireModule;
 import com.clarkparsia.empire.util.EmpireModule;
+import com.clarkparsia.empire.config.EmpireConfiguration;
 import com.clarkparsia.utils.Predicate;
 
 import static com.clarkparsia.utils.collections.CollectionUtil.find;
@@ -112,7 +113,7 @@ public class Empire {
 	 * Initialize Empire with the given configuration
 	 * @param theConfig the container configuration for Empire
 	 */
-	public static void init(Map<String, String> theConfig) {
+	public static void init(EmpireConfiguration theConfig) {
 		init(new DefaultEmpireModule(theConfig));
 	}
 
@@ -121,7 +122,7 @@ public class Empire {
 	 * @param theConfig the container configuration for Empire
 	 * @param theModules the modules to use with Empire
 	 */
-	public static void init(Map<String, String> theConfig, EmpireModule... theModules) {
+	public static void init(EmpireConfiguration theConfig, EmpireModule... theModules) {
 		Collection<EmpireModule> aModules = new HashSet<EmpireModule>(Arrays.asList(theModules));
 
 		if (!find(aModules, new FindDefaultEmpireModulePredicate())) {

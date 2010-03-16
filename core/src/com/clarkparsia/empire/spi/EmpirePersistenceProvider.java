@@ -16,6 +16,7 @@
 package com.clarkparsia.empire.spi;
 
 import com.clarkparsia.empire.DataSourceFactory;
+import com.clarkparsia.empire.config.EmpireConfiguration;
 import com.clarkparsia.empire.impl.EntityManagerFactoryImpl;
 
 import com.google.inject.Inject;
@@ -37,7 +38,7 @@ import java.util.Set;
  *
  * @author Michael Grove
  * @since 0.6
- * @version 0.6.1
+ * @version 0.6.2
  */
 public class EmpirePersistenceProvider implements PersistenceProvider {
     // TODO: should we keep factories created so that to factories created w/ the same name are == ?
@@ -50,7 +51,7 @@ public class EmpirePersistenceProvider implements PersistenceProvider {
 	/**
 	 * Application container configuration
 	 */
-    private Map<String, String> mContainerConfig;
+    private EmpireConfiguration mContainerConfig;
 
 	/**
 	 * Key constant for finding the class name of the factory we want to create
@@ -64,7 +65,7 @@ public class EmpirePersistenceProvider implements PersistenceProvider {
 	 */
     @Inject
     public EmpirePersistenceProvider(Set<DataSourceFactory> theFactories,
-                              @Named("ec") Map<String, String> theContainerConfig) {
+                              @Named("ec") EmpireConfiguration theContainerConfig) {
         mFactories = theFactories;
         mContainerConfig = theContainerConfig;
     }
@@ -73,7 +74,11 @@ public class EmpirePersistenceProvider implements PersistenceProvider {
 	 * @inheritDoc
 	 */
     public EntityManagerFactory createEntityManagerFactory(final String theUnitName, final Map theMap) {
-        Map<String, String> aConfig = new HashMap<String, String>(mContainerConfig);
+        Map<String, String> aConfig = new HashMap<String, String>();
+
+		if (mContainerConfig.hasUnit(theUnitName)) {
+			aConfig.putAll(mContainerConfig.getUnitConfig(theUnitName));
+		}
 
         aConfig.putAll(mapOfStrings(theMap));
 
@@ -81,9 +86,7 @@ public class EmpirePersistenceProvider implements PersistenceProvider {
             return null;
         }
 
-		// TODO: use the unit name.  app properties should be broken up by unit name, only pass in the unit's props to the factory
-
-		// TODO: is there a better way to do this?
+		// TODO: is there a better way to do this than having the user encode the fully qualified class name of the factory?
         final String aName = aConfig.get(FACTORY);
 
         for (DataSourceFactory aFactory  : mFactories) {

@@ -107,7 +107,7 @@ public class Launch extends BaseTestClass {
 		if (getSpacecraft() != null ? !getSpacecraft().equals(aLaunch.getSpacecraft()) : aLaunch.getSpacecraft() != null) {
 			return false;
 		}
-		if (!BasicUtils.equalsOrNull(getRdfId(), aLaunch.getRdfId())) {
+		if (!BasicUtils.equalsOrNull(getId(), aLaunch.getId())) {
 			return false;
 		}
 
@@ -116,6 +116,6 @@ public class Launch extends BaseTestClass {
 
 	@Override
 	public int hashCode() {
-		return getRdfId().hashCode();
+		return getId().hashCode();
 	}
 }

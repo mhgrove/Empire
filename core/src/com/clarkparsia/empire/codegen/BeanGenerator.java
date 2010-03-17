@@ -72,6 +72,7 @@ import java.net.URL;
  *
  * @author Michael Grove
  * @since 0.5.1
+ * @version 0.6.2
  */
 public class BeanGenerator {
 
@@ -226,7 +227,10 @@ public class BeanGenerator {
 					if (aResults.hasNext()) {
 						URI aTempRange = null;
 						while (aTempRange == null && aResults.hasNext()) {
-							aTempRange = ((Literal) aResults.next().getValue("o")).getDatatype();
+							Literal aLit = (Literal) aResults.next().getValue("o");
+							if (aLit != null){
+								aTempRange = aLit.getDatatype();
+							}
 						}
 						
 						if (!aResults.hasNext()) {

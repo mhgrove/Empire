@@ -44,12 +44,12 @@ public class BaseTestClass implements SupportsRdfId {
 
 	private SupportsRdfId mIdSupport = new SupportsRdfIdImpl();
 
-	public URI getRdfId() {
-		return mIdSupport.getRdfId();
+	public RdfKey getId() {
+		return mIdSupport.getId();
 	}
 
-	public void setRdfId(final URI theId) {
-		mIdSupport.setRdfId(theId);
+	public void setId(final RdfKey theId) {
+		mIdSupport.setId(theId);
 	}
 
 	public void clearState() {

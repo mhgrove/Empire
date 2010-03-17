@@ -112,7 +112,7 @@ public class MissionRole extends BaseTestClass {
 		if (getRole() != null ? !getRole().equals(that.getRole()) : that.getRole() != null) {
 			return false;
 		}
-		if (!BasicUtils.equalsOrNull(getRdfId(), that.getRdfId())) {
+		if (!BasicUtils.equalsOrNull(getId(), that.getId())) {
 			return false;
 		}
 

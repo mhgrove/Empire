@@ -16,6 +16,7 @@
 package com.clarkparsia.empire.annotation;
 
 import com.clarkparsia.empire.SupportsRdfId;
+import com.clarkparsia.empire.util.EmpireUtil;
 
 import java.net.URI;
 
@@ -26,12 +27,13 @@ import com.clarkparsia.utils.BasicUtils;
  *
  * @author Michael Grove
  * @since 0.1
+ * @version 0.6.2
  */
 public final class SupportsRdfIdImpl implements SupportsRdfId {
 	/**
-	 * the rdf:id
+	 * the rdf key identifier
 	 */
-	private java.net.URI mId;
+	private RdfKey mId;
 
 	/**
 	 * Create a new SupportsRdfIdImpl
@@ -47,21 +49,37 @@ public final class SupportsRdfIdImpl implements SupportsRdfId {
 	 * Create a new SupportsRdfIdImpl
 	 * @param theId the rdf:ID of the object
 	 */
-	public SupportsRdfIdImpl(final URI theId) {
+	public SupportsRdfIdImpl(final RdfKey theId) {
 		mId = theId;
+	}
+
+	/**
+	 * Create a new SupportsRdfIdImpl
+	 * @param theId the rdf:ID of the object
+	 */
+	public SupportsRdfIdImpl(final URI theId) {
+		this(new URIKey(theId));
+	}
+
+	/**
+	 * Create a new SupportsRdfIdImpl
+	 * @param theId the identifier of the object
+	 */
+	public SupportsRdfIdImpl(final String theId) {
+		this(EmpireUtil.asPrimaryKey(theId));
 	}
 
 	/**
 	 * @inheritDoc
 	 */
-	public URI getRdfId() {
+	public RdfKey getId() {
 		return mId;
 	}
 
 	/**
 	 * @inheritDoc
 	 */
-	public void setRdfId(final URI theId) {
+	public void setId(final RdfKey theId) {
 		if (mId != null) {
 			throw new IllegalStateException("Cannot set the rdf id of an object once it is set");
 		}

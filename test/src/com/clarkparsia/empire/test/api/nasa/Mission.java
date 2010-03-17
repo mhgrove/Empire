@@ -81,7 +81,7 @@ public class Mission extends BaseTestClass {
 		if (getTitle() != null ? !getTitle().equals(aMission.getTitle()) : aMission.getTitle() != null) {
 			return false;
 		}
-		if (!BasicUtils.equalsOrNull(getRdfId(), aMission.getRdfId())) {
+		if (!BasicUtils.equalsOrNull(getId(), aMission.getId())) {
 			return false;
 		}
 

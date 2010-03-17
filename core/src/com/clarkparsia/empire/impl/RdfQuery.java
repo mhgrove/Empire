@@ -600,13 +600,13 @@ public abstract class RdfQuery implements Query {
 
 		for (Integer aIndex : mIndexedParameters.keySet()) {
 			if (mIndexedParameters.get(aIndex) == null) {
-				throw new IllegalStateException("Not all parameters in query were replaced with values, query is invalid.");
+				throw new IllegalStateException("Not all parameters in query were replaced with values, query is invalid. Parameter at index " + aIndex + " was not set.");
 			}
 		}
 
 		for (String aName : mNamedParameters.keySet()) {
 			if (mNamedParameters.get(aName) == null) {
-				throw new IllegalStateException("Not all parameters in query were replaced with values, query is invalid.");
+				throw new IllegalStateException("Not all parameters in query were replaced with values, query is invalid.  Parameter named " + aName + " was not set.");
 			}
 		}
 	}
@@ -640,7 +640,7 @@ public abstract class RdfQuery implements Query {
 		mNamedParameters.clear();
 		mIndexedParameters.clear();
 
-		String aUnamedVarRegex = VT_RE + "[^a-zA-Z0-9_-]?";
+		String aUnamedVarRegex = VT_RE + "[^a-zA-Z0-9_\\-][\\.\\w]?";
 
 		Matcher aMatcher = Pattern.compile(aUnamedVarRegex).matcher(getQueryString());
 
@@ -650,7 +650,7 @@ public abstract class RdfQuery implements Query {
 			mIndexedParameters.put(aIndex++, null);
 		}
 
-		String aNamedVarRegex = VT_RE + "[a-zA-Z0-9_-]+";
+		String aNamedVarRegex = VT_RE + "[a-zA-Z0-9_\\-]+";
 
 		aMatcher = Pattern.compile(aNamedVarRegex).matcher(getQueryString());
 

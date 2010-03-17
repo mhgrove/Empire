@@ -64,8 +64,8 @@ public class EmpirePersistenceProvider implements PersistenceProvider {
 	 * @param theContainerConfig the current empire configuration
 	 */
     @Inject
-    public EmpirePersistenceProvider(Set<DataSourceFactory> theFactories,
-                              @Named("ec") EmpireConfiguration theContainerConfig) {
+	public EmpirePersistenceProvider(Set<DataSourceFactory> theFactories,
+								     @Named("ec") EmpireConfiguration theContainerConfig) {
         mFactories = theFactories;
         mContainerConfig = theContainerConfig;
     }
@@ -80,7 +80,9 @@ public class EmpirePersistenceProvider implements PersistenceProvider {
 			aConfig.putAll(mContainerConfig.getUnitConfig(theUnitName));
 		}
 
-        aConfig.putAll(mapOfStrings(theMap));
+		if (theMap != null) {
+        	aConfig.putAll(mapOfStrings(theMap));
+		}
 
         if (!aConfig.containsKey(FACTORY)) {
             return null;

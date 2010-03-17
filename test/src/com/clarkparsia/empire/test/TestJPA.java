@@ -318,7 +318,7 @@ public class TestJPA  {
         mManager.persist(aNewCraft);
 
         Spacecraft aCraft = mManager.find(Spacecraft.class,
-                                          aNewCraft.getRdfId());
+                                          aNewCraft.getId());
 
         assertEquals(aNewCraft, aCraft);
 	}

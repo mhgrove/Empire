@@ -21,6 +21,7 @@ import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.NamedGraph;
 import com.clarkparsia.empire.test.api.BaseTestClass;
 import com.clarkparsia.empire.test.api.TestEntityListener;
+import static com.clarkparsia.empire.util.EmpireUtil.asPrimaryKey;
 
 import javax.persistence.Entity;
 import javax.persistence.NamedQuery;
@@ -87,7 +88,7 @@ public class Spacecraft extends BaseTestClass {
 	}
 
 	public Spacecraft(URI theURI) {
-		setRdfId(theURI);
+		setId(asPrimaryKey(theURI));
 	}
 
 	public List<Discipline> getDisciplines() {
@@ -208,8 +209,8 @@ public class Spacecraft extends BaseTestClass {
 		if (getInternationalDesignator() != null ? !getInternationalDesignator().equals(that.getInternationalDesignator()) : that.getInternationalDesignator() != null) {
 			return false;
 		}
-		if (!BasicUtils.equalsOrNull(getLaunch() == null ? null : getLaunch().getRdfId(),
-									that.getLaunch() == null ? null : that.getLaunch().getRdfId())) {
+		if (!BasicUtils.equalsOrNull(getLaunch() == null ? null : getLaunch().getId(),
+									that.getLaunch() == null ? null : that.getLaunch().getId())) {
 			return false;
 		}
 		if (getMass() != null ? !getMass().equals(that.getMass()) : that.getMass() != null) {
@@ -221,7 +222,7 @@ public class Spacecraft extends BaseTestClass {
 		if (getName() != null ? !getName().equals(that.getName()) : that.getName() != null) {
 			return false;
 		}
-		if (!BasicUtils.equalsOrNull(getRdfId(), that.getRdfId())) {
+		if (!BasicUtils.equalsOrNull(getId(), that.getId())) {
 			return false;
 		}
 
@@ -230,6 +231,6 @@ public class Spacecraft extends BaseTestClass {
 
 	@Override
 	public int hashCode() {
-		return getRdfId() == null ? 31 : getRdfId().hashCode();
+		return getId() == null ? 31 : getId().hashCode();
 	}
 }

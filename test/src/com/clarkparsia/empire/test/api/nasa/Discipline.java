@@ -63,7 +63,7 @@ public class Discipline extends BaseTestClass {
 		if (getLabel() != null ? !getLabel().equals(that.getLabel()) : that.getLabel() != null) {
 			return false;
 		}
-		if (!BasicUtils.equalsOrNull(getRdfId(), that.getRdfId())) {
+		if (!BasicUtils.equalsOrNull(getId(), that.getId())) {
 			return false;
 		}
 

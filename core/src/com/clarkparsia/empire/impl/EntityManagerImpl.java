@@ -55,10 +55,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.AccessibleObject;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-
 import java.util.Map;
 import java.util.Collection;
 import java.util.HashSet;
@@ -78,7 +74,7 @@ import com.clarkparsia.empire.util.EmpireUtil;
  *
  * @author Michael Grove
  * @since 0.1
- * @version 0.6.1
+ * @version 0.6.2
  * @see EntityManager
  * @see DataSource
  */
@@ -190,7 +186,7 @@ public class EntityManagerImpl implements EntityManager {
 
 		assertContains(theObj);
 
-		Object aDbObj = find(theObj.getClass(), EmpireUtil.asSupportsRdfId(theObj).getRdfId());
+		Object aDbObj = find(theObj.getClass(), EmpireUtil.asSupportsRdfId(theObj).getId());
 
         Collection<AccessibleObject> aAccessors = new HashSet<AccessibleObject>();
 
@@ -227,11 +223,7 @@ public class EntityManagerImpl implements EntityManager {
 		assertStateOk(theObj);
 
 		try {
-//			return contains(asSupportsRdfId(theObj).getRdfId());
-
-			Graph aGraph = EmpireUtil.describe(getDataSource(), theObj);
-
-			return aGraph != null && aGraph.size() > 0;
+			return EmpireUtil.exists(getDataSource(), theObj);
 		}
 		catch (DataSourceException e) {
 			throw new PersistenceException(e);
@@ -357,7 +349,7 @@ public class EntityManagerImpl implements EntityManager {
 			}
 
 			if (!contains(theObj)) {
-				throw new PersistenceException("Addition failed for object: " + EmpireUtil.asSupportsRdfId(theObj).getRdfId());
+				throw new PersistenceException("Addition failed for object: " + theObj.getClass() + " -> " + EmpireUtil.asSupportsRdfId(theObj).getId());
 			}
 
 			postPersist(theObj);
@@ -436,7 +428,7 @@ public class EntityManagerImpl implements EntityManager {
 			}
 
 			if (contains(theObj)) {
-				throw new PersistenceException("Remove failed for object: " + EmpireUtil.asSupportsRdfId(theObj).getRdfId());
+				throw new PersistenceException("Remove failed for object: " + theObj.getClass() + " -> " + EmpireUtil.asSupportsRdfId(theObj).getId());
 			}
 
 			postRemove(theObj);
@@ -456,11 +448,16 @@ public class EntityManagerImpl implements EntityManager {
 		assertOpen();
 
 		try {
-			T aT = RdfGenerator.fromRdf(theClass, asPrimaryKey(theObj), getDataSource());
+			if (EmpireUtil.exists(getDataSource(), EmpireUtil.asPrimaryKey(theObj))) {
+				T aT = RdfGenerator.fromRdf(theClass, EmpireUtil.asPrimaryKey(theObj), getDataSource());
 
-			postLoad(aT);
+				postLoad(aT);
 
-			return aT;
+				return aT;
+			}
+			else {
+				return null;
+			}
 		}
 		catch (InvalidRdfException e) {
 			throw new IllegalArgumentException("Type is not valid, or object with key is not a valid Rdf Entity.", e);
@@ -504,34 +501,6 @@ public class EntityManagerImpl implements EntityManager {
 	private void assertNotContains(Object theObj) {
 		if (contains(theObj)) {
 			throw new IllegalArgumentException("Entity already exists: " + theObj);
-		}
-	}
-
-	/**
-	 * Returns the object as a primary key value.  Generally, for an rdf database, the identifying key for a resource
-	 * will be it's rdf:ID.  So the value must be a URI, or something that can be turned into one.
-	 * @param theObj the possible primary key
-	 * @return the primary key as a URI
-	 * @throws IllegalArgumentException thrown if the value is null, or if it is not a valid URI, or it cannot be turned into one
-	 */
-	private java.net.URI asPrimaryKey(Object theObj) {
-		if (theObj == null) {
-			throw new IllegalArgumentException("null is not a valid primary key for an Entity");
-		}
-
-		try {
-			if (theObj instanceof URI) {
-				return (URI) theObj;
-			}
-			else if (theObj instanceof URL) {
-				return ((URL) theObj).toURI();
-			}
-			else {
-				return new URI(theObj.toString());
-			}
-		}
-		catch (URISyntaxException e) {
-			throw new IllegalArgumentException(theObj + " is not a valid primary key, it is not a URI.", e);
 		}
 	}
 

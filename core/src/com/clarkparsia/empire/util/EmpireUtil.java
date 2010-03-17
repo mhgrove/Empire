@@ -2,40 +2,54 @@ package com.clarkparsia.empire.util;
 
 import com.clarkparsia.empire.annotation.RdfsClass;
 import com.clarkparsia.empire.annotation.NamedGraph;
+import com.clarkparsia.empire.annotation.SupportsRdfIdImpl;
 import com.clarkparsia.empire.SupportsRdfId;
 import com.clarkparsia.empire.QueryException;
 import com.clarkparsia.empire.DataSource;
 import com.clarkparsia.empire.SupportsNamedGraphs;
+import com.clarkparsia.empire.Empire;
+import com.clarkparsia.empire.ResultSet;
 import com.clarkparsia.empire.impl.serql.SerqlDialect;
 import com.clarkparsia.empire.impl.sparql.SPARQLDialect;
 import com.clarkparsia.openrdf.query.builder.QueryBuilder;
 import com.clarkparsia.openrdf.query.builder.QueryBuilderFactory;
 import com.clarkparsia.openrdf.query.sparql.SPARQLQueryRenderer;
 import com.clarkparsia.openrdf.query.serql.SeRQLQueryRenderer;
+import com.clarkparsia.openrdf.query.SesameQueryUtils;
 import com.clarkparsia.utils.NamespaceUtils;
+import com.clarkparsia.utils.BasicUtils;
 
 import javax.persistence.Entity;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceException;
 
 import org.openrdf.model.Graph;
+import org.openrdf.model.Resource;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.impl.GraphImpl;
 import org.openrdf.model.impl.ValueFactoryImpl;
 import org.openrdf.query.parser.ParsedTupleQuery;
+import org.apache.log4j.Logger;
+import org.apache.log4j.LogManager;
 
 import java.net.URI;
+import java.net.URL;
+import java.net.URISyntaxException;
 import java.util.List;
 import java.util.ArrayList;
 
 /**
- * <p>A collection of utility functions for Empire.k</p>
+ * <p>A collection of utility functions for Empire.</p>
  *
  * @author Michael Grove
  * @since 0.6.1
- * @version 0.6.1
+ * @version 0.6.2
  */
 public class EmpireUtil {
+	/**
+	 * The logger
+	 */
+	private static final Logger LOGGER = LogManager.getLogger(Empire.class.getName());
 
 	/**
 	 * Return whether or not the given class instances is compatible with Empire, in that it has all the required
@@ -48,7 +62,6 @@ public class EmpireUtil {
 			   theClass.isAnnotationPresent(RdfsClass.class) &&
 			   SupportsRdfId.class.isAssignableFrom(theClass);
 	}
-
 
 	/**
 	 * Do a poor-man's describe on the given resource, querying its context if that is supported, or otherwise
@@ -68,7 +81,7 @@ public class EmpireUtil {
 
 		String aNG = null;
 
-		if (asSupportsRdfId(theObj).getRdfId() == null) {
+		if (asSupportsRdfId(theObj).getId() == null) {
 			return new GraphImpl();
 		}
 
@@ -82,11 +95,11 @@ public class EmpireUtil {
 
 		String aSPARQL = "construct {?s ?p ?o}\n" +
 						 (aNG == null ? "" : "from <" + aNG + ">\n") +
-						 "where {?s ?p ?o. filter(?s = <" + asSupportsRdfId(theObj).getRdfId() + ">) }";
+						 "where {?s ?p ?o. filter(?s = " + SesameQueryUtils.getQueryString(asResource(asSupportsRdfId(theObj))) + ") }";
 
 		String aSeRQL = "construct {s} p {o}\n" +
 						 (aNG == null ? "from\n" : "from context <" + aNG + ">\n") +
-						 "{s} p {o} where s = <" + asSupportsRdfId(theObj).getRdfId() + ">";
+						 "{s} p {o} where s = " + SesameQueryUtils.getQueryString(asResource(asSupportsRdfId(theObj))) + "";
 
 		Graph aGraph;
 
@@ -102,6 +115,81 @@ public class EmpireUtil {
 	}
 
 	/**
+	 * Do a poor-man's ask on the given resource to see if any triples using the resource (as the subject) exist,
+	 * querying its context if that is supported, or otherwise querying the graph in general.
+	 * @param theSource the {@link DataSource} to query
+	 * @param theObj the object to do the "ask" operation on
+	 * @return true if there are statements about the object, false otherwise
+	 * @throws com.clarkparsia.empire.QueryException if there is an error while querying for the graph
+	 */
+	public static boolean exists(DataSource theSource, Object theObj) throws QueryException {
+		String aNG = null;
+
+		if (asSupportsRdfId(theObj).getId() == null) {
+			return false;
+		}
+
+		if (theSource instanceof SupportsNamedGraphs && hasNamedGraphSpecified(theObj)) {
+			java.net.URI aURI = getNamedGraph(theObj);
+
+			if (aURI != null) {
+				aNG = aURI.toString();
+			}
+		}
+
+		String aSPARQL = "select distinct ?s\n" +
+						 (aNG == null ? "" : "from <" + aNG + ">\n") +
+						 "where {?s ?p ?o. filter(?s = " + SesameQueryUtils.getQueryString(asResource(asSupportsRdfId(theObj))) + ") } limit 1";
+
+		String aSeRQL = "select distinct s\n" +
+						 (aNG == null ? "from\n" : "from context <" + aNG + ">\n") +
+						 "{s} p {o} where s = " + SesameQueryUtils.getQueryString(asResource(asSupportsRdfId(theObj))) + " limit 1";
+
+		ResultSet aResults;
+
+		if (theSource.getQueryFactory().getDialect().equals(SerqlDialect.instance())) {
+			aResults = theSource.selectQuery(aSeRQL);
+		}
+		else {
+			// fall back on sparql
+			aResults = theSource.selectQuery(aSPARQL);
+		}
+
+		try {
+			return aResults.hasNext();
+		}
+		finally {
+			aResults.close();
+		}
+	}
+
+	/**
+	 * Return the RDF-izable support object's identifier.  This will be either a URI or a BNode.  All java URI/URL objects
+	 * and anything whose toString() value is a valid URI will be returned as such.  All other strings are assumed
+	 * to be bnode identifiers.
+	 * @param theSupport the support object
+	 * @return it's identifier as a Sesame Resource
+	 */
+	public static Resource asResource(SupportsRdfId theSupport) {
+		if (theSupport.getId() == null) {
+			return null;
+		}
+		else if (theSupport.getId() instanceof SupportsRdfId.URIKey) {
+			return ValueFactoryImpl.getInstance().createURI( ((SupportsRdfId.URIKey) theSupport.getId()).value().toASCIIString() );
+		}
+		else {
+			String aValue = theSupport.getId().toString();
+
+			if (BasicUtils.isURI(aValue)) {
+				return ValueFactoryImpl.getInstance().createURI(aValue);
+			}
+			else {
+				return ValueFactoryImpl.getInstance().createBNode(aValue);
+			}
+		}
+	}
+
+	/**
 	 * Return the object as an instanceof {@link com.clarkparsia.empire.SupportsRdfId}
 	 * @param theObj the object
 	 * @return the object as SupportsRdfId
@@ -109,7 +197,12 @@ public class EmpireUtil {
 	 * @see com.clarkparsia.empire.SupportsRdfId
 	 */
 	public static SupportsRdfId asSupportsRdfId(Object theObj) {
-		return SupportsRdfId.class.cast(theObj);
+		if (theObj instanceof SupportsRdfId.RdfKey) {
+			return new SupportsRdfIdImpl( (SupportsRdfId.RdfKey) theObj);
+		}
+		else {
+			return (SupportsRdfId) theObj;
+		}
 	}
 
 	/**
@@ -142,13 +235,52 @@ public class EmpireUtil {
 		NamedGraph aAnnotation = theObj.getClass().getAnnotation(NamedGraph.class);
 
 		if (aAnnotation.type() == NamedGraph.NamedGraphType.Instance) {
-			return asSupportsRdfId(theObj).getRdfId();
+			SupportsRdfId aId = asSupportsRdfId(theObj);
+
+			try {
+				return asURI(aId);
+			}
+			catch (URISyntaxException e) {
+				LOGGER.warn("There was an error trying to get the instance-level named graph URI from an object.  Its key is not a URI.", e);
+				return null;
+			}
 		}
 		else {
 			return URI.create(aAnnotation.value());
 		}
 	}
 
+	/**
+	 * Return the SupportsRdfId key as a java.net.URI.
+	 * @param theSupport the RDF-izable support class
+	 * @return the id key as a java URI, or null if it cannot be converted to a URI.
+	 * @throws URISyntaxException thrown if the value is not a valid URI.
+	 */
+	private static java.net.URI asURI(SupportsRdfId theSupport) throws URISyntaxException {
+		if (theSupport.getId() == null) {
+			return null;
+		}
+		else if (theSupport.getId() instanceof SupportsRdfId.URIKey) {
+			return ((SupportsRdfId.URIKey) theSupport.getId()).value();
+		}
+		else {
+			String aValue = theSupport.getId().toString();
+
+			if (BasicUtils.isURI(aValue)) {
+				return URI.create(aValue);
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Return all instances of the specified class in the EntityManager
+	 * @param theManager the manager to query
+	 * @param theClass the type of objects to query for
+	 * @param <T> the type of objects returned
+	 * @return the list of all objects of the given type in the EntityManager
+	 */
 	public static <T> List<T> all(EntityManager theManager, Class<T> theClass) {
 		List<T> aList = new ArrayList<T>();
 
@@ -187,5 +319,42 @@ public class EmpireUtil {
 		}
 
 		return aList;
+	}
+
+	/**
+	 * Returns the object as a primary key value.  Generally, for an rdf database, the identifying key for a resource
+	 * will be it's rdf:ID or rdf:nodeID.  So the value must be a URI, for named resources, or a non-uri string, for
+	 * nodeID.
+	 * @param theObj the possible primary key
+	 * @return the primary key as a RdfKey object
+	 * @throws IllegalArgumentException thrown if the value is null, or if it is not a valid URI, or it cannot be turned into one
+	 */
+	public static SupportsRdfId.RdfKey asPrimaryKey(Object theObj) {
+		if (theObj == null) {
+			throw new IllegalArgumentException("null is not a valid primary key for an Entity");
+		}
+
+		try {
+			if (theObj instanceof URI) {
+				return new SupportsRdfId.URIKey((URI) theObj);
+			}
+			else if (theObj instanceof URL) {
+				return new SupportsRdfId.URIKey(((URL) theObj).toURI());
+			}
+			else {
+				if (BasicUtils.isURI(theObj.toString())) {
+					return new SupportsRdfId.URIKey(new URI(theObj.toString()));
+				}
+				else {
+					if (theObj.toString().matches("[a-zA-Z_]{1}[a-zA-Z_\\-0-9]?")) {
+						return new SupportsRdfId.BNodeKey(theObj.toString());
+					}
+					throw new IllegalArgumentException(theObj + " is not a valid primary key, it is not a URI or a valid BNode identifer");
+				}
+			}
+		}
+		catch (URISyntaxException e) {
+			throw new IllegalArgumentException(theObj + " is not a valid primary key, it is not a URI.", e);
+		}
 	}
 }

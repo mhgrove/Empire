@@ -91,6 +91,9 @@ import com.clarkparsia.openrdf.util.GraphBuilder;
 import com.clarkparsia.openrdf.ExtGraph;
 import com.clarkparsia.openrdf.query.SesameQueryUtils;
 
+import com.google.inject.ProvisionException;
+import com.google.inject.ConfigurationException;
+
 import javax.persistence.Entity;
 import javax.persistence.Transient;
 
@@ -104,10 +107,10 @@ import javassist.util.proxy.MethodHandler;
  * <code><pre>
  *   MyClass aObj = new MyClass();
  *
- *  // set some data on the object
+ *   // set some data on the object
  *   KB.add(RdfGenerator.toRdf(aObj));
  *
- *  MyClass aObjCopy = RdfGenerator.fromRdf(MyClass.class, aObj.getRdfId(), KB);
+ *   MyClass aObjCopy = RdfGenerator.fromRdf(MyClass.class, aObj.getRdfId(), KB);
  *
  *   // this will print true
  *   System.out.println(aObj.equals(aObjCopy));
@@ -206,26 +209,39 @@ public class RdfGenerator {
 		T aObj;
 
 		try {
-			// TODO: use Guice here.
-			// something like this might be interesting: http://code.google.com/p/google-guice/wiki/JustInTimeBindings
-			if (theClass.isInterface()) {
-				aObj = com.clarkparsia.empire.codegen.InstanceGenerator.generateInstanceClass(theClass).newInstance();
-			}
-			else {
-				aObj = theClass.newInstance();
-			}
+			aObj = Empire.get().instance(theClass);
+		}
+		catch (ConfigurationException ex) {
+			aObj = null;
+		}
+		catch (ProvisionException ex) {
+			aObj = null;
+		}
 
-			asSupportsRdfId(aObj).setRdfId(theId);
+		if (aObj == null) {
+			// this means Guice construction failed, which is not surprising since that's not going to be the default.
+			// so we'll try our own reflect based creation or create bytecode for an interface.
+
+			try {
+				if (theClass.isInterface()) {
+					aObj = com.clarkparsia.empire.codegen.InstanceGenerator.generateInstanceClass(theClass).newInstance();
+				}
+				else {
+					aObj = theClass.newInstance();
+				}
+			}
+			catch (InstantiationException e) {
+				throw new InvalidRdfException("Cannot create instance of bean, should have a default constructor.", e);
+			}
+			catch (IllegalAccessException e) {
+				throw new InvalidRdfException("Could not access default constructor for class: " + theClass, e);
+			}
+			catch (Exception e) {
+				throw new InvalidRdfException("Cannot create an instance of bean", e);
+			}
 		}
-		catch (InstantiationException e) {
-			throw new InvalidRdfException("Cannot create instance of bean, should have a default constructor.", e);
-		}
-		catch (IllegalAccessException e) {
-			throw new InvalidRdfException("Could not access default constructor for class: " + theClass, e);
-		}
-		catch (Exception e) {
-			throw new InvalidRdfException("Cannot create an instance of bean", e);
-		}
+
+		asSupportsRdfId(aObj).setRdfId(theId);
 
 		return fromRdf(aObj, theSource);
 	}

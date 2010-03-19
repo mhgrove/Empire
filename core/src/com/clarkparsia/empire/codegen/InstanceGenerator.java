@@ -140,13 +140,17 @@ public class InstanceGenerator {
 		Map<String, Class> aMap = new HashMap<String, Class>();
 
 		for (Method aMethod : theClass.getDeclaredMethods()) {
-			String aProp = aMethod.getName().substring(3);
+			if (!aMethod.getName().startsWith("get") && !aMethod.getName().startsWith("is") && !aMethod.getName().startsWith("set")) {
+				continue;
+
+			}
+			String aProp = aMethod.getName().substring(aMethod.getName().startsWith("is") ? 2 : 3);
 
 			aProp = String.valueOf(aProp.charAt(0)).toLowerCase() + aProp.substring(1);
 
 			Class aType = null;
 
-			if (aMethod.getName().startsWith("get")) {
+			if (aMethod.getName().startsWith("get") || aMethod.getName().startsWith("is")) {
 				aType = aMethod.getReturnType();
 			}
 			else if (aMethod.getName().startsWith("set") && aMethod.getParameterTypes().length > 0) {

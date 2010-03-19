@@ -92,7 +92,7 @@ public class JenaSesameUtils {
 		if (theLiteral == null) {
 			return null;
 		}
-		else if (theLiteral.getLanguage() != null) {
+		else if (theLiteral.getLanguage() != null && !theLiteral.getLanguage().equals("")) {
 			return FACTORY.createLiteral(theLiteral.getLexicalForm(),
 										 theLiteral.getLanguage());
 		}

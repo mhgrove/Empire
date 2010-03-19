@@ -55,7 +55,6 @@ public class InstanceGenerator {
 		ClassPool aPool = ClassPool.getDefault();
 		CtClass aInterface = aPool.get(theInterface.getName());
 
-
 		String aName = aInterface.getPackageName()+ ".impl." + aInterface.getSimpleName() + "Impl";
 		CtClass aClass = null;
 		
@@ -76,6 +75,7 @@ public class InstanceGenerator {
 		}
 
 		aClass.addInterface(aInterface);
+		aClass.addInterface(aPool.get(SupportsRdfId.class.getName()));
 
 		aClass.addConstructor(CtNewConstructor.defaultConstructor(aClass));
 
@@ -91,8 +91,9 @@ public class InstanceGenerator {
 
 		CtField aIdField = new CtField(aPool.get(SupportsRdfId.class.getName()), "supportsId", aClass);
 		aClass.addField(aIdField, CtField.Initializer.byExpr("new com.clarkparsia.empire.annotation.SupportsRdfIdImpl();"));
-		aClass.addMethod(CtNewMethod.make("public SupportsRdfId.RdfKey getRdfId() { return supportsId.getRdfId(); } ", aClass));
-		aClass.addMethod(CtNewMethod.make("public void setRdfId(SupportsRdfId.RdfKey theURI) { return supportsId.setRdfId(theURI); } ", aClass));
+
+		aClass.addMethod(CtNewMethod.make("public com.clarkparsia.empire.SupportsRdfId.RdfKey getRdfId() { return supportsId.getRdfId(); } ", aClass));
+		aClass.addMethod(CtNewMethod.make("public void setRdfId(com.clarkparsia.empire.SupportsRdfId.RdfKey theURI) { supportsId.setRdfId(theURI); } ", aClass));
 
 		// TODO: generate a more sophisticated equals method based on the fields in the bean
 		aClass.addMethod(CtNewMethod.make("public boolean equals(Object theObj) { " +
@@ -140,6 +141,7 @@ public class InstanceGenerator {
 
 		for (Method aMethod : theClass.getDeclaredMethods()) {
 			String aProp = aMethod.getName().substring(3);
+
 			aProp = String.valueOf(aProp.charAt(0)).toLowerCase() + aProp.substring(1);
 
 			Class aType = null;

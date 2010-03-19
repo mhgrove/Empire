@@ -43,7 +43,7 @@ import org.apache.log4j.LogManager;
  *
  * @author Michael Grove
  * @since 0.1
- * @version 0.6.2
+ * @version 0.6.3
  */
 public class PropertiesAnnotationProvider implements EmpireAnnotationProvider {
 
@@ -55,7 +55,7 @@ public class PropertiesAnnotationProvider implements EmpireAnnotationProvider {
 	/**
 	 * The file to read the Annotations index from
 	 */
-	private File mFile;
+	private final File mFile;
 
 	/**
 	 * The properties read in from disk
@@ -75,7 +75,7 @@ public class PropertiesAnnotationProvider implements EmpireAnnotationProvider {
 	 * @param theFile the file to read the annotation properties from
 	 */
 	@Inject
-	private PropertiesAnnotationProvider(@Named("annotation.index") File theFile) {
+	PropertiesAnnotationProvider(@Named("annotation.index") File theFile) {
 		mFile = theFile;
 	}
 
@@ -94,14 +94,14 @@ public class PropertiesAnnotationProvider implements EmpireAnnotationProvider {
 				mProperties.load(aStream);
 			}
 			catch (IOException e) {
-				LOGGER.error("Reading empire.config properties for Annotation provider failed", e);
+				LOGGER.warn("Reading empire.config properties for Annotation provider failed");
 			}
 			finally {
 				try {
 					if (aStream != null) aStream.close();
 				}
 				catch (IOException e) {
-					LOGGER.warn("Error while closing annotation index properties stream", e);
+					LOGGER.warn("Error while closing annotation index properties stream");
 				}
 			}
 		}

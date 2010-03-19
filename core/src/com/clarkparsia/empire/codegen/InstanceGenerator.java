@@ -33,6 +33,7 @@ import com.clarkparsia.empire.SupportsRdfId;
  *
  * @author Michael Grove
  * @since 0.5.1
+ * @version 0.6.3
  */
 public class InstanceGenerator {
 
@@ -90,19 +91,19 @@ public class InstanceGenerator {
 
 		CtField aIdField = new CtField(aPool.get(SupportsRdfId.class.getName()), "supportsId", aClass);
 		aClass.addField(aIdField, CtField.Initializer.byExpr("new com.clarkparsia.empire.annotation.SupportsRdfIdImpl();"));
-		aClass.addMethod(CtNewMethod.make("public SupportsRdfId.RdfKey getId() { return supportsId.getId(); } ", aClass));
-		aClass.addMethod(CtNewMethod.make("public void setId(SupportsRdfId.RdfKey theURI) { return supportsId.setId(theURI); } ", aClass));
+		aClass.addMethod(CtNewMethod.make("public SupportsRdfId.RdfKey getRdfId() { return supportsId.getRdfId(); } ", aClass));
+		aClass.addMethod(CtNewMethod.make("public void setRdfId(SupportsRdfId.RdfKey theURI) { return supportsId.setRdfId(theURI); } ", aClass));
 
 		// TODO: generate a more sophisticated equals method based on the fields in the bean
 		aClass.addMethod(CtNewMethod.make("public boolean equals(Object theObj) { " +
 										  "  if (theObj == this) return true;\n" +
 										  "  if (!(theObj instanceof com.clarkparsia.empire.SupportsRdfId)) return false;\n" +
 										  "  if (!(this.getClass().isAssignableFrom(theObj.getClass()))) return false;\n" +
-										  "  return getId().equals( ((com.clarkparsia.empire.SupportsRdfId) theObj).getId());" +
+										  "  return getRdfId().equals( ((com.clarkparsia.empire.SupportsRdfId) theObj).getRdfId());" +
 										  "} ", aClass));
 
-		aClass.addMethod(CtNewMethod.make("public String toString() { return getId() != null ? getId().toString() : super.toString(); } ", aClass));
-		aClass.addMethod(CtNewMethod.make("public int hashCode() { return getId() != null ? getId().hashCode() : 0; } ", aClass));
+		aClass.addMethod(CtNewMethod.make("public String toString() { return getRdfId() != null ? getRdfId().toString() : super.toString(); } ", aClass));
+		aClass.addMethod(CtNewMethod.make("public int hashCode() { return getRdfId() != null ? getRdfId().hashCode() : 0; } ", aClass));
 
 		aClass.freeze();
 

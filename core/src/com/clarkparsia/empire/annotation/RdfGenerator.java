@@ -120,7 +120,7 @@ import javassist.util.proxy.MethodHandler;
  *
  * @author Michael Grove
  * @since 0.1
- * @version 0.6.2
+ * @version 0.6.3
  */
 public class RdfGenerator {
 
@@ -206,6 +206,8 @@ public class RdfGenerator {
 		T aObj;
 
 		try {
+			// TODO: use Guice here.
+			// something like this might be interesting: http://code.google.com/p/google-guice/wiki/JustInTimeBindings
 			if (theClass.isInterface()) {
 				aObj = com.clarkparsia.empire.codegen.InstanceGenerator.generateInstanceClass(theClass).newInstance();
 			}
@@ -213,7 +215,7 @@ public class RdfGenerator {
 				aObj = theClass.newInstance();
 			}
 
-			asSupportsRdfId(aObj).setId(theId);
+			asSupportsRdfId(aObj).setRdfId(theId);
 		}
 		catch (InstantiationException e) {
 			throw new InvalidRdfException("Cannot create instance of bean, should have a default constructor.", e);
@@ -238,7 +240,7 @@ public class RdfGenerator {
 	 * @throws DataSourceException thrown if there is an error retrieving data from the database
 	 */
 	private static <T> T fromRdf(T theObj, DataSource theSource) throws InvalidRdfException, DataSourceException {
-		SupportsRdfId.RdfKey theKeyObj = asSupportsRdfId(theObj).getId();
+		SupportsRdfId.RdfKey theKeyObj = asSupportsRdfId(theObj).getRdfId();
 
 		if (OBJECT_M.containsKey(theKeyObj)) {
 			// TODO: this is probably a safe cast, i dont see how something w/ the same URI, which should be the same
@@ -411,7 +413,7 @@ public class RdfGenerator {
 	private static Resource id(Object theObj) throws InvalidRdfException {
 		SupportsRdfId aSupport = asSupportsRdfId(theObj);
 
-		if (aSupport.getId() != null) {
+		if (aSupport.getRdfId() != null) {
 			//return FACTORY.createURI(aSupport.getRdfId().toString());
 			return EmpireUtil.asResource(aSupport);
 		}
@@ -462,7 +464,7 @@ public class RdfGenerator {
 			aIdField.setAccessible(aOldAccess);
 		}
 
-		aSupport.setId(new SupportsRdfId.URIKey(java.net.URI.create(aURI.toString())));
+		aSupport.setRdfId(new SupportsRdfId.URIKey(java.net.URI.create(aURI.toString())));
 
 		return aURI;
 	}

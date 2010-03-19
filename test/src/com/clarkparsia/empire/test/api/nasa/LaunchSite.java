@@ -92,7 +92,7 @@ public class LaunchSite extends BaseTestClass {
 		if (getPlace() != null ? !getPlace().equals(that.getPlace()) : that.getPlace() != null) {
 			return false;
 		}
-		if (!BasicUtils.equalsOrNull(getId(), that.getId())) {
+		if (!BasicUtils.equalsOrNull(getRdfId(), that.getRdfId())) {
 			return false;
 		}
 

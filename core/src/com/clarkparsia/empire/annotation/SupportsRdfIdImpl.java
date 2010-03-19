@@ -27,7 +27,7 @@ import com.clarkparsia.utils.BasicUtils;
  *
  * @author Michael Grove
  * @since 0.1
- * @version 0.6.2
+ * @version 0.6.3
  */
 public final class SupportsRdfIdImpl implements SupportsRdfId {
 	/**
@@ -72,14 +72,14 @@ public final class SupportsRdfIdImpl implements SupportsRdfId {
 	/**
 	 * @inheritDoc
 	 */
-	public RdfKey getId() {
+	public RdfKey getRdfId() {
 		return mId;
 	}
 
 	/**
 	 * @inheritDoc
 	 */
-	public void setId(final RdfKey theId) {
+	public void setRdfId(final RdfKey theId) {
 		if (mId != null) {
 			throw new IllegalStateException("Cannot set the rdf id of an object once it is set");
 		}

@@ -9,7 +9,7 @@
 	<property environment="env"/>
 
 	<property name="project.name" value="empire"/>
-	<property name="project.version" value="0.6.2"/>
+	<property name="project.version" value="0.6.3"/>
 
 	<property name="core.dir" location="core"/>
 	<property name="jena.dir" location="jena"/>
@@ -245,8 +245,9 @@
 
 	<target name="test" depends="dist">
 		<mkdir dir="dist/test-reports"/>
-  		<junit fork="yes" printsummary="no" haltonfailure="no">
+  		<junit fork="yes" printsummary="yes" haltonfailure="no">
             <jvmarg value="-Xmx1024m"/>
+			<jvmarg value="-Dtest.data=${test.dir}/data/nasa.nt"/>
               
             <test name="com.clarkparsia.empire.test.EmpireTestSuite" outfile="dist/test-reports/report"/>
               

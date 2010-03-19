@@ -43,7 +43,7 @@ import java.util.ArrayList;
  *
  * @author Michael Grove
  * @since 0.6.1
- * @version 0.6.2
+ * @version 0.6.3
  */
 public class EmpireUtil {
 	/**
@@ -81,7 +81,7 @@ public class EmpireUtil {
 
 		String aNG = null;
 
-		if (asSupportsRdfId(theObj).getId() == null) {
+		if (asSupportsRdfId(theObj).getRdfId() == null) {
 			return new GraphImpl();
 		}
 
@@ -125,7 +125,7 @@ public class EmpireUtil {
 	public static boolean exists(DataSource theSource, Object theObj) throws QueryException {
 		String aNG = null;
 
-		if (asSupportsRdfId(theObj).getId() == null) {
+		if (asSupportsRdfId(theObj).getRdfId() == null) {
 			return false;
 		}
 
@@ -171,14 +171,14 @@ public class EmpireUtil {
 	 * @return it's identifier as a Sesame Resource
 	 */
 	public static Resource asResource(SupportsRdfId theSupport) {
-		if (theSupport.getId() == null) {
+		if (theSupport.getRdfId() == null) {
 			return null;
 		}
-		else if (theSupport.getId() instanceof SupportsRdfId.URIKey) {
-			return ValueFactoryImpl.getInstance().createURI( ((SupportsRdfId.URIKey) theSupport.getId()).value().toASCIIString() );
+		else if (theSupport.getRdfId() instanceof SupportsRdfId.URIKey) {
+			return ValueFactoryImpl.getInstance().createURI( ((SupportsRdfId.URIKey) theSupport.getRdfId()).value().toASCIIString() );
 		}
 		else {
-			String aValue = theSupport.getId().toString();
+			String aValue = theSupport.getRdfId().toString();
 
 			if (BasicUtils.isURI(aValue)) {
 				return ValueFactoryImpl.getInstance().createURI(aValue);
@@ -257,14 +257,14 @@ public class EmpireUtil {
 	 * @throws URISyntaxException thrown if the value is not a valid URI.
 	 */
 	private static java.net.URI asURI(SupportsRdfId theSupport) throws URISyntaxException {
-		if (theSupport.getId() == null) {
+		if (theSupport.getRdfId() == null) {
 			return null;
 		}
-		else if (theSupport.getId() instanceof SupportsRdfId.URIKey) {
-			return ((SupportsRdfId.URIKey) theSupport.getId()).value();
+		else if (theSupport.getRdfId() instanceof SupportsRdfId.URIKey) {
+			return ((SupportsRdfId.URIKey) theSupport.getRdfId()).value();
 		}
 		else {
-			String aValue = theSupport.getId().toString();
+			String aValue = theSupport.getRdfId().toString();
 
 			if (BasicUtils.isURI(aValue)) {
 				return URI.create(aValue);

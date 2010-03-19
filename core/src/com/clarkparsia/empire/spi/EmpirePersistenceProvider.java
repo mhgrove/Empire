@@ -46,12 +46,12 @@ public class EmpirePersistenceProvider implements PersistenceProvider {
 	/**
 	 * Current DataSourceFactory "plugins"
 	 */
-    private Set<DataSourceFactory> mFactories = new HashSet<DataSourceFactory>();
+    private final Set<DataSourceFactory> mFactories;
 
 	/**
 	 * Application container configuration
 	 */
-    private EmpireConfiguration mContainerConfig;
+    private final EmpireConfiguration mContainerConfig;
 
 	/**
 	 * Key constant for finding the class name of the factory we want to create
@@ -64,8 +64,8 @@ public class EmpirePersistenceProvider implements PersistenceProvider {
 	 * @param theContainerConfig the current empire configuration
 	 */
     @Inject
-	public EmpirePersistenceProvider(Set<DataSourceFactory> theFactories,
-								     @Named("ec") EmpireConfiguration theContainerConfig) {
+	EmpirePersistenceProvider(Set<DataSourceFactory> theFactories,
+							  @Named("ec") EmpireConfiguration theContainerConfig) {
         mFactories = theFactories;
         mContainerConfig = theContainerConfig;
     }

@@ -20,6 +20,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 
 import com.clarkparsia.empire.EmpireException;
+import com.clarkparsia.empire.Empire;
 
 import com.clarkparsia.empire.config.EmpireConfiguration;
 
@@ -42,7 +43,7 @@ import org.apache.log4j.Logger;
  *
  * @author Michael Grove
  * @since 0.6
- * @version 0.6.2
+ * @version 0.6.3
  */
 public class DefaultEmpireModule extends AbstractModule implements EmpireModule {
 
@@ -95,7 +96,10 @@ public class DefaultEmpireModule extends AbstractModule implements EmpireModule 
 			// TODO: need a more sophisticated method of selection which reader to use =)
 			if (System.getProperty("empire.config.reader") != null) {
 				try {
-					aReader = (ConfigReader) Class.forName(System.getProperty("empire.config.reader")).newInstance();
+					@SuppressWarnings("unchecked") // it's ok if this throws a cast exception, we handle that
+					Class<ConfigReader> aClass = (Class<ConfigReader>) Class.forName(System.getProperty("empire.config.reader"));
+
+					aReader =  Empire.get().instance(aClass);
 				}
 				catch (Exception e) {
 					LOGGER.error("Unable to find or create specified configuration reader class: " + System.getProperty("empire.config.reader"), e);
@@ -137,11 +141,6 @@ public class DefaultEmpireModule extends AbstractModule implements EmpireModule 
 			}
 		}
 	}
-
-//
-//	public DefaultEmpireModule(final Map<String, String> theConfig) {
-//		this(new EmpireConfiguration("default", theConfig));
-//	}
 
 	/**
 	 * Create a new DefaultEmpireModule

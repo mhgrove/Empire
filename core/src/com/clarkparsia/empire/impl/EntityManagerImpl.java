@@ -20,6 +20,7 @@ import com.clarkparsia.empire.MutableDataSource;
 import com.clarkparsia.empire.SupportsNamedGraphs;
 import com.clarkparsia.empire.SupportsRdfId;
 import com.clarkparsia.empire.SupportsTransactions;
+import com.clarkparsia.empire.Empire;
 
 import com.clarkparsia.empire.annotation.InvalidRdfException;
 import com.clarkparsia.empire.annotation.RdfGenerator;
@@ -74,9 +75,9 @@ import com.clarkparsia.empire.util.EmpireUtil;
  *
  * @author Michael Grove
  * @since 0.1
- * @version 0.6.2
+ * @version 0.6.3
  * @see EntityManager
- * @see DataSource
+ * @see com.clarkparsia.empire.DataSource
  */
 public class EntityManagerImpl implements EntityManager {
 	/**
@@ -186,7 +187,7 @@ public class EntityManagerImpl implements EntityManager {
 
 		assertContains(theObj);
 
-		Object aDbObj = find(theObj.getClass(), EmpireUtil.asSupportsRdfId(theObj).getId());
+		Object aDbObj = find(theObj.getClass(), EmpireUtil.asSupportsRdfId(theObj).getRdfId());
 
         Collection<AccessibleObject> aAccessors = new HashSet<AccessibleObject>();
 
@@ -349,7 +350,7 @@ public class EntityManagerImpl implements EntityManager {
 			}
 
 			if (!contains(theObj)) {
-				throw new PersistenceException("Addition failed for object: " + theObj.getClass() + " -> " + EmpireUtil.asSupportsRdfId(theObj).getId());
+				throw new PersistenceException("Addition failed for object: " + theObj.getClass() + " -> " + EmpireUtil.asSupportsRdfId(theObj).getRdfId());
 			}
 
 			postPersist(theObj);
@@ -428,7 +429,7 @@ public class EntityManagerImpl implements EntityManager {
 			}
 
 			if (contains(theObj)) {
-				throw new PersistenceException("Remove failed for object: " + theObj.getClass() + " -> " + EmpireUtil.asSupportsRdfId(theObj).getId());
+				throw new PersistenceException("Remove failed for object: " + theObj.getClass() + " -> " + EmpireUtil.asSupportsRdfId(theObj).getRdfId());
 			}
 
 			postRemove(theObj);
@@ -699,9 +700,9 @@ public class EntityManagerImpl implements EntityManager {
 			if (aEntityListeners != null) {
 				// if there are entity listeners, lets create them
 				aListeners = new HashSet<Object>();
-				for (Class aClass : aEntityListeners.value()) {
+				for (Class<?> aClass : aEntityListeners.value()) {
 					try {
-						aListeners.add(aClass.newInstance());
+						aListeners.add(Empire.get().instance(aClass));
 					}
 					catch (Exception e) {
 						LOGGER.error("There was an error instantiating an EntityListener. ", e);

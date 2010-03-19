@@ -88,7 +88,7 @@ public class Spacecraft extends BaseTestClass {
 	}
 
 	public Spacecraft(URI theURI) {
-		setId(asPrimaryKey(theURI));
+		setRdfId(asPrimaryKey(theURI));
 	}
 
 	public List<Discipline> getDisciplines() {
@@ -209,8 +209,8 @@ public class Spacecraft extends BaseTestClass {
 		if (getInternationalDesignator() != null ? !getInternationalDesignator().equals(that.getInternationalDesignator()) : that.getInternationalDesignator() != null) {
 			return false;
 		}
-		if (!BasicUtils.equalsOrNull(getLaunch() == null ? null : getLaunch().getId(),
-									that.getLaunch() == null ? null : that.getLaunch().getId())) {
+		if (!BasicUtils.equalsOrNull(getLaunch() == null ? null : getLaunch().getRdfId(),
+									that.getLaunch() == null ? null : that.getLaunch().getRdfId())) {
 			return false;
 		}
 		if (getMass() != null ? !getMass().equals(that.getMass()) : that.getMass() != null) {
@@ -222,7 +222,7 @@ public class Spacecraft extends BaseTestClass {
 		if (getName() != null ? !getName().equals(that.getName()) : that.getName() != null) {
 			return false;
 		}
-		if (!BasicUtils.equalsOrNull(getId(), that.getId())) {
+		if (!BasicUtils.equalsOrNull(getRdfId(), that.getRdfId())) {
 			return false;
 		}
 
@@ -231,6 +231,6 @@ public class Spacecraft extends BaseTestClass {
 
 	@Override
 	public int hashCode() {
-		return getId() == null ? 31 : getId().hashCode();
+		return getRdfId() == null ? 31 : getRdfId().hashCode();
 	}
 }

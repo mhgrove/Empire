@@ -29,13 +29,13 @@ public interface SupportsRdfId {
 	 * Return the rdf:ID of this instance
 	 * @return the rdf:ID
 	 */
-	public RdfKey getId();
+	public RdfKey getRdfId();
 
 	/**
 	 * Set the rdf:ID for this object
 	 * @param theId the new rdf:ID
 	 */
-	void setId(RdfKey theId);
+	void setRdfId(RdfKey theId);
 
 	public interface RdfKey<T> {
 		public T value();

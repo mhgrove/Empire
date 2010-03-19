@@ -27,8 +27,9 @@ import org.junit.runners.Parameterized;
 import com.clarkparsia.empire.Empire;
 import com.clarkparsia.empire.DataSource;
 import com.clarkparsia.empire.EmpireOptions;
-import com.clarkparsia.empire.jena.JenaInMemoryDataSourceFactory;
-import com.clarkparsia.empire.spi.EmpirePersistenceProvider;
+import com.clarkparsia.empire.config.ConfigKeys;
+import com.clarkparsia.empire.jena.JenaTestDataSourceFactory;
+import com.clarkparsia.empire.jena.JenaConfig;
 import com.clarkparsia.empire.sesametwo.RepositoryDataSourceFactory;
 
 import com.clarkparsia.empire.test.api.MutableTestDataSourceFactory;
@@ -617,7 +618,7 @@ public class TestJPA  {
 	private static Map<String, String> getTestEMConfigMap() {
 		Map<String, String> aMap = new HashMap<String, String>();
 
-		aMap.put(EmpirePersistenceProvider.FACTORY, RepositoryDataSourceFactory.class.getName());
+		aMap.put(ConfigKeys.FACTORY, RepositoryDataSourceFactory.class.getName());
 		aMap.put(RepositoryDataSourceFactory.REPO, "test-repo");
 		aMap.put(RepositoryDataSourceFactory.FILES, "");
 
@@ -627,7 +628,7 @@ public class TestJPA  {
 	private static Map<String, String> getLocalSesameTwoTestConfigMap() {
 		Map<String, String> aMap = new HashMap<String, String>();
 
-		aMap.put(EmpirePersistenceProvider.FACTORY, RepositoryDataSourceFactory.class.getName());
+		aMap.put(ConfigKeys.FACTORY, "sesame");
 
 		aMap.put("files", DATA_FILE);
 
@@ -637,7 +638,7 @@ public class TestJPA  {
 	private static Map<String, String> getLocalSesameTestConfigMap() {
 		Map<String, String> aMap = new HashMap<String, String>();
 
-		aMap.put(EmpirePersistenceProvider.FACTORY, MutableTestDataSourceFactory.class.getName());
+		aMap.put(ConfigKeys.FACTORY, MutableTestDataSourceFactory.class.getName());
 
 		aMap.put("files", DATA_FILE);
 
@@ -647,9 +648,9 @@ public class TestJPA  {
 	private static Map<String, String> getLocalJenaTestConfigMap() {
 		Map<String, String> aMap = new HashMap<String, String>();
 
-		aMap.put(EmpirePersistenceProvider.FACTORY, JenaInMemoryDataSourceFactory.class.getName());
+		aMap.put(ConfigKeys.FACTORY, "jena-test");
 
-		aMap.put("files", DATA_FILE);
+		aMap.put(JenaConfig.FILES, DATA_FILE);
 
 		return aMap;
 	}

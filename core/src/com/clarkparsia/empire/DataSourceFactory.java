@@ -18,11 +18,12 @@ package com.clarkparsia.empire;
 import java.util.Map;
 
 /**
- * <p>Factory interface for creating instances of a {@link DataSource}</p>
+ * <p>Factory interface for creating instances of a {@link DataSource}.</p>
  *
  * @author Michael Grove
  * @see DataSource
  * @since 0.1
+ * @version 0.6.3
  */
 public interface DataSourceFactory {
 
@@ -31,7 +32,7 @@ public interface DataSourceFactory {
 	 * @param theMap the data to use to create the data source
 	 * @return true if this can create a data source, false otherwise
 	 */
-	public boolean canCreate(Map<String, String> theMap);
+	public boolean canCreate(Map<String, Object> theMap);
 
 	/**
 	 * Create a {@link DataSource} from the given parameters
@@ -40,5 +41,5 @@ public interface DataSourceFactory {
 	 * @throws DataSourceException thrown if the Map contains insufficient data, the data source cannot be constructed
 	 * from the data, or if there was an error establishing a connection to the data source.
 	 */
-	public DataSource create(Map<String, String> theMap) throws DataSourceException;
+	public DataSource create(Map<String, Object> theMap) throws DataSourceException;
 }

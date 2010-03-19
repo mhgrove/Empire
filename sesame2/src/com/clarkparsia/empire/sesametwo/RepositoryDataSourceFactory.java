@@ -18,6 +18,7 @@ package com.clarkparsia.empire.sesametwo;
 import com.clarkparsia.empire.DataSourceFactory;
 import com.clarkparsia.empire.DataSource;
 import com.clarkparsia.empire.DataSourceException;
+import com.clarkparsia.empire.ds.Alias;
 import com.clarkparsia.utils.BasicUtils;
 
 import java.util.Map;
@@ -40,7 +41,9 @@ import org.openrdf.model.Statement;
  *
  * @author Michael Grove
  * @since 0.6
+ * @version 0.6.3
  */
+@Alias("sesame")
 public class RepositoryDataSourceFactory implements DataSourceFactory {
 	/**
 	 * Configuration key for the URL of the sesame service
@@ -62,33 +65,37 @@ public class RepositoryDataSourceFactory implements DataSourceFactory {
 	 */
 	public static final String DIR = "dir";
 
-
-	public boolean canCreate(final Map<String, String> theMap) {
-		String aURL = theMap.get(URL);
-		String aRepo = theMap.get(REPO);
-		String aFiles = theMap.get(FILES);
-		String aDir = theMap.get(DIR);
+	/**
+	 * @inheritDoc
+	 */
+	public boolean canCreate(final Map<String, Object> theMap) {
+		Object aURL = theMap.get(URL);
+		Object aRepo = theMap.get(REPO);
+		Object aFiles = theMap.get(FILES);
+		Object aDir = theMap.get(DIR);
 
 		return (aURL != null && aRepo != null) || aFiles != null || aDir != null;
 	}
 
-	public DataSource create(final Map<String, String> theMap) throws DataSourceException {
+	/**
+	 * @inheritDoc
+	 */
+	public DataSource create(final Map<String, Object> theMap) throws DataSourceException {
 		if (!canCreate(theMap)) {
 			throw new DataSourceException("Invalid configuration map: " + theMap);
 		}
 
-		String aURL = theMap.get(URL);
-		String aRepo = theMap.get(REPO);
-		String aFiles = theMap.get(FILES);
-		String aDir = theMap.get(DIR);
+		Object aURL = theMap.get(URL);
+		Object aRepo = theMap.get(REPO);
+		Object aFiles = theMap.get(FILES);
+		Object aDir = theMap.get(DIR);
 
-		Repository aRepository = null;
-
+		Repository aRepository;
 
 		try {
 
-		if (aURL != null) {
-			aRepository = new HTTPRepository(aURL, aRepo);
+		if (aURL != null && aRepo != null) {
+			aRepository = new HTTPRepository(aURL.toString(), aRepo.toString());
 
 			aRepository.initialize();
 			
@@ -101,7 +108,7 @@ public class RepositoryDataSourceFactory implements DataSourceFactory {
 				
 				RepositoryConnection aConn = aRepository.getConnection();
 
-				for (String aFile : BasicUtils.split(aFiles, ",")) {
+				for (String aFile : BasicUtils.split(aFiles.toString(), ",")) {
 					RDFParser aParser = Rio.createParser(Rio.getParserFormatForFileName(aFile));
 
 					aParser.setRDFHandler(new SailBuilderRDFHandler(aConn));
@@ -116,7 +123,7 @@ public class RepositoryDataSourceFactory implements DataSourceFactory {
 			}
 		}
 		else {
-			aRepository = new SailRepository(new MemoryStore(new File(aDir)));
+			aRepository = new SailRepository(new MemoryStore(new File(aDir.toString())));
 
 			aRepository.initialize();
 		}
@@ -130,6 +137,9 @@ public class RepositoryDataSourceFactory implements DataSourceFactory {
 		}
 	}
 
+	/**
+	 * Handler implementation which listens to the RDF parsing events and adds each statement to a RepositoryConnection
+	 */
 	private static class SailBuilderRDFHandler extends RDFHandlerBase {
 		private RepositoryConnection mConnection;
 
@@ -137,6 +147,9 @@ public class RepositoryDataSourceFactory implements DataSourceFactory {
 			mConnection = theConnection;
 		}
 
+		/**
+		 * @inheritDoc
+		 */
 		@Override
 		public void handleStatement(Statement theStmt) {
 			try {

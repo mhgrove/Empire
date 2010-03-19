@@ -29,18 +29,26 @@ import com.clarkparsia.openrdf.ExtGraph;
  * <p>DataSourceFactory implementation to create a DataSource used for testing</p>
  *
  * @author Michael Grove
+ * @since 0.1
+ * @version 0.6.3
  */
 public class TestDataSourceFactory implements DataSourceFactory {
 
-	public boolean canCreate(final Map<String, String> theMap) {
+	/**
+	 * @inheritDoc
+	 */
+	public boolean canCreate(final Map<String, Object> theMap) {
 		return true;
 	}
 
-	public DataSource create(final Map<String, String> theMap) throws DataSourceException {
+	/**
+	 * @inheritDoc
+	 */
+	public DataSource create(final Map<String, Object> theMap) throws DataSourceException {
 		ExtGraph aGraph = new ExtGraph();
 
 		if (theMap.containsKey("files")) {
-			for (String aFile : theMap.get("files").split(",")) {
+			for (String aFile : theMap.get("files").toString().split(",")) {
 				try {
 					aGraph.read(new File(aFile.trim()));
 				}

@@ -20,6 +20,7 @@ import com.google.inject.multibindings.Multibinder;
 import com.google.inject.AbstractModule;
 
 import com.clarkparsia.empire.DataSourceFactory;
+
 import com.clarkparsia.empire.util.EmpireModule;
 
 /**
@@ -27,7 +28,7 @@ import com.clarkparsia.empire.util.EmpireModule;
  *
  * @author Michael Grove
  * @since 0.6
- * @version 0.6.1
+ * @version 0.6.3
  */
 public class JenaEmpireModule extends AbstractModule implements EmpireModule {
 
@@ -37,6 +38,25 @@ public class JenaEmpireModule extends AbstractModule implements EmpireModule {
 	@Override
 	protected void configure() {
 		Multibinder.newSetBinder(binder(), DataSourceFactory.class)
-				.addBinding().to(JenaInMemoryDataSourceFactory.class);
+				.addBinding().to(JenaTestDataSourceFactory.class);
+
+		Multibinder.newSetBinder(binder(), DataSourceFactory.class)
+				.addBinding().to(DefaultJenaDataSourceFactory.class);
 	}
+
+//	public static void main(String[] args) throws Exception {
+//		Map<String, Object> aFactoryMap = new HashMap<String, Object>();
+//		InputStream aStream = new FileInputStream("foo");
+//
+//		aFactoryMap.put(JenaConfig.FACTORY, "jena");
+//
+//		EntityManagerFactory aFactory = Empire.get().persistenceProvider().createEntityManagerFactory("", aFactoryMap);
+//
+//		Map<String, Object> aMap = new HashMap<String, Object>();
+//
+//		aMap.put(JenaConfig.STREAM, aStream);
+//		aMap.put(JenaConfig.FORMAT, "N3");
+//
+//		EntityManager aManager = aFactory.createEntityManager(aMap);
+//	}
 }

@@ -18,6 +18,7 @@ package com.clarkparsia.empire.fourstore;
 import com.clarkparsia.empire.DataSourceFactory;
 import com.clarkparsia.empire.DataSource;
 import com.clarkparsia.empire.DataSourceException;
+import com.clarkparsia.empire.ds.Alias;
 
 import java.util.Map;
 import java.net.URL;
@@ -36,7 +37,9 @@ import org.apache.log4j.Logger;
  *
  * @author Michael Grove
  * @since 0.1
+ * @version 0.6.3
  */
+@Alias("4store")
 public class FourStoreDataSourceFactory implements DataSourceFactory {
 	/**
 	 * The logger
@@ -56,26 +59,26 @@ public class FourStoreDataSourceFactory implements DataSourceFactory {
 	/**
 	 * @inheritDoc
 	 */
-	public boolean canCreate(final Map<String, String> theMap) {
-		return theMap.containsKey(KEY_URL) && BasicUtils.isURL(theMap.get(KEY_URL));
+	public boolean canCreate(final Map<String, Object> theMap) {
+		return theMap.containsKey(KEY_URL) && BasicUtils.isURL(theMap.get(KEY_URL).toString());
 	}
 
 	/**
 	 * @inheritDoc
 	 */
-	public DataSource create(final Map<String, String> theMap) throws DataSourceException {
+	public DataSource create(final Map<String, Object> theMap) throws DataSourceException {
 		if (!canCreate(theMap)) {
 			throw new DataSourceException();
 		}
 
-		String aURL = theMap.get(KEY_URL);
+		String aURL = theMap.get(KEY_URL).toString();
 
 		try {
 			Store aStore = StoreFactory.create(new URL(aURL));
 
 			if (theMap.containsKey(KEY_SOFT_LIMIT)) {
 				try {
-					aStore.setSoftLimit(Integer.parseInt(theMap.get(KEY_SOFT_LIMIT)));
+					aStore.setSoftLimit(Integer.parseInt(theMap.get(KEY_SOFT_LIMIT).toString()));
 				}
 				catch (NumberFormatException e) {
 					LOGGER.warn("Invalid soft limit value specified: " + theMap.get(KEY_SOFT_LIMIT));

@@ -61,14 +61,14 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory {
 	/**
 	 * Factory configuration parameters
 	 */
-	private Map<String, String> mConfig;
+	private Map<String, ?> mConfig;
 
 	/**
 	 * Create a new AbstractEntityManagerFactory
      * @param theProvider the DataSourceFactory to use with this
      */
 	public EntityManagerFactoryImpl(DataSourceFactory theProvider) {
-		this(theProvider, new HashMap<String, String>());
+		this(theProvider, new HashMap<String, Object>());
 	}
 
 	/**
@@ -76,9 +76,10 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory {
      * @param theProvider the DataSourceFactory to use with this
 	 * @param theConfig the container configuration to be used by this EntityManagerFactory
      */
-	public EntityManagerFactoryImpl(DataSourceFactory theProvider, final Map<String, String> theConfig) {
+	public EntityManagerFactoryImpl(DataSourceFactory theProvider, final Map<String, ?> theConfig) {
 		mManagers = new HashSet<EntityManager>();
         mDataSourceFactoryProvider = theProvider;
+		
 		mConfig = theConfig;
 	}
 
@@ -89,9 +90,10 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory {
 	 * @throws IllegalArgumentException thrown if the map does not contain the required set of properties to
 	 * create a new instance of the EntityManager
 	 */
-	protected EntityManager newEntityManager(Map<String, String> theMap) {
+	protected EntityManager newEntityManager(Map<String, Object> theMap) {
 		try {
-			Map<String, String> aConfig = new HashMap<String, String>(theMap);
+			Map<String, Object> aConfig = new HashMap<String, Object>(theMap);
+
 			aConfig.putAll(mConfig);
 
 			DataSource aSource = mDataSourceFactoryProvider.create(aConfig);

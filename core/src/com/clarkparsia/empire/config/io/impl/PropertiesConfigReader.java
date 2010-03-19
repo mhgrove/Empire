@@ -167,7 +167,7 @@ public class PropertiesConfigReader implements ConfigReader, ConfigKeys {
 						 "0.repo = mem-rdf-db\n" +
 						 "\n" +
 						 "1.name = context2\n" + 
-						 "1.factory = com.clarkparsia.empire.jena.JenaInMemoryDataSourceFactory\n";
+						 "1.factory = com.clarkparsia.empire.jena.JenaTestDataSourceFactory\n";
 
 		new PropertiesConfigReader().read(new java.io.StringReader(aConfig));
 	}

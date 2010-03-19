@@ -16,20 +16,18 @@
 package com.clarkparsia.empire.spi;
 
 import com.clarkparsia.empire.DataSourceFactory;
+import com.clarkparsia.empire.ds.Alias;
 import com.clarkparsia.empire.config.EmpireConfiguration;
+import com.clarkparsia.empire.config.ConfigKeys;
 import com.clarkparsia.empire.impl.EntityManagerFactoryImpl;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
-import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
-import javax.persistence.PersistenceContext;
-import javax.persistence.PersistenceProperty;
 import javax.persistence.spi.PersistenceProvider;
 import javax.persistence.spi.PersistenceUnitInfo;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -38,7 +36,7 @@ import java.util.Set;
  *
  * @author Michael Grove
  * @since 0.6
- * @version 0.6.2
+ * @version 0.6.3
  */
 public class EmpirePersistenceProvider implements PersistenceProvider {
     // TODO: should we keep factories created so that to factories created w/ the same name are == ?
@@ -52,11 +50,6 @@ public class EmpirePersistenceProvider implements PersistenceProvider {
 	 * Application container configuration
 	 */
     private final EmpireConfiguration mContainerConfig;
-
-	/**
-	 * Key constant for finding the class name of the factory we want to create
-	 */
-    public static final String FACTORY = "factory";
 
 	/**
 	 * Create a new EmpirePersistenceProvider
@@ -74,25 +67,27 @@ public class EmpirePersistenceProvider implements PersistenceProvider {
 	 * @inheritDoc
 	 */
     public EntityManagerFactory createEntityManagerFactory(final String theUnitName, final Map theMap) {
-        Map<String, String> aConfig = new HashMap<String, String>();
+        Map<String, Object> aConfig = new HashMap<String, Object>();
 
 		if (mContainerConfig.hasUnit(theUnitName)) {
 			aConfig.putAll(mContainerConfig.getUnitConfig(theUnitName));
 		}
 
 		if (theMap != null) {
-        	aConfig.putAll(mapOfStrings(theMap));
+        	aConfig.putAll(theMap);
 		}
 
-        if (!aConfig.containsKey(FACTORY)) {
+        if (!aConfig.containsKey(ConfigKeys.FACTORY)) {
             return null;
         }
 
-		// TODO: is there a better way to do this than having the user encode the fully qualified class name of the factory?
-        final String aName = aConfig.get(FACTORY);
+        final String aName = aConfig.get(ConfigKeys.FACTORY).toString();
 
         for (DataSourceFactory aFactory  : mFactories) {
-            if (aFactory.getClass().getName().equals(aName)) {
+			String aAlias = aFactory.getClass().isAnnotationPresent(Alias.class) ? aFactory.getClass().getAnnotation(Alias.class).value() : "";
+
+            if (aAlias.equals(aName) ||
+				aFactory.getClass().getName().equals(aName)) {
                 return new EntityManagerFactoryImpl(aFactory, aConfig);
             }
         }
@@ -107,20 +102,5 @@ public class EmpirePersistenceProvider implements PersistenceProvider {
                                                                     final Map theMap) {
         // TODO: there's a lot more options on PersistenceUnitInfo that we can use here.
         return createEntityManagerFactory(thePersistenceUnitInfo.getPersistenceUnitName(), theMap);
-    }
-
-	/**
-	 * Convert a Map to a Map of String's
-	 * @param theMap the map to convert
-	 * @return the original map copied as a map of strings (calling toString on all keys and values).
-	 */
-    private Map<String, String> mapOfStrings(Map theMap) {
-        Map<String, String> aMap = new HashMap<String, String>();
-
-        for (Object aKey : theMap.keySet()) {
-            aMap.put(aKey.toString(), theMap.get(aKey).toString());
-        }
-
-        return aMap;
     }
 }

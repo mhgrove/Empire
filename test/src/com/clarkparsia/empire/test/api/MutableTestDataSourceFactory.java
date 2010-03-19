@@ -18,6 +18,7 @@ package com.clarkparsia.empire.test.api;
 import com.clarkparsia.empire.DataSourceFactory;
 import com.clarkparsia.empire.DataSource;
 import com.clarkparsia.empire.DataSourceException;
+import com.clarkparsia.empire.ds.Alias;
 import com.clarkparsia.openrdf.ExtGraph;
 import com.clarkparsia.utils.BasicUtils;
 
@@ -30,14 +31,15 @@ import java.io.File;
  *
  * @author Michael Grove
  */
+@Alias("test-source")
 public class MutableTestDataSourceFactory implements DataSourceFactory {
 	private static Map<String, DataSource> mSourceCache = new HashMap<String, DataSource>();
 
-	public boolean canCreate(final Map<String, String> theMap) {
+	public boolean canCreate(final Map<String, Object> theMap) {
 		return true;
 	}
 
-	public DataSource create(final Map<String, String> theMap) throws DataSourceException {
+	public DataSource create(final Map<String, Object> theMap) throws DataSourceException {
 		// tests should reuse the same source.
 		if (theMap.containsKey("files") && mSourceCache.containsKey(theMap.get("files"))) {
 			return mSourceCache.get(theMap.get("files"));
@@ -46,7 +48,7 @@ public class MutableTestDataSourceFactory implements DataSourceFactory {
 		ExtGraph aGraph = new ExtGraph();
 
 		if (theMap.containsKey("files")) {
-			for (String aFile : BasicUtils.split(theMap.get("files"), ",")) {
+			for (String aFile : BasicUtils.split(theMap.get("files").toString(), ",")) {
 				try {
 					aGraph.read(new File(aFile.trim()));
 				}
@@ -58,7 +60,7 @@ public class MutableTestDataSourceFactory implements DataSourceFactory {
 
 		DataSource aSource = new MutableTestDataSource(aGraph);
 
-		mSourceCache.put(theMap.get("files"), aSource);
+		mSourceCache.put(theMap.get("files").toString(), aSource);
 
 		return aSource;
 	}

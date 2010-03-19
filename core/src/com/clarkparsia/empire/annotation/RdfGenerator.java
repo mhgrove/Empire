@@ -490,7 +490,7 @@ public class RdfGenerator {
 	 * @param theObj the object to scan.
 	 */
 	private static void addNamespaces(Class<?> theObj) {
-		Namespaces aNS = theObj.getAnnotation(Namespaces.class);
+		Namespaces aNS = BeanReflectUtil.getAnnotation(theObj, Namespaces.class);
 
 		if (aNS == null) {
 			return;
@@ -918,10 +918,14 @@ public class RdfGenerator {
 							aTypes = ((Method) mAccessor).getGenericParameterTypes();
 						}
 
-
-						if (aTypes != null && aTypes.length >= 1 && aTypes[0] instanceof Class) {
+						if (aTypes != null && aTypes.length >= 1) {
 							// first type argument to a collection is usually the one we care most about
-							aClass = (Class) aTypes[0];
+							if (aTypes[0] instanceof ParameterizedType && ((ParameterizedType)aTypes[0]).getActualTypeArguments().length > 0) {
+								aClass = (Class) ((ParameterizedType)aTypes[0]).getActualTypeArguments()[0];
+							}
+							else if (aTypes[0] instanceof Class) {
+								aClass = (Class) aTypes[0];
+							}
 						}
 					}
 

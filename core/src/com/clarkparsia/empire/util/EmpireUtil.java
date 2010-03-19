@@ -200,6 +200,9 @@ public class EmpireUtil {
 		if (theObj instanceof SupportsRdfId.RdfKey) {
 			return new SupportsRdfIdImpl( (SupportsRdfId.RdfKey) theObj);
 		}
+		else if (theObj instanceof java.net.URI) {
+			return new SupportsRdfIdImpl(new SupportsRdfId.URIKey( (java.net.URI) theObj));
+		}
 		else {
 			return (SupportsRdfId) theObj;
 		}

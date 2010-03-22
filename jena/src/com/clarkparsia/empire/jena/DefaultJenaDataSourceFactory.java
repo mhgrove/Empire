@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2009-2010 Clark & Parsia, LLC. <http://www.clarkparsia.com>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.clarkparsia.empire.jena;
 
 import com.clarkparsia.empire.ds.Alias;
@@ -11,6 +26,7 @@ import com.clarkparsia.utils.BasicUtils;
 
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.RDFReader;
+import com.hp.hpl.jena.shared.JenaException;
 
 import java.util.Map;
 
@@ -102,13 +118,19 @@ public class DefaultJenaDataSourceFactory extends JenaDataSourceFactory implemen
 	 * @param theReader the reader to load the data from
 	 * @param theFormat the key for the RDF format the data is in
 	 * @param theBase the base uri to be used when parsing the file
+	 * @throws com.clarkparsia.empire.DataSourceException if there is an error while parsing or reading the source RDF.
 	 */
-	private void load(Model theModel, Reader theReader, String theFormat, String theBase) {
-		RDFReader aReader = theModel.getReader(theFormat);
+	private void load(Model theModel, Reader theReader, String theFormat, String theBase) throws DataSourceException {
+		try {
+			RDFReader aReader = theModel.getReader(theFormat);
 
-		aReader.setProperty("WARN_REDEFINITION_OF_ID","EM_IGNORE");
+			aReader.setProperty("WARN_REDEFINITION_OF_ID","EM_IGNORE");
 
-		aReader.read(theModel, theReader, theBase != null ? theBase : "");
+			aReader.read(theModel, theReader, theBase != null ? theBase : "");
+		}
+		catch (JenaException e) {
+			throw new DataSourceException("There was a Jena error while reading the source", e);
+		}
 	}
 
 	/**

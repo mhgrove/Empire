@@ -24,7 +24,9 @@ import com.clarkparsia.empire.SupportsNamedGraphs;
 import com.clarkparsia.empire.impl.AbstractDataSource;
 
 import com.clarkparsia.empire.impl.AbstractResultSet;
-import com.clarkparsia.empire.impl.sparql.SPARQLQueryFactory;
+import com.clarkparsia.empire.impl.RdfQueryFactory;
+
+import com.clarkparsia.empire.impl.sparql.SPARQLDialect;
 
 import org.openrdf.model.Graph;
 import org.openrdf.model.impl.ValueFactoryImpl;
@@ -53,6 +55,7 @@ import static com.clarkparsia.openrdf.OpenRdfUtil.toIterator;
  *
  * @author Michael Grove
  * @since 0.1
+ * @version 0.6.3
  */
 public class FourStoreDataSource extends AbstractDataSource implements MutableDataSource, SupportsNamedGraphs {
 	/**
@@ -72,7 +75,7 @@ public class FourStoreDataSource extends AbstractDataSource implements MutableDa
 	FourStoreDataSource(Store theStore) {
 		mStore = theStore;
 
-		setQueryFactory(new SPARQLQueryFactory(this));
+		setQueryFactory(new RdfQueryFactory(this, SPARQLDialect.instance()));
 	}
 
 	/**

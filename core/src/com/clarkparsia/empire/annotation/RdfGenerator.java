@@ -73,6 +73,7 @@ import com.clarkparsia.empire.EmpireOptions;
 import com.clarkparsia.empire.QueryException;
 import com.clarkparsia.empire.SupportsRdfId;
 import com.clarkparsia.empire.Empire;
+import com.clarkparsia.empire.Dialect;
 import com.clarkparsia.empire.annotation.runtime.Proxy;
 
 import com.clarkparsia.empire.impl.serql.SerqlDialect;
@@ -86,6 +87,7 @@ import static com.clarkparsia.empire.util.BeanReflectUtil.get;
 
 import com.clarkparsia.empire.util.BeanReflectUtil;
 import com.clarkparsia.empire.util.EmpireUtil;
+import static com.clarkparsia.empire.util.EmpireUtil.asPrimaryKey;
 import com.clarkparsia.openrdf.util.ResourceBuilder;
 import com.clarkparsia.openrdf.util.GraphBuilder;
 import com.clarkparsia.openrdf.ExtGraph;
@@ -489,7 +491,7 @@ public class RdfGenerator {
 	 * Scan the object for {@link Namespaces} annotations and add them to the current list of known namespaces
 	 * @param theObj the object to scan.
 	 */
-	private static void addNamespaces(Class<?> theObj) {
+	public static void addNamespaces(Class<?> theObj) {
 		Namespaces aNS = BeanReflectUtil.getAnnotation(theObj, Namespaces.class);
 
 		if (aNS == null) {
@@ -730,33 +732,84 @@ public class RdfGenerator {
 	/**
 	 * Return the Class type of the accessor.  For a {@link Field} it's the declared type of the field, for a
 	 * {@link Method}, which should be a bean-style setter, it's the type of the single parameter to the method.
-	 * @param theObject the accessor
+	 * @param theAccessor the accessor
 	 * @return the Class type of the Field/Method
 	 * @throws RuntimeException thrown if you don't pass in a Field or Method, or if the Method is not of the expected
 	 * bean-style setter variety.
 	 */
-	private static Class classFrom(Object theObject) {
-		if (theObject instanceof Field) {
-			return ((Field)theObject).getType();
+	private static Class classFrom(Object theAccessor) {
+		Class<?> aClass = null;
+
+		if (theAccessor instanceof Field) {
+			aClass = ((Field)theAccessor).getType();
 		}
-		else if (theObject instanceof Method) {
+		else if (theAccessor instanceof Method) {
 			// this should be a setter style bean method, taking one param which corresponds to the type of the property
 			// it represents
 
-			Method aMethod = (Method) theObject;
+			Method aMethod = (Method) theAccessor;
 			if (aMethod.getParameterTypes().length == 1) {
-				return aMethod.getParameterTypes()[0];
+				aClass = aMethod.getParameterTypes()[0];
 			}
 			else {
 				throw new RuntimeException("Unknown or unsupported accessor method type");
 			}
 		}
-        else if (theObject instanceof Class) {
-            return (Class) theObject;
+        else if (theAccessor instanceof Class) {
+            aClass = (Class) theAccessor;
         }
 		else {
-			throw new RuntimeException("Unknown or unsupported accessor type: " + theObject);
+			throw new RuntimeException("Unknown or unsupported accessor type: " + theAccessor);
 		}
+
+		return aClass;
+	}
+
+	private static Class refineClass(Object theAccessor, Class aClass, DataSource theSource, Resource theId) {
+		if (Collection.class.isAssignableFrom(aClass)) {
+			// if the field we're assigning from is a collection, try and figure out the type of the thing
+			// we're creating from the collection
+
+			Type[] aTypes = null;
+
+			if (theAccessor instanceof Field && ((Field)theAccessor).getGenericType() instanceof ParameterizedType) {
+				aTypes = ((ParameterizedType) ((Field)theAccessor).getGenericType()).getActualTypeArguments();
+			}
+			else if (theAccessor instanceof Method) {
+				aTypes = ((Method) theAccessor).getGenericParameterTypes();
+			}
+
+			if (aTypes != null && aTypes.length >= 1) {
+				// first type argument to a collection is usually the one we care most about
+				if (aTypes[0] instanceof ParameterizedType && ((ParameterizedType)aTypes[0]).getActualTypeArguments().length > 0) {
+					aClass = (Class) ((ParameterizedType)aTypes[0]).getActualTypeArguments()[0];
+				}
+				else if (aTypes[0] instanceof Class) {
+					aClass = (Class) aTypes[0];
+				}
+			}
+		}
+
+		if (!BeanReflectUtil.hasAnnotation(aClass, RdfsClass.class)) {
+			// k, so either the parameter of the collection or the declared type of the field does
+			// not map to an instance/bean type.  this is most likely an error, but lets try and find
+			// the rdf:type of the field, and see if we can map that to a class in the path and we'll
+			// create an instance of that.  that will work, and pushes the likely failure back off to
+			// the assignment of the created instance
+
+			URI aType = getType(theSource, theId);
+
+			// k, so now we know the type, if we can match the type to a class then we're in business
+			if (aType != null) {
+				Class aTypeClass = TYPE_TO_CLASS.get(aType);
+				if (aTypeClass != null && BeanReflectUtil.hasAnnotation(aTypeClass, RdfsClass.class)) {
+					// lets try this one
+					aClass = aTypeClass;
+				}
+			}
+		}
+
+		return aClass;
 	}
 
 	private static Collection<Object> instantiateCollectionFromField(Class theValueType) {
@@ -813,6 +866,10 @@ public class RdfGenerator {
 		}
 
 		public Object apply(final Value theValue) {
+			if (mAccessor == null) {
+				throw new RuntimeException("Null accessor is not permitted");
+			}
+
 			if (theValue instanceof Literal) {
 				Literal aLit = (Literal) theValue;
 				URI aDatatype = aLit.getDatatype() != null ? aLit.getDatatype() : null;
@@ -863,7 +920,14 @@ public class RdfGenerator {
 			else if (theValue instanceof BNode) {
 				// TODO: this is not bulletproof, clean this up
 
-				if (mAccessor != null && Collection.class.isAssignableFrom(classFrom(mAccessor))) {
+				BNode aBNode = (BNode) theValue;
+
+				// we need to figure out what type of bean this instance maps to.
+					Class<?> aClass = classFrom(mAccessor);
+
+					aClass = refineClass(mAccessor, aClass, mSource, aBNode);
+
+				if (Collection.class.isAssignableFrom(classFrom(mAccessor))) {
 					// the field takes a collection, lets create a new instance of said collection, and hopefully the
 					// bnode is a list.  this approach will only work if the property is a singleton value, eg
 					// :inst someProperty _:a where _:a is the head of a list.  if you have another value _:b for
@@ -878,21 +942,23 @@ public class RdfGenerator {
 						
 						ExtGraph aGraph = new ExtGraph(mSource.graphQuery(aQuery));
 						Resource aPossibleListHead = (Resource) aGraph.getValue(mResource, mProperty);
+						
 						if (aGraph.isList(aPossibleListHead)) {
 							List<Value> aList = aGraph.asList(aPossibleListHead);
 
 							return new ToObjectFunction(mSource, null, null, null).apply(aList);
-						}
-						else {
-							throw new RuntimeException("Arbitrary bnodes not supported");
 						}
 					}
 					catch (QueryException e) {
 						throw new RuntimeException(e);
 					}
 				}
-				else {
-					throw new RuntimeException("Arbitrary bnodes not supported");
+
+				try {
+					return getProxyOrDbObject(aClass, aBNode, mSource);
+				}
+				catch (Exception e) {
+					throw new RuntimeException(e);
 				}
 			}
 			else if (theValue instanceof URI) {
@@ -901,54 +967,62 @@ public class RdfGenerator {
 					// we need to figure out what type of bean this instance maps to.
 					Class<?> aClass = classFrom(mAccessor);
 
-					// TODO: need a better method for this situation
+					aClass = refineClass(mAccessor, aClass, mSource, aURI);
+
 					if (aClass.isAssignableFrom(java.net.URI.class)) {
 						return java.net.URI.create(aURI.toString());
 					}
-					else if (Collection.class.isAssignableFrom(aClass)) {
-						// if the field we're assigning from is a collection, try and figure out the type of the thing
-						// we're creating from the collection
-
-						Type[] aTypes = null;
-
-						if (mAccessor instanceof Field && ((Field)mAccessor).getGenericType() instanceof ParameterizedType) {
-							aTypes = ((ParameterizedType) ((Field)mAccessor).getGenericType()).getActualTypeArguments();
-						}
-						else if (mAccessor instanceof Method) {
-							aTypes = ((Method) mAccessor).getGenericParameterTypes();
-						}
-
-						if (aTypes != null && aTypes.length >= 1) {
-							// first type argument to a collection is usually the one we care most about
-							if (aTypes[0] instanceof ParameterizedType && ((ParameterizedType)aTypes[0]).getActualTypeArguments().length > 0) {
-								aClass = (Class) ((ParameterizedType)aTypes[0]).getActualTypeArguments()[0];
-							}
-							else if (aTypes[0] instanceof Class) {
-								aClass = (Class) aTypes[0];
-							}
-						}
+					else {
+						return getProxyOrDbObject(aClass, java.net.URI.create(aURI.toString()), mSource);
 					}
 
-					if (!BeanReflectUtil.hasAnnotation(aClass, RdfsClass.class)) {
-						// k, so either the parameter of the collection or the declared type of the field does
-						// not map to an instance/bean type.  this is most likely an error, but lets try and find
-						// the rdf:type of the field, and see if we can map that to a class in the path and we'll
-						// create an instance of that.  that will work, and pushes the likely failure back off to
-						// the assignment of the created instance
-
-						URI aType = getType(mSource, aURI);
-
-						// k, so now we know the type, if we can match the type to a class then we're in business
-						if (aType != null) {
-							Class aTypeClass = TYPE_TO_CLASS.get(aType);
-							if (aTypeClass != null && BeanReflectUtil.hasAnnotation(aTypeClass, RdfsClass.class)) {
-								// lets try this one
-								aClass = aTypeClass;
-							}
-						}
-					}
-
-					return getProxyOrDbObject(aClass, java.net.URI.create(aURI.toString()), mSource);
+//					if (aClass.isAssignableFrom(java.net.URI.class)) {
+//						return java.net.URI.create(aURI.toString());
+//					}
+//					else if (Collection.class.isAssignableFrom(aClass)) {
+//						// if the field we're assigning from is a collection, try and figure out the type of the thing
+//						// we're creating from the collection
+//
+//						Type[] aTypes = null;
+//
+//						if (mAccessor instanceof Field && ((Field)mAccessor).getGenericType() instanceof ParameterizedType) {
+//							aTypes = ((ParameterizedType) ((Field)mAccessor).getGenericType()).getActualTypeArguments();
+//						}
+//						else if (mAccessor instanceof Method) {
+//							aTypes = ((Method) mAccessor).getGenericParameterTypes();
+//						}
+//
+//						if (aTypes != null && aTypes.length >= 1) {
+//							// first type argument to a collection is usually the one we care most about
+//							if (aTypes[0] instanceof ParameterizedType && ((ParameterizedType)aTypes[0]).getActualTypeArguments().length > 0) {
+//								aClass = (Class) ((ParameterizedType)aTypes[0]).getActualTypeArguments()[0];
+//							}
+//							else if (aTypes[0] instanceof Class) {
+//								aClass = (Class) aTypes[0];
+//							}
+//						}
+//					}
+//
+//					if (!BeanReflectUtil.hasAnnotation(aClass, RdfsClass.class)) {
+//						// k, so either the parameter of the collection or the declared type of the field does
+//						// not map to an instance/bean type.  this is most likely an error, but lets try and find
+//						// the rdf:type of the field, and see if we can map that to a class in the path and we'll
+//						// create an instance of that.  that will work, and pushes the likely failure back off to
+//						// the assignment of the created instance
+//
+//						URI aType = getType(mSource, aURI);
+//
+//						// k, so now we know the type, if we can match the type to a class then we're in business
+//						if (aType != null) {
+//							Class aTypeClass = TYPE_TO_CLASS.get(aType);
+//							if (aTypeClass != null && BeanReflectUtil.hasAnnotation(aTypeClass, RdfsClass.class)) {
+//								// lets try this one
+//								aClass = aTypeClass;
+//							}
+//						}
+//					}
+//
+//					return getProxyOrDbObject(aClass, java.net.URI.create(aURI.toString()), mSource);
 				}
 				catch (Exception e) {
 					throw new RuntimeException(e);
@@ -960,9 +1034,16 @@ public class RdfGenerator {
 		}
 	}
 
-	private static <T> T getProxyOrDbObject(Class<T> theClass, java.net.URI theURI, DataSource theSource) throws Exception {
+	private static <T> T getProxyOrDbObject(Class<T> theClass, Object theKey, DataSource theSource) throws Exception {
+		// TODO: do we need to provide a reference to the thing we're proxying for.  like, if the getter is proxied
+		// as we do it here, it will always return the same value.  if you do a set on the property expecting the
+		// new value, that will set it on the actual object, but it will not change what this value returns.
+		// I think that maybe the proxy should be tweaked such that it will return the proxied value when it's first
+		// asked for, and then set that value on the object it's proxying for.  that way get/set should work as expected
+		// and once the value is retrieved the first time, it will always return it from the parent object rather than
+		// from the cached copy in the proxy object.
 		if (EmpireOptions.ENABLE_PROXY_OBJECTS) {
-			Proxy<T> aProxy = new Proxy<T>(theClass, theURI, theSource);
+			Proxy<T> aProxy = new Proxy<T>(theClass, asPrimaryKey(theKey), theSource);
 
 			ProxyFactory aFactory = new ProxyFactory();
 			aFactory.setSuperclass(theClass);
@@ -971,7 +1052,7 @@ public class RdfGenerator {
 			return (T) aFactory.createClass().newInstance();
 		}
 		else {
-			return fromRdf(theClass, new SupportsRdfId.URIKey(theURI), theSource);
+			return fromRdf(theClass, asPrimaryKey(theKey), theSource);
 		}
 	}
 
@@ -991,9 +1072,15 @@ public class RdfGenerator {
 		}
 	}
 
-	private static URI getType(DataSource theSource, URI theConcept) {
+	/**
+	 * Return the type of the resource in the data source.
+	 * @param theSource the data source
+	 * @param theConcept the concept whose type to lookup
+	 * @return the rdf:type of the concept, or null if there is an error or one cannot be found.
+	 */
+	private static URI getType(DataSource theSource, Resource theConcept) {
 		try {
-			return new ExtGraph(EmpireUtil.describe(theSource, java.net.URI.create(theConcept.toString()))).getType(theConcept);
+			return new ExtGraph(EmpireUtil.describe(theSource, theConcept.toString())).getType(theConcept);
 		}
 		catch (DataSourceException e) {
 			LOGGER.error("There was an error while getting the type of a resource", e);
@@ -1003,14 +1090,16 @@ public class RdfGenerator {
 	}
 
 	private static String getBNodeConstructQuery(DataSource theSource, Resource theRes, URI theProperty) {
-		String aSerqlQuery = "construct * from {" + SesameQueryUtils.getQueryString(theRes) + "} <"+theProperty.toString()+"> {o}, {o} po {oo}";
+		Dialect aDialect = theSource.getQueryFactory().getDialect();
 
-		String aSparqlQuery = "CONSTRUCT  { " + SesameQueryUtils.getQueryString(theRes) + " <"+theProperty.toString()+"> ?o . ?o ?po ?oo  } \n" +
+		String aSerqlQuery = "construct * from {" + aDialect.asQueryString(theRes) + "} <" + theProperty.toString() + "> {o}, {o} po {oo}";
+
+		String aSparqlQuery = "CONSTRUCT  { " + aDialect.asQueryString(theRes) + " <"+theProperty.toString()+"> ?o . ?o ?po ?oo  } \n" +
 							  "WHERE\n" +
-							  "{ " + SesameQueryUtils.getQueryString(theRes) + " <"+theProperty.toString()+"> ?o.\n" +
+							  "{ " + aDialect.asQueryString(theRes) + " <" + theProperty.toString() + "> ?o.\n" +
 							  "?o ?po ?oo. }";
 
-		if (theSource.getQueryFactory().getDialect() == SerqlDialect.instance()) {
+		if (theSource.getQueryFactory().getDialect() instanceof SerqlDialect) {
 			return aSerqlQuery;
 		}
 		else {

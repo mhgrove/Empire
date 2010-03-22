@@ -16,28 +16,58 @@
 package com.clarkparsia.empire.annotation.runtime;
 
 import com.clarkparsia.empire.DataSource;
+import com.clarkparsia.empire.SupportsRdfId;
 
 import com.clarkparsia.empire.annotation.RdfGenerator;
 
 import java.net.URI;
 
 /**
- * <p></p>
+ * <p>Wrapper class which serves as a proxy for an object to the database.</p>
  *
  * @author Michael Grove
+ * @since 0.5
+ * @version 0.6.3
  */
 public class Proxy<T> {
+
+	/**
+	 * The value this is a proxy for
+	 */
 	private T mValue;
+
+	/**
+	 * The type of the value
+	 */
 	private Class<T> mClass;
-	private URI mURI;
+
+	/**
+	 * The key of the value
+	 */
+	private SupportsRdfId.RdfKey mURI;
+
+	/**
+	 * The datasource to retrieve the value from
+	 */
 	private DataSource mDataSource;
 
-	public Proxy(Class<T> theClass, URI theURI, DataSource theSource) {
+	/**
+	 * Create a new Proxy object
+	 * @param theClass the type of the object
+	 * @param theKey the database key of the object
+	 * @param theSource the database to grab the proxied object from
+	 */
+	public Proxy(Class<T> theClass, SupportsRdfId.RdfKey theKey, DataSource theSource) {
 		mClass = theClass;
-		mURI = theURI;
+		mURI = theKey;
 		mDataSource = theSource;
 	}
 
+	/**
+	 * Return the value backing this proxy.  This will either be a cached copy of the already retrieved value, or
+	 * it will actually go and grab the object from the database.
+	 * @return the value this class proxies for
+	 */
 	public T value() {
 		if (mValue == null) {
 			try {

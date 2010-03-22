@@ -21,7 +21,6 @@ import com.clarkparsia.empire.QueryException;
 import com.clarkparsia.empire.DataSourceException;
 import com.clarkparsia.empire.SupportsTransactions;
 import com.clarkparsia.empire.impl.AbstractDataSource;
-import com.clarkparsia.empire.impl.sparql.SPARQLQueryFactory;
 
 import java.net.ConnectException;
 import java.net.URI;
@@ -30,7 +29,10 @@ import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.query.QueryFactory;
 import com.hp.hpl.jena.query.QueryExecutionFactory;
 import com.hp.hpl.jena.query.QueryExecution;
+import com.hp.hpl.jena.query.Syntax;
+
 import com.clarkparsia.empire.jena.util.JenaSesameUtils;
+
 import org.openrdf.model.Graph;
 
 /**
@@ -38,6 +40,7 @@ import org.openrdf.model.Graph;
  *
  * @author Michael Grove
  * @since 0.1
+ * @version 0.6.3
  */
 public class JenaDataSource extends AbstractDataSource implements MutableDataSource, SupportsTransactions {
 
@@ -53,7 +56,7 @@ public class JenaDataSource extends AbstractDataSource implements MutableDataSou
 	JenaDataSource(final Model theModel) {
 		mModel = theModel;
 
-		setQueryFactory(new SPARQLQueryFactory(this));
+		setQueryFactory(new JenaSPARQLQueryFactory(this));
 	}
 
 	/**
@@ -103,7 +106,7 @@ public class JenaDataSource extends AbstractDataSource implements MutableDataSou
 	private QueryExecution query(final String theQuery) {
 		assertConnected();
 
-		return QueryExecutionFactory.create(QueryFactory.create(theQuery), mModel);
+		return QueryExecutionFactory.create(QueryFactory.create(theQuery, Syntax.syntaxSPARQL), mModel);
 	}
 
 	/**

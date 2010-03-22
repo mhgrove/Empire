@@ -15,12 +15,54 @@
 
 package com.clarkparsia.empire;
 
+import org.openrdf.model.Value;
+
 /**
- * <p>Stub interface (for now) for specifying the query language dialect supported by a data source.</p>
+ * <p>Interface for specifying the query language dialect supported by a data source and providing language specific
+ * opterations such as validation, and serialization.</p>
  *
  * @author Michael Grove
  * @since 0.1
+ * @version 0.6.3
+ *
+ * @see com.clarkparsia.empire.impl.RdfQuery
+ * @see QueryFactory
  * @see DataSource
  */
 public interface Dialect {
+
+	/**
+	 * Return the Value object in a properly encoded query string for the supported query language
+	 * @param theValue the value to encode
+	 * @return the value as a valid query string element.
+	 */
+	public abstract String asQueryString(Value theValue);
+
+	/**
+	 * Validate that the query fragment is valid for the query language supported
+	 * by this query dialect.
+	 * @param theQuery the query fragment
+	 * @param theProjectionVarName the name of the var used in the projection
+	 */
+	public abstract void validateQueryFormat(final String theQuery, final String theProjectionVarName);
+
+	/**
+	 * Return the variable name in a suitable format for insertion into the projection of the query
+	 * @param theVar the projection variable name
+	 * @return the projection variable in the correct syntax to be inserted into the project clause of the query
+	 */
+	public abstract String asProjectionVar(String theVar);
+
+	/**
+	 * Return the keyword that denotes the start of graph patterns in the query.
+	 * @return the pattern keyword for the language represented by this query
+	 */
+	public abstract String patternKeyword();
+
+	/**
+	 * Insert all of the global namespaces into the query string so that declared namespace prefixes are available
+	 * in all queries.
+	 * @param theBuffer the buffer containing the current, complete query without namespaces.
+	 */
+	public abstract void insertNamespaces(StringBuffer theBuffer);
 }

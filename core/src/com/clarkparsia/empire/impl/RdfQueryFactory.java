@@ -18,6 +18,7 @@ package com.clarkparsia.empire.impl;
 import com.clarkparsia.empire.DataSource;
 import com.clarkparsia.empire.QueryFactory;
 import com.clarkparsia.empire.Empire;
+import com.clarkparsia.empire.Dialect;
 
 import javax.persistence.Query;
 import javax.persistence.NamedQuery;
@@ -34,11 +35,16 @@ import java.util.Collection;
  * @author Michael Grove
  * @since 0.1
  */
-public abstract class AbstractQueryFactory<T extends RdfQuery> implements QueryFactory {
+public class RdfQueryFactory implements QueryFactory {
 	/**
 	 * the data source the queries will be executed against
 	 */
 	private DataSource mSource;
+
+	/**
+	 * The query language dialect supported by this factory
+	 */
+	private Dialect mDialect;
 
 	/**
 	 * User-defined NamedQueries.  The actual queries are evaluated on-demand, we'll just keep the annotations which
@@ -49,9 +55,11 @@ public abstract class AbstractQueryFactory<T extends RdfQuery> implements QueryF
 	/**
 	 * Create a new AbstractQueryFactory
 	 * @param theSource the data source the queries will be executed against
+	 * @param theDialect the Query dialect supporte by this query factory
 	 */
-	protected AbstractQueryFactory(final DataSource theSource) {
+	public RdfQueryFactory(final DataSource theSource, Dialect theDialect) {
 		mSource = theSource;
+		mDialect = theDialect;
 
 		Collection<Class<?>> aClasses = Empire.get().getAnnotationProvider().getClassesWithAnnotation(NamedQuery.class);
 		for (Class<?> aClass :  aClasses) {
@@ -66,7 +74,10 @@ public abstract class AbstractQueryFactory<T extends RdfQuery> implements QueryF
 	 * @param theQuery the query string
 	 * @return a new query
 	 */
-	protected abstract T newQuery(String theQuery);
+	protected RdfQuery newQuery(String theQuery) {
+		// TODO: maybe just directly pass in the dialect to the query object?
+		return new RdfQuery(mSource, theQuery);
+	}
 
 	/**
 	 * Return the data source the queries will be executed against
@@ -88,6 +99,13 @@ public abstract class AbstractQueryFactory<T extends RdfQuery> implements QueryF
 	/**
 	 * @inheritDoc
 	 */
+	public Dialect getDialect() {
+		return mDialect;
+	}
+
+	/**
+	 * @inheritDoc
+	 */
 	public Query createQuery(final String theQueryString) {
 		return newQuery(theQueryString);
 	}
@@ -99,7 +117,7 @@ public abstract class AbstractQueryFactory<T extends RdfQuery> implements QueryF
 		if (mNamedQueries.containsKey(theName)) {
 			NamedQuery aNamedQuery = mNamedQueries.get(theName);
 
-			T aQuery = newQuery(aNamedQuery.query());
+			RdfQuery aQuery = newQuery(aNamedQuery.query());
 			for (QueryHint aHint : aNamedQuery.hints()) {
 				aQuery.setHint(aHint.name(), aHint.value());
 			}
@@ -124,7 +142,8 @@ public abstract class AbstractQueryFactory<T extends RdfQuery> implements QueryF
 	 * @inheritDoc
 	 */
 	public Query createNativeQuery(final String theQueryString, final Class theResultClass) {
-		T aQuery = newQuery(theQueryString);
+		RdfQuery aQuery = newQuery(theQueryString);
+
 		aQuery.setBeanClass(theResultClass);
 
 		return aQuery;

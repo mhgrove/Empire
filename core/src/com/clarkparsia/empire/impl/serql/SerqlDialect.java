@@ -16,12 +16,19 @@
 package com.clarkparsia.empire.impl.serql;
 
 import com.clarkparsia.empire.Dialect;
+import com.clarkparsia.empire.impl.RdfQuery;
+import com.clarkparsia.openrdf.query.SesameQueryUtils;
+import com.clarkparsia.utils.NamespaceUtils;
+import org.openrdf.model.Value;
+import org.openrdf.query.parser.serql.SeRQLParserFactory;
+import org.openrdf.query.MalformedQueryException;
 
 /**
  * <p>Represents the SERQL query language</p>
  *
  * @author Michael Grove
  * @since 0.1
+ * @version 0.6.3
  */
 public class SerqlDialect implements Dialect {
 	/**
@@ -45,5 +52,78 @@ public class SerqlDialect implements Dialect {
 		}
 
 		return INSTANCE;
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public String asQueryString(final Value theValue) {
+		return SesameQueryUtils.getQueryString(theValue);
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public void validateQueryFormat(final String theQuery, final String theProjectionVarName) {
+		String aQuery = theQuery.toLowerCase().trim();
+		aQuery = aQuery.replaceAll(RdfQuery.VT_RE, asProjectionVar("x"));
+
+		if (!aQuery.startsWith("select") && !aQuery.startsWith("construct")) {
+            if (!aQuery.contains(patternKeyword())) {
+                aQuery = " " + patternKeyword() + " " + aQuery;
+            }
+
+			aQuery = "select " + asProjectionVar(theProjectionVarName) + " " + aQuery;
+		}
+
+		StringBuffer aBuffer = new StringBuffer(aQuery);
+
+		insertNamespaces(aBuffer);
+
+		try {
+			new SeRQLParserFactory().getParser().parseQuery(aBuffer.toString(), "");
+		}
+		catch (MalformedQueryException e) {
+			throw new IllegalArgumentException("Invalid query: " + aBuffer.toString(), e);
+		}
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public String asProjectionVar(String theName) {
+		return theName;
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public String patternKeyword() {
+		return "from";
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public void insertNamespaces(final StringBuffer theBuffer) {
+		StringBuffer aNS = new StringBuffer();
+		boolean aFirst = true;
+		for (String aPrefix : NamespaceUtils.prefixes()) {
+			if (aPrefix.trim().equals("")) {
+				continue;
+			}
+
+			if (aFirst) {
+				aNS.append("using namespace\n");
+				aFirst = false;
+			}
+			else {
+				aNS.append(",\n");
+			}
+
+			aNS.append(aPrefix).append(" = <").append(NamespaceUtils.namespace(aPrefix)).append(">");
+		}
+
+		theBuffer.append("\n").append(aNS);
 	}
 }

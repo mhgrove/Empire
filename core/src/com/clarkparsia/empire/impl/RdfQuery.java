@@ -29,7 +29,9 @@ import org.apache.log4j.LogManager;
 
 import com.clarkparsia.empire.DataSource;
 import com.clarkparsia.empire.ResultSet;
+import com.clarkparsia.empire.Dialect;
 import com.clarkparsia.empire.util.EmpireUtil;
+import static com.clarkparsia.empire.util.EmpireUtil.asPrimaryKey;
 import com.clarkparsia.empire.annotation.RdfGenerator;
 import com.clarkparsia.openrdf.ExtBindingSet;
 
@@ -50,16 +52,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * <p>Abstract implementation of the JPA {@link Query} interface for RDF based query languages.  Specific
- * query language support is left to the concrete implementations of the class.</p>
+ * <p>Implementation of the JPA {@link Query} interface for RDF based query languages.</p>
  *
  * @author Michael Grove
  * @since 0.1
- * @version 0.6.2
- * @see com.clarkparsia.empire.impl.serql.SerqlQuery
- * @see com.clarkparsia.empire.impl.sparql.SPARQLQuery
+ * @version 0.6.3
  */
-public abstract class RdfQuery implements Query {
+public class RdfQuery implements Query {
 	/**
 	 * The logger
 	 */
@@ -143,6 +142,8 @@ public abstract class RdfQuery implements Query {
 	 */
 	private Map<String, Object> mHints = new HashMap<String, Object>();
 
+	private Dialect mQueryDialect;
+
     /**
 	 * Create a new RdfQuery
 	 * @param theSource the data source the query is run against
@@ -155,42 +156,12 @@ public abstract class RdfQuery implements Query {
 
 		mQuery = theQueryString;
 
-		validateQueryFormat();
+		mQueryDialect = theSource.getQueryFactory().getDialect();
+
+		mQueryDialect.validateQueryFormat(getQueryString(), getProjectionVarName());
+
 		parseParameters();
 	}
-
-	/**
-	 * Return the Value object in a properly encoded query string for the supported query language
-	 * @param theValue the value to encode
-	 * @return the value as a valid query string element.
-	 */
-	protected abstract String asQueryString(Value theValue);
-
-	/**
-	 * Validate that the query fragment returned by {@link #getQueryString} is valid for the query language supported
-	 * by this query object.
-	 */
-	protected abstract void validateQueryFormat();
-
-	/**
-	 * Return the variable name in a suitable format for insertion into the projection of the query
-	 * @param theVar the projection variable name
-	 * @return the projection variable in the correct syntax to be inserted into the project clause of the query
-	 */
-	protected abstract String asProjectionVar(String theVar);
-
-	/**
-	 * Return the keyword that denotes the start of graph patterns in the query.
-	 * @return the pattern keyword for the language represented by this query
-	 */
-	protected abstract String patternKeyword();
-
-	/**
-	 * Insert all of the global namespaces into the query string so that declared namespace prefixes are available
-	 * in all queries.
-	 * @param theBuffer the buffer containing the current, complete query without namespaces.
-	 */
-	protected abstract void insertNamespaces(StringBuffer theBuffer);
 
 	/**
 	 * Returns the class of Java beans returned as the results of the executed query.  When no bean class is specified,
@@ -346,7 +317,7 @@ public abstract class RdfQuery implements Query {
 
 						if (aBinding.getValue(aVarName) instanceof URI && EmpireUtil.isEmpireCompatible(getBeanClass())) {
 							aObj = RdfGenerator.fromRdf(getBeanClass(),
-														java.net.URI.create(aBinding.getURI(aVarName).toString()),
+														asPrimaryKey(aBinding.getValue(aVarName)),
 														getSource());
                         }
                         else {
@@ -622,12 +593,12 @@ public abstract class RdfQuery implements Query {
 		String aBuffer = theQuery;
 
 		for (String aName : mNamedParameters.keySet()) {
-			aBuffer = aBuffer.replaceAll(VT_RE + aName, asQueryString(mNamedParameters.get(aName)));
+			aBuffer = aBuffer.replaceAll(VT_RE + aName, mQueryDialect.asQueryString(mNamedParameters.get(aName)));
 		}
 
 		int aIndex = 1;
 		while (aBuffer.indexOf(VARIABLE_TOKEN) != -1) {
-			aBuffer = aBuffer.replaceFirst(VT_RE, asQueryString(mIndexedParameters.get(aIndex++)));
+			aBuffer = aBuffer.replaceFirst(VT_RE, mQueryDialect.asQueryString(mIndexedParameters.get(aIndex++)));
 		}
 
 		return aBuffer;
@@ -678,8 +649,8 @@ public abstract class RdfQuery implements Query {
 
 		StringBuffer aQuery = new StringBuffer(insertVariables(getQueryString()).trim());
 
-        if (!aQuery.toString().startsWith(patternKeyword()) && !aQuery.toString().startsWith("select") && !aQuery.toString().startsWith("construct")) {
-            aQuery.insert(0, patternKeyword());
+        if (!aQuery.toString().startsWith(mQueryDialect.patternKeyword()) && !aQuery.toString().startsWith("select") && !aQuery.toString().startsWith("construct")) {
+            aQuery.insert(0, mQueryDialect.patternKeyword());
         }
 
         StringBuffer aStart = new StringBuffer();
@@ -689,7 +660,7 @@ public abstract class RdfQuery implements Query {
 				aStart.append(" * ");
 			}
 			else {
-				aStart.append(asProjectionVar(getProjectionVarName())).append(" ");
+				aStart.append(mQueryDialect.asProjectionVar(getProjectionVarName())).append(" ");
 			}
 		}
 
@@ -703,7 +674,7 @@ public abstract class RdfQuery implements Query {
 			aQuery.append(" offset ").append(getFirstResult());
 		}
 
-		insertNamespaces(aQuery);
+		mQueryDialect.insertNamespaces(aQuery);
 
 		return aQuery.toString();
 	}

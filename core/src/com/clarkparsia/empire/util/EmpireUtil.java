@@ -3,19 +3,21 @@ package com.clarkparsia.empire.util;
 import com.clarkparsia.empire.annotation.RdfsClass;
 import com.clarkparsia.empire.annotation.NamedGraph;
 import com.clarkparsia.empire.annotation.SupportsRdfIdImpl;
+import com.clarkparsia.empire.annotation.RdfGenerator;
 import com.clarkparsia.empire.SupportsRdfId;
 import com.clarkparsia.empire.QueryException;
 import com.clarkparsia.empire.DataSource;
 import com.clarkparsia.empire.SupportsNamedGraphs;
 import com.clarkparsia.empire.Empire;
 import com.clarkparsia.empire.ResultSet;
+import com.clarkparsia.empire.Dialect;
 import com.clarkparsia.empire.impl.serql.SerqlDialect;
 import com.clarkparsia.empire.impl.sparql.SPARQLDialect;
 import com.clarkparsia.openrdf.query.builder.QueryBuilder;
 import com.clarkparsia.openrdf.query.builder.QueryBuilderFactory;
 import com.clarkparsia.openrdf.query.sparql.SPARQLQueryRenderer;
 import com.clarkparsia.openrdf.query.serql.SeRQLQueryRenderer;
-import com.clarkparsia.openrdf.query.SesameQueryUtils;
+
 import com.clarkparsia.utils.NamespaceUtils;
 import com.clarkparsia.utils.BasicUtils;
 
@@ -25,10 +27,13 @@ import javax.persistence.PersistenceException;
 
 import org.openrdf.model.Graph;
 import org.openrdf.model.Resource;
+import org.openrdf.model.BNode;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.impl.GraphImpl;
 import org.openrdf.model.impl.ValueFactoryImpl;
+
 import org.openrdf.query.parser.ParsedTupleQuery;
+
 import org.apache.log4j.Logger;
 import org.apache.log4j.LogManager;
 
@@ -93,17 +98,22 @@ public class EmpireUtil {
 			}
 		}
 
+		Dialect aDialect = theSource.getQueryFactory().getDialect();
+
+		Resource aResource = asResource(asSupportsRdfId(theObj));
+
 		String aSPARQL = "construct {?s ?p ?o}\n" +
 						 (aNG == null ? "" : "from <" + aNG + ">\n") +
-						 "where {?s ?p ?o. filter(?s = " + SesameQueryUtils.getQueryString(asResource(asSupportsRdfId(theObj))) + ") }";
+						 "where {?s ?p ?o. filter(?s = " + aDialect.asQueryString(aResource) + ") }";
+
 
 		String aSeRQL = "construct {s} p {o}\n" +
 						 (aNG == null ? "from\n" : "from context <" + aNG + ">\n") +
-						 "{s} p {o} where s = " + SesameQueryUtils.getQueryString(asResource(asSupportsRdfId(theObj))) + "";
+						 "{s} p {o} where s = " + aDialect.asQueryString(aResource) + "";
 
 		Graph aGraph;
 
-		if (theSource.getQueryFactory().getDialect().equals(SerqlDialect.instance())) {
+		if (theSource.getQueryFactory().getDialect() instanceof SerqlDialect) {
 			aGraph = theSource.graphQuery(aSeRQL);
 		}
 		else {
@@ -137,17 +147,19 @@ public class EmpireUtil {
 			}
 		}
 
+		Dialect aDialect = theSource.getQueryFactory().getDialect();
+
 		String aSPARQL = "select distinct ?s\n" +
 						 (aNG == null ? "" : "from <" + aNG + ">\n") +
-						 "where {?s ?p ?o. filter(?s = " + SesameQueryUtils.getQueryString(asResource(asSupportsRdfId(theObj))) + ") } limit 1";
+						 "where {?s ?p ?o. filter(?s = " + aDialect.asQueryString(asResource(asSupportsRdfId(theObj))) + ") } limit 1";
 
 		String aSeRQL = "select distinct s\n" +
 						 (aNG == null ? "from\n" : "from context <" + aNG + ">\n") +
-						 "{s} p {o} where s = " + SesameQueryUtils.getQueryString(asResource(asSupportsRdfId(theObj))) + " limit 1";
+						 "{s} p {o} where s = " + aDialect.asQueryString(asResource(asSupportsRdfId(theObj))) + " limit 1";
 
 		ResultSet aResults;
 
-		if (theSource.getQueryFactory().getDialect().equals(SerqlDialect.instance())) {
+		if (theSource.getQueryFactory().getDialect() instanceof SerqlDialect) {
 			aResults = theSource.selectQuery(aSeRQL);
 		}
 		else {
@@ -203,8 +215,11 @@ public class EmpireUtil {
 		else if (theObj instanceof java.net.URI) {
 			return new SupportsRdfIdImpl(new SupportsRdfId.URIKey( (java.net.URI) theObj));
 		}
-		else {
+		else if (theObj instanceof SupportsRdfId) {
 			return (SupportsRdfId) theObj;
+		}
+		else {
+			return new SupportsRdfIdImpl(asPrimaryKey(theObj.toString()));
 		}
 	}
 
@@ -293,6 +308,11 @@ public class EmpireUtil {
 
 		RdfsClass aClass = theClass.getAnnotation(RdfsClass.class);
 
+		// this init should be handled by the static block in RdfGenerator, but if there is no annotation index,
+		// or RdfGenerator has not been referenced, the namespace stuff will not have been initialized.  so we'll
+		// call this here as a backup.
+		RdfGenerator.addNamespaces(theClass);
+
 		QueryBuilder<ParsedTupleQuery> aQuery = QueryBuilderFactory.select("result").distinct()
 				.group().atom("result", RDF.TYPE, ValueFactoryImpl.getInstance().createURI(NamespaceUtils.uri(aClass.value()))).closeGroup();
 
@@ -300,10 +320,10 @@ public class EmpireUtil {
 
 		try {
 			DataSource aSource = (DataSource) theManager.getDelegate();
-			if (aSource.getQueryFactory().getDialect().equals(SPARQLDialect.instance())) {
+			if (aSource.getQueryFactory().getDialect() instanceof SPARQLDialect) {
 				aQueryStr = new SPARQLQueryRenderer().render(aQuery.query());
 			}
-			else if (aSource.getQueryFactory().getDialect().equals(SerqlDialect.instance())) {
+			else if (aSource.getQueryFactory().getDialect() instanceof SerqlDialect) {
 				aQueryStr = new SeRQLQueryRenderer().render(aQuery.query());
 			}
 		}
@@ -343,6 +363,12 @@ public class EmpireUtil {
 			}
 			else if (theObj instanceof URL) {
 				return new SupportsRdfId.URIKey(((URL) theObj).toURI());
+			}
+			else if (theObj instanceof org.openrdf.model.URI) {
+				return new SupportsRdfId.URIKey( URI.create( ((org.openrdf.model.URI) theObj).stringValue()) );
+			}
+			else if (theObj instanceof org.openrdf.model.BNode) {
+				return new SupportsRdfId.BNodeKey( ((BNode) theObj).getID() );
 			}
 			else {
 				if (BasicUtils.isURI(theObj.toString())) {

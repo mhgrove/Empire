@@ -94,41 +94,39 @@ public class RepositoryDataSourceFactory implements DataSourceFactory {
 
 		try {
 
-		if (aURL != null && aRepo != null) {
-			aRepository = new HTTPRepository(aURL.toString(), aRepo.toString());
+			if (aURL != null && aRepo != null) {
+				aRepository = new HTTPRepository(aURL.toString(), aRepo.toString());
 
-			aRepository.initialize();
-			
-		}
-		else if (aFiles != null) {
-			aRepository = new SailRepository(new MemoryStore());
-
-			try {
 				aRepository.initialize();
+			
+			}
+			else if (aFiles != null) {
+				aRepository = new SailRepository(new MemoryStore());
+
+				try {
+					aRepository.initialize();
 				
-				RepositoryConnection aConn = aRepository.getConnection();
+					RepositoryConnection aConn = aRepository.getConnection();
 
-				for (String aFile : BasicUtils.split(aFiles.toString(), ",")) {
-					RDFParser aParser = Rio.createParser(Rio.getParserFormatForFileName(aFile));
+					for (String aFile : BasicUtils.split(aFiles.toString(), ",")) {
+						RDFParser aParser = Rio.createParser(Rio.getParserFormatForFileName(aFile));
 
-					aParser.setRDFHandler(new SailBuilderRDFHandler(aConn));
+						aParser.setRDFHandler(new SailBuilderRDFHandler(aConn));
 
-					aParser.parse(new FileInputStream(aFile), "");
+						aParser.parse(new FileInputStream(aFile), "");
+					}
+
+					aConn.commit();
 				}
-
-				aConn.commit();
+				catch (Exception e) {
+					throw new DataSourceException(e);
+				}
 			}
-			catch (Exception e) {
-				throw new DataSourceException(e);
+			else {
+				aRepository = new SailRepository(new MemoryStore(new File(aDir.toString())));
+
+				aRepository.initialize();
 			}
-		}
-		else {
-			aRepository = new SailRepository(new MemoryStore(new File(aDir.toString())));
-
-			aRepository.initialize();
-		}
-
-
 
 			return new RepositoryDataSource(aRepository);
 		}

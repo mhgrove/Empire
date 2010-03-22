@@ -29,8 +29,9 @@ import com.clarkparsia.empire.ResultSet;
 import com.clarkparsia.empire.sesametwo.TupleQueryResultSet;
 
 import com.clarkparsia.empire.impl.AbstractDataSource;
+import com.clarkparsia.empire.impl.RdfQueryFactory;
 
-import com.clarkparsia.empire.impl.serql.SerqlQueryFactory;
+import com.clarkparsia.empire.impl.serql.SerqlDialect;
 
 import com.clarkparsia.openrdf.ExtRepository;
 import com.clarkparsia.openrdf.OpenRdfUtil;
@@ -61,7 +62,7 @@ public class TestDataSource extends AbstractDataSource implements DataSource {
 			throw new RuntimeException(e);
 		}
 
-        setQueryFactory(new SerqlQueryFactory(this));
+        setQueryFactory(new RdfQueryFactory(this, SerqlDialect.instance()));
 	}
 
 	protected ExtRepository getRepository() {

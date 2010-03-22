@@ -17,11 +17,25 @@ package com.clarkparsia.empire.impl.sparql;
 
 import com.clarkparsia.empire.Dialect;
 
+import com.clarkparsia.empire.impl.RdfQuery;
+
+import com.clarkparsia.openrdf.query.SesameQueryUtils;
+
+import com.clarkparsia.utils.NamespaceUtils;
+
+import org.openrdf.query.MalformedQueryException;
+
+import org.openrdf.query.parser.sparql.SPARQLParserFactory;
+
+import org.openrdf.model.Value;
+
 /**
  * <p>Represents the SPARQL query language.</p>
  *
  * @author Michael Grove
+ *
  * @since 0.1
+ * @version 0.6.3
  */
 public class SPARQLDialect implements Dialect {
 	/**
@@ -32,7 +46,7 @@ public class SPARQLDialect implements Dialect {
 	/**
 	 * Create a new SPARQLDialect
 	 */
-	private SPARQLDialect() {
+	protected SPARQLDialect() {
 	}
 
 	/**
@@ -45,5 +59,77 @@ public class SPARQLDialect implements Dialect {
 		}
 
 		return INSTANCE;
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public String asQueryString(final Value theValue) {
+		return SesameQueryUtils.getQueryString(theValue);
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public void validateQueryFormat(final String theQuery, final String theProjectionVarName) {
+		String aQuery = theQuery.toLowerCase().trim();
+		aQuery = aQuery.replaceAll(RdfQuery.VT_RE, asProjectionVar("x"));
+
+		if (!aQuery.startsWith("select") && !aQuery.startsWith("construct")) {
+            if (!aQuery.contains(patternKeyword())) {
+                aQuery = " " + patternKeyword() + " " + aQuery;
+            }
+
+			aQuery = "select " + asProjectionVar(theProjectionVarName) + " " + aQuery;
+		}
+
+		StringBuffer aBuffer = new StringBuffer(aQuery);
+
+		insertNamespaces(aBuffer);
+
+		try {
+			new SPARQLParserFactory().getParser().parseQuery(aBuffer.toString(), "http://example.org");
+		}
+		catch (IllegalArgumentException e) {
+			throw new IllegalArgumentException("Invalid query: " + aBuffer.toString(), e);
+		}
+		catch (MalformedQueryException e) {
+			throw new IllegalArgumentException("Invalid query: " + aBuffer.toString(), e);
+		}
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public String asProjectionVar(final String theVar) {
+		return "?" + theVar;
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public String patternKeyword() {
+		return "where";
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public void insertNamespaces(final StringBuffer theBuffer) {
+		StringBuffer aNS = new StringBuffer();
+
+		for (String aPrefix : NamespaceUtils.prefixes()) {
+			if (aPrefix.trim().equals("")) {
+				continue;
+			}
+
+			aNS.append("PREFIX ").append(aPrefix).append(": <").append(NamespaceUtils.namespace(aPrefix)).append(">\n");
+		}
+
+		if (aNS.length() > 0) {
+			aNS.append("\n");
+		}
+
+		theBuffer.insert(0, aNS);
 	}
 }

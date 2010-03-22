@@ -20,11 +20,11 @@ import com.clarkparsia.empire.MutableDataSource;
 import com.clarkparsia.empire.DataSourceException;
 import com.clarkparsia.empire.ResultSet;
 import com.clarkparsia.empire.QueryException;
-import com.clarkparsia.empire.SupportsTransactions;
 
 import com.clarkparsia.empire.impl.AbstractDataSource;
+import com.clarkparsia.empire.impl.RdfQueryFactory;
 
-import com.clarkparsia.empire.impl.serql.SerqlQueryFactory;
+import com.clarkparsia.empire.impl.serql.SerqlDialect;
 import com.clarkparsia.openrdf.util.GraphBuildingRDFHandler;
 
 import org.openrdf.model.Graph;
@@ -51,6 +51,7 @@ import java.net.URI;
  *
  * @author Michael Grove
  * @since 0.6
+ * @version 0.6.3
  */
 public class RepositoryDataSource extends AbstractDataSource implements MutableDataSource, SupportsNamedGraphs {
 
@@ -87,7 +88,7 @@ public class RepositoryDataSource extends AbstractDataSource implements MutableD
 
 		// TODO: change which query factory is used through some sort of config parameter
 		// this will require us to not hard code serql as the query language later on in the code
-		setQueryFactory(new SerqlQueryFactory(this));
+		setQueryFactory(new RdfQueryFactory(this, SerqlDialect.instance()));
 	}
 
 	/**

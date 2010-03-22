@@ -40,21 +40,6 @@ public class EmpireConfiguration {
 
 	private Map<String, Map<String, String>> mUnitConfiguration = new HashMap<String, Map<String, String>>();
 
-//	public EmpireConfiguration(final Map<String, Map<String, String>> theConfiguration) {
-//		mConfiguration = theConfiguration;
-//	}
-//
-//	public EmpireConfiguration(final String theUnit, final Map<String, String> theConfig) {
-//		mConfiguration.put(theUnit, theConfig);
-//	}
-//
-//	public EmpireConfiguration() {
-//	}
-//
-//	public Map<String, String> get(String theUnitName) {
-//		return mConfiguration.get(theUnitName);
-//	}
-
 	public EmpireConfiguration() {
 	}
 

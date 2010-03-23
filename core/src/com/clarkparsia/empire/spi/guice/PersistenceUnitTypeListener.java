@@ -21,6 +21,7 @@ import com.google.inject.spi.TypeListener;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceUnit;
+import javax.persistence.EntityManagerFactory;
 
 import java.lang.reflect.Field;
 
@@ -37,7 +38,7 @@ public class PersistenceUnitTypeListener implements TypeListener {
      */
     public <I> void hear(final TypeLiteral<I> theTypeLiteral, final TypeEncounter<I> theTypeEncounter) {
         for (Field aField : theTypeLiteral.getRawType().getDeclaredFields()) {
-            if (aField.getType() == EntityManager.class &&
+            if (aField.getType() == EntityManagerFactory.class &&
                 aField.isAnnotationPresent(PersistenceUnit.class)) {
                 theTypeEncounter.register(new PersistenceUnitInjector<I>(aField));
             }

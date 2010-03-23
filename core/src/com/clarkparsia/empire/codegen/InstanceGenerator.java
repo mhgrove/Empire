@@ -24,6 +24,8 @@ import javassist.NotFoundException;
 
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Arrays;
+import java.util.Collection;
 import java.lang.reflect.Method;
 
 import com.clarkparsia.empire.SupportsRdfId;
@@ -53,14 +55,21 @@ public class InstanceGenerator {
 		// TODO: can we use some sort of template language for this?
 
 		ClassPool aPool = ClassPool.getDefault();
+
 		CtClass aInterface = aPool.get(theInterface.getName());
+		CtClass aSupportsRdfIdInterface = aPool.get(SupportsRdfId.class.getName());
+
+		if (!Arrays.asList(aInterface.getInterfaces()).contains(aSupportsRdfIdInterface)) {
+			throw new IllegalArgumentException("Class does not implement SupportsRdfId, cannot generate Empire suitable implementation.");
+		}
 
 		String aName = aInterface.getPackageName()+ ".impl." + aInterface.getSimpleName() + "Impl";
 		CtClass aClass = null;
 		
 		try {
+			//  i had a good reason for doing this, but i dont remember what it is.  when i do, i'll explain it here =)
+			
 			aClass = aPool.get(aName);
-//			return (Class<T>) aClass.toClass();
 			return (Class<T>) Class.forName(aName);
 		}
 		catch (NotFoundException e) {
@@ -75,7 +84,7 @@ public class InstanceGenerator {
 		}
 
 		aClass.addInterface(aInterface);
-		aClass.addInterface(aPool.get(SupportsRdfId.class.getName()));
+		aClass.addInterface(aSupportsRdfIdInterface);
 
 		aClass.addConstructor(CtNewConstructor.defaultConstructor(aClass));
 
@@ -141,9 +150,9 @@ public class InstanceGenerator {
 
 		for (Method aMethod : theClass.getDeclaredMethods()) {
 			if (!aMethod.getName().startsWith("get") && !aMethod.getName().startsWith("is") && !aMethod.getName().startsWith("set")) {
-				continue;
-
+				throw new IllegalArgumentException("Non-bean style methods found, implementations for them cannot not be generated");
 			}
+
 			String aProp = aMethod.getName().substring(aMethod.getName().startsWith("is") ? 2 : 3);
 
 			aProp = String.valueOf(aProp.charAt(0)).toLowerCase() + aProp.substring(1);

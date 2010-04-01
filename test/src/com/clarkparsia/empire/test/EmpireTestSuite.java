@@ -35,11 +35,12 @@ import org.junit.AfterClass;
  * <p>Empire test suite.</p>
  *
  * @author Michael Grove
- * @since 0.6
+ * @since 0.6.4
  */
 @RunWith(Suite.class)
-@Suite.SuiteClasses({TestRdfConvert.class, TestJPA.class, TestSPI.class, TestMisc.class})
+@Suite.SuiteClasses({TestRdfConvert.class, TestJPA.class, TestSPI.class, TestMisc.class, TestConfig.class})
 public class EmpireTestSuite {
+
 	@BeforeClass
 	public static void beforeClass () {
 		Empire.init(new DefaultEmpireModule(), new OpenRdfEmpireModule(), new FourStoreEmpireModule(),

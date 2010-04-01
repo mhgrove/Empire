@@ -39,7 +39,7 @@ import org.apache.log4j.LogManager;
  *
  * @author Michael Grove
  * @since 0.6.2
- * @version 0.6.2
+ * @version 0.6.4
  * @see EmpireConfiguration
  */
 public class PropertiesConfigReader implements ConfigReader, ConfigKeys {
@@ -65,7 +65,13 @@ public class PropertiesConfigReader implements ConfigReader, ConfigKeys {
 	public EmpireConfiguration read(Reader theReader) throws IOException {
 		Properties aProps = new EnhancedProperties();
 
-		aProps.load(theReader);
+		try {
+			aProps.load(theReader);
+		}
+		catch (Exception e) {
+			throw new IOException(e);
+		}
+
 		int aIndex = 0;
 
 		Map<String, String> aGeneralConfig = new HashMap<String, String>();

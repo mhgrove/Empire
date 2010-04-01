@@ -23,6 +23,7 @@ import com.clarkparsia.empire.Dialect;
 import javax.persistence.Query;
 import javax.persistence.NamedQuery;
 import javax.persistence.QueryHint;
+import javax.persistence.NamedQueries;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -66,6 +67,15 @@ public class RdfQueryFactory implements QueryFactory {
 			NamedQuery aNamedQuery = aClass.getAnnotation(NamedQuery.class);
 
 			addNamedQuery(aNamedQuery.name(), aNamedQuery);
+		}
+
+		aClasses = Empire.get().getAnnotationProvider().getClassesWithAnnotation(NamedQueries.class);
+		for (Class<?> aClass : aClasses) {
+			NamedQueries aNamedQueries = aClass.getAnnotation(NamedQueries.class);
+
+			for (NamedQuery aQuery : aNamedQueries.value()) {
+				addNamedQuery(aQuery.name(), aQuery);
+			}
 		}
 	}
 

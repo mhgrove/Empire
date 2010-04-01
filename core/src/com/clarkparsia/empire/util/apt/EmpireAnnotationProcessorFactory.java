@@ -49,6 +49,7 @@ import java.io.OutputStream;
 import com.clarkparsia.empire.annotation.RdfsClass;
 
 import javax.persistence.NamedQuery;
+import javax.persistence.NamedQueries;
 
 /**
  * <p>Implementation of an APT-based annotation processor to pull out Annotation information
@@ -86,7 +87,8 @@ public class EmpireAnnotationProcessorFactory implements AnnotationProcessorFact
 	 */
 	public Collection<String> supportedAnnotationTypes() {
 		return Arrays.asList(RdfsClass.class.getName(),
-							 NamedQuery.class.getName());
+							 NamedQuery.class.getName(),
+							 NamedQueries.class.getName());
 	}
 
 	/**

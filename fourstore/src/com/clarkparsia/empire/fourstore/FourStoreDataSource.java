@@ -55,7 +55,7 @@ import static com.clarkparsia.openrdf.OpenRdfUtil.toIterator;
  *
  * @author Michael Grove
  * @since 0.1
- * @version 0.6.3
+ * @version 0.6.4
  */
 public class FourStoreDataSource extends AbstractDataSource implements MutableDataSource, SupportsNamedGraphs {
 	/**
@@ -82,15 +82,23 @@ public class FourStoreDataSource extends AbstractDataSource implements MutableDa
 	 * @inheritDoc
 	 */
 	public void add(final Graph theGraph) throws DataSourceException {
-		// limitation of 4store: http://4store.org/trac/wiki/TODO
-		throw new UnsupportedOperationException("Adding single triples, or graphs of triples is not supported, only adds to named graphs are supported");
+		try {
+			mStore.add(theGraph, null);
+		}
+		catch (StoreException e) {
+			throw new DataSourceException(e);
+		}
 	}
 	/**
 	 * @inheritDoc
 	 */
 	public void remove(final Graph theGraph) throws DataSourceException {
-		// limitation of 4store: http://4store.org/trac/wiki/TODO
-		throw new UnsupportedOperationException("Removing single triples, or graphs of triples is not supported, only named graph removal is supported");
+		try {
+			mStore.delete(theGraph, null);
+		}
+		catch (StoreException e) {
+			throw new DataSourceException(e);
+		}
 	}
 
 	/**

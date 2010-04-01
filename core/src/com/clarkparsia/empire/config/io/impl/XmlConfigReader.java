@@ -59,7 +59,6 @@ public class XmlConfigReader implements ConfigReader {
 	private static final String NODE_NAME = "name";
 	private static final String NODE_FACTORY = "factory";
 
-
 	/**
 	 * @inheritDoc
 	 */

@@ -31,14 +31,12 @@ import org.openrdf.model.vocabulary.XMLSchema;
 import org.openrdf.model.vocabulary.RDFS;
 
 import java.lang.reflect.Type;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 
 import java.lang.reflect.Field;
@@ -52,9 +50,8 @@ import java.lang.annotation.Annotation;
 
 import java.util.Map;
 import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
 import java.util.Iterator;
+import java.net.URISyntaxException;
 
 import com.clarkparsia.utils.BasicUtils;
 import com.clarkparsia.utils.Function;
@@ -91,7 +88,6 @@ import static com.clarkparsia.empire.util.EmpireUtil.asPrimaryKey;
 import com.clarkparsia.openrdf.util.ResourceBuilder;
 import com.clarkparsia.openrdf.util.GraphBuilder;
 import com.clarkparsia.openrdf.ExtGraph;
-import com.clarkparsia.openrdf.query.SesameQueryUtils;
 
 import com.google.inject.ProvisionException;
 import com.google.inject.ConfigurationException;
@@ -701,7 +697,7 @@ public class RdfGenerator {
 			}
 			else if (Collection.class.isAssignableFrom(classFrom(mField))) {
 				try {
-					Collection<Object> aValues = instantiateCollectionFromField(classFrom(mField));
+					Collection<Object> aValues = BeanReflectUtil.instantiateCollectionFromField(classFrom(mField));
 
 					for (Value aValue : theIn) {
 						Object aListValue = valueToObject.apply(aValue);
@@ -812,38 +808,6 @@ public class RdfGenerator {
 		return aClass;
 	}
 
-	private static Collection<Object> instantiateCollectionFromField(Class theValueType) {
-		try {
-			// try creating a new instance.  this will work if they've specified a concrete type
-			return (Collection<Object>) theValueType.newInstance();
-		}
-		catch (Throwable e) {
-			// TODO: make this less brittle -- should we have some sort of facade collection or something in front
-			// that we generate at runtime?  or is there a better way to handle this situation?
-
-			// if the above failed, that means the type of the field is something like List, or Set, which is not
-			// directly instantiable.  If it's a known type, we'll hand instantiate something here.
-			if (List.class.isAssignableFrom(theValueType)) {
-				return new ArrayList<Object>();
-			}
-			else if (Set.class.isAssignableFrom(theValueType)) {
-				if (SortedSet.class.isAssignableFrom(theValueType)) {
-					return new TreeSet<Object>();
-				}
-				else {
-					return new LinkedHashSet<Object>();
-				}
-			}
-			else if (Collection.class.equals(theValueType)) {
-				return new LinkedHashSet<Object>();
-			}
-			else {
-				// last option is Map, but i dunno what the hell to do in that case, it doesn't map to our use here.
-				throw new RuntimeException("Unknown or unsupported collection type for a field: " + theValueType);
-			}
-		}
-	}
-
 	public static class ValueToObject implements Function<Value, Object> {
 		static final List<URI> integerTypes = Arrays.asList(XMLSchema.INT, XMLSchema.INTEGER, XMLSchema.POSITIVE_INTEGER,
 													  XMLSchema.NEGATIVE_INTEGER, XMLSchema.NON_NEGATIVE_INTEGER,
@@ -898,7 +862,13 @@ public class RdfGenerator {
 					return Byte.valueOf(aLit.getLabel());
 				}
 				else if (XMLSchema.ANYURI.equals(aDatatype)) {
-					return java.net.URI.create(aLit.getLabel());
+					try {
+						return new java.net.URI(aLit.getLabel());
+					}
+					catch (URISyntaxException e) {
+						LOGGER.warn("URI syntax exception converting literal value which is not a valid URI: " + aLit.getLabel());
+						return null;
+					}
 				}
 				else if (XMLSchema.DATE.equals(aDatatype) || XMLSchema.DATETIME.equals(aDatatype)) {
 					return BasicUtils.asDate(aLit.getLabel());
@@ -975,54 +945,6 @@ public class RdfGenerator {
 					else {
 						return getProxyOrDbObject(aClass, java.net.URI.create(aURI.toString()), mSource);
 					}
-
-//					if (aClass.isAssignableFrom(java.net.URI.class)) {
-//						return java.net.URI.create(aURI.toString());
-//					}
-//					else if (Collection.class.isAssignableFrom(aClass)) {
-//						// if the field we're assigning from is a collection, try and figure out the type of the thing
-//						// we're creating from the collection
-//
-//						Type[] aTypes = null;
-//
-//						if (mAccessor instanceof Field && ((Field)mAccessor).getGenericType() instanceof ParameterizedType) {
-//							aTypes = ((ParameterizedType) ((Field)mAccessor).getGenericType()).getActualTypeArguments();
-//						}
-//						else if (mAccessor instanceof Method) {
-//							aTypes = ((Method) mAccessor).getGenericParameterTypes();
-//						}
-//
-//						if (aTypes != null && aTypes.length >= 1) {
-//							// first type argument to a collection is usually the one we care most about
-//							if (aTypes[0] instanceof ParameterizedType && ((ParameterizedType)aTypes[0]).getActualTypeArguments().length > 0) {
-//								aClass = (Class) ((ParameterizedType)aTypes[0]).getActualTypeArguments()[0];
-//							}
-//							else if (aTypes[0] instanceof Class) {
-//								aClass = (Class) aTypes[0];
-//							}
-//						}
-//					}
-//
-//					if (!BeanReflectUtil.hasAnnotation(aClass, RdfsClass.class)) {
-//						// k, so either the parameter of the collection or the declared type of the field does
-//						// not map to an instance/bean type.  this is most likely an error, but lets try and find
-//						// the rdf:type of the field, and see if we can map that to a class in the path and we'll
-//						// create an instance of that.  that will work, and pushes the likely failure back off to
-//						// the assignment of the created instance
-//
-//						URI aType = getType(mSource, aURI);
-//
-//						// k, so now we know the type, if we can match the type to a class then we're in business
-//						if (aType != null) {
-//							Class aTypeClass = TYPE_TO_CLASS.get(aType);
-//							if (aTypeClass != null && BeanReflectUtil.hasAnnotation(aTypeClass, RdfsClass.class)) {
-//								// lets try this one
-//								aClass = aTypeClass;
-//							}
-//						}
-//					}
-//
-//					return getProxyOrDbObject(aClass, java.net.URI.create(aURI.toString()), mSource);
 				}
 				catch (Exception e) {
 					throw new RuntimeException(e);
@@ -1109,23 +1031,12 @@ public class RdfGenerator {
 		}
 	}
 
-	/**
-	 * Return whether or not the given object is a Java primitive type (String is included as a primitive).
-	 * @param theObj the object
-	 * @return true if its a primitive, false otherwise.
-	 */
-    public static boolean isPrimitive(Object theObj) {
-        return (Boolean.class.isInstance(theObj) || Integer.class.isInstance(theObj) || Long.class.isInstance(theObj)
-                || Short.class.isInstance(theObj) || Double.class.isInstance(theObj) || Float.class.isInstance(theObj)
-                || Date.class.isInstance(theObj) || String.class.isInstance(theObj) || Character.class.isInstance(theObj));
-    }
-
 	public static class AsValueFunction implements Function<Object, Value> {
 		public Value apply(final Object theIn) {
 			if (theIn == null) {
 				return null;
 			}
-            else if (!EmpireOptions.STRONG_TYPING && isPrimitive(theIn)) {
+            else if (!EmpireOptions.STRONG_TYPING && BeanReflectUtil.isPrimitive(theIn)) {
                 return FACTORY.createLiteral(theIn.toString());
             }
 			else if (Boolean.class.isInstance(theIn)) {

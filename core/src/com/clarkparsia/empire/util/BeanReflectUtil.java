@@ -28,6 +28,13 @@ import java.lang.annotation.Annotation;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
+import java.util.LinkedHashSet;
+import java.util.Date;
 
 /**
  * <p>Some utility methods which use the Java reflect stuff to do a lot of the runtime accessing of fields and methods
@@ -498,5 +505,56 @@ public class BeanReflectUtil {
         }
 
         return false;
+    }
+
+	/**
+	 * Create an instance of the specifiec collection.  If the type cannot be instantiated directly, such as List, or Set,
+	 * we'll try and figure out which type of collection is desired and return the standard implementation for
+	 * that type, for example ArrayList or HashSet.
+	 * @param theValueType the type of collection to instantiate
+	 * @return the instantiated collection
+	 * @throws RuntimeException if there is no way to instantiate any matching collection
+	 */
+	public static Collection<Object> instantiateCollectionFromField(Class theValueType) {
+		try {
+			// try creating a new instance.  this will work if they've specified a concrete type
+			return (Collection<Object>) theValueType.newInstance();
+		}
+		catch (Throwable e) {
+			// TODO: make this less brittle -- should we have some sort of facade collection or something in front
+			// that we generate at runtime?  or is there a better way to handle this situation?
+
+			// if the above failed, that means the type of the field is something like List, or Set, which is not
+			// directly instantiable.  If it's a known type, we'll hand instantiate something here.
+			if (List.class.isAssignableFrom(theValueType)) {
+				return new ArrayList<Object>();
+			}
+			else if (Set.class.isAssignableFrom(theValueType)) {
+				if (SortedSet.class.isAssignableFrom(theValueType)) {
+					return new TreeSet<Object>();
+				}
+				else {
+					return new LinkedHashSet<Object>();
+				}
+			}
+			else if (Collection.class.equals(theValueType)) {
+				return new LinkedHashSet<Object>();
+			}
+			else {
+				// last option is Map, but i dunno what the hell to do in that case, it doesn't map to our use here.
+				throw new RuntimeException("Unknown or unsupported collection type for a field: " + theValueType);
+			}
+		}
+	}
+
+	/**
+	 * Return whether or not the given object is a Java primitive type (String is included as a primitive).
+	 * @param theObj the object
+	 * @return true if its a primitive, false otherwise.
+	 */
+    public static boolean isPrimitive(Object theObj) {
+        return (Boolean.class.isInstance(theObj) || Integer.class.isInstance(theObj) || Long.class.isInstance(theObj)
+                || Short.class.isInstance(theObj) || Double.class.isInstance(theObj) || Float.class.isInstance(theObj)
+                || Date.class.isInstance(theObj) || String.class.isInstance(theObj) || Character.class.isInstance(theObj));
     }
 }

@@ -69,6 +69,7 @@ import javax.persistence.Transient;
  * <p>Test cases for classes in the com.clarkparsia.empire.annotation package.</p>
  *
  * @author Michael Grove
+ * @since 0.1
  */
 public class TestRdfConvert {
 	// TODO: tests for properties whose values are serialized as rdf:List's
@@ -79,8 +80,6 @@ public class TestRdfConvert {
     @BeforeClass
     public static void beforeClass() {
         EmpireOptions.STRONG_TYPING = true;
-
-//		TestUtil.initEmpire();
     }
     
 	@Test(expected=InvalidRdfException.class)

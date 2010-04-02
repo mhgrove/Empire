@@ -17,19 +17,21 @@ package com.clarkparsia.empire.test.api.nasa;
 
 import com.clarkparsia.empire.annotation.Namespaces;
 import com.clarkparsia.empire.annotation.RdfsClass;
-import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.NamedGraph;
+import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.test.api.BaseTestClass;
+import com.clarkparsia.utils.collections.CollectionUtil;
+import com.clarkparsia.utils.BasicUtils;
 
 import javax.persistence.Entity;
-import javax.persistence.OneToOne;
+import javax.persistence.FetchType;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.CascadeType;
+import javax.persistence.OneToOne;
 
 import java.util.List;
 import java.util.ArrayList;
-
-import com.clarkparsia.utils.BasicUtils;
-import com.clarkparsia.utils.collections.CollectionUtil;
 
 /**
  * <p></p>
@@ -40,9 +42,13 @@ import com.clarkparsia.utils.collections.CollectionUtil;
 @Entity
 @RdfsClass("Launch")
 @NamedGraph(type = NamedGraph.NamedGraphType.Instance)
-public class Launch extends BaseTestClass {
+
+public class LaunchUsingProxy extends BaseTestClass {
+	
 	@RdfProperty("spacecraft")
-	private List<Spacecraft> spacecraft = new ArrayList<Spacecraft>();
+	@OneToMany(targetEntity=Spacecraft.class, fetch=FetchType.LAZY,
+			   cascade={CascadeType.REMOVE})
+	private List spacecraft = new ArrayList<Spacecraft>();
 
 	@RdfProperty("launched")
 	private String launched;
@@ -51,9 +57,12 @@ public class Launch extends BaseTestClass {
 	private List<String> launchvehicle;
 
 	@RdfProperty("launchsite")
+	@ManyToOne(fetch=FetchType.LAZY,
+			   cascade={CascadeType.ALL})
 	private LaunchSite launchSite;
 
 	@RdfProperty("spacecraftOther")
+	@OneToOne(cascade={CascadeType.PERSIST, CascadeType.MERGE})
 	private Spacecraft otherSpacecraft;
 
 	public Spacecraft getOtherSpacecraft() {
@@ -64,7 +73,7 @@ public class Launch extends BaseTestClass {
 		otherSpacecraft = theOtherSpacecraft;
 	}
 
-	public List<Spacecraft> getSpacecraft() {
+	public List getSpacecraft() {
 		return spacecraft;
 	}
 

@@ -38,7 +38,8 @@ import org.junit.AfterClass;
  * @since 0.6.4
  */
 @RunWith(Suite.class)
-@Suite.SuiteClasses({TestRdfConvert.class, TestJPA.class, TestSPI.class, TestMisc.class, TestConfig.class})
+@Suite.SuiteClasses({TestRdfConvert.class, TestJPA.class, TestSPI.class, TestMisc.class,
+					 TestConfig.class, TestProxyFetchAndCascade.class})
 public class EmpireTestSuite {
 
 	@BeforeClass

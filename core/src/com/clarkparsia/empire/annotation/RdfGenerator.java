@@ -46,8 +46,6 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Modifier;
 
-import java.lang.annotation.Annotation;
-
 import java.util.Map;
 import java.util.Set;
 import java.util.Iterator;
@@ -121,7 +119,7 @@ import javassist.util.proxy.MethodHandler;
  *
  * @author Michael Grove
  * @since 0.1
- * @version 0.6.3
+ * @version 0.6.4
  */
 public class RdfGenerator {
 
@@ -297,7 +295,7 @@ public class RdfGenerator {
 
 		CollectionUtil.each(aMethods, new AbstractDataCommand<Method>() {
 			public void execute() {
-				RdfProperty aAnnotation = getAnnotation(getData(), RdfProperty.class);
+				RdfProperty aAnnotation = BeanReflectUtil.getAnnotation(getData(), RdfProperty.class);
 				if (aAnnotation != null) {
 					aAccessMap.put(FACTORY.createURI(NamespaceUtils.uri(aAnnotation.value())),
 								   getData());
@@ -359,6 +357,8 @@ public class RdfGenerator {
 				// this is "likely" to happen.  we'll get this exception if the rdf does not match the java.  for example
 				// if something is specified to be an int in the java class, but it typed as a float (though down conversion
 				// in that case might work) the set call will fail.
+				// TODO: shouldnt this be an error?
+				LOGGER.warn("Probable type mismatch: " + aValue + " " + aAccess);
 			}
 			catch (RuntimeException e) {
 				// TODO: i dont like keying on a RuntimeException here to get the error condition, but since the
@@ -386,7 +386,7 @@ public class RdfGenerator {
 	 * @throws InvalidRdfException thrown if the object does not have the required annotation, does not have an @Entity
 	 * annotation, or does not {@link SupportsRdfId support Rdf Id's}
 	 */
-	private static RdfsClass asRdfClass(Object theObj) throws InvalidRdfException {
+	private static RdfsClass asValidRdfClass(Object theObj) throws InvalidRdfException {
 		if (theObj.getClass().getAnnotation(RdfsClass.class) == null) {
 			throw new InvalidRdfException("Specified value is not an RdfsClass object");
 		}
@@ -428,7 +428,6 @@ public class RdfGenerator {
 		SupportsRdfId aSupport = asSupportsRdfId(theObj);
 
 		if (aSupport.getRdfId() != null) {
-			//return FACTORY.createURI(aSupport.getRdfId().toString());
 			return EmpireUtil.asResource(aSupport);
 		}
 
@@ -513,7 +512,7 @@ public class RdfGenerator {
 	 * @throws InvalidRdfException thrown if the object cannot be transformed into RDF.
 	 */
 	public static ExtGraph asRdf(Object theObj) throws InvalidRdfException {
-		RdfsClass aClass = asRdfClass(theObj);
+		RdfsClass aClass = asValidRdfClass(theObj);
 
 		Resource aSubj = id(theObj);
 
@@ -540,7 +539,7 @@ public class RdfGenerator {
 					continue;
 				}
 
-				RdfProperty aPropertyAnnotation = getAnnotation(aAccess, RdfProperty.class);
+				RdfProperty aPropertyAnnotation = BeanReflectUtil.getAnnotation(aAccess, RdfProperty.class);
 				URI aProperty = aBuilder.getValueFactory().createURI(NamespaceUtils.uri(aPropertyAnnotation.value()));
 
 				boolean aOldAccess = aAccess.isAccessible();
@@ -589,63 +588,6 @@ public class RdfGenerator {
 	}
 
 	/**
-	 * Return the Annotation of the specified type on the accessor, either a {@link Field} or a {@link Method}
-	 * @param theAccess the accessor
-	 * @param theAnnotation the annotation to get
-	 * @param <T> the type of annotation to retrieve
-	 * @return the value of the annotation on the accessor, or null if one is not found, or the accessor is not a Field or Method.
-	 */
-	private static <T extends Annotation> T getAnnotation(Object theAccess, Class<T> theAnnotation) {
-		if (theAccess instanceof Field) {
-			return ((Field)theAccess).getAnnotation(theAnnotation);
-		}
-		else if (theAccess instanceof Method) {
-			Method aMethod = (Method) theAccess;
-			T aAnnotation = aMethod.getAnnotation(theAnnotation);
-
-			if (aAnnotation == null) {
-				// if this is the case, it might be that this is from an "inferred" method.  so let's check it's twin,
-				// either a getter or setter to see if it has the annotation.  If not, I don't know what the hell
-				// happened
-
-				try {
-					Method aPairedMethod = null;
-					if (aMethod.getName().startsWith("get")) {
-						aPairedMethod = aMethod.getDeclaringClass().getMethod(aMethod.getName().replaceFirst("get", "set"),
-																			  aMethod.getReturnType());
-					}
-					else if (aMethod.getName().startsWith("set")) {
-						try {
-							aPairedMethod = aMethod.getDeclaringClass().getMethod(aMethod.getName().replaceFirst("set", "get"));
-						}
-						catch (Exception e) {
-							// no-op
-						}
-
-						if (aPairedMethod == null) {
-							aPairedMethod = aMethod.getDeclaringClass().getMethod(aMethod.getName().replaceFirst("set", "is"));
-						}
-					}
-
-					if (aPairedMethod != null) {
-						aAnnotation = aPairedMethod.getAnnotation(theAnnotation);
-					}
-				}
-				catch (NoSuchMethodException e) {
-					// could not find a paired getter/setter.  don't know why.  probably the user put the annotations
-					// on methods of non-bean compliant code, which is screwing things up.  we'll try to fail as
-					// gracefully as possible
-				}
-			}
-
-			return aAnnotation;
-		}
-		else {
-			return null;
-		}
-	}
-
-	/**
 	 * Transform a list of Java Objects into the corresponding RDF values
 	 * @param theCollection the collection to transform
 	 * @return the collection as a list of RDF values
@@ -668,7 +610,6 @@ public class RdfGenerator {
 	 */
 	private static String hash(Object theObj) {
 		return BasicUtils.hex(BasicUtils.md5(theObj.toString()));
-//		return Encoder.base64Encode(BasicUtils.md5(theObj.toString()));
 	}
 
 	/**
@@ -695,9 +636,9 @@ public class RdfGenerator {
 			if (theIn == null || theIn.isEmpty()) {
 				return null;
 			}
-			else if (Collection.class.isAssignableFrom(classFrom(mField))) {
+			else if (Collection.class.isAssignableFrom(BeanReflectUtil.classFrom(mField))) {
 				try {
-					Collection<Object> aValues = BeanReflectUtil.instantiateCollectionFromField(classFrom(mField));
+					Collection<Object> aValues = BeanReflectUtil.instantiateCollectionFromField(BeanReflectUtil.classFrom(mField));
 
 					for (Value aValue : theIn) {
 						Object aListValue = valueToObject.apply(aValue);
@@ -725,43 +666,9 @@ public class RdfGenerator {
 		}
 	}
 
-	/**
-	 * Return the Class type of the accessor.  For a {@link Field} it's the declared type of the field, for a
-	 * {@link Method}, which should be a bean-style setter, it's the type of the single parameter to the method.
-	 * @param theAccessor the accessor
-	 * @return the Class type of the Field/Method
-	 * @throws RuntimeException thrown if you don't pass in a Field or Method, or if the Method is not of the expected
-	 * bean-style setter variety.
-	 */
-	private static Class classFrom(Object theAccessor) {
-		Class<?> aClass = null;
+	private static Class refineClass(Object theAccessor, Class theClass, DataSource theSource, Resource theId) {
+		Class aClass = theClass;
 
-		if (theAccessor instanceof Field) {
-			aClass = ((Field)theAccessor).getType();
-		}
-		else if (theAccessor instanceof Method) {
-			// this should be a setter style bean method, taking one param which corresponds to the type of the property
-			// it represents
-
-			Method aMethod = (Method) theAccessor;
-			if (aMethod.getParameterTypes().length == 1) {
-				aClass = aMethod.getParameterTypes()[0];
-			}
-			else {
-				throw new RuntimeException("Unknown or unsupported accessor method type");
-			}
-		}
-        else if (theAccessor instanceof Class) {
-            aClass = (Class) theAccessor;
-        }
-		else {
-			throw new RuntimeException("Unknown or unsupported accessor type: " + theAccessor);
-		}
-
-		return aClass;
-	}
-
-	private static Class refineClass(Object theAccessor, Class aClass, DataSource theSource, Resource theId) {
 		if (Collection.class.isAssignableFrom(aClass)) {
 			// if the field we're assigning from is a collection, try and figure out the type of the thing
 			// we're creating from the collection
@@ -784,6 +691,16 @@ public class RdfGenerator {
 					aClass = (Class) aTypes[0];
 				}
 			}
+			else {
+				// could not figure out the type from the generics assertions on the Collection, they are either
+				// not present, or my algorithm is not bullet proof.  So lets try checking on the annotations
+				// for a type hint.
+
+				Class aTarget = BeanReflectUtil.getTargetEntity(theAccessor);
+				if (aTarget != null) {
+					aClass = aTarget;
+				}
+			}
 		}
 
 		if (!BeanReflectUtil.hasAnnotation(aClass, RdfsClass.class)) {
@@ -793,7 +710,7 @@ public class RdfGenerator {
 			// create an instance of that.  that will work, and pushes the likely failure back off to
 			// the assignment of the created instance
 
-			URI aType = getType(theSource, theId);
+			URI aType = EmpireUtil.getType(theSource, theId);
 
 			// k, so now we know the type, if we can match the type to a class then we're in business
 			if (aType != null) {
@@ -879,7 +796,7 @@ public class RdfGenerator {
 				else {
 					// no idea what this value is from its data type.  if the field takes a string
 					// we'll just assign the plain string, otherwise its an error
-					if (classFrom(mAccessor).isAssignableFrom(String.class)) {
+					if (BeanReflectUtil.classFrom(mAccessor).isAssignableFrom(String.class)) {
 						return aLit.getLabel();
 					}
 					else {
@@ -893,11 +810,11 @@ public class RdfGenerator {
 				BNode aBNode = (BNode) theValue;
 
 				// we need to figure out what type of bean this instance maps to.
-					Class<?> aClass = classFrom(mAccessor);
+					Class<?> aClass = BeanReflectUtil.classFrom(mAccessor);
 
 					aClass = refineClass(mAccessor, aClass, mSource, aBNode);
 
-				if (Collection.class.isAssignableFrom(classFrom(mAccessor))) {
+				if (Collection.class.isAssignableFrom(BeanReflectUtil.classFrom(mAccessor))) {
 					// the field takes a collection, lets create a new instance of said collection, and hopefully the
 					// bnode is a list.  this approach will only work if the property is a singleton value, eg
 					// :inst someProperty _:a where _:a is the head of a list.  if you have another value _:b for
@@ -925,7 +842,7 @@ public class RdfGenerator {
 				}
 
 				try {
-					return getProxyOrDbObject(aClass, aBNode, mSource);
+					return getProxyOrDbObject(mAccessor, aClass, aBNode, mSource);
 				}
 				catch (Exception e) {
 					throw new RuntimeException(e);
@@ -935,7 +852,7 @@ public class RdfGenerator {
 				URI aURI = (URI) theValue;
 				try {
 					// we need to figure out what type of bean this instance maps to.
-					Class<?> aClass = classFrom(mAccessor);
+					Class<?> aClass = BeanReflectUtil.classFrom(mAccessor);
 
 					aClass = refineClass(mAccessor, aClass, mSource, aURI);
 
@@ -943,7 +860,7 @@ public class RdfGenerator {
 						return java.net.URI.create(aURI.toString());
 					}
 					else {
-						return getProxyOrDbObject(aClass, java.net.URI.create(aURI.toString()), mSource);
+						return getProxyOrDbObject(mAccessor, aClass, java.net.URI.create(aURI.toString()), mSource);
 					}
 				}
 				catch (Exception e) {
@@ -956,7 +873,7 @@ public class RdfGenerator {
 		}
 	}
 
-	private static <T> T getProxyOrDbObject(Class<T> theClass, Object theKey, DataSource theSource) throws Exception {
+	private static <T> T getProxyOrDbObject(Object theAccessor, Class<T> theClass, Object theKey, DataSource theSource) throws Exception {
 		// TODO: do we need to provide a reference to the thing we're proxying for.  like, if the getter is proxied
 		// as we do it here, it will always return the same value.  if you do a set on the property expecting the
 		// new value, that will set it on the actual object, but it will not change what this value returns.
@@ -964,7 +881,8 @@ public class RdfGenerator {
 		// asked for, and then set that value on the object it's proxying for.  that way get/set should work as expected
 		// and once the value is retrieved the first time, it will always return it from the parent object rather than
 		// from the cached copy in the proxy object.
-		if (EmpireOptions.ENABLE_PROXY_OBJECTS) {
+
+		if (BeanReflectUtil.isFetchTypeLazy(theAccessor) || EmpireOptions.ENABLE_PROXY_OBJECTS) {
 			Proxy<T> aProxy = new Proxy<T>(theClass, asPrimaryKey(theKey), theSource);
 
 			ProxyFactory aFactory = new ProxyFactory();
@@ -983,34 +901,30 @@ public class RdfGenerator {
 	 * @param <T> the proxy class type
 	 */
 	private static class ProxyHandler<T> implements MethodHandler {
-		Proxy<T> mProxy;
 
+		/**
+		 * The proxy object which wraps the instance being proxied.
+		 */
+		private Proxy<T> mProxy;
+
+		/**
+		 * Create a new ProxyHandler
+		 * @param theProxy the proxy object
+		 */
 		private ProxyHandler(final Proxy<T> theProxy) {
 			mProxy = theProxy;
 		}
 
+		/**
+		 * Delegates the methods to the Proxy
+		 * @inheritDoc
+		 */
 		public Object invoke(final Object theThis, final Method theMethod, final Method theProxyMethod, final Object[] theArgs) throws Throwable {
 			return theMethod.invoke(mProxy.value(), theArgs);
 		}
 	}
 
-	/**
-	 * Return the type of the resource in the data source.
-	 * @param theSource the data source
-	 * @param theConcept the concept whose type to lookup
-	 * @return the rdf:type of the concept, or null if there is an error or one cannot be found.
-	 */
-	private static URI getType(DataSource theSource, Resource theConcept) {
-		try {
-			return new ExtGraph(EmpireUtil.describe(theSource, theConcept.toString())).getType(theConcept);
-		}
-		catch (DataSourceException e) {
-			LOGGER.error("There was an error while getting the type of a resource", e);
-
-			return null;
-		}
-	}
-
+	
 	private static String getBNodeConstructQuery(DataSource theSource, Resource theRes, URI theProperty) {
 		Dialect aDialect = theSource.getQueryFactory().getDialect();
 

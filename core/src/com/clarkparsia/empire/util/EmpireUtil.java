@@ -11,12 +11,14 @@ import com.clarkparsia.empire.SupportsNamedGraphs;
 import com.clarkparsia.empire.Empire;
 import com.clarkparsia.empire.ResultSet;
 import com.clarkparsia.empire.Dialect;
+import com.clarkparsia.empire.DataSourceException;
 import com.clarkparsia.empire.impl.serql.SerqlDialect;
 import com.clarkparsia.empire.impl.sparql.SPARQLDialect;
 import com.clarkparsia.openrdf.query.builder.QueryBuilder;
 import com.clarkparsia.openrdf.query.builder.QueryBuilderFactory;
 import com.clarkparsia.openrdf.query.sparql.SPARQLQueryRenderer;
 import com.clarkparsia.openrdf.query.serql.SeRQLQueryRenderer;
+import com.clarkparsia.openrdf.ExtGraph;
 
 import com.clarkparsia.utils.NamespaceUtils;
 import com.clarkparsia.utils.BasicUtils;
@@ -48,7 +50,7 @@ import java.util.ArrayList;
  *
  * @author Michael Grove
  * @since 0.6.1
- * @version 0.6.3
+ * @version 0.6.4
  */
 public class EmpireUtil {
 	/**
@@ -384,6 +386,23 @@ public class EmpireUtil {
 		}
 		catch (URISyntaxException e) {
 			throw new IllegalArgumentException(theObj + " is not a valid primary key, it is not a URI.", e);
+		}
+	}
+
+	/**
+	 * Return the type of the resource in the data source.
+	 * @param theSource the data source
+	 * @param theConcept the concept whose type to lookup
+	 * @return the rdf:type of the concept, or null if there is an error or one cannot be found.
+	 */
+	public static org.openrdf.model.URI getType(DataSource theSource, Resource theConcept) {
+		try {
+			return new ExtGraph(describe(theSource, theConcept.toString())).getType(theConcept);
+		}
+		catch (DataSourceException e) {
+			LOGGER.error("There was an error while getting the type of a resource", e);
+
+			return null;
 		}
 	}
 }

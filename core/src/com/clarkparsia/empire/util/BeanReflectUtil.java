@@ -20,6 +20,12 @@ import com.clarkparsia.empire.annotation.InvalidRdfException;
 import com.clarkparsia.empire.annotation.RdfId;
 import com.clarkparsia.empire.EmpireOptions;
 
+import javax.persistence.FetchType;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
+import javax.persistence.ManyToOne;
+import javax.persistence.ManyToMany;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -42,6 +48,7 @@ import java.util.Date;
  *
  * @author Michael Grove
  * @since 0.5.1
+ * @version 0.6.4
  */
 public class BeanReflectUtil {
 
@@ -557,4 +564,163 @@ public class BeanReflectUtil {
                 || Short.class.isInstance(theObj) || Double.class.isInstance(theObj) || Float.class.isInstance(theObj)
                 || Date.class.isInstance(theObj) || String.class.isInstance(theObj) || Character.class.isInstance(theObj));
     }
+
+	/**
+	 * Return whether or not the accessor is marked with a {@link FetchType#LAZY} annotation.  If there is no
+	 * {@link OneToOne}, {@link OneToMany}, {@link ManyToOne}, {@link OneToOne}, or {@link ManyToMany} annotation,
+	 * or they do not specify a fetch type, the default value is assumed to be {@link FetchType#EAGER}.  If the
+	 * provided accessor is not a Field or Method, the FetchType is also assumed to be EAGER.
+	 * @param theAccessor the accessor
+	 * @return true if the accessor is marked with {@link FetchType#LAZY}, false otherwise.
+	 */
+	public static boolean isFetchTypeLazy(Object theAccessor) {
+		FetchType aFetchType = null;
+
+		if (theAccessor instanceof AccessibleObject) {
+			AccessibleObject aObject = (AccessibleObject) theAccessor;
+
+			if (aObject.getAnnotation(OneToMany.class) != null) {
+				aFetchType = aObject.getAnnotation(OneToMany.class).fetch();
+			}
+			else if (aObject.getAnnotation(OneToOne.class) != null) {
+				aFetchType = aObject.getAnnotation(OneToOne.class).fetch();
+			}
+			else if (aObject.getAnnotation(ManyToOne.class) != null) {
+				aFetchType = aObject.getAnnotation(ManyToOne.class).fetch();
+			}
+			else if (aObject.getAnnotation(ManyToMany.class) != null) {
+				aFetchType = aObject.getAnnotation(ManyToMany.class).fetch();
+			}
+		}
+
+		if (aFetchType == null) {
+			aFetchType = FetchType.EAGER;
+		}
+
+		return aFetchType.equals(FetchType.LAZY);
+	}
+
+	/**
+	 * Return the value of the targetEntity for the accessor if it has a {@link OneToOne}, {@link OneToMany},
+	 * {@link ManyToOne}, {@link OneToOne}, or {@link ManyToMany} annotation.  This will return null if the accessor
+	 * is not an {@link AccessibleObject} or if it does not have one of the aforementioned annotations, or if the
+	 * targetEntity is not set for the annotation
+	 * @param theAccessor the accessor
+	 * @return the targetEntity for the accessor, or null if not specified.
+	 */
+	public static Class<?> getTargetEntity(Object theAccessor) {
+		Class<?> aClass = null;
+
+		if (theAccessor instanceof AccessibleObject) {
+			AccessibleObject aObject = (AccessibleObject) theAccessor;
+
+			if (aObject.getAnnotation(OneToMany.class) != null) {
+				aClass = aObject.getAnnotation(OneToMany.class).targetEntity();
+			}
+			else if (aObject.getAnnotation(OneToOne.class) != null) {
+				aClass = aObject.getAnnotation(OneToOne.class).targetEntity();
+			}
+			else if (aObject.getAnnotation(ManyToOne.class) != null) {
+				aClass = aObject.getAnnotation(ManyToOne.class).targetEntity();
+			}
+			else if (aObject.getAnnotation(ManyToMany.class) != null) {
+				aClass = aObject.getAnnotation(ManyToMany.class).targetEntity();
+			}
+		}
+
+		return aClass;
+	}
+
+	/**
+	 * Return the Annotation of the specified type on the accessor, either a {@link java.lang.reflect.Field} or a {@link java.lang.reflect.Method}
+	 * @param theAccess the accessor
+	 * @param theAnnotation the annotation to get
+	 * @param <T> the type of annotation to retrieve
+	 * @return the value of the annotation on the accessor, or null if one is not found, or the accessor is not a Field or Method.
+	 */
+	public static <T extends Annotation> T getAnnotation(Object theAccess, Class<T> theAnnotation) {
+		if (theAccess instanceof Field) {
+			return ((Field)theAccess).getAnnotation(theAnnotation);
+		}
+		else if (theAccess instanceof Method) {
+			Method aMethod = (Method) theAccess;
+			T aAnnotation = aMethod.getAnnotation(theAnnotation);
+
+			if (aAnnotation == null) {
+				// if this is the case, it might be that this is from an "inferred" method.  so let's check it's twin,
+				// either a getter or setter to see if it has the annotation.  If not, I don't know what the hell
+				// happened
+
+				try {
+					Method aPairedMethod = null;
+					if (aMethod.getName().startsWith("get")) {
+						aPairedMethod = aMethod.getDeclaringClass().getMethod(aMethod.getName().replaceFirst("get", "set"),
+																			  aMethod.getReturnType());
+					}
+					else if (aMethod.getName().startsWith("set")) {
+						try {
+							aPairedMethod = aMethod.getDeclaringClass().getMethod(aMethod.getName().replaceFirst("set", "get"));
+						}
+						catch (Exception e) {
+							// no-op
+						}
+
+						if (aPairedMethod == null) {
+							aPairedMethod = aMethod.getDeclaringClass().getMethod(aMethod.getName().replaceFirst("set", "is"));
+						}
+					}
+
+					if (aPairedMethod != null) {
+						aAnnotation = aPairedMethod.getAnnotation(theAnnotation);
+					}
+				}
+				catch (NoSuchMethodException e) {
+					// could not find a paired getter/setter.  don't know why.  probably the user put the annotations
+					// on methods of non-bean compliant code, which is screwing things up.  we'll try to fail as
+					// gracefully as possible
+				}
+			}
+
+			return aAnnotation;
+		}
+		else {
+			return null;
+		}
+	}
+
+	/**
+	 * Return the Class type of the accessor.  For a {@link java.lang.reflect.Field} it's the declared type of the field, for a
+	 * {@link java.lang.reflect.Method}, which should be a bean-style setter, it's the type of the single parameter to the method.
+	 * @param theAccessor the accessor
+	 * @return the Class type of the Field/Method
+	 * @throws RuntimeException thrown if you don't pass in a Field or Method, or if the Method is not of the expected
+	 * bean-style setter variety.
+	 */
+	public static Class classFrom(Object theAccessor) {
+		Class<?> aClass = null;
+
+		if (theAccessor instanceof Field) {
+			aClass = ((Field)theAccessor).getType();
+		}
+		else if (theAccessor instanceof Method) {
+			// this should be a setter style bean method, taking one param which corresponds to the type of the property
+			// it represents
+
+			Method aMethod = (Method) theAccessor;
+			if (aMethod.getParameterTypes().length == 1) {
+				aClass = aMethod.getParameterTypes()[0];
+			}
+			else {
+				throw new RuntimeException("Unknown or unsupported accessor method type");
+			}
+		}
+        else if (theAccessor instanceof Class) {
+            aClass = (Class) theAccessor;
+        }
+		else {
+			throw new RuntimeException("Unknown or unsupported accessor type: " + theAccessor);
+		}
+
+		return aClass;
+	}
 }

@@ -59,6 +59,7 @@ import javax.persistence.NamedQueries;
  *
  * @author Michael Grove
  * @since 0.1
+ * @version 0.6.4
  * @see <a href="http://java.sun.com/j2se/1.5.0/docs/guide/apt/GettingStarted.html">Sun APT Docs</a>
  */
 public class EmpireAnnotationProcessorFactory implements AnnotationProcessorFactory {

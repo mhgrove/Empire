@@ -387,18 +387,18 @@ public class RdfGenerator {
 	 * annotation, or does not {@link SupportsRdfId support Rdf Id's}
 	 */
 	private static RdfsClass asValidRdfClass(Object theObj) throws InvalidRdfException {
-		if (theObj.getClass().getAnnotation(RdfsClass.class) == null) {
+		if (!BeanReflectUtil.hasAnnotation(theObj.getClass(), RdfsClass.class)) {
 			throw new InvalidRdfException("Specified value is not an RdfsClass object");
 		}
 
-		if (theObj.getClass().getAnnotation(Entity.class)  == null) {
+		if (!BeanReflectUtil.hasAnnotation(theObj.getClass(), Entity.class)) {
 			throw new InvalidRdfException("Specified value is not a JPA Entity object");
 		}
 
 		// verify that it supports rdf id's
 		asSupportsRdfId(theObj);
 
-		return theObj.getClass().getAnnotation(RdfsClass.class);
+		return BeanReflectUtil.getAnnotation(theObj.getClass(), RdfsClass.class);
 	}
 
 	/**

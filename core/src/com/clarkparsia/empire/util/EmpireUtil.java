@@ -65,8 +65,8 @@ public class EmpireUtil {
 	 * @return true if its Empire compatible, false otherwise.
 	 */
 	public static boolean isEmpireCompatible(final Class theClass) {
-		return theClass.isAnnotationPresent(Entity.class) &&
-			   theClass.isAnnotationPresent(RdfsClass.class) &&
+		return BeanReflectUtil.hasAnnotation(theClass, Entity.class) &&
+			   BeanReflectUtil.hasAnnotation(theClass, RdfsClass.class) &&
 			   SupportsRdfId.class.isAssignableFrom(theClass);
 	}
 

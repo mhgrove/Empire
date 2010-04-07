@@ -136,6 +136,12 @@
 		<jar jarfile="${dist.src.dir}/${project.name}-fourstore-src.jar" basedir="${fourstore.src.dir}"/>
 		<jar jarfile="${dist.src.dir}/${project.name}-test-src.jar" basedir="${test.src.dir}"/>
 
+		<copy todir="${core.build.dir}">
+			<fileset dir="${core.dir}/resources">
+				<include name="**/*"/>
+			</fileset>
+		</copy>
+
 		<jar jarfile="${dist.lib.dir}/${project.name}-core.jar" basedir="${core.build.dir}"/>
 		<jar jarfile="${dist.lib.dir}/${project.name}-jena.jar" basedir="${jena.build.dir}"/>
 		<jar jarfile="${dist.lib.dir}/${project.name}-sesame.jar" basedir="${sesame.build.dir}"/>

@@ -16,14 +16,25 @@
 package com.clarkparsia.empire.test;
 
 import org.junit.Test;
+import org.junit.BeforeClass;
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
 
 import com.clarkparsia.empire.Empire;
+import com.clarkparsia.empire.jena.JenaEmpireModule;
+import com.clarkparsia.empire.fourstore.FourStoreEmpireModule;
+import com.clarkparsia.empire.sesametwo.OpenRdfEmpireModule;
+import com.clarkparsia.empire.util.DefaultEmpireModule;
+import com.clarkparsia.empire.impl.EntityManagerFactoryImpl;
 
 import com.clarkparsia.empire.test.api.TestDataSourceFactory;
+import com.clarkparsia.empire.test.util.TestModule;
+
+import javax.persistence.Persistence;
 
 import java.util.Collections;
+import java.util.HashMap;
 
 /**
  * <p>Test the Empire SPI code.</p>
@@ -33,6 +44,13 @@ import java.util.Collections;
  */
 public class TestSPI {
 	// TODO: we could use some more tests here...
+
+//	@BeforeClass
+//	public static void beforeClass () {
+//		Empire.init(new DefaultEmpireModule(), new OpenRdfEmpireModule(), new FourStoreEmpireModule(),
+//					new JenaEmpireModule(), new TestModule());
+//
+//	}
 
 	@Test
 	public void testInvalidFactory() {
@@ -52,5 +70,11 @@ public class TestSPI {
 		assertTrue(null == Empire.get().persistenceProvider().createEntityManagerFactory("not mutable",
 																						 Collections.singletonMap("factory",
 																												  TestDataSourceFactory.class.getName())));
+	}
+
+	@Test
+	public void testPersistenceHook() {
+		assertEquals(Persistence.createEntityManagerFactory("test-data-source").getClass(), EntityManagerFactoryImpl.class);
+		assertEquals(Persistence.createEntityManagerFactory("test-data-source", new HashMap()).getClass(), EntityManagerFactoryImpl.class);
 	}
 }

@@ -44,6 +44,8 @@ public class EmpireTestSuite {
 
 	@BeforeClass
 	public static void beforeClass () {
+		System.setProperty("empire.configuration.file", "test.empire.config.properties");
+		
 		Empire.init(new DefaultEmpireModule(), new OpenRdfEmpireModule(), new FourStoreEmpireModule(),
 					new JenaEmpireModule(), new TestModule());
 	}

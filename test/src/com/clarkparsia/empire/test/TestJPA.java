@@ -118,7 +118,7 @@ public class TestJPA  {
 												    "from {result} <" + SpaceVocab.ontology().agency + "> {??}, {result} <" + SpaceVocab.ontology().alternateName + "> {??altName}",
 												    "sovietSpacecraft" },
 
-// NOTE: don't forget to run TestUtil before testing 4store, the 4store db needs to be prepped.
+// NOTE: 4store setup.
 //				{ getFourStoreTestConfigMap(), "where { ?result <urn:prop> ?y }",
 //				  							   "select distinct ?result where { ?uri <" + SpaceVocab.ontology().mass + "> ?result }",
 //											   "where { ?uri <" + SpaceVocab.ontology().mass + "> ?result }",

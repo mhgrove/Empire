@@ -27,6 +27,7 @@ import com.clarkparsia.empire.annotation.RdfGenerator;
 import com.clarkparsia.empire.annotation.RdfsClass;
 
 import org.openrdf.model.Graph;
+import org.openrdf.model.Statement;
 
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -67,7 +68,11 @@ import static com.clarkparsia.empire.util.BeanReflectUtil.getAnnotatedGetters;
 import static com.clarkparsia.empire.util.BeanReflectUtil.asSetter;
 import static com.clarkparsia.empire.util.BeanReflectUtil.safeGet;
 import static com.clarkparsia.empire.util.BeanReflectUtil.safeSet;
+import static com.clarkparsia.empire.util.BeanReflectUtil.hasAnnotation;
 import com.clarkparsia.empire.util.EmpireUtil;
+import com.clarkparsia.empire.util.BeanReflectUtil;
+import com.clarkparsia.utils.Predicate;
+import com.clarkparsia.utils.AbstractDataCommand;
 
 /**
  * <p>Implementation of the JPA {@link EntityManager} interface to support the persistence model over
@@ -353,6 +358,8 @@ public class EntityManagerImpl implements EntityManager {
 				throw new PersistenceException("Addition failed for object: " + theObj.getClass() + " -> " + EmpireUtil.asSupportsRdfId(theObj).getRdfId());
 			}
 
+			cascadeOperation(theObj, new IsPersistCascade(), new MergeCascade());
+
 			postPersist(theObj);
 		}
 		catch (InvalidRdfException ex) {
@@ -394,10 +401,57 @@ public class EntityManagerImpl implements EntityManager {
 				getDataSource().add(aData);
 			}
 
+			// cascade the merge
+			cascadeOperation(theT, new IsMergeCascade(), new MergeCascade());
+//			Collection<AccessibleObject> aAccessors = new HashSet<AccessibleObject>();
+//			aAccessors.addAll(getAnnotatedFields(theT.getClass()));
+//			aAccessors.addAll(getAnnotatedGetters(theT.getClass(), true));
+//			for (AccessibleObject aObj : aAccessors) {
+//				if (BeanReflectUtil.isMergeCascade(aObj)) {
+//
+//					try {
+//						Object aAccessorValue = BeanReflectUtil.safeGet(aObj, theT);
+//
+//						// is it the correct JPA behavior to persist a value when it does not exist during a cascaded
+//						// merge?  or should that be a PersistenceException just like any normal merge for an un-managed
+//						// object?
+//						// Futhermore, is it an error if you specify a cascade type for something that cannot be
+//						// cascaded?  such as strings, or a non Entity instance?
+//						if (Collection.class.isAssignableFrom(aAccessorValue.getClass())) {
+//							for (Object aValue : (Collection) aAccessorValue) {
+//
+//								if (!EmpireUtil.isEmpireCompatible(aAccessorValue.getClass())) {
+//									continue;
+//								}
+//
+//								if (contains(aValue)) {
+//									merge(aValue);
+//								}
+//								else {
+//									persist(aValue);
+//								}
+//							}
+//						}
+//						else {
+//							if (EmpireUtil.isEmpireCompatible(aAccessorValue.getClass())) {
+//								if (contains(aAccessorValue)) {
+//									merge(aAccessorValue);
+//								}
+//								else {
+//									persist(aAccessorValue);
+//								}
+//							}
+//						}
+//					}
+//					catch (InvocationTargetException e) {
+//						e.printStackTrace();
+//						throw new PersistenceException(e);
+//					}
+//				}
+//			}
+
 			postUpdate(theT);
 
-			// this should be a safe cast...
-			//return find((Class<T>) theT.getClass(), asSupportsRdfId(theT).getRdfId());
             return theT;
 		}
 		catch (DataSourceException ex) {
@@ -407,7 +461,94 @@ public class EntityManagerImpl implements EntityManager {
 			throw new IllegalStateException(ex);
 		}
 	}
-	
+
+	private <T> void cascadeOperation(T theT, CascadeTest theCascadeTest, CascadeAction theAction) {
+		Collection<AccessibleObject> aAccessors = new HashSet<AccessibleObject>();
+		aAccessors.addAll(getAnnotatedFields(theT.getClass()));
+		aAccessors.addAll(getAnnotatedGetters(theT.getClass(), true));
+		for (AccessibleObject aObj : aAccessors) {
+			if (theCascadeTest.accept(aObj)) {
+				try {
+					Object aAccessorValue = BeanReflectUtil.safeGet(aObj, theT);
+					
+					if (aAccessorValue == null) {
+						continue;
+					}
+
+					theAction.setData(aAccessorValue);
+					theAction.execute();
+				}
+				catch (Exception e) {
+					throw new PersistenceException(e);
+				}
+			}
+		}
+	}
+
+	private class MergeCascade extends CascadeAction {
+		public void cascade(Object theValue) {
+			// is it the correct JPA behavior to persist a value when it does not exist during a cascaded
+			// merge?  or should that be a PersistenceException just like any normal merge for an un-managed
+			// object?
+			if (EmpireUtil.isEmpireCompatible(theValue.getClass())) {
+				if (contains(theValue)) {
+					merge(theValue);
+				}
+				else {
+					persist(theValue);
+				}
+			}
+		}
+	}
+
+	private class RemoveCascade extends CascadeAction {
+		public void cascade(Object theValue) {
+			if (EmpireUtil.isEmpireCompatible(theValue.getClass())) {
+				if (contains(theValue)) {
+					remove(theValue);
+				}
+			}
+		}
+	}
+
+	private class IsMergeCascade extends CascadeTest {
+		public boolean accept(final AccessibleObject theValue) {
+			return BeanReflectUtil.isMergeCascade(theValue);
+		}
+	}
+
+	private class IsRemoveCascade extends CascadeTest {
+		public boolean accept(final AccessibleObject theValue) {
+			return BeanReflectUtil.isRemoveCascade(theValue);
+		}
+	}
+
+	private class IsPersistCascade extends CascadeTest {
+		public boolean accept(final AccessibleObject theValue) {
+			return BeanReflectUtil.isPersistCascade(theValue);
+		}
+	}
+
+	private abstract class CascadeTest implements Predicate<AccessibleObject> {
+	}
+
+	private abstract class CascadeAction extends AbstractDataCommand<Object> {
+		public abstract void cascade(Object theObj);
+
+		public void execute() {
+			// is it an error if you specify a cascade type for something that cannot be
+			// cascaded?  such as strings, or a non Entity instance?
+			if (Collection.class.isAssignableFrom(getData().getClass())) {
+				for (Object aValue : (Collection) getData()) {
+					cascade(aValue);
+				}
+			}
+			else {
+				cascade(getData());
+			}
+		}
+	}
+
 	/**
 	 * @inheritDoc
 	 */
@@ -419,7 +560,14 @@ public class EntityManagerImpl implements EntityManager {
 		try {
 			preRemove(theObj);
 
-			Graph aData = RdfGenerator.asRdf(theObj);
+			// we were transforming the current object to RDF and deleting that, but i dont think that's the intended
+			// behavior.  you want to delete everything about the object in the database, not the properties specifically
+			// on the thing being deleted -- there's an obvious case where there could be a delta between them and you
+			// don't delete everything.  so we'll do a describe on the object and delete everything we know about it
+			// i.e. everything where its in the subject position.
+
+			//Graph aData = RdfGenerator.asRdf(theObj);
+			Graph aData = EmpireUtil.describe(getDataSource(), theObj);
 
 			if (doesSupportNamedGraphs() && EmpireUtil.hasNamedGraphSpecified(theObj)) {
 				asSupportsNamedGraphs().remove(EmpireUtil.getNamedGraph(theObj), aData);
@@ -432,14 +580,16 @@ public class EntityManagerImpl implements EntityManager {
 				throw new PersistenceException("Remove failed for object: " + theObj.getClass() + " -> " + EmpireUtil.asSupportsRdfId(theObj).getRdfId());
 			}
 
+			cascadeOperation(theObj, new IsRemoveCascade(), new RemoveCascade());
+
 			postRemove(theObj);
 		}
 		catch (DataSourceException ex) {
 			throw new PersistenceException(ex);
 		}
-		catch (InvalidRdfException ex) {
-			throw new IllegalStateException(ex);
-		}
+//		catch (InvalidRdfException ex) {
+//			throw new IllegalStateException(ex);
+//		}
 	}
 
 	/**
@@ -570,7 +720,7 @@ public class EntityManagerImpl implements EntityManager {
 	 * @throws IllegalArgumentException thrown if the instance does not have the required annotation
 	 */
 	private void assertHasAnnotation(Object theObj, Class<? extends Annotation> theAnnotation) {
-		if (theObj.getClass().getAnnotation(theAnnotation) == null) {
+		if (!hasAnnotation(theObj.getClass(), theAnnotation)) {
 			throw new IllegalArgumentException("Object is not an " + theAnnotation.getSimpleName());
 		}
 	}

@@ -25,6 +25,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.ManyToOne;
 import javax.persistence.ManyToMany;
+import javax.persistence.CascadeType;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -41,6 +42,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.LinkedHashSet;
 import java.util.Date;
+import java.util.Arrays;
 
 /**
  * <p>Some utility methods which use the Java reflect stuff to do a lot of the runtime accessing of fields and methods
@@ -629,6 +631,81 @@ public class BeanReflectUtil {
 		}
 
 		return aClass;
+	}
+
+	/**
+	 * Check whether or not the accessor has a {@link CascadeType} specified, and if so, if that cascade type indicates
+	 * that Remove operations should be cascaded.
+	 * @param theAccessor the accessor to inspect
+	 * @return true if remove operations should be cascaded, false otherwise.
+	 */
+	public static boolean isRemoveCascade(Object theAccessor) {
+		Collection<CascadeType> aCascade = getCascadeTypes(theAccessor);
+		return aCascade.contains(CascadeType.REMOVE) || aCascade.contains(CascadeType.ALL);
+	}
+
+	/**
+	 * Check whether or not the accessor has a {@link CascadeType} specified, and if so, if that cascade type indicates
+	 * that Persist operations should be cascaded.
+	 * @param theAccessor the accessor to inspect
+	 * @return true if persist operations should be cascaded, false otherwise.
+	 */
+	public static boolean isPersistCascade(Object theAccessor) {
+		Collection<CascadeType> aCascade = getCascadeTypes(theAccessor);
+		return aCascade.contains(CascadeType.PERSIST) || aCascade.contains(CascadeType.ALL);
+	}
+
+	/**
+	 * Check whether or not the accessor has a {@link CascadeType} specified, and if so, if that cascade type indicates
+	 * that refresh operations should be cascaded.
+	 * @param theAccessor the accessor to inspect
+	 * @return true if refresh operations should be cascaded, false otherwise.
+	 */
+	public static boolean isRefreshCascade(Object theAccessor) {
+		Collection<CascadeType> aCascade = getCascadeTypes(theAccessor);
+		return aCascade.contains(CascadeType.REFRESH) || aCascade.contains(CascadeType.ALL);
+	}
+
+	/**
+	 * Check whether or not the accessor has a {@link CascadeType} specified, and if so, if that cascade type indicates
+	 * that Merge operations should be cascaded.
+	 * @param theAccessor the accessor to inspect
+	 * @return true if merge operations should be cascaded, false otherwise.
+	 */
+	public static boolean isMergeCascade(Object theAccessor) {
+		Collection<CascadeType> aCascade = getCascadeTypes(theAccessor);
+		return aCascade.contains(CascadeType.MERGE) || aCascade.contains(CascadeType.ALL);
+	}
+
+	/**
+	 * Return all {@link CascadeType CascadeTypes} specified for the provided accessor.  If the access is not a Field
+	 * or Method, or if it does not have any of the value multiplicity annotations ({@link OneToOne}, {@link OneToMany},
+	 * {@link ManyToOne}, {@link OneToOne}, or {@link ManyToMany}) this will return false, otherwise it will collect
+	 * the values of the casade property of any of the aforementioned annotations used on the accessor.
+	 * @param theAccessor the accessor to inspect
+	 * @return the collection of CascadeTypes specified, or an empty list if none is specified.
+	 */
+	private static Collection<CascadeType> getCascadeTypes(Object theAccessor) {
+		Collection<CascadeType> aCascade = new HashSet<CascadeType>();
+
+		if (theAccessor instanceof AccessibleObject) {
+			AccessibleObject aObject = (AccessibleObject) theAccessor;
+
+			if (aObject.getAnnotation(OneToMany.class) != null) {
+				aCascade.addAll(Arrays.asList(aObject.getAnnotation(OneToMany.class).cascade()));
+			}
+			else if (aObject.getAnnotation(OneToOne.class) != null) {
+				aCascade.addAll(Arrays.asList(aObject.getAnnotation(OneToOne.class).cascade()));
+			}
+			else if (aObject.getAnnotation(ManyToOne.class) != null) {
+				aCascade.addAll(Arrays.asList(aObject.getAnnotation(ManyToOne.class).cascade()));
+			}
+			else if (aObject.getAnnotation(ManyToMany.class) != null) {
+				aCascade.addAll(Arrays.asList(aObject.getAnnotation(ManyToMany.class).cascade()));
+			}
+		}
+
+		return aCascade;
 	}
 
 	/**

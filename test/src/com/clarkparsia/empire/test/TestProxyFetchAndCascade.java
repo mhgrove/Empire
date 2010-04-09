@@ -45,6 +45,7 @@ import static org.junit.Assert.assertFalse;
 import org.junit.Test;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
+import org.junit.Before;
 
 /**
  * <p></p>
@@ -53,11 +54,23 @@ import org.junit.Ignore;
  */
 public class TestProxyFetchAndCascade {
 
-//	@BeforeClass
-//	public static void beforeClass () {
-//		Empire.init(new DefaultEmpireModule(), new OpenRdfEmpireModule(), new FourStoreEmpireModule(),
-//					new JenaEmpireModule(), new TestModule());
-//	}
+	private EntityManager mManager;
+
+	@BeforeClass
+	public static void beforeClass () {
+		Empire.init(new DefaultEmpireModule(), new OpenRdfEmpireModule(), new FourStoreEmpireModule(),
+					new JenaEmpireModule(), new TestModule());
+	}
+
+	@Before
+	public void before() {
+		Map<String, String> aMap = new HashMap<String, String>();
+		aMap.put(ConfigKeys.FACTORY, "test-source");
+		aMap.put("files", TestJPA.DATA_FILE);
+		aMap.put("use.cache", "false");
+
+		mManager = Empire.get().persistenceProvider().createEntityManagerFactory("test", aMap).createEntityManager();
+	}
 
 	@Test
 	public void testProxying() {
@@ -66,17 +79,11 @@ public class TestProxyFetchAndCascade {
 
 		String javaAssistMarker = "$$_javassist";
 
-		Map<String, String> aMap = new HashMap<String, String>();
-		aMap.put(ConfigKeys.FACTORY, MutableTestDataSourceFactory.class.getName());
-		aMap.put("files", TestJPA.DATA_FILE);
-
-		EntityManager aManager = Empire.get().persistenceProvider().createEntityManagerFactory("test", aMap).createEntityManager();
-
 		String aLaunchURI = "http://nasa.dataincubator.org/launch/SATURNSA1";
 
-		Launch aLaunch = aManager.find(Launch.class, aLaunchURI);
+		Launch aLaunch = mManager.find(Launch.class, aLaunchURI);
 
-		LaunchUsingProxy aProxySupportingLaunch = aManager.find(LaunchUsingProxy.class, aLaunchURI);
+		LaunchUsingProxy aProxySupportingLaunch = mManager.find(LaunchUsingProxy.class, aLaunchURI);
 
 		// this object is proxied
 		LaunchSite aOrigSite = aProxySupportingLaunch.getLaunchSite();
@@ -110,16 +117,10 @@ public class TestProxyFetchAndCascade {
 
 	@Test
 	public void testTargetEntity() {
-		Map<String, String> aMap = new HashMap<String, String>();
-		aMap.put(ConfigKeys.FACTORY, MutableTestDataSourceFactory.class.getName());
-		aMap.put("files", TestJPA.DATA_FILE);
-
-		EntityManager aManager = Empire.get().persistenceProvider().createEntityManagerFactory("test", aMap).createEntityManager();
-
 		String aLaunchURI = "http://nasa.dataincubator.org/launch/SATURNSA1";
 
-		Launch aLaunch = aManager.find(Launch.class, aLaunchURI);
-		LaunchUsingProxy aProxySupportingLaunch = aManager.find(LaunchUsingProxy.class, aLaunchURI);
+		Launch aLaunch = mManager.find(Launch.class, aLaunchURI);
+		LaunchUsingProxy aProxySupportingLaunch = mManager.find(LaunchUsingProxy.class, aLaunchURI);
 
 		assertTrue(aProxySupportingLaunch.getSpacecraft().size() > 0);
 
@@ -137,47 +138,14 @@ public class TestProxyFetchAndCascade {
 		assertTrue(contentsEqual(aLaunch.getSpacecraft(), aProxySupportingLaunch.getSpacecraft()));
 	}
 
-	@Test @Ignore
-	public void testCascading() {
-		Map<String, String> aMap = new HashMap<String, String>();
-		aMap.put(ConfigKeys.FACTORY, MutableTestDataSourceFactory.class.getName());
-		aMap.put("files", TestJPA.DATA_FILE);
-
-		EntityManager aManager = Empire.get().persistenceProvider().createEntityManagerFactory("test", aMap).createEntityManager();
-
+	@Test
+	public void testRemoveCascading() {
 		String aLaunchURI = "http://nasa.dataincubator.org/launch/SATURNSA1";
-		String aOtherLaunchURI = "http://nasa.dataincubator.org/launch/POLAIRE";
-
-		// =============== test merge cascade
-		LaunchUsingProxy aExistingLaunchWithProxy = aManager.find(LaunchUsingProxy.class, aLaunchURI);
-		Launch aExistingLaunch = aManager.find(Launch.class, aOtherLaunchURI);
-
-		Spacecraft aNewSpacecraft = new Spacecraft();
-		aNewSpacecraft.setRdfId(new SupportsRdfId.URIKey(URI.create("http://empire.clarkparsia.com/test/merge/cascade/aNewOtherSpacecraft")));
-		aNewSpacecraft.setAgency("agency");
-
-		aExistingLaunch.setOtherSpacecraft(aNewSpacecraft);
-		aExistingLaunchWithProxy.setOtherSpacecraft(aNewSpacecraft);
-
-		aManager.merge(aExistingLaunch);
-
-		assertTrue(aManager.contains(aExistingLaunch));
-		// it was merged as a relation...
-		assertTrue(aManager.find(Launch.class, aOtherLaunchURI).getOtherSpacecraft().equals(aNewSpacecraft));
-
-		// but merge does not cascade
-		assertFalse(aManager.contains(aNewSpacecraft));
-
-		aManager.merge(aExistingLaunchWithProxy);
-
-		assertTrue(aManager.contains(aExistingLaunchWithProxy));
-
-		// this should be true now because the merge was cascaded
-		assertTrue(aManager.contains(aNewSpacecraft));
+		String aOtherLaunchURI = "http://nasa.dataincubator.org/launch/PION2";
 
 		// ================= test remove cascade
-		aExistingLaunchWithProxy = aManager.find(LaunchUsingProxy.class, aLaunchURI);
-		aExistingLaunch = aManager.find(Launch.class, aOtherLaunchURI);
+		LaunchUsingProxy aExistingLaunchWithProxy = mManager.find(LaunchUsingProxy.class, aLaunchURI);
+		Launch aExistingLaunch = mManager.find(Launch.class, aOtherLaunchURI);
 
 		List<Spacecraft> aExistingSpacecraft = aExistingLaunch.getSpacecraft();
 
@@ -185,28 +153,37 @@ public class TestProxyFetchAndCascade {
 
 		aExistingLaunch.getSpacecraft().clear();
 
-		aManager.remove(aExistingLaunch);
+		mManager.remove(aExistingLaunch);
 
 		// delete shoudl have worked...
-		assertFalse(aManager.contains(aExistingLaunch));
+		assertFalse(mManager.contains(aExistingLaunch));
 
 		// but not cascaded
 		for (Spacecraft aCraft : aExistingSpacecraft) {
-			assertTrue(aManager.contains(aCraft));
+			assertTrue(mManager.contains(aCraft));
 		}
 
 		aExistingSpacecraft = aExistingLaunchWithProxy.getSpacecraft();
 		assertTrue(aExistingSpacecraft.size() > 0);
 
-		aManager.remove(aExistingLaunchWithProxy);
+		mManager.remove(aExistingLaunchWithProxy);
 
 		// delete should have worked...
-		assertFalse(aManager.contains(aExistingLaunchWithProxy));
+		assertFalse(mManager.contains(aExistingLaunchWithProxy));
 
 		// and delete should have cascaded
 		for (Spacecraft aCraft : aExistingSpacecraft) {
-			assertFalse(aManager.contains(aCraft));
+			assertFalse(mManager.contains(aCraft));
 		}
+	}
+
+	@Test
+	public void testPersistCascading() {
+		Map<String, String> aMap = new HashMap<String, String>();
+		aMap.put(ConfigKeys.FACTORY, MutableTestDataSourceFactory.class.getName());
+		aMap.put("files", TestJPA.DATA_FILE);
+
+		EntityManager aManager = Empire.get().persistenceProvider().createEntityManagerFactory("test", aMap).createEntityManager();
 
 		// ================= test persist cascade
 
@@ -225,7 +202,7 @@ public class TestProxyFetchAndCascade {
 		assertTrue(aManager.contains(aNewLaunch));
 
 		// it was persisted as a relation...
-		assertTrue(aManager.find(Launch.class, aNewLaunch.getRdfId()).getOtherSpacecraft().equals(aNewOtherSpacecraft));
+		assertTrue(aManager.find(Launch.class, aNewLaunch.getRdfId()).getOtherSpacecraft().getRdfId().equals(aNewOtherSpacecraft.getRdfId()));
 
 		// but persist does not cascade
 		assertFalse(aManager.contains(aNewOtherSpacecraft));
@@ -239,10 +216,47 @@ public class TestProxyFetchAndCascade {
 
 		// and this should be true now because the persist was cascaded
 		assertTrue(aManager.contains(aNewOtherSpacecraft));
+	}
 
+	@Test
+	public void testMergeCascading() {
+		String aLaunchURI = "http://nasa.dataincubator.org/launch/SATURNSA1";
+		String aOtherLaunchURI = "http://nasa.dataincubator.org/launch/PION2";
+
+		// =============== test merge cascade
+		LaunchUsingProxy aExistingLaunchWithProxy = mManager.find(LaunchUsingProxy.class, aLaunchURI);
+		Launch aExistingLaunch = mManager.find(Launch.class, aOtherLaunchURI);
+
+		Spacecraft aNewSpacecraft = new Spacecraft();
+		aNewSpacecraft.setRdfId(new SupportsRdfId.URIKey(URI.create("http://empire.clarkparsia.com/test/merge/cascade/aNewOtherSpacecraft")));
+		aNewSpacecraft.setAgency("agency");
+
+		aExistingLaunch.setOtherSpacecraft(aNewSpacecraft);
+		aExistingLaunchWithProxy.setOtherSpacecraft(aNewSpacecraft);
+
+		mManager.merge(aExistingLaunch);
+
+		assertTrue(mManager.contains(aExistingLaunch));
+		// it was merged as a relation...
+		assertTrue(mManager.find(Launch.class, aOtherLaunchURI).getOtherSpacecraft().getRdfId().equals(aNewSpacecraft.getRdfId()));
+
+		// but merge does not cascade
+		assertFalse(mManager.contains(aNewSpacecraft));
+
+		mManager.merge(aExistingLaunchWithProxy);
+
+		assertTrue(mManager.contains(aExistingLaunchWithProxy));
+
+		// this should be true now because the merge was cascaded
+		assertTrue(mManager.contains(aNewSpacecraft));
+
+	}
+
+	@Test
+	public void testAllCascade() {
 		// ============ test all cascade
-		aNewLaunch = new Launch();
-		aNewLaunchWithProxy = new LaunchUsingProxy();
+		Launch aNewLaunch = new Launch();
+		LaunchUsingProxy aNewLaunchWithProxy = new LaunchUsingProxy();
 
 		LaunchSite aNewSiteOne = new LaunchSite();
 		aNewSiteOne.setLabel(Arrays.asList("new launch site one"));
@@ -253,41 +267,41 @@ public class TestProxyFetchAndCascade {
 		aNewLaunch.setLaunchSite(aNewSiteOne);
 		aNewLaunchWithProxy.setLaunchSite(aNewSiteOne);
 
-		aManager.persist(aNewLaunch);
+		mManager.persist(aNewLaunch);
 
-		assertTrue(aManager.contains(aNewLaunch));
-		assertTrue(aManager.find(Launch.class, aNewLaunch.getRdfId()).getLaunchSite().equals(aNewSiteOne));
-		assertFalse(aManager.contains(aNewSiteOne));
+		assertTrue(mManager.contains(aNewLaunch));
+		assertTrue(mManager.find(Launch.class, aNewLaunch.getRdfId()).getLaunchSite().getRdfId().equals(aNewSiteOne.getRdfId()));
+		assertFalse(mManager.contains(aNewSiteOne));
 
-		aManager.persist(aNewLaunchWithProxy);
+		mManager.persist(aNewLaunchWithProxy);
 
-		assertTrue(aManager.contains(aNewLaunchWithProxy));
-		assertTrue(aManager.find(LaunchUsingProxy.class, aNewLaunchWithProxy.getRdfId()).getLaunchSite().equals(aNewSiteOne));
-		assertTrue(aManager.contains(aNewSiteOne));
+		assertTrue(mManager.contains(aNewLaunchWithProxy));
+		assertTrue(mManager.find(LaunchUsingProxy.class, aNewLaunchWithProxy.getRdfId()).getLaunchSite().equals(aNewSiteOne));
+		assertTrue(mManager.contains(aNewSiteOne));
 
 		aNewLaunch.setLaunchSite(aNewSiteTwo);
 		aNewLaunchWithProxy.setLaunchSite(aNewSiteTwo);
 
-		aManager.merge(aNewLaunch);
+		mManager.merge(aNewLaunch);
 
-		assertTrue(aManager.contains(aNewLaunch));
-		assertTrue(aManager.find(Launch.class, aNewLaunch.getRdfId()).getLaunchSite().equals(aNewSiteTwo));
-		assertFalse(aManager.contains(aNewSiteTwo));
+		assertTrue(mManager.contains(aNewLaunch));
+		assertTrue(mManager.find(Launch.class, aNewLaunch.getRdfId()).getLaunchSite().getRdfId().equals(aNewSiteTwo.getRdfId()));
+		assertFalse(mManager.contains(aNewSiteTwo));
 
-		aManager.merge(aNewLaunchWithProxy);
+		mManager.merge(aNewLaunchWithProxy);
 
-		assertTrue(aManager.contains(aNewLaunchWithProxy));
-		assertTrue(aManager.find(LaunchUsingProxy.class, aNewLaunchWithProxy.getRdfId()).getLaunchSite().equals(aNewSiteTwo));
-		assertTrue(aManager.contains(aNewSiteTwo));
+		assertTrue(mManager.contains(aNewLaunchWithProxy));
+		assertTrue(mManager.find(LaunchUsingProxy.class, aNewLaunchWithProxy.getRdfId()).getLaunchSite().equals(aNewSiteTwo));
+		assertTrue(mManager.contains(aNewSiteTwo));
 
-		aManager.remove(aNewLaunch);
+		mManager.remove(aNewLaunch);
 
-		assertFalse(aManager.contains(aNewLaunch));
-		assertTrue(aManager.contains(aNewSiteTwo));
+		assertFalse(mManager.contains(aNewLaunch));
+		assertTrue(mManager.contains(aNewSiteTwo));
 
-		aManager.remove(aNewLaunchWithProxy);
+		mManager.remove(aNewLaunchWithProxy);
 
-		assertFalse(aManager.contains(aNewLaunchWithProxy));
-		assertFalse(aManager.contains(aNewSiteTwo));
+		assertFalse(mManager.contains(aNewLaunchWithProxy));
+		assertFalse(mManager.contains(aNewSiteTwo));
 	}
 }

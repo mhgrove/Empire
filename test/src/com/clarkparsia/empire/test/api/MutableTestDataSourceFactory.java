@@ -41,7 +41,9 @@ public class MutableTestDataSourceFactory implements DataSourceFactory {
 
 	public DataSource create(final Map<String, Object> theMap) throws DataSourceException {
 		// tests should reuse the same source.
-		if (theMap.containsKey("files") && mSourceCache.containsKey(theMap.get("files"))) {
+		if (theMap.containsKey("files")
+			&& mSourceCache.containsKey(theMap.get("files"))
+			&& (!theMap.containsKey("use.cache") || theMap.get("use.cache").toString().equalsIgnoreCase("true"))) {
 			return mSourceCache.get(theMap.get("files"));
 		}
 

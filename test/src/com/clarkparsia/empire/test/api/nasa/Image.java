@@ -27,6 +27,7 @@ import com.clarkparsia.empire.SupportsRdfId;
 import javax.persistence.Entity;
 
 import java.net.URI;
+import java.util.List;
 
 import com.clarkparsia.utils.BasicUtils;
 
@@ -44,7 +45,7 @@ public class Image extends BaseTestClass {
 	private URI mURI;
 
 	@RdfProperty("foaf:depicts")
-	private Object depicts;
+	private List<Object> depicts;
 
 	@RdfProperty("foaf:thumbnail")
 	private URI thumbnail;
@@ -57,11 +58,11 @@ public class Image extends BaseTestClass {
 		mURI = theURI;
 	}
 
-	public Object getDepicts() {
+	public List<Object> getDepicts() {
 		return depicts;
 	}
 
-	public void setDepicts(final Object theDepicts) {
+	public void setDepicts(final List<Object> theDepicts) {
 		depicts = theDepicts;
 	}
 

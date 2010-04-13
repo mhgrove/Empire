@@ -21,6 +21,7 @@ import javassist.CtNewConstructor;
 import javassist.CtField;
 import javassist.CtNewMethod;
 import javassist.NotFoundException;
+import javassist.Modifier;
 
 import java.util.Map;
 import java.util.HashMap;
@@ -59,7 +60,8 @@ public class InstanceGenerator {
 		CtClass aInterface = aPool.get(theInterface.getName());
 		CtClass aSupportsRdfIdInterface = aPool.get(SupportsRdfId.class.getName());
 
-		if (!Arrays.asList(aInterface.getInterfaces()).contains(aSupportsRdfIdInterface)) {
+		if (!Arrays.asList(aInterface.getInterfaces()).contains(aSupportsRdfIdInterface)
+			&& !SupportsRdfId.class.isAssignableFrom(theInterface)) {
 			throw new IllegalArgumentException("Class does not implement SupportsRdfId, cannot generate Empire suitable implementation.");
 		}
 
@@ -83,7 +85,13 @@ public class InstanceGenerator {
 			aClass.defrost();
 		}
 
-		aClass.addInterface(aInterface);
+		if (aInterface.isInterface()) {
+			aClass.addInterface(aInterface);
+		}
+		else {
+			aClass.setSuperclass(aInterface);
+		}
+
 		aClass.addInterface(aSupportsRdfIdInterface);
 
 		aClass.addConstructor(CtNewConstructor.defaultConstructor(aClass));
@@ -92,17 +100,29 @@ public class InstanceGenerator {
 		for (String aProp : aProps.keySet()) {
 			CtField aNewField = new CtField(aPool.get(aProps.get(aProp).getName()), aProp, aClass);
 
-			aClass.addField(aNewField);
+			if (!hasField(aClass, aNewField.getName())) {
+				aClass.addField(aNewField);
+			}
 
-			aClass.addMethod(CtNewMethod.getter(getterName(aProp), aNewField));
-			aClass.addMethod(CtNewMethod.setter(setterName(aProp), aNewField));
+			if (!hasMethod(aClass, getterName(aProp))) {
+				aClass.addMethod(CtNewMethod.getter(getterName(aProp), aNewField));
+			}
+
+			if (!hasMethod(aClass, setterName(aProp))) {
+				aClass.addMethod(CtNewMethod.setter(setterName(aProp), aNewField));
+			}
 		}
 
 		CtField aIdField = new CtField(aPool.get(SupportsRdfId.class.getName()), "supportsId", aClass);
 		aClass.addField(aIdField, CtField.Initializer.byExpr("new com.clarkparsia.empire.annotation.SupportsRdfIdImpl();"));
 
-		aClass.addMethod(CtNewMethod.make("public com.clarkparsia.empire.SupportsRdfId.RdfKey getRdfId() { return supportsId.getRdfId(); } ", aClass));
-		aClass.addMethod(CtNewMethod.make("public void setRdfId(com.clarkparsia.empire.SupportsRdfId.RdfKey theURI) { supportsId.setRdfId(theURI); } ", aClass));
+		if (!hasMethod(aClass, "getRdfId")) {
+			aClass.addMethod(CtNewMethod.make("public com.clarkparsia.empire.SupportsRdfId.RdfKey getRdfId() { return supportsId.getRdfId(); } ", aClass));
+		}
+
+		if (!hasMethod(aClass, "setRdfId")) {
+			aClass.addMethod(CtNewMethod.make("public void setRdfId(com.clarkparsia.empire.SupportsRdfId.RdfKey theURI) { supportsId.setRdfId(theURI); } ", aClass));
+		}
 
 		// TODO: generate a more sophisticated equals method based on the fields in the bean
 		aClass.addMethod(CtNewMethod.make("public boolean equals(Object theObj) { " +
@@ -118,6 +138,47 @@ public class InstanceGenerator {
 		aClass.freeze();
 
 		return (Class<T>) aClass.toClass();
+	}
+
+	/**
+	 * Return whether or not the class has a field with the given name
+	 * @param theClass the class to inspect
+	 * @param theField the name of the field to look for
+	 * @return true if the class contains the field, false otherwise
+	 */
+	private static boolean hasField(CtClass theClass, String theField) {
+		try {
+			return theClass.getDeclaredField(theField) != null;
+		}
+		catch (NotFoundException e) {
+			return false;
+		}
+	}
+
+	/**
+	 * Return whether or not the class has a method with the given name
+	 * @param theClass the class to inspect
+	 * @param theName the name of the method to look for
+	 * @return true if the class contains the method, false otherwise
+	 */
+	private static boolean hasMethod(CtClass theClass, String theName) {
+		try {
+			return theClass.getDeclaredMethod(theName) != null &&
+				   !Modifier.isAbstract(theClass.getDeclaredMethod(theName).getModifiers());
+		}
+		catch (NotFoundException e) {
+			try {
+				if (theClass.getSuperclass() != null) {
+					return hasMethod(theClass.getSuperclass(), theName);
+				}
+				else {
+					return false;
+				}
+			}
+			catch (NotFoundException e1) {
+				return false;
+			}
+		}
 	}
 
 	/**

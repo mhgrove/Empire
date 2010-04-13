@@ -219,7 +219,7 @@ public class RdfGenerator {
 			// so we'll try our own reflect based creation or create bytecode for an interface.
 
 			try {
-				if (theClass.isInterface()) {
+				if (theClass.isInterface() || Modifier.isAbstract(theClass.getModifiers())) {
 					aObj = com.clarkparsia.empire.codegen.InstanceGenerator.generateInstanceClass(theClass).newInstance();
 				}
 				else {

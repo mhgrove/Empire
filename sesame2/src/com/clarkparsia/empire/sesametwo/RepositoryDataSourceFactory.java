@@ -41,7 +41,7 @@ import org.openrdf.model.Statement;
  *
  * @author Michael Grove
  * @since 0.6
- * @version 0.6.3
+ * @version 0.6.5
  */
 @Alias("sesame")
 public class RepositoryDataSourceFactory implements DataSourceFactory {
@@ -64,6 +64,17 @@ public class RepositoryDataSourceFactory implements DataSourceFactory {
 	 * Configuration key for the local sesame data directory
 	 */
 	public static final String DIR = "dir";
+
+	/**
+	 * Configuration key for controlling which query dialect is used by the RepositoryDataSource
+	 */
+	public static final String QUERY_LANG = "queryLang";
+
+	/**
+	 * Constant value for the SERQL query language
+	 * @see #QUERY_LANG
+	 */
+	public static final String LANG_SERQL = "serql";
 
 	/**
 	 * @inheritDoc
@@ -128,7 +139,7 @@ public class RepositoryDataSourceFactory implements DataSourceFactory {
 				aRepository.initialize();
 			}
 
-			return new RepositoryDataSource(aRepository);
+			return new RepositoryDataSource(aRepository, theMap.containsKey(QUERY_LANG) && theMap.get(QUERY_LANG).toString().equalsIgnoreCase(LANG_SERQL));
 		}
 		catch (RepositoryException e) {
 			throw new DataSourceException(e);

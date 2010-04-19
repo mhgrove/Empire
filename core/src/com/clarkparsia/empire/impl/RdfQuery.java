@@ -142,6 +142,9 @@ public class RdfQuery implements Query {
 	 */
 	private Map<String, Object> mHints = new HashMap<String, Object>();
 
+	/**
+	 * The dialect of the query represented by this query object.
+	 */
 	private Dialect mQueryDialect;
 
     /**

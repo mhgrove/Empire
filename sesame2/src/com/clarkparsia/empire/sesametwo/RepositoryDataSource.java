@@ -23,6 +23,7 @@ import com.clarkparsia.empire.QueryException;
 
 import com.clarkparsia.empire.impl.AbstractDataSource;
 import com.clarkparsia.empire.impl.RdfQueryFactory;
+import com.clarkparsia.empire.impl.sparql.SPARQLDialect;
 
 import com.clarkparsia.empire.impl.serql.SerqlDialect;
 import com.clarkparsia.openrdf.util.GraphBuildingRDFHandler;
@@ -51,7 +52,7 @@ import java.net.URI;
  *
  * @author Michael Grove
  * @since 0.6
- * @version 0.6.3
+ * @version 0.6.5
  */
 public class RepositoryDataSource extends AbstractDataSource implements MutableDataSource, SupportsNamedGraphs {
 
@@ -71,10 +72,24 @@ public class RepositoryDataSource extends AbstractDataSource implements MutableD
 	private RepositoryConnection mConnection;
 
 	/**
-	 * Create a new RepositoryDataSource
+	 * The query languge to use when sending queries to the repository
+	 */
+	private QueryLanguage mQueryLang;
+
+	/**
+	 * Create a new RepositoryDataSource which uses the SPARQL query dialect for its Query API
 	 * @param theRepository the sesame repository to back this data source
 	 */
 	RepositoryDataSource(final Repository theRepository) {
+		this(theRepository, false);
+	}
+
+	/**
+	 * Create a new RepositoryDataSource
+	 * @param theRepository the sesame repository to back this data source
+	 * @param theUseSerql true to use the serql query dialect with this data source, false to default to sparql
+	 */
+	RepositoryDataSource(final Repository theRepository, boolean theUseSerql) {
 		mRepository = theRepository;
 
 		// TODO: add the SupportsTransactions interface to this class so Empire notices it natively supports
@@ -86,9 +101,14 @@ public class RepositoryDataSource extends AbstractDataSource implements MutableD
 		// on the repository implementation.  so its' not easy to do *one* solution that will work for all of them
 		// so we have to rely on our naive poor-man's transaction implementation.
 
-		// TODO: change which query factory is used through some sort of config parameter
-		// this will require us to not hard code serql as the query language later on in the code
-		setQueryFactory(new RdfQueryFactory(this, SerqlDialect.instance()));
+		if (theUseSerql) {
+			mQueryLang = QueryLanguage.SERQL;
+			setQueryFactory(new RdfQueryFactory(this, SerqlDialect.instance()));
+		}
+		else {
+			mQueryLang = QueryLanguage.SPARQL;
+			setQueryFactory(new RdfQueryFactory(this, SPARQLDialect.instance()));
+		}
 	}
 
 	/**
@@ -176,7 +196,7 @@ public class RepositoryDataSource extends AbstractDataSource implements MutableD
 		assertConnected();
 
 		try {
-			TupleQueryResult aResult = mConnection.prepareTupleQuery(QueryLanguage.SERQL, theQuery).evaluate();
+			TupleQueryResult aResult = mConnection.prepareTupleQuery(mQueryLang, theQuery).evaluate();
 
 			return new TupleQueryResultSet(aResult);
 		}
@@ -194,7 +214,7 @@ public class RepositoryDataSource extends AbstractDataSource implements MutableD
 		GraphBuildingRDFHandler aHandler = new GraphBuildingRDFHandler();
 
 		try {
-			GraphQuery aQuery = mConnection.prepareGraphQuery(QueryLanguage.SERQL, theQuery);
+			GraphQuery aQuery = mConnection.prepareGraphQuery(mQueryLang, theQuery);
 			aQuery.evaluate(aHandler);
 			return aHandler.getGraph();
 		}

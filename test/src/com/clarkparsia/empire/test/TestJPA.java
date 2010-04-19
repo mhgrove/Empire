@@ -621,6 +621,7 @@ public class TestJPA  {
 		aMap.put(ConfigKeys.FACTORY, RepositoryDataSourceFactory.class.getName());
 		aMap.put(RepositoryDataSourceFactory.REPO, "test-repo");
 		aMap.put(RepositoryDataSourceFactory.FILES, "");
+		aMap.put(RepositoryDataSourceFactory.QUERY_LANG, RepositoryDataSourceFactory.LANG_SERQL);
 
 		return aMap;
 	}
@@ -631,6 +632,7 @@ public class TestJPA  {
 		aMap.put(ConfigKeys.FACTORY, "sesame");
 
 		aMap.put("files", DATA_FILE);
+		aMap.put(RepositoryDataSourceFactory.QUERY_LANG, RepositoryDataSourceFactory.LANG_SERQL);
 
 		return aMap;
 	}

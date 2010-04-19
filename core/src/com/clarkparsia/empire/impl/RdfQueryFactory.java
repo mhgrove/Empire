@@ -35,6 +35,7 @@ import java.util.Collection;
  *
  * @author Michael Grove
  * @since 0.1
+ * @version 0.6.4
  */
 public class RdfQueryFactory implements QueryFactory {
 	/**
@@ -85,7 +86,6 @@ public class RdfQueryFactory implements QueryFactory {
 	 * @return a new query
 	 */
 	protected RdfQuery newQuery(String theQuery) {
-		// TODO: maybe just directly pass in the dialect to the query object?
 		return new RdfQuery(mSource, theQuery);
 	}
 
@@ -163,7 +163,6 @@ public class RdfQueryFactory implements QueryFactory {
 	 * @inheritDoc
 	 */
 	public Query createNativeQuery(final String theQueryString, final String theResultSetMapping) {
-		// TODO: add support for this.  I think it refers to javax.persistence.SqlResultSetMapping -- is the param the name of the mapping?
 		throw new UnsupportedOperationException();
 	}
 }

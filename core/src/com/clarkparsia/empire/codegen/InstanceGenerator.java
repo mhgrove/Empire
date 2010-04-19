@@ -36,7 +36,7 @@ import com.clarkparsia.empire.SupportsRdfId;
  *
  * @author Michael Grove
  * @since 0.5.1
- * @version 0.6.3
+ * @version 0.6.5
  */
 public class InstanceGenerator {
 
@@ -210,7 +210,14 @@ public class InstanceGenerator {
 		Map<String, Class> aMap = new HashMap<String, Class>();
 
 		for (Method aMethod : theClass.getDeclaredMethods()) {
-			if (!aMethod.getName().startsWith("get") && !aMethod.getName().startsWith("is") && !aMethod.getName().startsWith("set")) {
+			// we want to ignore methods with implementations, we should not override them.
+			if (!Modifier.isAbstract(aMethod.getModifiers())) {
+				continue;
+			}
+			
+			if (!aMethod.getName().startsWith("get")
+				&& !aMethod.getName().startsWith("is")
+				&& !aMethod.getName().startsWith("set")) {
 				throw new IllegalArgumentException("Non-bean style methods found, implementations for them cannot not be generated");
 			}
 

@@ -122,15 +122,8 @@ public class EntityManagerImpl implements EntityManager {
 	EntityManagerImpl(MutableDataSource theSource) {
 
 		// TODO: sparql for everything, just convert serql into sparql
-		// TODO: bnode support?
-		// TODO: locking support
 		// TODO: work like JPA/hibernate -- if something does not have a @Transient on it, convert it.  we'll just need to coin a URI in those cases
-		// TODO: support cascades of delete's -- when you delete a resource X, right now we just delete all the triples
-		// where X is the subject.  allow you to specify a cascade so you can remove all the triples where X is the object
-		// actually, we want all operations to be cascable (or not) via @CascadeType
 		// TODO: add an @RdfsLabel annotation that will use the value of a property as the label during annotation
-		// TODO: implement as many of the normal JPA annotations as possible/reasonable (like @Transient, @Enumerated, @ManyToOne) mapping to OWL/rdfs constructs as appropriate
-		//       -- need list of candidate annotations
 		// TODO: support for owl/rdfs annotations not mappable to JPA annotations such as min/max cardinality and others.
 		// TODO: do we want to do anything special with MappedSuperclass?
 

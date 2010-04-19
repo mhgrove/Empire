@@ -55,4 +55,11 @@ public @interface RdfProperty {
 	 * Default value is false.
 	 */
 	public boolean isList() default false;
+
+	/**
+	 * For literal valued properties, this specifies which language tag to retrieve and save from the RDF
+	 * @return the language value, such as 'en' or 'fr' or the empty string for any language typed literals including
+	 * those without language types specified.
+	 */
+	public String language() default "";
 }

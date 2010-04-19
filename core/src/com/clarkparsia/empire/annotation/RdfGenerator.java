@@ -49,13 +49,17 @@ import java.lang.reflect.Modifier;
 import java.util.Map;
 import java.util.Set;
 import java.util.Iterator;
+import java.util.Locale;
 import java.net.URISyntaxException;
 
 import com.clarkparsia.utils.BasicUtils;
 import com.clarkparsia.utils.Function;
+import com.clarkparsia.utils.Predicate;
 import com.clarkparsia.utils.io.Encoder;
 
 import com.clarkparsia.utils.collections.CollectionUtil;
+import static com.clarkparsia.utils.collections.CollectionUtil.filter;
+import static com.clarkparsia.utils.collections.CollectionUtil.find;
 
 import org.openrdf.model.impl.ValueFactoryImpl;
 
@@ -119,7 +123,7 @@ import javassist.util.proxy.MethodHandler;
  *
  * @author Michael Grove
  * @since 0.1
- * @version 0.6.4
+ * @version 0.6.5
  */
 public class RdfGenerator {
 
@@ -528,8 +532,9 @@ public class RdfGenerator {
 			ResourceBuilder aRes = aBuilder.instance(aBuilder.getValueFactory().createURI(NamespaceUtils.uri(aClass.value())),
 													 aSubj);
 
-			AsValueFunction aFunc = new AsValueFunction();
 			for (AccessibleObject aAccess : aAccessors) {
+
+				AsValueFunction aFunc = new AsValueFunction(aAccess);
 
 				if (aAccess.isAnnotationPresent(Transient.class)
 					|| (aAccess instanceof Field
@@ -554,7 +559,7 @@ public class RdfGenerator {
 				}
 				else if (Collection.class.isAssignableFrom(aValue.getClass())) {
 					@SuppressWarnings("unchecked")
-					List<Value> aValueList = asList((Collection<Object>) Collection.class.cast(aValue));
+					List<Value> aValueList = asList(aAccess, (Collection<Object>) Collection.class.cast(aValue));
 
 					if (aValueList.isEmpty()) {
 						continue;
@@ -589,13 +594,14 @@ public class RdfGenerator {
 
 	/**
 	 * Transform a list of Java Objects into the corresponding RDF values
+	 * @param theAccess the accessor for the value
 	 * @param theCollection the collection to transform
 	 * @return the collection as a list of RDF values
 	 * @throws InvalidRdfException thrown if any of the values cannot be transformed
 	 */
-	private static List<Value> asList(Collection<Object> theCollection) throws InvalidRdfException {
+	private static List<Value> asList(AccessibleObject theAccess, Collection<Object> theCollection) throws InvalidRdfException {
 		try {
-			return CollectionUtil.list(CollectionUtil.transform(theCollection, new AsValueFunction()));
+			return CollectionUtil.list(CollectionUtil.transform(theCollection, new AsValueFunction(theAccess)));
 		}
 		catch (RuntimeException e) {
 			e.printStackTrace();
@@ -624,23 +630,23 @@ public class RdfGenerator {
 		/**
 		 * Reference to the Type which the values will be assigned
 		 */
-		private Object mField;
+		private AccessibleObject mField;
 
-		public ToObjectFunction(final DataSource theSource, Resource theResource, final Object theField, final URI theProp) {
+		public ToObjectFunction(final DataSource theSource, Resource theResource, final AccessibleObject theField, final URI theProp) {
 			valueToObject = new ValueToObject(theSource, theResource, theField, theProp);
 
 			mField = theField;
 		}
 
-		public Object apply(final Collection<Value> theIn) {
-			if (theIn == null || theIn.isEmpty()) {
+		public Object apply(final Collection<Value> theList) {
+			if (theList == null || theList.isEmpty()) {
 				return null;
 			}
-			else if (Collection.class.isAssignableFrom(BeanReflectUtil.classFrom(mField))) {
+			if (Collection.class.isAssignableFrom(BeanReflectUtil.classFrom(mField))) {
 				try {
 					Collection<Object> aValues = BeanReflectUtil.instantiateCollectionFromField(BeanReflectUtil.classFrom(mField));
 
-					for (Value aValue : theIn) {
+					for (Value aValue : theList) {
 						Object aListValue = valueToObject.apply(aValue);
 
 						if (aListValue == null) {
@@ -656,13 +662,90 @@ public class RdfGenerator {
 					throw new RuntimeException(e);
 				}
 			}
-			else if (theIn.size() == 1) {
+
+			/**
+			 * if not list all literals
+			 *   proceed
+			 * else
+			 *  if not lang aware
+			 * 	 find non lang typed literals
+			 *   if >= 1 non lang typed literals
+			 *     proceed
+			 *   else get language based on locale
+			 *     find literals based on local lang
+			 *
+			 *   if == 0 literals
+			 *     use original list
+			 *   else use filtered list
+			 *
+			 * else if lang aware
+			 */
+
+			Collection<Value> aList = new HashSet<Value>(theList);
+
+			if (!find(aList, new ContainsResourceValues())) {
+				if (!EmpireOptions.ENABLE_LANG_AWARE) {
+					Collection<Value> aLangFiltered = filter(aList, new Predicate<Value>() { public boolean accept(final Value theValue) { return ((Literal)theValue).getLanguage() == null; }});
+
+					if (aLangFiltered.isEmpty()) {
+						aLangFiltered = filter(aList, new LanguageFilter(getLanguageForLocale()));
+					}
+
+					if (!aLangFiltered.isEmpty()) {
+						aList = aLangFiltered;
+					}
+				}
+				else {
+					aList = filter(aList, new LanguageFilter(mField.getAnnotation(RdfProperty.class).language()));
+				}
+			}
+
+//			aList = filter(aList, new Predicate<Value>() {
+//				public boolean accept(final Value theValue) {
+//					if (theValue instanceof Resource
+//						|| !EmpireOptions.ENABLE_LANG_AWARE
+//						|| (EmpireOptions.ENABLE_LANG_AWARE
+//							&& theValue instanceof Literal
+//							&& !mField.getAnnotation(RdfProperty.class).language().equals(""))
+//							&& mField.getAnnotation(RdfProperty.class).language().equals(((Literal)theValue).getLanguage())) {
+//						return true;
+//					}
+//					else {
+//						return false;
+//					}
+//				}
+//			});
+
+
+			if (aList.isEmpty()) {
+				// yes, we checked for emptiness to begin the method, but we might have done some filtering based on the
+				// language tags, so we need to check again.
+				return null;
+			}
+			else if (aList.size() == 1) {
 				// collection of one element, just convert the single element and send that back
-				return valueToObject.apply(theIn.iterator().next());
+				return valueToObject.apply(aList.iterator().next());
 			}
 			else {
-				throw new RuntimeException("Cannot convert list of values to anything meaningful for the field. " + mField + " " + theIn);
+				throw new RuntimeException("Cannot convert list of values to anything meaningful for the field. " + mField + " " + aList);
 			}
+		}
+	}
+
+	private static String getLanguageForLocale() {
+		return Locale.getDefault() == null ? "en" : Locale.getDefault().toString().substring(0, Locale.getDefault().toString().indexOf("_"));
+	}
+
+	private static class ContainsResourceValues implements Predicate<Value> { public boolean accept(final Value theValue) { return theValue instanceof Resource; }}
+	private static class LanguageFilter implements Predicate<Value> {
+		private String mLangCode;
+
+		private LanguageFilter(final String theLangCode) {
+			mLangCode = theLangCode;
+		}
+
+		public boolean accept(final Value theValue) {
+			return theValue instanceof Literal && mLangCode.equals(((Literal)theValue).getLanguage());
 		}
 	}
 
@@ -946,6 +1029,15 @@ public class RdfGenerator {
 	}
 
 	public static class AsValueFunction implements Function<Object, Value> {
+		private AccessibleObject mField;
+
+		public AsValueFunction() {
+		}
+
+		public AsValueFunction(final AccessibleObject theField) {
+			mField = theField;
+		}
+
 		public Value apply(final Object theIn) {
 			if (theIn == null) {
 				return null;
@@ -975,7 +1067,14 @@ public class RdfGenerator {
 				return FACTORY.createLiteral(BasicUtils.datetime(Date.class.cast(theIn)), XMLSchema.DATETIME);
 			}
 			else if (String.class.isInstance(theIn)) {
-				return FACTORY.createLiteral(String.class.cast(theIn));
+				RdfProperty aProp = mField == null ? null : mField.getAnnotation(RdfProperty.class);
+
+				if (aProp != null && !aProp.language().equals("")) {
+					return FACTORY.createLiteral(String.class.cast(theIn), aProp.language());
+				}
+				else {
+					return FACTORY.createLiteral(String.class.cast(theIn));
+				}
 			}
 			else if (Character.class.isInstance(theIn)) {
 				return FACTORY.createLiteral(Character.class.cast(theIn));

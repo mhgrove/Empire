@@ -20,7 +20,7 @@ package com.clarkparsia.empire;
  *
  * @author Michael Grove
  * @since 0.1
- * @version 0.6.4
+ * @version 0.6.5
  */
 public class EmpireOptions {
 
@@ -59,4 +59,11 @@ public class EmpireOptions {
 	 * {@link com.clarkparsia.empire.annotation.RdfProperty} or {@link com.clarkparsia.empire.annotation.RdfsClass}.
 	 */
 	public static boolean INSPECT_BEAN_HIERARCHY = true;
+
+	/**
+	 * Flag to enable whether or not language tags are used when setting the values for fields from RDF string literals.
+	 * By specifying a language on the {@link com.clarkparsia.empire.annotation.RdfProperty} and enabling this mode,
+	 * only literal values with the specified language will be considered for valid values for a field.
+	 */
+	public static boolean ENABLE_LANG_AWARE = false;
 }

@@ -59,6 +59,10 @@ public class JenaDataSource extends AbstractDataSource implements MutableDataSou
 		setQueryFactory(new JenaSPARQLQueryFactory(this));
 	}
 
+	public Model getModel() {
+		return mModel;
+	}
+
 	/**
 	 * @inheritDoc
 	 */

@@ -4,6 +4,7 @@ import com.clarkparsia.empire.annotation.RdfsClass;
 import com.clarkparsia.empire.annotation.NamedGraph;
 import com.clarkparsia.empire.annotation.SupportsRdfIdImpl;
 import com.clarkparsia.empire.annotation.RdfGenerator;
+import com.clarkparsia.empire.annotation.AnnotationChecker;
 import com.clarkparsia.empire.SupportsRdfId;
 import com.clarkparsia.empire.QueryException;
 import com.clarkparsia.empire.DataSource;
@@ -23,7 +24,6 @@ import com.clarkparsia.openrdf.ExtGraph;
 import com.clarkparsia.utils.NamespaceUtils;
 import com.clarkparsia.utils.BasicUtils;
 
-import javax.persistence.Entity;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceException;
 
@@ -57,18 +57,6 @@ public class EmpireUtil {
 	 * The logger
 	 */
 	private static final Logger LOGGER = LogManager.getLogger(Empire.class.getName());
-
-	/**
-	 * Return whether or not the given class instances is compatible with Empire, in that it has all the required
-	 * annotations, and can have an rdf:ID.
-	 * @param theClass the class to check
-	 * @return true if its Empire compatible, false otherwise.
-	 */
-	public static boolean isEmpireCompatible(final Class theClass) {
-		return BeanReflectUtil.hasAnnotation(theClass, Entity.class) &&
-			   BeanReflectUtil.hasAnnotation(theClass, RdfsClass.class) &&
-			   SupportsRdfId.class.isAssignableFrom(theClass);
-	}
 
 	/**
 	 * Do a poor-man's describe on the given resource, querying its context if that is supported, or otherwise
@@ -297,7 +285,7 @@ public class EmpireUtil {
 	public static <T> List<T> all(EntityManager theManager, Class<T> theClass) {
 		List<T> aList = new ArrayList<T>();
 
-		if (!isEmpireCompatible(theClass) || !(theManager.getDelegate() instanceof DataSource)) {
+		if (!AnnotationChecker.isValid(theClass) || !(theManager.getDelegate() instanceof DataSource)) {
 			return aList;
 		}
 

@@ -21,13 +21,14 @@ import com.clarkparsia.empire.SupportsNamedGraphs;
 import com.clarkparsia.empire.SupportsRdfId;
 import com.clarkparsia.empire.SupportsTransactions;
 import com.clarkparsia.empire.Empire;
+import com.clarkparsia.empire.EmpireException;
 
 import com.clarkparsia.empire.annotation.InvalidRdfException;
 import com.clarkparsia.empire.annotation.RdfGenerator;
 import com.clarkparsia.empire.annotation.RdfsClass;
+import com.clarkparsia.empire.annotation.AnnotationChecker;
 
 import org.openrdf.model.Graph;
-import org.openrdf.model.Statement;
 
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -80,7 +81,7 @@ import com.clarkparsia.utils.AbstractDataCommand;
  *
  * @author Michael Grove
  * @since 0.1
- * @version 0.6.3
+ * @version 0.6.5
  * @see EntityManager
  * @see com.clarkparsia.empire.DataSource
  */
@@ -396,52 +397,6 @@ public class EntityManagerImpl implements EntityManager {
 
 			// cascade the merge
 			cascadeOperation(theT, new IsMergeCascade(), new MergeCascade());
-//			Collection<AccessibleObject> aAccessors = new HashSet<AccessibleObject>();
-//			aAccessors.addAll(getAnnotatedFields(theT.getClass()));
-//			aAccessors.addAll(getAnnotatedGetters(theT.getClass(), true));
-//			for (AccessibleObject aObj : aAccessors) {
-//				if (BeanReflectUtil.isMergeCascade(aObj)) {
-//
-//					try {
-//						Object aAccessorValue = BeanReflectUtil.safeGet(aObj, theT);
-//
-//						// is it the correct JPA behavior to persist a value when it does not exist during a cascaded
-//						// merge?  or should that be a PersistenceException just like any normal merge for an un-managed
-//						// object?
-//						// Futhermore, is it an error if you specify a cascade type for something that cannot be
-//						// cascaded?  such as strings, or a non Entity instance?
-//						if (Collection.class.isAssignableFrom(aAccessorValue.getClass())) {
-//							for (Object aValue : (Collection) aAccessorValue) {
-//
-//								if (!EmpireUtil.isEmpireCompatible(aAccessorValue.getClass())) {
-//									continue;
-//								}
-//
-//								if (contains(aValue)) {
-//									merge(aValue);
-//								}
-//								else {
-//									persist(aValue);
-//								}
-//							}
-//						}
-//						else {
-//							if (EmpireUtil.isEmpireCompatible(aAccessorValue.getClass())) {
-//								if (contains(aAccessorValue)) {
-//									merge(aAccessorValue);
-//								}
-//								else {
-//									persist(aAccessorValue);
-//								}
-//							}
-//						}
-//					}
-//					catch (InvocationTargetException e) {
-//						e.printStackTrace();
-//						throw new PersistenceException(e);
-//					}
-//				}
-//			}
 
 			postUpdate(theT);
 
@@ -483,7 +438,7 @@ public class EntityManagerImpl implements EntityManager {
 			// is it the correct JPA behavior to persist a value when it does not exist during a cascaded
 			// merge?  or should that be a PersistenceException just like any normal merge for an un-managed
 			// object?
-			if (EmpireUtil.isEmpireCompatible(theValue.getClass())) {
+			if (AnnotationChecker.isValid(theValue.getClass())) {
 				if (contains(theValue)) {
 					merge(theValue);
 				}
@@ -496,7 +451,7 @@ public class EntityManagerImpl implements EntityManager {
 
 	private class RemoveCascade extends CascadeAction {
 		public void cascade(Object theValue) {
-			if (EmpireUtil.isEmpireCompatible(theValue.getClass())) {
+			if (AnnotationChecker.isValid(theValue.getClass())) {
 				if (contains(theValue)) {
 					remove(theValue);
 				}
@@ -681,8 +636,16 @@ public class EntityManagerImpl implements EntityManager {
 
 		assertEntity(theObj);
 		assertRdfClass(theObj);
+
 		if (!(theObj instanceof SupportsRdfId)) {
 			throw new IllegalArgumentException("Persistent RDF objects must implement the SupportsRdfId interface.");
+		}
+
+		try {
+			AnnotationChecker.assertValid(theObj.getClass());
+		}
+		catch (EmpireException e) {
+			throw new IllegalArgumentException(e);
 		}
 	}
 

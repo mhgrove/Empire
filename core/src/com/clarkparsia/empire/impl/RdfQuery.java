@@ -30,9 +30,9 @@ import org.apache.log4j.LogManager;
 import com.clarkparsia.empire.DataSource;
 import com.clarkparsia.empire.ResultSet;
 import com.clarkparsia.empire.Dialect;
-import com.clarkparsia.empire.util.EmpireUtil;
 import static com.clarkparsia.empire.util.EmpireUtil.asPrimaryKey;
 import com.clarkparsia.empire.annotation.RdfGenerator;
+import com.clarkparsia.empire.annotation.AnnotationChecker;
 import com.clarkparsia.openrdf.ExtBindingSet;
 
 import javax.persistence.FlushModeType;
@@ -318,7 +318,7 @@ public class RdfQuery implements Query {
 
 						String aVarName = getProjectionVarName();
 
-						if (aBinding.getValue(aVarName) instanceof URI && EmpireUtil.isEmpireCompatible(getBeanClass())) {
+						if (aBinding.getValue(aVarName) instanceof URI && AnnotationChecker.isValid(getBeanClass())) {
 							aObj = RdfGenerator.fromRdf(getBeanClass(),
 														asPrimaryKey(aBinding.getValue(aVarName)),
 														getSource());

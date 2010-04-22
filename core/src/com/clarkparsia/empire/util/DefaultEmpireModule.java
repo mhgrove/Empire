@@ -71,6 +71,9 @@ public class DefaultEmpireModule extends AbstractModule implements EmpireModule 
 		if (System.getProperty("empire.configuration.file") != null && new File(System.getProperty("empire.configuration.file")).exists()) {
 			aConfigFile = new File(System.getProperty("empire.configuration.file"));
 		}
+		else if (new File("empire.config").exists()) {
+			aConfigFile = new File("empire.config");
+		}
 		else if (new File("empire.properties").exists()) {
 			aConfigFile = new File("empire.properties");
 		}

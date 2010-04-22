@@ -79,13 +79,6 @@ public class EmpireUtil {
 	 * @throws com.clarkparsia.empire.QueryException if there is an error while querying for the graph
 	 */
 	public static Graph describe(DataSource theSource, Object theObj) throws QueryException {
-//		ParsedGraphQuery aQuery =
-//				QueryBuilderFactory.construct().addProjectionStatement("s", "p", "o")
-//				.group()
-//				.setContext(ValueFactoryImpl.getInstance())
-//				.atom("s", "p", "o")
-//				.filter().eq("s", ValueFactoryImpl.getInstance().createURI(asSupportsRdfId(theObj).getRdfId().toString())).closeGroup().query();
-
 		String aNG = null;
 
 		if (asSupportsRdfId(theObj).getRdfId() == null) {

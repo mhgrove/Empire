@@ -21,6 +21,7 @@ import com.clarkparsia.empire.util.DefaultEmpireModule;
 import com.clarkparsia.empire.util.EmpireModule;
 import com.clarkparsia.empire.config.EmpireConfiguration;
 import com.clarkparsia.utils.Predicate;
+import com.clarkparsia.utils.NamespaceUtils;
 
 import static com.clarkparsia.utils.collections.CollectionUtil.find;
 
@@ -69,6 +70,13 @@ public class Empire {
 	 * module of the same type later on, it will overwrite the previous module.
 	 */
 	private static Map<Class, Module> mModules = new HashMap<Class, Module>();
+
+	static {
+		// add default namespaces
+		NamespaceUtils.addNamespace("rdfs", "http://www.w3.org/2000/01/rdf-schema#");
+		NamespaceUtils.addNamespace("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#");
+		NamespaceUtils.addNamespace("owl", "http://www.w3.org/2002/07/owl#");
+	}
 
 	/**
 	 * Get a handle to Empire for the current thread

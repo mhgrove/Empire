@@ -50,7 +50,7 @@ import java.util.ArrayList;
  *
  * @author Michael Grove
  * @since 0.6.1
- * @version 0.6.4
+ * @version 0.6.5
  */
 public class EmpireUtil {
 	/**
@@ -66,11 +66,11 @@ public class EmpireUtil {
 	 * @return all the statements about the given object
 	 * @throws com.clarkparsia.empire.QueryException if there is an error while querying for the graph
 	 */
-	public static Graph describe(DataSource theSource, Object theObj) throws QueryException {
+	public static ExtGraph describe(DataSource theSource, Object theObj) throws QueryException {
 		String aNG = null;
 
 		if (asSupportsRdfId(theObj).getRdfId() == null) {
-			return new GraphImpl();
+			return new ExtGraph();
 		}
 
 		if (theSource instanceof SupportsNamedGraphs && hasNamedGraphSpecified(theObj)) {
@@ -84,6 +84,8 @@ public class EmpireUtil {
 		Dialect aDialect = theSource.getQueryFactory().getDialect();
 
 		Resource aResource = asResource(asSupportsRdfId(theObj));
+
+		// TODO: if source supports describe queries, use that.
 
 		String aSPARQL = "construct {?s ?p ?o}\n" +
 						 (aNG == null ? "" : "from <" + aNG + ">\n") +
@@ -104,7 +106,7 @@ public class EmpireUtil {
 			aGraph = theSource.graphQuery(aSPARQL);
 		}
 
-		return aGraph;
+		return new ExtGraph(aGraph);
 	}
 
 	/**

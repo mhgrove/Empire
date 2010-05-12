@@ -149,11 +149,6 @@ public class RdfGenerator {
 	private final static Map<Object, Object> OBJECT_M = Collections.synchronizedMap(new HashMap<Object, Object>());
 
 	static {
-		// add default namespaces
-		NamespaceUtils.addNamespace("rdfs", "http://www.w3.org/2000/01/rdf-schema#");
-		NamespaceUtils.addNamespace("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#");
-		NamespaceUtils.addNamespace("owl", "http://www.w3.org/2002/07/owl#");
-
 		Collection<Class<?>> aClasses = Empire.get().getAnnotationProvider().getClassesWithAnnotation(RdfsClass.class);
 		for (Class<?> aClass : aClasses) {
 			RdfsClass aAnnotation = aClass.getAnnotation(RdfsClass.class);

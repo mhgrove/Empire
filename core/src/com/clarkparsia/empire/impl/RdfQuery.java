@@ -56,7 +56,7 @@ import java.util.regex.Pattern;
  *
  * @author Michael Grove
  * @since 0.1
- * @version 0.6.3
+ * @version 0.6.5
  */
 public class RdfQuery implements Query {
 	/**
@@ -162,6 +162,13 @@ public class RdfQuery implements Query {
 		mQueryDialect = theSource.getQueryFactory().getDialect();
 
 		mQueryDialect.validateQueryFormat(getQueryString(), getProjectionVarName());
+
+		// trying to guess if this is a construct query or not.  this is not foolproof, but since the only way of
+		// definitely specifying this right now is to cast a query object as an RdfQuery and use setConstruct, that
+		// is not ideal.  so we'll take a crack guessing it here.
+		if (getQueryString().trim().startsWith("construct")) {
+			setConstruct(true);
+		}
 
 		parseParameters();
 	}
@@ -639,11 +646,26 @@ public class RdfQuery implements Query {
 	 * @return a valid query that can be run against a DataSource
 	 */
 	protected String query() {
-		// TODO: do we need to remove existing offsets and limits if they were pre-specifed in the query string
-		// by the user rather than through the Query object?
-		// ala:
-		//		String aRegex = "limit(\\s)*[0-9]{1,}";
-		//		boolean containsLimit = Pattern.compile(aRegex).matcher(s).find();
+		// use some regexs to look for and remove limits and offsets specified in the query string and store them locally
+		// these will get postfixed to the query later on.
+		boolean containsLimit = Pattern.compile("limit(\\s)*[0-9]{1,}[^}]*").matcher(getQueryString()).find();
+		boolean containsOffset = Pattern.compile("offset(\\s)*[0-9]{1,}[^}]*").matcher(getQueryString()).find();
+
+		if (containsLimit) {
+			String aLimitGrabRegex = "limit(\\s)*[0-9]{1,}";
+			Matcher m = Pattern.compile(aLimitGrabRegex).matcher(getQueryString());
+			m.find();
+			setMaxResults(Integer.parseInt(m.group(0).split(" ")[1]));
+			mQuery = mQuery.replaceAll(aLimitGrabRegex, "");
+		}
+
+		if (containsOffset) {
+			String aOffsetGrabRegex = "offset(\\s)*[0-9]{1,}";
+			Matcher m = Pattern.compile(aOffsetGrabRegex).matcher(getQueryString());
+			m.find();
+			setFirstResult(Integer.parseInt(m.group(0).split(" ")[1]));
+			mQuery = mQuery.replaceAll(aOffsetGrabRegex, "");
+		}
 
 		validateVariables();
 

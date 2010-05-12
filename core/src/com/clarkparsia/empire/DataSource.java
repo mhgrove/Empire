@@ -31,7 +31,7 @@ import com.clarkparsia.empire.QueryFactory;
  *
  * @author Michael Grove
  * @since 0.1
- * @version 0.6.1
+ * @version 0.6.5
  */
 public interface DataSource {
 
@@ -75,5 +75,5 @@ public interface DataSource {
 	 * Return a {@link QueryFactory} for creating executable {@link javax.persistence.Query} instances against this data source
 	 * @return the factory for this data source
 	 */
-	QueryFactory getQueryFactory();
+	public QueryFactory getQueryFactory();
 }

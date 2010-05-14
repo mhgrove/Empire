@@ -50,9 +50,30 @@ import java.util.Arrays;
  *
  * @author Michael Grove
  * @since 0.5.1
- * @version 0.6.4
+ * @version 0.6.5
  */
 public class BeanReflectUtil {
+
+	/**
+	 * More or less a more robust version of Class.forName.  Attempts to get around custom class loaders and
+	 * different class loaders in the current Thread context by trying *all* of them to load a class.
+	 * @param theName the class to load
+	 * @return the loaded class
+	 * @throws ClassNotFoundException if the class is not found.
+	 */
+	public static Class<?> loadClass(String theName) throws ClassNotFoundException {
+		try {
+			return Class.forName(theName);
+		}
+		catch (ClassNotFoundException e) {
+			try {
+				return Thread.currentThread().getContextClassLoader().loadClass(theName);
+			}
+			catch (ClassNotFoundException ex) {
+				return ClassLoader.getSystemClassLoader().loadClass(theName);
+			}
+		}
+	}
 
 	/**
 	 * Return the field on the class which has an {@link RdfId} annotation.  If the fields on the class do not have the

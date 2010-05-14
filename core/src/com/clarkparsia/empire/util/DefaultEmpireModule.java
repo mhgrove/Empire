@@ -43,7 +43,7 @@ import org.apache.log4j.Logger;
  *
  * @author Michael Grove
  * @since 0.6
- * @version 0.6.3
+ * @version 0.6.5
  */
 public class DefaultEmpireModule extends AbstractModule implements EmpireModule {
 
@@ -100,7 +100,7 @@ public class DefaultEmpireModule extends AbstractModule implements EmpireModule 
 			if (System.getProperty("empire.config.reader") != null) {
 				try {
 					@SuppressWarnings("unchecked") // it's ok if this throws a cast exception, we handle that
-					Class<ConfigReader> aClass = (Class<ConfigReader>) Class.forName(System.getProperty("empire.config.reader"));
+					Class<ConfigReader> aClass = (Class<ConfigReader>) BeanReflectUtil.loadClass(System.getProperty("empire.config.reader"));
 
 					aReader =  Empire.get().instance(aClass);
 				}

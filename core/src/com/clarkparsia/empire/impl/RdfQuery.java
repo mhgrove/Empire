@@ -31,6 +31,7 @@ import com.clarkparsia.empire.DataSource;
 import com.clarkparsia.empire.ResultSet;
 import com.clarkparsia.empire.Dialect;
 import static com.clarkparsia.empire.util.EmpireUtil.asPrimaryKey;
+import com.clarkparsia.empire.util.BeanReflectUtil;
 import com.clarkparsia.empire.annotation.RdfGenerator;
 import com.clarkparsia.empire.annotation.AnnotationChecker;
 import com.clarkparsia.openrdf.ExtBindingSet;
@@ -189,7 +190,7 @@ public class RdfQuery implements Query {
             }
             else {
                 try {
-                    return Class.forName(aValue.toString());
+                    return BeanReflectUtil.loadClass(aValue.toString());
                 }
                 catch (ClassNotFoundException e) {
                     LOGGER.error("Invalid Entity class query set, value not found: " + aValue);

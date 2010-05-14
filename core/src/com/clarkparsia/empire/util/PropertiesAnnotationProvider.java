@@ -16,7 +16,9 @@
 package com.clarkparsia.empire.util;
 
 import com.clarkparsia.utils.BasicUtils;
+import com.clarkparsia.empire.Empire;
 import com.google.inject.Inject;
+import com.google.inject.Guice;
 import com.google.inject.name.Named;
 
 import java.util.Collection;
@@ -43,7 +45,7 @@ import org.apache.log4j.LogManager;
  *
  * @author Michael Grove
  * @since 0.1
- * @version 0.6.3
+ * @version 0.6.5
  */
 public class PropertiesAnnotationProvider implements EmpireAnnotationProvider {
 
@@ -94,14 +96,14 @@ public class PropertiesAnnotationProvider implements EmpireAnnotationProvider {
 				mProperties.load(aStream);
 			}
 			catch (IOException e) {
-				LOGGER.warn("Reading empire.config properties for Annotation provider failed");
+				LOGGER.warn("Reading empire.config properties for Annotation provider failed", e);
 			}
 			finally {
 				try {
 					if (aStream != null) aStream.close();
 				}
 				catch (IOException e) {
-					LOGGER.warn("Error while closing annotation index properties stream");
+					LOGGER.warn("Error while closing annotation index properties stream", e);
 				}
 			}
 		}
@@ -122,7 +124,7 @@ public class PropertiesAnnotationProvider implements EmpireAnnotationProvider {
 		if (aVal != null) {
 			for (String aName : BasicUtils.split(aVal, ",")) {
 				try {
-					Class aClass = Class.forName(aName);
+					Class aClass = BeanReflectUtil.loadClass(aName);
 
 					if (aClass.isAnnotationPresent(theAnnotation)) {
 						aClasses.add(aClass);
@@ -133,7 +135,7 @@ public class PropertiesAnnotationProvider implements EmpireAnnotationProvider {
 					}
 				}
 				catch (ClassNotFoundException e) {
-					LOGGER.warn("Class specified in AnnotationProvider file '" + aName + "' cannot be found.");
+					LOGGER.warn("Class specified in AnnotationProvider file '" + aName + "' cannot be found.", e);
 				}
 			}
 		}

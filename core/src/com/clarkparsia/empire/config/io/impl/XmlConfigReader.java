@@ -19,6 +19,7 @@ import com.clarkparsia.empire.config.io.ConfigReader;
 import com.clarkparsia.empire.config.EmpireConfiguration;
 import com.clarkparsia.empire.EmpireException;
 import com.clarkparsia.empire.util.EmpireAnnotationProvider;
+import com.clarkparsia.empire.util.BeanReflectUtil;
 
 import java.io.InputStream;
 import java.io.IOException;
@@ -45,7 +46,7 @@ import javax.xml.parsers.ParserConfigurationException;
  *
  * @author Michael Grove
  * @since 0.6.4
- * @version 0.6.4
+ * @version 0.6.5
  */
 public class XmlConfigReader implements ConfigReader {
 	/**
@@ -86,7 +87,7 @@ public class XmlConfigReader implements ConfigReader {
 					String aValue = aChild.getTextContent();
 
 					try {
-						aProvider = (Class<EmpireAnnotationProvider>) Class.forName(aValue);
+						aProvider = (Class<EmpireAnnotationProvider>) BeanReflectUtil.loadClass(aValue);
 					}
 					catch (ClassNotFoundException e) {
 						LOGGER.warn("Annotation provider implementation '" + aValue + "' cannot be found, please check your classpath.");

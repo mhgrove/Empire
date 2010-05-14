@@ -22,6 +22,7 @@ import com.clarkparsia.empire.config.EmpireConfiguration;
 import com.clarkparsia.empire.config.ConfigKeys;
 import com.clarkparsia.empire.config.io.ConfigReader;
 import com.clarkparsia.empire.util.EmpireAnnotationProvider;
+import com.clarkparsia.empire.util.BeanReflectUtil;
 
 import java.util.Properties;
 import java.util.Map;
@@ -39,7 +40,7 @@ import org.apache.log4j.LogManager;
  *
  * @author Michael Grove
  * @since 0.6.2
- * @version 0.6.4
+ * @version 0.6.5
  * @see EmpireConfiguration
  */
 public class PropertiesConfigReader implements ConfigReader, ConfigKeys {
@@ -103,7 +104,7 @@ public class PropertiesConfigReader implements ConfigReader, ConfigKeys {
 		if (aGeneralConfig.containsKey(ANNOTATION_PROVIDER)) {
 			try {
 				@SuppressWarnings("unchecked")
-				Class<EmpireAnnotationProvider> aClass = (Class<EmpireAnnotationProvider>) Class.forName(aGeneralConfig.get(ANNOTATION_PROVIDER));
+				Class<EmpireAnnotationProvider> aClass = (Class<EmpireAnnotationProvider>) BeanReflectUtil.loadClass(aGeneralConfig.get(ANNOTATION_PROVIDER));
 
 				aConfig.setAnnotationProvider(aClass);
 			}

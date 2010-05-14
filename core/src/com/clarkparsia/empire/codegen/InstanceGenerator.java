@@ -30,6 +30,7 @@ import java.util.Collection;
 import java.lang.reflect.Method;
 
 import com.clarkparsia.empire.SupportsRdfId;
+import com.clarkparsia.empire.util.BeanReflectUtil;
 
 /**
  * <p>Generate implementations of interfaces at runtime via bytecode manipulation.</p>
@@ -72,7 +73,7 @@ public class InstanceGenerator {
 			//  i had a good reason for doing this, but i dont remember what it is.  when i do, i'll explain it here =)
 			
 			aClass = aPool.get(aName);
-			return (Class<T>) Class.forName(aName);
+			return (Class<T>) BeanReflectUtil.loadClass(aName);
 		}
 		catch (NotFoundException e) {
 			aClass = aPool.makeClass(aInterface.getPackageName()+ ".impl." + aInterface.getSimpleName() + "Impl");

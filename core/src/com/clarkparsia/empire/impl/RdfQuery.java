@@ -345,7 +345,7 @@ public class RdfQuery implements Query {
 					}
 				}
 				else {
-					aList.addAll(CollectionUtil.list(aResults));
+					aList.addAll(CollectionUtil.list( (Iterable<BindingSet>) aResults));
 				}
 
 				aResults.close();

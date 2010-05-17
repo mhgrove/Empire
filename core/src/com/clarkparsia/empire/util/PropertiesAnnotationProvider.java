@@ -32,6 +32,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.io.FileNotFoundException;
 
 import org.apache.log4j.Logger;
 import org.apache.log4j.LogManager;
@@ -95,8 +96,11 @@ public class PropertiesAnnotationProvider implements EmpireAnnotationProvider {
 
 				mProperties.load(aStream);
 			}
+			catch (FileNotFoundException ex) {
+				LOGGER.warn("Reading annotation index properties for Annotation provider failed, index file not found.");
+			}
 			catch (IOException e) {
-				LOGGER.warn("Reading empire.config properties for Annotation provider failed", e);
+				LOGGER.warn("Reading annotation index properties for Annotation provider failed", e);
 			}
 			finally {
 				try {

@@ -16,6 +16,8 @@
 package com.clarkparsia.empire.spi;
 
 import com.clarkparsia.empire.DataSourceFactory;
+import com.clarkparsia.empire.DataSource;
+import com.clarkparsia.empire.DataSourceException;
 import com.clarkparsia.empire.ds.Alias;
 import com.clarkparsia.empire.config.EmpireConfiguration;
 import com.clarkparsia.empire.config.ConfigKeys;
@@ -36,7 +38,7 @@ import java.util.Set;
  *
  * @author Michael Grove
  * @since 0.6
- * @version 0.6.3
+ * @version 0.6.5
  */
 public class EmpirePersistenceProvider implements PersistenceProvider {
     // TODO: should we keep factories created so that to factories created w/ the same name are == ?
@@ -67,32 +69,14 @@ public class EmpirePersistenceProvider implements PersistenceProvider {
 	 * @inheritDoc
 	 */
     public EntityManagerFactory createEntityManagerFactory(final String theUnitName, final Map theMap) {
-        Map<String, Object> aConfig = new HashMap<String, Object>();
+        DataSourceFactory aFactory = selectFactory(theUnitName, theMap);
 
-		if (mContainerConfig.hasUnit(theUnitName)) {
-			aConfig.putAll(mContainerConfig.getUnitConfig(theUnitName));
-		}
-
-		if (theMap != null) {
-        	aConfig.putAll(theMap);
-		}
-
-        if (!aConfig.containsKey(ConfigKeys.FACTORY)) {
-            return null;
+		if (aFactory != null) {
+			return new EntityManagerFactoryImpl(aFactory, createUnitConfig(theUnitName, theMap));
         }
-
-        final String aName = aConfig.get(ConfigKeys.FACTORY).toString();
-
-        for (DataSourceFactory aFactory  : mFactories) {
-			String aAlias = aFactory.getClass().isAnnotationPresent(Alias.class) ? aFactory.getClass().getAnnotation(Alias.class).value() : "";
-
-            if (aAlias.equals(aName) ||
-				aFactory.getClass().getName().equals(aName)) {
-                return new EntityManagerFactoryImpl(aFactory, aConfig);
-            }
-        }
-
-        return null;
+		else {
+	        return null;
+		}
     }
 
 	/**
@@ -103,4 +87,67 @@ public class EmpirePersistenceProvider implements PersistenceProvider {
         // TODO: there's a lot more options on PersistenceUnitInfo that we can use here.
         return createEntityManagerFactory(thePersistenceUnitInfo.getPersistenceUnitName(), theMap);
     }
+
+	/**
+	 * Similar to {@link #createEntityManagerFactory} this creates a DataSource (instead of an EntityManagerFactory)
+	 * based on the current persistence context and additional provided context parameters.  Essentially does the
+	 * same thing as createEntityManagerFactory without wrapping the DataSource in an EntityManager or providing
+	 * EntityManager specific configuration properties as can be done with the EntityManagerFactory.
+	 * @param theUnitName the persistence unit to create
+	 * @param theMap additional persistence context parameters
+	 * @return a new data source, or null if one cannot be created.
+	 * @throws com.clarkparsia.empire.DataSourceException if there is an error while creating the data source
+	 */
+	public DataSource createDataSource(final String theUnitName, final Map theMap) throws DataSourceException {
+		DataSourceFactory aFactory = selectFactory(theUnitName, theMap);
+
+		if (aFactory != null) {
+			return aFactory.create(createUnitConfig(theUnitName, theMap));
+		}
+		else {
+			return null;
+		}
+	}
+
+	private DataSourceFactory selectFactory(final String theUnitName, final Map theMap) {
+		Map<String, Object> aConfig = createUnitConfig(theUnitName, theMap);
+
+		if (!aConfig.containsKey(ConfigKeys.FACTORY)) {
+			return null;
+		}
+
+		final String aName = aConfig.get(ConfigKeys.FACTORY).toString();
+
+		for (DataSourceFactory aFactory  : mFactories) {
+			String aAlias = aFactory.getClass().isAnnotationPresent(Alias.class) ? aFactory.getClass().getAnnotation(Alias.class).value() : "";
+
+			if (aAlias.equals(aName) ||
+				aFactory.getClass().getName().equals(aName)) {
+				return aFactory;
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Create the unit specific configuration properties by grabbing unit configuration from the Empire config and then
+	 * merging that with the request specific configuration parameters.
+	 * @param theUnitName the name of the persistence unit configuration to retrieve
+	 * @param theMap the additional configuration parameters to add to the defaults
+	 * @return the unit configuration
+	 */
+	private Map<String, Object> createUnitConfig(final String theUnitName, final Map theMap) {
+		Map<String, Object> aConfig = new HashMap<String, Object>();
+
+		if (mContainerConfig.hasUnit(theUnitName)) {
+			aConfig.putAll(mContainerConfig.getUnitConfig(theUnitName));
+		}
+
+		if (theMap != null) {
+			aConfig.putAll(theMap);
+		}
+
+		return aConfig;
+	}
 }

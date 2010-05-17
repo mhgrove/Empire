@@ -23,6 +23,9 @@ import com.clarkparsia.openrdf.ExtGraph;
 
 import com.clarkparsia.utils.NamespaceUtils;
 import com.clarkparsia.utils.BasicUtils;
+import com.clarkparsia.utils.Function;
+import static com.clarkparsia.utils.collections.CollectionUtil.transform;
+import static com.clarkparsia.utils.collections.CollectionUtil.set;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceException;
@@ -30,11 +33,14 @@ import javax.persistence.PersistenceException;
 import org.openrdf.model.Graph;
 import org.openrdf.model.Resource;
 import org.openrdf.model.BNode;
+import org.openrdf.model.Value;
+
 import org.openrdf.model.vocabulary.RDF;
-import org.openrdf.model.impl.GraphImpl;
+
 import org.openrdf.model.impl.ValueFactoryImpl;
 
 import org.openrdf.query.parser.ParsedTupleQuery;
+import org.openrdf.query.BindingSet;
 
 import org.apache.log4j.Logger;
 import org.apache.log4j.LogManager;
@@ -42,8 +48,10 @@ import org.apache.log4j.LogManager;
 import java.net.URI;
 import java.net.URL;
 import java.net.URISyntaxException;
+
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Collection;
 
 /**
  * <p>A collection of utility functions for Empire.</p>
@@ -386,6 +394,40 @@ public class EmpireUtil {
 			LOGGER.error("There was an error while getting the type of a resource", e);
 
 			return null;
+		}
+	}
+
+	/**
+	 * Return the values for the property on the given resource.
+	 * @param theSource the data source to query for values
+	 * @param theSubject the subject to get property values for
+	 * @param thePredicate the property to get values for
+	 * @return a collection of all the values of the property on the given resource
+	 * @throws DataSourceException if there is an error while querying the data source.
+	 */
+	public static Collection<Value> getValues(final DataSource theSource, final Resource theSubject, final org.openrdf.model.URI thePredicate) throws DataSourceException {
+		ParsedTupleQuery aQuery = QueryBuilderFactory.select("obj")
+				.group()
+				.atom(theSubject, thePredicate, "obj").closeGroup().query();
+
+		ResultSet aResults;
+
+		try {
+			if (theSource.getQueryFactory().getDialect().equals(SerqlDialect.instance())) {
+				aResults = theSource.selectQuery(new SeRQLQueryRenderer().render(aQuery));
+			}
+			else {
+				aResults = theSource.selectQuery(new SPARQLQueryRenderer().render(aQuery));
+			}
+
+			return transform(set( (Iterable<BindingSet>) aResults), new Function<BindingSet, Value>() {
+					public Value apply(final BindingSet theIn) {
+						return theIn.getValue("obj");
+					}
+			});
+		}
+		catch (Exception e) {
+			throw new DataSourceException(e);
 		}
 	}
 }

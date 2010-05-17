@@ -21,7 +21,7 @@ import org.openrdf.query.BindingSet;
 
 /**
  * <p>Simple stub interface for a set of results to a select query.  This is considered to be an
- * {@link Iterator} set of {@link BindingSEt} objects.  BindingSet objects are map-like structures where the keys
+ * {@link Iterator} set of {@link BindingSet} objects.  BindingSet objects are map-like structures where the keys
  * are the names elements of the projection of the query and the values are the bindings for that particular
  * query solution.</p>
  *
@@ -31,7 +31,7 @@ import org.openrdf.query.BindingSet;
  * @author Michael Grove
  * @since 0.1
  */
-public interface ResultSet extends Iterator<BindingSet> {
+public interface ResultSet extends Iterator<BindingSet>, Iterable<BindingSet> {
 
 	/**
 	 * Close this result set and release any resources it holds.

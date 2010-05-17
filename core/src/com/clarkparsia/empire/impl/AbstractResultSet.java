@@ -18,6 +18,7 @@ package com.clarkparsia.empire.impl;
 import com.clarkparsia.empire.ResultSet;
 
 import java.util.Iterator;
+import java.util.Collection;
 
 import org.openrdf.query.BindingSet;
 
@@ -26,6 +27,7 @@ import org.openrdf.query.BindingSet;
  *
  * @author Michael Grove
  * @since 0.1
+ * @version 0.6.5
  */
 public abstract class AbstractResultSet implements ResultSet {
 
@@ -40,6 +42,14 @@ public abstract class AbstractResultSet implements ResultSet {
 	 */
 	public AbstractResultSet(final Iterator<BindingSet> theIter) {
 		mIter = theIter;
+	}
+
+	/**
+	 * Create a new AbstractResultSet
+	 * @param theCollection the collection to back this result set.
+	 */
+	public AbstractResultSet(final Collection<BindingSet> theCollection) {
+		this(theCollection.iterator());
 	}
 
 	/**
@@ -61,5 +71,13 @@ public abstract class AbstractResultSet implements ResultSet {
 	 */
 	public void remove() {
 		mIter.remove();
+	}
+
+
+	/**
+	 * @inheritDoc
+	 */
+	public Iterator<BindingSet> iterator() {
+		return this;
 	}
 }

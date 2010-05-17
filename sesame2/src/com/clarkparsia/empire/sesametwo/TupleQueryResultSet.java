@@ -39,6 +39,9 @@ public class TupleQueryResultSet extends AbstractResultSet {
 		mResults = theResults;
 	}
 
+	/**
+	 * @inheritDoc
+	 */
 	public void close() {
 		try {
 			mResults.close();

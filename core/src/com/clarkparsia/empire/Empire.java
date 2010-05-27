@@ -53,7 +53,7 @@ public class Empire {
 	/**
 	 * The Guice injector used by Empire
 	 */
-	private static Injector injector = Guice.createInjector(new DefaultEmpireModule());
+	private static Injector injector;
 
 	/**
 	 * The EmpirePersistenceProvider
@@ -84,7 +84,7 @@ public class Empire {
 	 */
 	public static Empire get() {
 		if (INSTANCE == null) {
-			INSTANCE = injector.getInstance(Empire.class);
+			INSTANCE = injector().getInstance(Empire.class);
 		}
 
 		return INSTANCE;
@@ -170,7 +170,7 @@ public class Empire {
 	 * @return the new instance
 	 */
 	public <T> T instance(Class<T> theClass) {
-		return injector.getInstance(theClass);
+		return injector().getInstance(theClass);
 	}
 
 	/**
@@ -183,5 +183,17 @@ public class Empire {
 		public boolean accept(EmpireModule theModule) {
 			return theModule instanceof DefaultEmpireModule;
 		}
+	}
+
+	/**
+	 * Return the Guice injector.
+	 * @return the Guice injector for Empire
+	 */
+	private static Injector injector() {
+		if (injector == null) {
+			injector = Guice.createInjector(new DefaultEmpireModule());
+		}
+
+		return injector;
 	}
 }

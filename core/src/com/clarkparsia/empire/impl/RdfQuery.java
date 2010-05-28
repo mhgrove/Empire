@@ -167,11 +167,19 @@ public class RdfQuery implements Query {
 		// trying to guess if this is a construct query or not.  this is not foolproof, but since the only way of
 		// definitely specifying this right now is to cast a query object as an RdfQuery and use setConstruct, that
 		// is not ideal.  so we'll take a crack guessing it here.
-		if (getQueryString().trim().startsWith("construct")) {
+		if (getQueryString().trim().toLowerCase().startsWith("construct")) {
 			setConstruct(true);
 		}
 
 		parseParameters();
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	@Override
+	public String toString() {
+		return getQueryString();
 	}
 
 	/**
@@ -675,7 +683,10 @@ public class RdfQuery implements Query {
 
 		StringBuffer aQuery = new StringBuffer(insertVariables(getQueryString()).trim());
 
-        if (!aQuery.toString().startsWith(mQueryDialect.patternKeyword()) && !aQuery.toString().startsWith("select") && !aQuery.toString().startsWith("construct")) {
+        if (!aQuery.toString().toLowerCase().startsWith(mQueryDialect.patternKeyword())
+			&& !aQuery.toString().toLowerCase().startsWith("select")
+			&& !aQuery.toString().toLowerCase().startsWith("construct")) {
+			
             aQuery.insert(0, mQueryDialect.patternKeyword());
         }
 

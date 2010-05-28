@@ -133,7 +133,7 @@ public class Empire {
 	public static void init(EmpireConfiguration theConfig, EmpireModule... theModules) {
 		Collection<EmpireModule> aModules = new HashSet<EmpireModule>(Arrays.asList(theModules));
 
-		if (!find(aModules, new FindDefaultEmpireModulePredicate())) {
+		if (aModules.isEmpty() || !find(aModules, new FindDefaultEmpireModulePredicate())) {
 			aModules.add(new DefaultEmpireModule(theConfig));
 		}
 
@@ -149,7 +149,7 @@ public class Empire {
 
 		Collection<EmpireModule> aModules = new HashSet<EmpireModule>(Arrays.asList(theModules));
 
-		if (!find(aModules, new FindDefaultEmpireModulePredicate())) {
+		if (aModules.isEmpty() || !find(aModules, new FindDefaultEmpireModulePredicate())) {
 			aModules.add(new DefaultEmpireModule());
 		}
 

@@ -16,11 +16,15 @@
 package com.clarkparsia.empire.util;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.multibindings.Multibinder;
 
 import com.google.inject.name.Names;
 
 import com.clarkparsia.empire.EmpireException;
 import com.clarkparsia.empire.Empire;
+import com.clarkparsia.empire.DataSourceFactory;
+
+import com.clarkparsia.empire.ds.impl.SparqlEndpointSourceFactory;
 
 import com.clarkparsia.empire.config.EmpireConfiguration;
 
@@ -165,5 +169,7 @@ public class DefaultEmpireModule extends AbstractModule implements EmpireModule 
 		 mConfig.installBindings(this.binder());
 
 		 bind(EmpireAnnotationProvider.class).to(mConfig.getAnnotationProvider());
+
+		 Multibinder.newSetBinder(binder(), DataSourceFactory.class).addBinding().to(SparqlEndpointSourceFactory.class);
 	 }
  }

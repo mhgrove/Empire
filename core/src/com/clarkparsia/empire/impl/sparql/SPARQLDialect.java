@@ -132,4 +132,16 @@ public class SPARQLDialect implements Dialect {
 
 		theBuffer.insert(0, aNS);
 	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public String asVar(String theVar) {
+		if (theVar == null) {
+			return "[]";
+		}
+		else {
+			return "?" + theVar.replaceAll("\\?", "");
+		}
+	}
 }

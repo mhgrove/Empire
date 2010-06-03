@@ -20,11 +20,16 @@ import com.clarkparsia.empire.DataSource;
 import com.clarkparsia.empire.DataSourceException;
 import com.clarkparsia.empire.ds.Alias;
 import com.clarkparsia.openrdf.ExtGraph;
+import com.clarkparsia.openrdf.ExtRepository;
+import com.clarkparsia.openrdf.OpenRdfUtil;
+import com.clarkparsia.openrdf.OpenRdfIO;
 import com.clarkparsia.utils.BasicUtils;
 
 import java.util.Map;
 import java.util.HashMap;
 import java.io.File;
+
+import org.openrdf.repository.RepositoryException;
 
 /**
  * <p>DataSourceFactory implementation which creates an instancoe of a MutableDataSource for testing.</p>
@@ -47,12 +52,12 @@ public class MutableTestDataSourceFactory implements DataSourceFactory {
 			return mSourceCache.get(theMap.get("files"));
 		}
 
-		ExtGraph aGraph = new ExtGraph();
+		ExtRepository aRepo = OpenRdfUtil.createInMemoryRepo();
 
 		if (theMap.containsKey("files")) {
 			for (String aFile : BasicUtils.split(theMap.get("files").toString(), ",")) {
 				try {
-					aGraph.read(new File(aFile.trim()));
+					OpenRdfIO.addData(aRepo, new File(aFile));
 				}
 				catch (Exception e) {
 					throw new DataSourceException("Error reading file: " + aFile, e);
@@ -60,7 +65,7 @@ public class MutableTestDataSourceFactory implements DataSourceFactory {
 			}
 		}
 
-		DataSource aSource = new MutableTestDataSource(aGraph);
+		DataSource aSource = new MutableTestDataSource(aRepo);
 
 		mSourceCache.put(theMap.get("files").toString(), aSource);
 

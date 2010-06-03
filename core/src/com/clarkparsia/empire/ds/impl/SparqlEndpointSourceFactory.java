@@ -4,6 +4,8 @@ import com.clarkparsia.empire.ds.Alias;
 import com.clarkparsia.empire.DataSourceFactory;
 import com.clarkparsia.empire.DataSource;
 import com.clarkparsia.empire.DataSourceException;
+import com.clarkparsia.empire.impl.sparql.SPARQLDialect;
+import com.clarkparsia.empire.impl.sparql.ARQSPARQLDialect;
 
 import java.util.Map;
 import java.net.URL;
@@ -26,6 +28,12 @@ public class SparqlEndpointSourceFactory implements DataSourceFactory {
 	public static final String KEY_URL = "url";
 
 	/**
+	 * Configuration parameter for specifying arq sparql dialect w/ its special bnode encoding, or the standard dialect
+	 * for sparql.
+	 */
+	public static final String KEY_DIALECT = "dialect";
+
+	/**
 	 * @inheritDoc
 	 */
 	public boolean canCreate(final Map<String, Object> theMap) {
@@ -38,7 +46,13 @@ public class SparqlEndpointSourceFactory implements DataSourceFactory {
 	public DataSource create(final Map<String, Object> theMap) throws DataSourceException {
 		if (canCreate(theMap)) {
 			try {
-				return new SparqlEndpointDataSource(new URL(theMap.get(KEY_URL).toString()));
+				SPARQLDialect aDialect = SPARQLDialect.instance();
+
+				if (theMap.containsKey(KEY_DIALECT) && theMap.get(KEY_DIALECT).equals("arq")) {
+					aDialect = ARQSPARQLDialect.instance();
+				}
+
+				return new SparqlEndpointDataSource(new URL(theMap.get(KEY_URL).toString()), aDialect);
 			}
 			catch (MalformedURLException e) {
 				throw new DataSourceException(e);

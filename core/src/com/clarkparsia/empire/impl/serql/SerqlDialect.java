@@ -126,4 +126,17 @@ public class SerqlDialect implements Dialect {
 
 		theBuffer.append("\n").append(aNS);
 	}
+
+
+	/**
+	 * @inheritDoc
+	 */
+	public String asVar(String theVar) {
+		if (theVar == null) {
+			return "";
+		}
+		else {
+			return theVar.replaceAll("\\?", "");
+		}
+	}
 }

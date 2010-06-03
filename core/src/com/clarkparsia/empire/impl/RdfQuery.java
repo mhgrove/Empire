@@ -30,6 +30,8 @@ import org.apache.log4j.LogManager;
 import com.clarkparsia.empire.DataSource;
 import com.clarkparsia.empire.ResultSet;
 import com.clarkparsia.empire.Dialect;
+import com.clarkparsia.empire.impl.sparql.SPARQLDialect;
+import com.clarkparsia.empire.impl.serql.SerqlDialect;
 import static com.clarkparsia.empire.util.EmpireUtil.asPrimaryKey;
 import com.clarkparsia.empire.util.BeanReflectUtil;
 import com.clarkparsia.empire.annotation.RdfGenerator;
@@ -148,7 +150,11 @@ public class RdfQuery implements Query {
 	 */
 	private Dialect mQueryDialect;
 
-    /**
+	private static String UNAMED_VAR_REGEX = VT_RE + "[^a-zA-Z0-9_\\-\\.\\w]??";
+
+	private static String NAMED_VAR_REGEX = VT_RE + "[a-zA-Z0-9_\\-]+";
+
+	/**
 	 * Create a new RdfQuery
 	 * @param theSource the data source the query is run against
 	 * @param theQueryString the query string
@@ -584,6 +590,7 @@ public class RdfQuery implements Query {
 	 * Validate that all parameter variables in the query have values.
 	 * @throws IllegalStateException if there are unescaped parameter variables in th query
 	 */
+	@Deprecated // no longer requiring all variables to be used, we can just let them be normal vars in the query
 	private void validateVariables() {
 		// note: null values for an index/name means the user never set a value for the parameter in the query
 		// which means we have an invalid query!
@@ -630,9 +637,7 @@ public class RdfQuery implements Query {
 		mNamedParameters.clear();
 		mIndexedParameters.clear();
 
-		String aUnamedVarRegex = VT_RE + "[^a-zA-Z0-9_\\-][\\.\\w]?";
-
-		Matcher aMatcher = Pattern.compile(aUnamedVarRegex).matcher(getQueryString());
+		Matcher aMatcher = Pattern.compile(UNAMED_VAR_REGEX).matcher(getQueryString());
 
 		// i'm pretty sure the JPA stuff is 1-indexed rather than the normal 0-indexed
 		int aIndex = 1;
@@ -640,9 +645,7 @@ public class RdfQuery implements Query {
 			mIndexedParameters.put(aIndex++, null);
 		}
 
-		String aNamedVarRegex = VT_RE + "[a-zA-Z0-9_\\-]+";
-
-		aMatcher = Pattern.compile(aNamedVarRegex).matcher(getQueryString());
+		aMatcher = Pattern.compile(NAMED_VAR_REGEX).matcher(getQueryString());
 
 		while (aMatcher.find()) {
 			mNamedParameters.put(getQueryString().substring(aMatcher.start() + VARIABLE_TOKEN.length(), aMatcher.end()), null);
@@ -664,7 +667,11 @@ public class RdfQuery implements Query {
 			String aLimitGrabRegex = "limit(\\s)*[0-9]{1,}";
 			Matcher m = Pattern.compile(aLimitGrabRegex).matcher(getQueryString());
 			m.find();
-			setMaxResults(Integer.parseInt(m.group(0).split(" ")[1]));
+
+			if (getMaxResults() == -1) {
+				setMaxResults(Integer.parseInt(m.group(0).split(" ")[1]));
+			}
+
 			mQuery = mQuery.replaceAll(aLimitGrabRegex, "");
 		}
 
@@ -672,16 +679,24 @@ public class RdfQuery implements Query {
 			String aOffsetGrabRegex = "offset(\\s)*[0-9]{1,}";
 			Matcher m = Pattern.compile(aOffsetGrabRegex).matcher(getQueryString());
 			m.find();
-			setFirstResult(Integer.parseInt(m.group(0).split(" ")[1]));
+
+			if (getFirstResult() == -1) {
+				setFirstResult(Integer.parseInt(m.group(0).split(" ")[1]));
+			}
+			
 			mQuery = mQuery.replaceAll(aOffsetGrabRegex, "");
 		}
 
-		validateVariables();
+		String queryStr = insertVariables(getQueryString()).trim();
+
+		queryStr = replaceUnusedVariableTokens(mQueryDialect, queryStr);
+
+//		validateVariables();
 
 		// TODO: should we get the values for the keywords used here (select, distinct, construct, limit, offset) from
 		// the subclass rather than hard coding them?  or will these be the same for all rdf based query languages?
 
-		StringBuffer aQuery = new StringBuffer(insertVariables(getQueryString()).trim());
+		StringBuffer aQuery = new StringBuffer(queryStr);
 
         if (!aQuery.toString().toLowerCase().startsWith(mQueryDialect.patternKeyword())
 			&& !aQuery.toString().toLowerCase().startsWith("select")
@@ -714,5 +729,44 @@ public class RdfQuery implements Query {
 		mQueryDialect.insertNamespaces(aQuery);
 
 		return aQuery.toString();
+	}
+
+	/**
+	 * Replaces all unused variable place holders with syntactically correct replacements.  Unnamed variable tokens "??"
+	 * in the query string get replaced with "[]" and named variable tokens "??foo" get turned into normal variables,
+	 * e.g. "?foo"
+	 * @param theQuery the query
+	 * @return the query w/ unused variables replaced w/ the appropriate equivalents.
+	 */
+	private static String replaceUnusedVariableTokens(Dialect theDialect, String theQuery) {
+		StringBuffer aQueryBuffer = new StringBuffer();
+
+		//aQuery = aQuery.replaceAll(UNAMED_VAR_REGEX, theDialect.asVar(null));
+
+		Matcher m = Pattern.compile(NAMED_VAR_REGEX).matcher(theQuery);
+
+		int start = 0;
+		int offset = 0;
+		while (m.find()) {
+//			System.err.println(m.group() +  " " + m.start() + " " + m.regionEnd());
+
+			aQueryBuffer.append(theQuery.substring(start, m.start()));// + m.group(0).substring(1) + theQuery.substring(offset + m.start() + m.group(0).length());
+			aQueryBuffer.append(theDialect.asVar(m.group(0).replaceAll(VT_RE, "")));
+
+			start = m.start() + m.group(0).length();
+			offset--;
+		}
+
+		aQueryBuffer.append(theQuery.substring(start));
+
+		return aQueryBuffer.toString().replaceAll(UNAMED_VAR_REGEX, theDialect.asVar(null) + " ");
+	}
+
+	public static void main(String[] args) {
+		String q = "select ?s ??name where { ?? <urn:foo> ??bar. ??bar <urn:pp> ??. }";
+		String q2 = "select s, n from {??} <urn:foo> {??bar}, {??bar} <urn:pp> {??}";
+
+		System.err.println(replaceUnusedVariableTokens(SPARQLDialect.instance(), q));
+		System.err.println(replaceUnusedVariableTokens(SerqlDialect.instance(), q2));
 	}
 }

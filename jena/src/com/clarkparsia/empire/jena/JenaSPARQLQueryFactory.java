@@ -16,6 +16,7 @@
 package com.clarkparsia.empire.jena;
 
 import com.clarkparsia.empire.impl.RdfQueryFactory;
+import com.clarkparsia.empire.impl.sparql.ARQSPARQLDialect;
 
 /**
  * <p>Jena/ARQ specific query factory.</p>

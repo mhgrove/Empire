@@ -21,6 +21,7 @@ import org.openrdf.model.impl.GraphImpl;
 import org.openrdf.model.impl.ValueFactoryImpl;
 import org.openrdf.query.MalformedQueryException;
 import org.openrdf.query.QueryEvaluationException;
+import org.openrdf.repository.Repository;
 
 import com.clarkparsia.empire.DataSource;
 import com.clarkparsia.empire.DataSourceException;
@@ -50,6 +51,11 @@ public class TestDataSource extends AbstractDataSource implements DataSource {
 
 	public TestDataSource() {
 		this(new GraphImpl());
+	}
+
+	public TestDataSource(ExtRepository theRepository) {
+		mRepo = theRepository;
+		setQueryFactory(new RdfQueryFactory(this, SerqlDialect.instance()));
 	}
 
 	public TestDataSource(Graph theGraph) {

@@ -2,6 +2,7 @@ package com.clarkparsia.empire.ds.impl;
 
 import com.clarkparsia.empire.ResultSet;
 import com.clarkparsia.empire.QueryException;
+import com.clarkparsia.empire.Dialect;
 
 import com.clarkparsia.empire.impl.AbstractDataSource;
 import com.clarkparsia.empire.impl.RdfQueryFactory;
@@ -61,7 +62,16 @@ public class SparqlEndpointDataSource extends AbstractDataSource {
 	 * @param theURL the URL of the sparql endpoint.
 	 */
 	public SparqlEndpointDataSource(final URL theURL) {
-		this(theURL, true);
+		this(theURL, true, SPARQLDialect.instance());
+	}
+
+	/**
+	 * Create a new SparqlEndpointDataSource
+	 * @param theURL the URL of the sparql endpoint
+	 * @param theDialect the sparql query dialect to use
+	 */
+	public SparqlEndpointDataSource(final URL theURL, SPARQLDialect theDialect) {
+		this(theURL, true, theDialect);
 	}
 
 	/**
@@ -74,6 +84,19 @@ public class SparqlEndpointDataSource extends AbstractDataSource {
 		mUseGetForQueries = theUseGetForQueries;
 
 		setQueryFactory(new RdfQueryFactory(this, SPARQLDialect.instance()));
+	}
+
+	/**
+	 * Create a new SparqlEndpointDataSource
+	 * @param theURL the URL of the sparql endpoint.
+	 * @param theUseGetForQueries whether or not to use HTTP GET requests for queries
+	 * @param theDialect the query dialect to use for the endpoint
+	 */
+	public SparqlEndpointDataSource(final URL theURL, final boolean theUseGetForQueries, SPARQLDialect theDialect) {
+		mURL = theURL;
+		mUseGetForQueries = theUseGetForQueries;
+
+		setQueryFactory(new RdfQueryFactory(this, theDialect));
 	}
 
 	/**

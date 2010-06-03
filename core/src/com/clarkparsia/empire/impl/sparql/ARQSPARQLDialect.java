@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package com.clarkparsia.empire.jena;
+package com.clarkparsia.empire.impl.sparql;
 
 import com.clarkparsia.empire.impl.sparql.SPARQLDialect;
 
@@ -27,7 +27,7 @@ import org.openrdf.model.BNode;
  *
  * @author Michael Grove
  * @since 0.6.3
- * @version 0.6.3
+ * @version 0.6.5
  */
 public class ARQSPARQLDialect extends SPARQLDialect {
 	/**

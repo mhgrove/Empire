@@ -182,6 +182,9 @@ public class EmpireUtil {
 		else if (theSupport.getRdfId() instanceof SupportsRdfId.URIKey) {
 			return ValueFactoryImpl.getInstance().createURI( ((SupportsRdfId.URIKey) theSupport.getRdfId()).value().toASCIIString() );
 		}
+		else if (theSupport.getRdfId() instanceof SupportsRdfId.BNodeKey) {
+			return ValueFactoryImpl.getInstance().createBNode( ((SupportsRdfId.BNodeKey) theSupport.getRdfId()).value() );
+		}
 		else {
 			String aValue = theSupport.getRdfId().toString();
 

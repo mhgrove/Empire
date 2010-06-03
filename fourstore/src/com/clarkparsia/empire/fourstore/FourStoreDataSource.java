@@ -55,7 +55,7 @@ import static com.clarkparsia.openrdf.OpenRdfUtil.toIterator;
  *
  * @author Michael Grove
  * @since 0.1
- * @version 0.6.4
+ * @version 0.6.5
  */
 public class FourStoreDataSource extends AbstractDataSource implements MutableDataSource, SupportsNamedGraphs {
 	/**
@@ -75,6 +75,8 @@ public class FourStoreDataSource extends AbstractDataSource implements MutableDa
 	FourStoreDataSource(Store theStore) {
 		mStore = theStore;
 
+		// i'm told by one of the Jena guys that 4store also supports the arq-style encoding for bnodes.
+		// need to confirm with steve.
 		setQueryFactory(new RdfQueryFactory(this, SPARQLDialect.instance()));
 	}
 

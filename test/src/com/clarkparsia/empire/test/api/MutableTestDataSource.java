@@ -2,6 +2,7 @@ package com.clarkparsia.empire.test.api;
 
 import com.clarkparsia.empire.MutableDataSource;
 import com.clarkparsia.empire.DataSourceException;
+import com.clarkparsia.openrdf.ExtRepository;
 
 import org.openrdf.model.Graph;
 
@@ -18,6 +19,10 @@ public class MutableTestDataSource extends TestDataSource implements MutableData
 
 	public MutableTestDataSource(final Graph theGraph) {
 		super(theGraph);
+	}
+
+	public MutableTestDataSource(final ExtRepository theRepository) {
+		super(theRepository);
 	}
 
 	/**

@@ -1,0 +1,25 @@
+Change Log
+==========
+
+Empire 0.6.5
+============
+	* ADDED: Implementation of DataSource interface for SPARQL endpoints.
+	* MODIFIED: Behavior of a missing annotation index changed from error to warning.
+	* MODIFIED: Refactor of persistence API to include a method for creating a DataSource independent of an EntityManager
+	* MODIFIED: Query API clean-ups
+		* Limit & Offset are extracted from static query strings and used on the Query object
+		* Fix to detection of the type of query being executed
+		* Relaxing constraint that all variables in the parameterized query must be bound, any vars not bound are left as normal query variables.
+		* Query factory now public on DataSources
+		* Support for ARQ-style bnode encoding in SPARQL queries.
+	* ADDED: Utility methods for getting values of a property for a specific subject
+	* ADDED: Utility method to load a class from any of the system, thread and current context class loaders
+	* ADDED: New example code and configuration for the Empire article published at SemanticUniverse
+	* ADDED: Annotation checker for scanning classes to make sure they have the required Empire & JPA annotations and that they are used correctly.
+	* ADDED: Support for @NamedQueries and @NamedNativeQueries
+	* ADDED: Parameter to Sesame DataSource factory which toggles the query dialect used, SeRQL or SPARQL.
+	* ADDED: support for language attribute awareness in handling literal values in Java/RDF conversion
+	* FIXED: InstanceGenerator to correct generate implementations for abstract classes as well as interfaces
+	* FIXED: Bug in Empire.init where the default module would not get loaded when no other modules were loaded
+	* FIXED: Bug in primary key creation
+	* FIXED: Bug in regex used for BNode detection

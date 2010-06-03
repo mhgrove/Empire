@@ -30,9 +30,9 @@ import org.apache.log4j.LogManager;
 import com.clarkparsia.empire.DataSource;
 import com.clarkparsia.empire.ResultSet;
 import com.clarkparsia.empire.Dialect;
-import com.clarkparsia.empire.impl.sparql.SPARQLDialect;
-import com.clarkparsia.empire.impl.serql.SerqlDialect;
+
 import static com.clarkparsia.empire.util.EmpireUtil.asPrimaryKey;
+
 import com.clarkparsia.empire.util.BeanReflectUtil;
 import com.clarkparsia.empire.annotation.RdfGenerator;
 import com.clarkparsia.empire.annotation.AnnotationChecker;
@@ -59,7 +59,7 @@ import java.util.regex.Pattern;
  *
  * @author Michael Grove
  * @since 0.1
- * @version 0.6.5
+ * @version 0.6.6
  */
 public class RdfQuery implements Query {
 	/**
@@ -689,7 +689,7 @@ public class RdfQuery implements Query {
 
 		String queryStr = insertVariables(getQueryString()).trim();
 
-		queryStr = replaceUnusedVariableTokens(mQueryDialect, queryStr);
+		queryStr = replaceUnusedVariableTokens(queryStr);
 
 //		validateVariables();
 
@@ -738,35 +738,21 @@ public class RdfQuery implements Query {
 	 * @param theQuery the query
 	 * @return the query w/ unused variables replaced w/ the appropriate equivalents.
 	 */
-	private static String replaceUnusedVariableTokens(Dialect theDialect, String theQuery) {
+	private String replaceUnusedVariableTokens(String theQuery) {
 		StringBuffer aQueryBuffer = new StringBuffer();
-
-		//aQuery = aQuery.replaceAll(UNAMED_VAR_REGEX, theDialect.asVar(null));
 
 		Matcher m = Pattern.compile(NAMED_VAR_REGEX).matcher(theQuery);
 
 		int start = 0;
-		int offset = 0;
 		while (m.find()) {
-//			System.err.println(m.group() +  " " + m.start() + " " + m.regionEnd());
-
-			aQueryBuffer.append(theQuery.substring(start, m.start()));// + m.group(0).substring(1) + theQuery.substring(offset + m.start() + m.group(0).length());
-			aQueryBuffer.append(theDialect.asVar(m.group(0).replaceAll(VT_RE, "")));
+			aQueryBuffer.append(theQuery.substring(start, m.start()));
+			aQueryBuffer.append(mQueryDialect.asVar(m.group(0).replaceAll(VT_RE, "")));
 
 			start = m.start() + m.group(0).length();
-			offset--;
 		}
 
 		aQueryBuffer.append(theQuery.substring(start));
 
-		return aQueryBuffer.toString().replaceAll(UNAMED_VAR_REGEX, theDialect.asVar(null) + " ");
-	}
-
-	public static void main(String[] args) {
-		String q = "select ?s ??name where { ?? <urn:foo> ??bar. ??bar <urn:pp> ??. }";
-		String q2 = "select s, n from {??} <urn:foo> {??bar}, {??bar} <urn:pp> {??}";
-
-		System.err.println(replaceUnusedVariableTokens(SPARQLDialect.instance(), q));
-		System.err.println(replaceUnusedVariableTokens(SerqlDialect.instance(), q2));
+		return aQueryBuffer.toString().replaceAll(UNAMED_VAR_REGEX, mQueryDialect.asVar(null) + " ");
 	}
 }

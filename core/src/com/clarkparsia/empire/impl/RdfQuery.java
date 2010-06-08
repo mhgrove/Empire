@@ -150,7 +150,7 @@ public class RdfQuery implements Query {
 	 */
 	private Dialect mQueryDialect;
 
-	private static String UNAMED_VAR_REGEX = VT_RE + "[^a-zA-Z0-9_\\-\\.\\w]??";
+	private static String UNAMED_VAR_REGEX = VT_RE + "[\\.\\s})]";
 
 	private static String NAMED_VAR_REGEX = VT_RE + "[a-zA-Z0-9_\\-]+";
 
@@ -619,12 +619,21 @@ public class RdfQuery implements Query {
 		String aBuffer = theQuery;
 
 		for (String aName : mNamedParameters.keySet()) {
-			aBuffer = aBuffer.replaceAll(VT_RE + aName, mQueryDialect.asQueryString(mNamedParameters.get(aName)));
+			boolean containsParam = Pattern.compile(VT_RE+aName).matcher(aBuffer).find();
+			if (mNamedParameters.get(aName) != null && containsParam) {
+				aBuffer = aBuffer.replaceAll(VT_RE + aName, mQueryDialect.asQueryString(mNamedParameters.get(aName)));
+			}
 		}
 
 		int aIndex = 1;
 		while (aBuffer.indexOf(VARIABLE_TOKEN) != -1) {
-			aBuffer = aBuffer.replaceFirst(VT_RE, mQueryDialect.asQueryString(mIndexedParameters.get(aIndex++)));
+			boolean containsParam = Pattern.compile(VT_RE).matcher(aBuffer).find();
+			if (mIndexedParameters.get(aIndex) != null && containsParam) {
+				aBuffer = aBuffer.replaceFirst(VT_RE, mQueryDialect.asQueryString(mIndexedParameters.get(aIndex++)));
+			}
+			else {
+				break;
+			}
 		}
 
 		return aBuffer;

@@ -35,7 +35,9 @@ import java.util.List;
  */
 public class Main {
 	public static void main(String[] args) {
-		System.setProperty("empire.configuration.file", "examples.empire.config.properties");
+		// Alternatively you can use:  -Dempire.configuration.file=examples/examples.empire.config.properties
+		// if so, comment out this line.
+		System.setProperty("empire.configuration.file", "examples/examples.empire.config.properties");
 
 		// loads Sesame bindings for Empire
 		Empire.init(new OpenRdfEmpireModule());

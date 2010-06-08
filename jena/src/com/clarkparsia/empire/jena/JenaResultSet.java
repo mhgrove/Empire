@@ -34,7 +34,7 @@ import com.clarkparsia.empire.impl.AbstractResultSet;
  *<p>Implementation of an Empire ResultSet backed by a Jena ResultSet</p>
  *
  * @author Michael Grove
- * @since 01.
+ * @since 0.1
  */
 public class JenaResultSet extends AbstractResultSet {
 	/**

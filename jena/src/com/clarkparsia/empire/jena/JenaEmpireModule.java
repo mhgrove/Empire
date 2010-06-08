@@ -42,38 +42,10 @@ public class JenaEmpireModule extends AbstractModule implements EmpireModule {
 	 */
 	@Override
 	protected void configure() {
-//		JenaParameters.disableBNodeUIDGeneration = true;
-			
 		Multibinder.newSetBinder(binder(), DataSourceFactory.class)
 				.addBinding().to(JenaTestDataSourceFactory.class);
 
 		Multibinder.newSetBinder(binder(), DataSourceFactory.class)
 				.addBinding().to(DefaultJenaDataSourceFactory.class);
 	}
-
-	public static void main(String[] args) {
-//		String q = "construct {?s ?p ?o}\n" +
-//				   "where {?s ?p ?o. filter(?s = <_:-407d4d90:127876dd080:-8000>) }";
-		String q = "construct {?s ?p ?o}\n" +
-				   "where {?s ?p ?o. filter(?s = <_:700b9d59:127879c2ac0:-8000>) }";
-
-		QueryExecutionFactory.create(QueryFactory.create(q, Syntax.syntaxSPARQL), ModelFactory.createDefaultModel());
-
-	}
-
-//	public static void main(String[] args) throws Exception {
-//		Map<String, Object> aFactoryMap = new HashMap<String, Object>();
-//		InputStream aStream = new FileInputStream("foo");
-//
-//		aFactoryMap.put(JenaConfig.FACTORY, "jena");
-//
-//		EntityManagerFactory aFactory = Empire.get().persistenceProvider().createEntityManagerFactory("", aFactoryMap);
-//
-//		Map<String, Object> aMap = new HashMap<String, Object>();
-//
-//		aMap.put(JenaConfig.STREAM, aStream);
-//		aMap.put(JenaConfig.FORMAT, "N3");
-//
-//		EntityManager aManager = aFactory.createEntityManager(aMap);
-//	}
 }

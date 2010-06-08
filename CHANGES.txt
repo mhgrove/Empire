@@ -1,8 +1,12 @@
 Change Log
 ==========
 
-Empire 0.6.5
-============
+Empire 0.6.6 (2010-06-08)
+=========================
+    * FIXED: Bug in query parameter handling introduced in 0.6.5, optional parameters could produce invalid queries in certain cases.
+
+Empire 0.6.5 (2010-06-04)
+=========================
 	* ADDED: Implementation of DataSource interface for SPARQL endpoints.
 	* MODIFIED: Behavior of a missing annotation index changed from error to warning.
 	* MODIFIED: Refactor of persistence API to include a method for creating a DataSource independent of an EntityManager

@@ -621,7 +621,7 @@ public class RdfQuery implements Query {
 		for (String aName : mNamedParameters.keySet()) {
 			boolean containsParam = Pattern.compile(VT_RE+aName).matcher(aBuffer).find();
 			if (mNamedParameters.get(aName) != null && containsParam) {
-				aBuffer = aBuffer.replaceAll(VT_RE + aName, mQueryDialect.asQueryString(mNamedParameters.get(aName)));
+				aBuffer = replaceVariable(aBuffer, aName, mNamedParameters.get(aName));
 			}
 		}
 
@@ -637,6 +637,27 @@ public class RdfQuery implements Query {
 		}
 
 		return aBuffer;
+	}
+
+	private String replaceVariable(String theQuery, String theVariable, Value theValue) {
+		// using this instead of replaceAll -- which keeps giving group does not exist errors.  I think my regex must
+		// be subtly (is that a word?) wrong and I'm just not seeing it.  This works, for now.
+
+		StringBuffer aQueryBuffer = new StringBuffer();
+
+		Matcher m = Pattern.compile(VT_RE+theVariable).matcher(theQuery);
+
+		int start = 0;
+		while (m.find()) {
+			aQueryBuffer.append(theQuery.substring(start, m.start()));
+			aQueryBuffer.append(mQueryDialect.asQueryString(theValue));
+
+			start = m.start() + m.group(0).length();
+		}
+
+		aQueryBuffer.append(theQuery.substring(start));
+
+		return aQueryBuffer.toString();
 	}
 
 	/**

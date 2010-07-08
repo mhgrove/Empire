@@ -25,6 +25,7 @@ import javax.persistence.PostRemove;
 import javax.persistence.PreUpdate;
 import javax.persistence.PostUpdate;
 import javax.persistence.PostLoad;
+import javax.persistence.MappedSuperclass;
 
 import java.net.URI;
 
@@ -33,6 +34,7 @@ import java.net.URI;
  *
  * @author Michael Grove
  */
+@MappedSuperclass
 public class BaseTestClass implements SupportsRdfId {
 	public boolean preUpdateCalled = false;
 	public boolean postUpdateCalled = false;

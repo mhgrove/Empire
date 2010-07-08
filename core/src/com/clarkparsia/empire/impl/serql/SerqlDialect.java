@@ -58,7 +58,7 @@ public class SerqlDialect implements Dialect {
 	 * @inheritDoc
 	 */
 	public String asQueryString(final Value theValue) {
-		return SesameQueryUtils.getQueryString(theValue);
+		return SesameQueryUtils.getSerqlQueryString(theValue);
 	}
 
 	/**

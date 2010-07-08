@@ -20,7 +20,7 @@ package com.clarkparsia.empire;
  *
  * @author Michael Grove
  * @since 0.1
- * @version 0.6.5
+ * @version 0.6.6
  */
 public class EmpireOptions {
 
@@ -53,12 +53,6 @@ public class EmpireOptions {
 	 */
 	@Deprecated
 	public static boolean ENABLE_PROXY_OBJECTS = false;
-
-	/**
-	 * Controls whether or not the super class and interfaces of a bean class are inspected for annotations such as
-	 * {@link com.clarkparsia.empire.annotation.RdfProperty} or {@link com.clarkparsia.empire.annotation.RdfsClass}.
-	 */
-	public static boolean INSPECT_BEAN_HIERARCHY = true;
 
 	/**
 	 * Flag to enable whether or not language tags are used when setting the values for fields from RDF string literals.

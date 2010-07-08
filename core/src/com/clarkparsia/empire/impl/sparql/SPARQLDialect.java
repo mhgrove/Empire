@@ -65,7 +65,7 @@ public class SPARQLDialect implements Dialect {
 	 * @inheritDoc
 	 */
 	public String asQueryString(final Value theValue) {
-		return SesameQueryUtils.getQueryString(theValue);
+		return SesameQueryUtils.getSPARQLQueryString(theValue);
 	}
 
 	/**

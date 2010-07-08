@@ -70,6 +70,7 @@ import static com.clarkparsia.empire.util.BeanReflectUtil.asSetter;
 import static com.clarkparsia.empire.util.BeanReflectUtil.safeGet;
 import static com.clarkparsia.empire.util.BeanReflectUtil.safeSet;
 import static com.clarkparsia.empire.util.BeanReflectUtil.hasAnnotation;
+import static com.clarkparsia.empire.util.BeanReflectUtil.getAnnotatedMethods;
 import com.clarkparsia.empire.util.EmpireUtil;
 import com.clarkparsia.empire.util.BeanReflectUtil;
 import com.clarkparsia.utils.Predicate;
@@ -81,7 +82,7 @@ import com.clarkparsia.utils.AbstractDataCommand;
  *
  * @author Michael Grove
  * @since 0.1
- * @version 0.6.5
+ * @version 0.6.6
  * @see EntityManager
  * @see com.clarkparsia.empire.DataSource
  */
@@ -126,7 +127,6 @@ public class EntityManagerImpl implements EntityManager {
 		// TODO: work like JPA/hibernate -- if something does not have a @Transient on it, convert it.  we'll just need to coin a URI in those cases
 		// TODO: add an @RdfsLabel annotation that will use the value of a property as the label during annotation
 		// TODO: support for owl/rdfs annotations not mappable to JPA annotations such as min/max cardinality and others.
-		// TODO: do we want to do anything special with MappedSuperclass?
 
 		mIsOpen = true;
 
@@ -677,7 +677,7 @@ public class EntityManagerImpl implements EntityManager {
 	 */
 	private void assertHasAnnotation(Object theObj, Class<? extends Annotation> theAnnotation) {
 		if (!hasAnnotation(theObj.getClass(), theAnnotation)) {
-			throw new IllegalArgumentException("Object is not an " + theAnnotation.getSimpleName());
+			throw new IllegalArgumentException("Object (" + theObj.getClass() + ") is not an " + theAnnotation.getSimpleName());
 		}
 	}
 
@@ -765,25 +765,27 @@ public class EntityManagerImpl implements EntityManager {
 			return;
 		}
 
-		Method aPrePersist = getAnnotatedMethod(theObj, theLifecycleAnnotation);
+		Collection<Method> aMethods = getAnnotatedMethods(theObj.getClass(), theLifecycleAnnotation);
 
-		if (aPrePersist != null) {
-			// Entity methods take no arguments...
-			try {
-				aPrePersist.invoke(theObj);
+		// Entity methods take no arguments...
+		try {
+			for (Method aMethod : aMethods) {
+				aMethod.invoke(theObj);
 			}
-			catch (Exception e) {
-				LOGGER.error("There was an error during entity lifecycle notification for annotation: " +
-							 theLifecycleAnnotation + " on object: " + theObj +".", e);
-			}
+		}
+		catch (Exception e) {
+			LOGGER.error("There was an error during entity lifecycle notification for annotation: " +
+						 theLifecycleAnnotation + " on object: " + theObj +".", e);
 		}
 
 		for (Object aListener : getEntityListeners(theObj)) {
-			Method aMethod = getAnnotatedMethod(aListener, theLifecycleAnnotation);
+			Collection<Method> aListenerMethods = getAnnotatedMethods(aListener.getClass(), theLifecycleAnnotation);
 
 			// EntityListeners methods take a single arguement, the entity
 			try {
-				aMethod.invoke(aListener, theObj);
+				for (Method aListenerMethod : aListenerMethods) {
+					aListenerMethod.invoke(aListener, theObj);
+				}
 			}
 			catch (Exception e) {
 				LOGGER.error("There was an error during lifecycle notification for annotation: " +
@@ -799,10 +801,11 @@ public class EntityManagerImpl implements EntityManager {
 	 * @return the list of EntityListeners for the object, or null if they do not exist
 	 */
 	private Collection<Object> getEntityListeners(Object theObj) {
-		EntityListeners aEntityListeners = theObj.getClass().getAnnotation(EntityListeners.class);
 		Collection<Object> aListeners = mManagedEntityListeners.get(theObj);
 
 		if (aListeners == null) {
+			EntityListeners aEntityListeners = BeanReflectUtil.getAnnotation(theObj.getClass(), EntityListeners.class);
+			
 			if (aEntityListeners != null) {
 				// if there are entity listeners, lets create them
 				aListeners = new HashSet<Object>();
@@ -823,22 +826,5 @@ public class EntityManagerImpl implements EntityManager {
 		}
 
 		return aListeners;
-	}
-
-	/**
-	 * Returns a Method on the object with the given annotation
-	 * @param theObj the object whose methods should be scanned
-	 * @param theAnnotation the annotation to look for
-	 * @return a method with the given annotation, or null if one is not found.
-	 */
-	private Method getAnnotatedMethod(final Object theObj, final Class<? extends Annotation> theAnnotation) {
-		// TODO: verify multliple methods don't have the annotation
-		for (Method aMethod : theObj.getClass().getMethods()) {
-			if (aMethod.getAnnotation(theAnnotation) != null) {
-				return aMethod;
-			}
-		}
-
-		return null;
 	}
 }

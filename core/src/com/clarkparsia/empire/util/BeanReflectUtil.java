@@ -18,7 +18,6 @@ package com.clarkparsia.empire.util;
 import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.InvalidRdfException;
 import com.clarkparsia.empire.annotation.RdfId;
-import com.clarkparsia.empire.EmpireOptions;
 
 import javax.persistence.FetchType;
 import javax.persistence.OneToMany;
@@ -26,6 +25,7 @@ import javax.persistence.OneToOne;
 import javax.persistence.ManyToOne;
 import javax.persistence.ManyToMany;
 import javax.persistence.CascadeType;
+import javax.persistence.MappedSuperclass;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -50,7 +50,7 @@ import java.util.Arrays;
  *
  * @author Michael Grove
  * @since 0.5.1
- * @version 0.6.5
+ * @version 0.6.6
  */
 public class BeanReflectUtil {
 
@@ -96,7 +96,7 @@ public class BeanReflectUtil {
 			}
 		}
 
-		if (EmpireOptions.INSPECT_BEAN_HIERARCHY && aIdField == null && theClass.getSuperclass() != null) {
+		if (aIdField == null && theClass.getSuperclass() != null && hasAnnotation(theClass.getSuperclass(), MappedSuperclass.class)) {
 			aIdField = getIdField(theClass.getSuperclass());
 		}
 
@@ -117,11 +117,11 @@ public class BeanReflectUtil {
 			aAnnotation = theClass.getAnnotation(theAnnotation);
 		}
 		else {
-			if (EmpireOptions.INSPECT_BEAN_HIERARCHY && theClass.getSuperclass() != null) {
+			if (theClass.getSuperclass() != null && hasAnnotation(theClass.getSuperclass(), MappedSuperclass.class)) {
 				aAnnotation = getAnnotation(theClass.getSuperclass(), theAnnotation);
 			}
 
-			if (EmpireOptions.INSPECT_BEAN_HIERARCHY && aAnnotation == null) {
+			if (aAnnotation == null) {
 				for (Class aInt : theClass.getInterfaces()) {
 					aAnnotation = getAnnotation(aInt, theAnnotation);
 
@@ -133,6 +133,33 @@ public class BeanReflectUtil {
 		}
 
 		return aAnnotation;
+	}
+
+
+	/**
+	 * Returns a Method on the object with the given annotation
+	 * @param theClass the class whose methods should be scanned
+	 * @param theAnnotation the annotation to look for
+	 * @return a method with the given annotation, or null if one is not found.
+	 */
+	public static Collection<Method> getAnnotatedMethods(final Class theClass, final Class<? extends Annotation> theAnnotation) {
+		Collection<Method> aMethods = new HashSet<Method>();
+
+		for (Method aMethod : theClass.getMethods()) {
+			if (aMethod.getAnnotation(theAnnotation) != null) {
+				aMethods.add(aMethod);
+			}
+		}
+
+		if (theClass.getSuperclass() != null && hasAnnotation(theClass.getSuperclass(), MappedSuperclass.class)) {
+			aMethods.addAll(getAnnotatedMethods(theClass.getSuperclass(), theAnnotation));
+		}
+
+		for (Class aInterface : theClass.getInterfaces()) {
+			aMethods.addAll(getAnnotatedMethods(aInterface, theAnnotation));
+		}
+
+		return aMethods;
 	}
 
 	/**
@@ -148,11 +175,11 @@ public class BeanReflectUtil {
 			aHasAnnotation = true;
 		}
 		else {
-			if (EmpireOptions.INSPECT_BEAN_HIERARCHY && theClass.getSuperclass() != null) {
+			if (theClass.getSuperclass() != null && hasAnnotation(theClass.getSuperclass(), MappedSuperclass.class)) {
 				aHasAnnotation = hasAnnotation(theClass.getSuperclass(), theAnnotation);
 			}
 
-			if (EmpireOptions.INSPECT_BEAN_HIERARCHY && !aHasAnnotation) {
+			if (!aHasAnnotation) {
 				for (Class aInt : theClass.getInterfaces()) {
 					aHasAnnotation = hasAnnotation(aInt, theAnnotation);
 
@@ -290,14 +317,12 @@ public class BeanReflectUtil {
 			}
 		}
 
-		if (EmpireOptions.INSPECT_BEAN_HIERARCHY) {
-			if (theClass.getSuperclass() != null) {
-				aMethods.addAll(getAnnotatedSetters(theClass.getSuperclass(), theInfer));
-			}
+		if (theClass.getSuperclass() != null && hasAnnotation(theClass.getSuperclass(), MappedSuperclass.class)) {
+			aMethods.addAll(getAnnotatedSetters(theClass.getSuperclass(), theInfer));
+		}
 
-			for (Class aInterface : theClass.getInterfaces()) {
-				aMethods.addAll(getAnnotatedSetters(aInterface, theInfer));
-			}
+		for (Class aInterface : theClass.getInterfaces()) {
+			aMethods.addAll(getAnnotatedSetters(aInterface, theInfer));
 		}
 
 		return aMethods;
@@ -367,14 +392,12 @@ public class BeanReflectUtil {
 			}
 		}
 
-		if (EmpireOptions.INSPECT_BEAN_HIERARCHY) {
-			if (theClass.getSuperclass() != null) {
-				aMethods.addAll(getAnnotatedGetters(theClass.getSuperclass(), theInfer));
-			}
+		if (theClass.getSuperclass() != null && hasAnnotation(theClass.getSuperclass(), MappedSuperclass.class)) {
+			aMethods.addAll(getAnnotatedGetters(theClass.getSuperclass(), theInfer));
+		}
 
-			for (Class aInterface : theClass.getInterfaces()) {
-				aMethods.addAll(getAnnotatedGetters(aInterface, theInfer));
-			}
+		for (Class aInterface : theClass.getInterfaces()) {
+			aMethods.addAll(getAnnotatedGetters(aInterface, theInfer));
 		}
 
 		return aMethods;
@@ -394,14 +417,12 @@ public class BeanReflectUtil {
 			}
 		}
 
-		if (EmpireOptions.INSPECT_BEAN_HIERARCHY) {
-			if (theClass.getSuperclass() != null) {
-				aProps.addAll(getAnnotatedFields(theClass.getSuperclass()));
-			}
+		if (theClass.getSuperclass() != null && hasAnnotation(theClass.getSuperclass(), MappedSuperclass.class)) {
+			aProps.addAll(getAnnotatedFields(theClass.getSuperclass()));
+		}
 
-			for (Class aInterface : theClass.getInterfaces()) {
-				aProps.addAll(getAnnotatedFields(aInterface));
-			}
+		for (Class aInterface : theClass.getInterfaces()) {
+			aProps.addAll(getAnnotatedFields(aInterface));
 		}
 
 		return aProps;
@@ -795,7 +816,7 @@ public class BeanReflectUtil {
 	 * bean-style setter variety.
 	 */
 	public static Class classFrom(Object theAccessor) {
-		Class<?> aClass = null;
+		Class<?> aClass;
 
 		if (theAccessor instanceof Field) {
 			aClass = ((Field)theAccessor).getType();

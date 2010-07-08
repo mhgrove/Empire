@@ -1,9 +1,12 @@
 Change Log
 ==========
 
-Empire 0.6.6 (2010-06-08)
+Empire 0.6.6 (2010-07-08)
 =========================
+	* ADDED: Support for MappedSuperclass
+	* REMOVED: Global option to inspect bean hierarchy, this is now controlled by @MappedSuperclass
     * FIXED: Bug in query parameter handling introduced in 0.6.5, optional parameters could produce invalid queries in certain cases.
+    * MODIFIED: Updates in 4Store & OpenRDF utility libraries to resolve issue regarding escaping quotes in queries. 
 
 Empire 0.6.5 (2010-06-04)
 =========================

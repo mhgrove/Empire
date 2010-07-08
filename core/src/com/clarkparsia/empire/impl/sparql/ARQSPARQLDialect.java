@@ -65,7 +65,7 @@ public class ARQSPARQLDialect extends SPARQLDialect {
 			return "<_:" + aBNode.getID() + ">";
 		}
 		else {
-			return SesameQueryUtils.getQueryString(theValue);
+			return SesameQueryUtils.getSPARQLQueryString(theValue);
 		}
 	}
 }

@@ -371,10 +371,10 @@ public class EmpireUtil {
 					return new SupportsRdfId.URIKey(new URI(theObj.toString()));
 				}
 				else {
-					if (theObj.toString().matches("[a-zA-Z_]{1}[a-zA-Z_\\-0-9]?")) {
+					if (theObj.toString().matches("[a-zA-Z_0-9]{1}[a-zA-Z_\\-0-9]?")) {
 						return new SupportsRdfId.BNodeKey(theObj.toString());
 					}
-					else if (theObj.toString().matches("_:[a-zA-Z_]{1}[a-zA-Z_\\-0-9]?")) {
+					else if (theObj.toString().matches("_:[a-zA-Z_0-9]{1}[a-zA-Z_\\-0-9]?")) {
 						return new SupportsRdfId.BNodeKey(theObj.toString().substring(2));
 					}
 					throw new IllegalArgumentException("'" + theObj + "' is not a valid primary key, it is not a URI or a valid BNode identifer");

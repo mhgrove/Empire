@@ -13,15 +13,17 @@
  * limitations under the License.
  */
 
-package com.clarkparsia.empire;
+package com.clarkparsia.empire.ds;
 
 import org.openrdf.model.Graph;
+import com.clarkparsia.empire.ds.DataSourceException;
 
 /**
  * <p>Interface for a {@link MutableDataSource} which supports operations on named graphs.</p>
  *
  * @author Michael Grove
  * @since 0.1
+ * @version 0.7
  * @see MutableDataSource
  */
 public interface SupportsNamedGraphs extends MutableDataSource {

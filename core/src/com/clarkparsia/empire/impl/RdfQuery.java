@@ -27,8 +27,8 @@ import org.openrdf.query.BindingSet;
 import org.apache.log4j.Logger;
 import org.apache.log4j.LogManager;
 
-import com.clarkparsia.empire.DataSource;
-import com.clarkparsia.empire.ResultSet;
+import com.clarkparsia.empire.ds.DataSource;
+import com.clarkparsia.empire.ds.ResultSet;
 import com.clarkparsia.empire.Dialect;
 
 import static com.clarkparsia.empire.util.EmpireUtil.asPrimaryKey;

@@ -15,11 +15,10 @@
 
 package com.clarkparsia.empire.test.api;
 
-import com.clarkparsia.empire.DataSourceFactory;
-import com.clarkparsia.empire.DataSource;
-import com.clarkparsia.empire.DataSourceException;
+import com.clarkparsia.empire.ds.DataSourceFactory;
+import com.clarkparsia.empire.ds.DataSource;
+import com.clarkparsia.empire.ds.DataSourceException;
 import com.clarkparsia.empire.ds.Alias;
-import com.clarkparsia.openrdf.ExtGraph;
 import com.clarkparsia.openrdf.ExtRepository;
 import com.clarkparsia.openrdf.OpenRdfUtil;
 import com.clarkparsia.openrdf.OpenRdfIO;
@@ -28,8 +27,6 @@ import com.clarkparsia.utils.BasicUtils;
 import java.util.Map;
 import java.util.HashMap;
 import java.io.File;
-
-import org.openrdf.repository.RepositoryException;
 
 /**
  * <p>DataSourceFactory implementation which creates an instancoe of a MutableDataSource for testing.</p>

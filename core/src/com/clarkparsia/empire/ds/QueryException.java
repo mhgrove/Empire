@@ -13,46 +13,47 @@
  * limitations under the License.
  */
 
-package com.clarkparsia.empire;
+package com.clarkparsia.empire.ds;
+
+import com.clarkparsia.empire.ds.DataSourceException;
 
 /**
- * <p>Parent Exception for operations on a {@link com.clarkparsia.empire.DataSource}</p>
+ * <p>Specific type of {@link com.clarkparsia.empire.ds.DataSourceException} that occurs when there is an error while performing or
+ * parsing a query against a data source.</p>
  *
  * @author Michael Grove
  * @since 0.1
- * @version 0.6.2
- * @see DataSource
+ * @version 0.7
  */
-public class DataSourceException extends EmpireException {
-
+public class QueryException extends DataSourceException {
 	/**
-	 * Create a new DataSourceException
+	 * Create a new QueryException
 	 */
-	public DataSourceException() {
+	public QueryException() {
 	}
 
 	/**
-	 * Create a new DataSourceException
+	 * Create a new QueryException
 	 * @param theMessage the error message
 	 */
-	public DataSourceException(final String theMessage) {
+	public QueryException(final String theMessage) {
 		super(theMessage);
 	}
 
 	/**
-	 * Create a new DataSourceException
+	 * Create a new QueryException
 	 * @param theMessage the error message
 	 * @param theCause the error cause
 	 */
-	public DataSourceException(final String theMessage, final Throwable theCause) {
+	public QueryException(final String theMessage, final Throwable theCause) {
 		super(theMessage, theCause);
 	}
 
 	/**
-	 * Create a new DataSourceException
+	 * Create a new QueryException
 	 * @param theCause the error cause
 	 */
-	public DataSourceException(final Throwable theCause) {
+	public QueryException(final Throwable theCause) {
 		super(theCause);
 	}
 }

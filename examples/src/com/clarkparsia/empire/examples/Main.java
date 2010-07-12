@@ -45,10 +45,11 @@ public class Main {
 		// create an EntityManager for the specified persistence context
 		EntityManager aManager = Persistence.createEntityManagerFactory("oreilly")
 											.createEntityManager();
-
+long s = System.currentTimeMillis();
 		// this retrieves a particular book from the database
 		Book aBook = aManager.find(Book.class, URI.create("urn:x-domain:oreilly.com:product:9780596514129.IP"));
-
+long e = System.currentTimeMillis();
+System.err.println("find time: " + (e-s));
 		// prints: Switching to the Mac: The Missing Manual, Leopard Edition
 		System.err.println(aBook.getTitle());
 
@@ -67,10 +68,12 @@ public class Main {
 
 		// and we'll use it as the embodiment of our new book.
 		aNewBook.setEmbodiments(Arrays.asList(aEBook));
-
+s = System.currentTimeMillis();
 		// save the new book to the database
 		aManager.persist(aNewBook);
 
+e = System.currentTimeMillis();
+System.err.println("persist time: " + (e-s));
 		Book aNewBookCopy = aManager.find(Book.class, aNewBook.getRdfId());
 
 		// true!
@@ -87,10 +90,11 @@ public class Main {
 		aPDFManifestation.setType(URI.create("http://purl.oreilly.com/product-types/PDF"));
 
 		aNewBook.setEmbodiments(Arrays.asList(aPDFManifestation));
-
+s = System.currentTimeMillis();
 		// now save our edits
 		aManager.merge(aNewBook);
-
+e = System.currentTimeMillis();
+System.err.println("merge time: " + (e-s));
 		// print the new information we just saved
 		System.err.println(aNewBook.getTitle());
 		System.err.println(aNewBook.getEmbodiments());
@@ -104,17 +108,19 @@ public class Main {
 		// the copy of the book contains the old information
 		System.err.println(aNewBookCopy.getTitle());
 		System.err.println(aNewBookCopy.getEmbodiments());
-
+s = System.currentTimeMillis();
 		// but can be refreshed...
 		aManager.refresh(aNewBookCopy);
-
+e = System.currentTimeMillis();
+System.err.println("refresh time: " + (e-s));
 		// and now contains the correct, up-to-date information
 		System.err.println(aNewBookCopy.getTitle());
 		System.err.println(aNewBookCopy.getEmbodiments());
-
+s = System.currentTimeMillis();
 		// now we can delete our new book
 		aManager.remove(aNewBook);
-
+e = System.currentTimeMillis();
+System.err.println("remove time: " + (e-s));
 		// false!
 		System.err.println(aManager.contains(aNewBook));
 
@@ -138,10 +144,11 @@ public class Main {
 		// set the parameter in the query to the value for the min price
 		// parameters are prefixed with ??
 		aQuery.setParameter("min", 30);
-
+s = System.currentTimeMillis();
 		// now execute the query to get the list of all books which are $30 USD
 		List aResults = aQuery.getResultList();
-
+e = System.currentTimeMillis();
+System.err.println("query time: " + (e-s));
 		// 233 results
 		System.err.println("Num Results:  " + aResults.size());
 

@@ -15,14 +15,10 @@
 
 package com.clarkparsia.empire.impl;
 
-import com.clarkparsia.empire.EmpireOptions;
-import com.clarkparsia.empire.MutableDataSource;
-import com.clarkparsia.empire.DataSource;
-import com.clarkparsia.empire.DataSourceFactory;
-import com.clarkparsia.empire.DataSourceException;
-import com.google.inject.Inject;
-import com.google.inject.Provider;
-import com.google.inject.assistedinject.Assisted;
+import com.clarkparsia.empire.ds.MutableDataSource;
+import com.clarkparsia.empire.ds.DataSource;
+import com.clarkparsia.empire.ds.DataSourceFactory;
+import com.clarkparsia.empire.ds.DataSourceException;
 
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityManager;
@@ -35,7 +31,7 @@ import java.net.ConnectException;
 
 /**
  * <p>Implementation of the JPA {@link EntityManagerFactory} class to support creating Empire based
- * {@link EntityManager EntityManagers}.  Uses an instance of a {@link com.clarkparsia.empire.DataSourceFactory} to dynamically
+ * {@link EntityManager EntityManagers}.  Uses an instance of a {@link com.clarkparsia.empire.ds.DataSourceFactory} to dynamically
  * create the DataSource used by the new EntityManager on the fly.</p>
  *
  * @author Michael Grove

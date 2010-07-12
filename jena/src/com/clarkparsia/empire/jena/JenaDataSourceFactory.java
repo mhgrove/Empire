@@ -15,7 +15,7 @@
 
 package com.clarkparsia.empire.jena;
 
-import com.clarkparsia.empire.DataSourceFactory;
+import com.clarkparsia.empire.ds.DataSourceFactory;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 

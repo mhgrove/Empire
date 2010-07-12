@@ -21,7 +21,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 /**
- * <p>Simple annotation to be placed on instances of {@link com.clarkparsia.empire.DataSourceFactory} to provide
+ * <p>Simple annotation to be placed on instances of {@link DataSourceFactory} to provide
  * a short name or alias for the factory when reading in configuration files.</p>
  * <p>Usage:
  * <pre><code>
@@ -35,10 +35,10 @@ import java.lang.annotation.RetentionPolicy;
  *
  * @author Michael Grove
  * @since 0.6.3
- * @version 0.6.3
+ * @version 0.7
  *
  * @see com.clarkparsia.empire.config.ConfigKeys
- * @see com.clarkparsia.empire.DataSourceFactory
+ * @see DataSourceFactory
  */
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)

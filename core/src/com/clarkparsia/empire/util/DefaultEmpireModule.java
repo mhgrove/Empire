@@ -22,7 +22,7 @@ import com.google.inject.name.Names;
 
 import com.clarkparsia.empire.EmpireException;
 import com.clarkparsia.empire.Empire;
-import com.clarkparsia.empire.DataSourceFactory;
+import com.clarkparsia.empire.ds.DataSourceFactory;
 
 import com.clarkparsia.empire.ds.impl.SparqlEndpointSourceFactory;
 
@@ -65,9 +65,6 @@ public class DefaultEmpireModule extends AbstractModule implements EmpireModule 
 	 * Create a new DefaultEmpireModule
 	 */
 	public DefaultEmpireModule() {
-		//this(new HashMap<String, String>());
-
-		//InputStream aStream = null;
 		File aConfigFile = null;
 
 		// not ideal, really we want just a single standard config file name with the system property which can override

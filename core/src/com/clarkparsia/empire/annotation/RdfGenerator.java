@@ -66,10 +66,11 @@ import org.openrdf.model.impl.ValueFactoryImpl;
 import org.apache.log4j.Logger;
 import org.apache.log4j.LogManager;
 
-import com.clarkparsia.empire.DataSource;
-import com.clarkparsia.empire.DataSourceException;
+import com.clarkparsia.empire.ds.DataSource;
+import com.clarkparsia.empire.ds.DataSourceException;
+import com.clarkparsia.empire.ds.QueryException;
+import com.clarkparsia.empire.ds.DataSourceUtil;
 import com.clarkparsia.empire.EmpireOptions;
-import com.clarkparsia.empire.QueryException;
 import com.clarkparsia.empire.SupportsRdfId;
 import com.clarkparsia.empire.Empire;
 import com.clarkparsia.empire.Dialect;
@@ -123,7 +124,7 @@ import javassist.util.proxy.MethodHandler;
  *
  * @author Michael Grove
  * @since 0.1
- * @version 0.6.5
+ * @version 0.7
  */
 public class RdfGenerator {
 
@@ -262,7 +263,7 @@ public class RdfGenerator {
 			OBJECT_M.put(theKeyObj, theObj);
 		}
 
-		ExtGraph aGraph = new ExtGraph(EmpireUtil.describe(theSource, theObj));
+		ExtGraph aGraph = new ExtGraph(DataSourceUtil.describe(theSource, theObj));
 
 		if (aGraph.size() == 0) {
 			OBJECT_M.remove(theKeyObj);
@@ -788,7 +789,7 @@ public class RdfGenerator {
 			// create an instance of that.  that will work, and pushes the likely failure back off to
 			// the assignment of the created instance
 
-			URI aType = EmpireUtil.getType(theSource, theId);
+			URI aType = DataSourceUtil.getType(theSource, theId);
 
 			// k, so now we know the type, if we can match the type to a class then we're in business
 			if (aType != null) {
@@ -960,7 +961,7 @@ public class RdfGenerator {
 		// and once the value is retrieved the first time, it will always return it from the parent object rather than
 		// from the cached copy in the proxy object.
 
-		if (BeanReflectUtil.isFetchTypeLazy(theAccessor) || EmpireOptions.ENABLE_PROXY_OBJECTS) {
+		if (BeanReflectUtil.isFetchTypeLazy(theAccessor)) {
 			Proxy<T> aProxy = new Proxy<T>(theClass, asPrimaryKey(theKey), theSource);
 
 			ProxyFactory aFactory = new ProxyFactory();

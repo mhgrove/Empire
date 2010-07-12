@@ -16,9 +16,9 @@
 package com.clarkparsia.empire.jena;
 
 import com.clarkparsia.empire.ds.Alias;
+import com.clarkparsia.empire.ds.DataSource;
 
-import com.clarkparsia.empire.DataSource;
-import com.clarkparsia.empire.DataSourceException;
+import com.clarkparsia.empire.ds.DataSourceException;
 
 import com.clarkparsia.utils.io.Encoder;
 
@@ -118,7 +118,7 @@ public class DefaultJenaDataSourceFactory extends JenaDataSourceFactory implemen
 	 * @param theReader the reader to load the data from
 	 * @param theFormat the key for the RDF format the data is in
 	 * @param theBase the base uri to be used when parsing the file
-	 * @throws com.clarkparsia.empire.DataSourceException if there is an error while parsing or reading the source RDF.
+	 * @throws com.clarkparsia.empire.ds.DataSourceException if there is an error while parsing or reading the source RDF.
 	 */
 	private void load(Model theModel, Reader theReader, String theFormat, String theBase) throws DataSourceException {
 		try {

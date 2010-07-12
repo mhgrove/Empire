@@ -15,9 +15,9 @@
 
 package com.clarkparsia.empire.fourstore;
 
-import com.clarkparsia.empire.DataSourceFactory;
-import com.clarkparsia.empire.DataSource;
-import com.clarkparsia.empire.DataSourceException;
+import com.clarkparsia.empire.ds.DataSourceFactory;
+import com.clarkparsia.empire.ds.DataSource;
+import com.clarkparsia.empire.ds.DataSourceException;
 import com.clarkparsia.empire.ds.Alias;
 
 import java.util.Map;

@@ -19,14 +19,9 @@ import com.google.inject.multibindings.Multibinder;
 
 import com.google.inject.AbstractModule;
 
-import com.clarkparsia.empire.DataSourceFactory;
+import com.clarkparsia.empire.ds.DataSourceFactory;
 
 import com.clarkparsia.empire.util.EmpireModule;
-import com.hp.hpl.jena.shared.impl.JenaParameters;
-import com.hp.hpl.jena.query.QueryFactory;
-import com.hp.hpl.jena.query.Syntax;
-import com.hp.hpl.jena.query.QueryExecutionFactory;
-import com.hp.hpl.jena.rdf.model.ModelFactory;
 
 /**
  * <p>Guice module for installing the Jena 'plugin' for Empire.</p>

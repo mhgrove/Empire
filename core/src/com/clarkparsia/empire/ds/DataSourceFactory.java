@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package com.clarkparsia.empire;
+package com.clarkparsia.empire.ds;
 
 import java.util.Map;
 
@@ -23,12 +23,12 @@ import java.util.Map;
  * @author Michael Grove
  * @see DataSource
  * @since 0.1
- * @version 0.6.3
+ * @version 0.7
  */
 public interface DataSourceFactory {
 
 	/**
-	 * Returns whether or not a {@link com.clarkparsia.empire.DataSource} can be created by this factory for the given set of data.
+	 * Returns whether or not a {@link DataSource} can be created by this factory for the given set of data.
 	 * @param theMap the data to use to create the data source
 	 * @return true if this can create a data source, false otherwise
 	 */

@@ -27,7 +27,7 @@ import org.openrdf.model.Value;
  *
  * @see com.clarkparsia.empire.impl.RdfQuery
  * @see QueryFactory
- * @see DataSource
+ * @see com.clarkparsia.empire.ds.DataSource
  */
 public interface Dialect {
 

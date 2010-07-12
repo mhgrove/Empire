@@ -17,7 +17,7 @@ package com.clarkparsia.empire.sesametwo;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
-import com.clarkparsia.empire.DataSourceFactory;
+import com.clarkparsia.empire.ds.DataSourceFactory;
 import com.clarkparsia.empire.util.EmpireModule;
 
 /**

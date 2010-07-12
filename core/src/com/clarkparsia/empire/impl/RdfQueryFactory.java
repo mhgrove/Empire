@@ -15,7 +15,7 @@
 
 package com.clarkparsia.empire.impl;
 
-import com.clarkparsia.empire.DataSource;
+import com.clarkparsia.empire.ds.DataSource;
 import com.clarkparsia.empire.QueryFactory;
 import com.clarkparsia.empire.Empire;
 import com.clarkparsia.empire.Dialect;

@@ -13,15 +13,14 @@
  * limitations under the License.
  */
 
-package com.clarkparsia.empire;
+package com.clarkparsia.empire.ds;
 
 import org.openrdf.model.Graph;
 
 import java.net.ConnectException;
 
-import com.clarkparsia.empire.ResultSet;
-import com.clarkparsia.empire.QueryException;
-import com.clarkparsia.empire.DataSourceException;
+import com.clarkparsia.empire.ds.ResultSet;
+import com.clarkparsia.empire.ds.QueryException;
 import com.clarkparsia.empire.QueryFactory;
 
 /**
@@ -31,7 +30,7 @@ import com.clarkparsia.empire.QueryFactory;
  *
  * @author Michael Grove
  * @since 0.1
- * @version 0.6.5
+ * @version 0.7
  */
 public interface DataSource {
 

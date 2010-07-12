@@ -21,12 +21,11 @@ import org.openrdf.model.impl.GraphImpl;
 import org.openrdf.model.impl.ValueFactoryImpl;
 import org.openrdf.query.MalformedQueryException;
 import org.openrdf.query.QueryEvaluationException;
-import org.openrdf.repository.Repository;
 
-import com.clarkparsia.empire.DataSource;
-import com.clarkparsia.empire.DataSourceException;
-import com.clarkparsia.empire.QueryException;
-import com.clarkparsia.empire.ResultSet;
+import com.clarkparsia.empire.ds.DataSource;
+import com.clarkparsia.empire.ds.DataSourceException;
+import com.clarkparsia.empire.ds.QueryException;
+import com.clarkparsia.empire.ds.ResultSet;
 import com.clarkparsia.empire.sesametwo.TupleQueryResultSet;
 
 import com.clarkparsia.empire.impl.AbstractDataSource;

@@ -15,11 +15,12 @@
 
 package com.clarkparsia.empire.impl;
 
-import com.clarkparsia.empire.DataSourceException;
-import com.clarkparsia.empire.MutableDataSource;
-import com.clarkparsia.empire.SupportsNamedGraphs;
+import com.clarkparsia.empire.ds.DataSourceException;
+import com.clarkparsia.empire.ds.MutableDataSource;
+import com.clarkparsia.empire.ds.SupportsNamedGraphs;
 import com.clarkparsia.empire.SupportsRdfId;
-import com.clarkparsia.empire.SupportsTransactions;
+import com.clarkparsia.empire.ds.SupportsTransactions;
+import com.clarkparsia.empire.ds.DataSourceUtil;
 import com.clarkparsia.empire.Empire;
 import com.clarkparsia.empire.EmpireException;
 
@@ -71,6 +72,7 @@ import static com.clarkparsia.empire.util.BeanReflectUtil.safeGet;
 import static com.clarkparsia.empire.util.BeanReflectUtil.safeSet;
 import static com.clarkparsia.empire.util.BeanReflectUtil.hasAnnotation;
 import static com.clarkparsia.empire.util.BeanReflectUtil.getAnnotatedMethods;
+
 import com.clarkparsia.empire.util.EmpireUtil;
 import com.clarkparsia.empire.util.BeanReflectUtil;
 import com.clarkparsia.utils.Predicate;
@@ -82,9 +84,9 @@ import com.clarkparsia.utils.AbstractDataCommand;
  *
  * @author Michael Grove
  * @since 0.1
- * @version 0.6.6
+ * @version 0.7
  * @see EntityManager
- * @see com.clarkparsia.empire.DataSource
+ * @see com.clarkparsia.empire.ds.DataSource
  */
 public class EntityManagerImpl implements EntityManager {
 	/**
@@ -223,7 +225,7 @@ public class EntityManagerImpl implements EntityManager {
 		assertStateOk(theObj);
 
 		try {
-			return EmpireUtil.exists(getDataSource(), theObj);
+			return DataSourceUtil.exists(getDataSource(), theObj);
 		}
 		catch (DataSourceException e) {
 			throw new PersistenceException(e);
@@ -380,7 +382,7 @@ public class EntityManagerImpl implements EntityManager {
 		try {
 			preUpdate(theT);
 
-			Graph aExistingData = EmpireUtil.describe(getDataSource(), theT);
+			Graph aExistingData = DataSourceUtil.describe(getDataSource(), theT);
 			Graph aData = RdfGenerator.asRdf(theT);
 
 			if (doesSupportNamedGraphs() && EmpireUtil.hasNamedGraphSpecified(theT)) {
@@ -515,7 +517,7 @@ public class EntityManagerImpl implements EntityManager {
 			// i.e. everything where its in the subject position.
 
 			//Graph aData = RdfGenerator.asRdf(theObj);
-			Graph aData = EmpireUtil.describe(getDataSource(), theObj);
+			Graph aData = DataSourceUtil.describe(getDataSource(), theObj);
 
 			if (doesSupportNamedGraphs() && EmpireUtil.hasNamedGraphSpecified(theObj)) {
 				asSupportsNamedGraphs().remove(EmpireUtil.getNamedGraph(theObj), aData);
@@ -547,7 +549,7 @@ public class EntityManagerImpl implements EntityManager {
 		assertOpen();
 
 		try {
-			if (EmpireUtil.exists(getDataSource(), EmpireUtil.asPrimaryKey(theObj))) {
+			if (DataSourceUtil.exists(getDataSource(), EmpireUtil.asPrimaryKey(theObj))) {
 				T aT = RdfGenerator.fromRdf(theClass, EmpireUtil.asPrimaryKey(theObj), getDataSource());
 
 				postLoad(aT);
@@ -692,7 +694,7 @@ public class EntityManagerImpl implements EntityManager {
 
 	/**
 	 * Returns a reference to an object (the data source) which can perform operations on named sub-graphs
-	 * @return the data source as a {@link SupportsNamedGraphs}
+	 * @return the data source as a {@link com.clarkparsia.empire.ds.SupportsNamedGraphs}
 	 * @throws ClassCastException thrown if the data source does not implements SupportsNamedGraphs
 	 */
 	private SupportsNamedGraphs asSupportsNamedGraphs() {

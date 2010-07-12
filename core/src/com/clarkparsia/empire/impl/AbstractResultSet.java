@@ -15,7 +15,7 @@
 
 package com.clarkparsia.empire.impl;
 
-import com.clarkparsia.empire.ResultSet;
+import com.clarkparsia.empire.ds.ResultSet;
 
 import java.util.Iterator;
 import java.util.Collection;

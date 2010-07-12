@@ -15,21 +15,25 @@
 
 package com.clarkparsia.empire.sesametwo;
 
-import com.clarkparsia.empire.SupportsNamedGraphs;
-import com.clarkparsia.empire.MutableDataSource;
-import com.clarkparsia.empire.DataSourceException;
-import com.clarkparsia.empire.ResultSet;
-import com.clarkparsia.empire.QueryException;
+import com.clarkparsia.empire.ds.SupportsNamedGraphs;
+import com.clarkparsia.empire.ds.MutableDataSource;
+import com.clarkparsia.empire.ds.DataSourceException;
+import com.clarkparsia.empire.ds.TripleSource;
+import com.clarkparsia.empire.ds.QueryException;
+import com.clarkparsia.empire.ds.ResultSet;
 
 import com.clarkparsia.empire.impl.AbstractDataSource;
 import com.clarkparsia.empire.impl.RdfQueryFactory;
 import com.clarkparsia.empire.impl.sparql.SPARQLDialect;
 
 import com.clarkparsia.empire.impl.serql.SerqlDialect;
+import com.clarkparsia.openrdf.OpenRdfUtil;
 import com.clarkparsia.openrdf.util.GraphBuildingRDFHandler;
 
 import org.openrdf.model.Graph;
 import org.openrdf.model.Resource;
+import org.openrdf.model.Statement;
+import org.openrdf.model.Value;
 
 import org.openrdf.repository.Repository;
 import org.openrdf.repository.RepositoryConnection;
@@ -52,9 +56,9 @@ import java.net.URI;
  *
  * @author Michael Grove
  * @since 0.6
- * @version 0.6.5
+ * @version 0.7
  */
-public class RepositoryDataSource extends AbstractDataSource implements MutableDataSource, SupportsNamedGraphs {
+public class RepositoryDataSource extends AbstractDataSource implements MutableDataSource, TripleSource, SupportsNamedGraphs {
 
 	/**
 	 * The logger
@@ -304,4 +308,17 @@ public class RepositoryDataSource extends AbstractDataSource implements MutableD
 			throw new DataSourceException(e);
 		}
 	}
+
+	/**
+	 * @inheritDoc
+	 */
+    public Iterable<Statement> getStatements(Resource subject, org.openrdf.model.URI predicate, Value object) 
+    		throws DataSourceException {
+    	try {
+			return OpenRdfUtil.iterable(mConnection.getStatements(subject, predicate, object, true));
+		}
+		catch (RepositoryException e) {
+			throw new DataSourceException(e);
+		}
+    }
 }

@@ -1,7 +1,7 @@
 package com.clarkparsia.empire.test.api;
 
-import com.clarkparsia.empire.MutableDataSource;
-import com.clarkparsia.empire.DataSourceException;
+import com.clarkparsia.empire.ds.MutableDataSource;
+import com.clarkparsia.empire.ds.DataSourceException;
 import com.clarkparsia.openrdf.ExtRepository;
 
 import org.openrdf.model.Graph;

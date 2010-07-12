@@ -1,9 +1,9 @@
 package com.clarkparsia.empire.ds.impl;
 
 import com.clarkparsia.empire.ds.Alias;
-import com.clarkparsia.empire.DataSourceFactory;
-import com.clarkparsia.empire.DataSource;
-import com.clarkparsia.empire.DataSourceException;
+import com.clarkparsia.empire.ds.DataSource;
+import com.clarkparsia.empire.ds.DataSourceFactory;
+import com.clarkparsia.empire.ds.DataSourceException;
 import com.clarkparsia.empire.impl.sparql.SPARQLDialect;
 import com.clarkparsia.empire.impl.sparql.ARQSPARQLDialect;
 

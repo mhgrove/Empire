@@ -15,11 +15,11 @@
 
 package com.clarkparsia.empire.fourstore;
 
-import com.clarkparsia.empire.MutableDataSource;
-import com.clarkparsia.empire.DataSourceException;
-import com.clarkparsia.empire.ResultSet;
-import com.clarkparsia.empire.QueryException;
-import com.clarkparsia.empire.SupportsNamedGraphs;
+import com.clarkparsia.empire.ds.MutableDataSource;
+import com.clarkparsia.empire.ds.DataSourceException;
+import com.clarkparsia.empire.ds.QueryException;
+import com.clarkparsia.empire.ds.ResultSet;
+import com.clarkparsia.empire.ds.SupportsNamedGraphs;
 
 import com.clarkparsia.empire.impl.AbstractDataSource;
 

@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package com.clarkparsia.empire;
+package com.clarkparsia.empire.ds;
 
 import java.util.Iterator;
 
@@ -30,8 +30,9 @@ import org.openrdf.query.BindingSet;
  *
  * @author Michael Grove
  * @since 0.1
+ * @version 0.7
  */
-public interface ResultSet extends Iterator<BindingSet>, Iterable<BindingSet> {
+public interface ResultSet extends Iterator<BindingSet> {
 
 	/**
 	 * Close this result set and release any resources it holds.

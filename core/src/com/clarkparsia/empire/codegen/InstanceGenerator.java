@@ -26,7 +26,7 @@ import javassist.Modifier;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Arrays;
-import java.util.Collection;
+
 import java.lang.reflect.Method;
 
 import com.clarkparsia.empire.SupportsRdfId;

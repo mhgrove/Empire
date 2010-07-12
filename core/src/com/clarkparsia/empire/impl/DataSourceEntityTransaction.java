@@ -15,8 +15,8 @@
 
 package com.clarkparsia.empire.impl;
 
-import com.clarkparsia.empire.DataSourceException;
-import com.clarkparsia.empire.SupportsTransactions;
+import com.clarkparsia.empire.ds.DataSourceException;
+import com.clarkparsia.empire.ds.SupportsTransactions;
 
 import javax.persistence.EntityTransaction;
 import javax.persistence.PersistenceException;
@@ -27,6 +27,7 @@ import javax.persistence.RollbackException;
  *
  * @author Michael Grove
  * @since 0.1
+ * @version 0.1
  * @see EntityManagerImpl
  */
 public class DataSourceEntityTransaction implements EntityTransaction {

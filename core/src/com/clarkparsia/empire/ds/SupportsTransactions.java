@@ -13,7 +13,9 @@
  * limitations under the License.
  */
 
-package com.clarkparsia.empire;
+package com.clarkparsia.empire.ds;
+
+import com.clarkparsia.empire.ds.DataSourceException;
 
 /**
  * <p>Interface for something that supports transactions.  Usually used in conjunction with a
@@ -21,6 +23,9 @@ package com.clarkparsia.empire;
  *
  * @author Michael Grove
  * @see MutableDataSource
+ *
+ * @since 0.1
+ * @version 0.7
  */
 public interface SupportsTransactions {
 	

@@ -15,12 +15,10 @@
 
 package com.clarkparsia.empire.annotation.runtime;
 
-import com.clarkparsia.empire.DataSource;
+import com.clarkparsia.empire.ds.DataSource;
 import com.clarkparsia.empire.SupportsRdfId;
 
 import com.clarkparsia.empire.annotation.RdfGenerator;
-
-import java.net.URI;
 
 /**
  * <p>Wrapper class which serves as a proxy for an object to the database.</p>

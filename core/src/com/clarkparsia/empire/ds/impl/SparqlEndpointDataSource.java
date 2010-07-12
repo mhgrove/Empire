@@ -1,8 +1,7 @@
 package com.clarkparsia.empire.ds.impl;
 
-import com.clarkparsia.empire.ResultSet;
-import com.clarkparsia.empire.QueryException;
-import com.clarkparsia.empire.Dialect;
+import com.clarkparsia.empire.ds.ResultSet;
+import com.clarkparsia.empire.ds.QueryException;
 
 import com.clarkparsia.empire.impl.AbstractDataSource;
 import com.clarkparsia.empire.impl.RdfQueryFactory;

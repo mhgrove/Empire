@@ -16,16 +16,15 @@
 package com.clarkparsia.empire.impl;
 
 import org.openrdf.model.Graph;
-import com.clarkparsia.empire.DataSource;
-import com.clarkparsia.empire.DataSourceException;
-import com.clarkparsia.empire.MutableDataSource;
-import com.clarkparsia.empire.QueryException;
+import com.clarkparsia.empire.ds.DataSource;
+import com.clarkparsia.empire.ds.DataSourceException;
+import com.clarkparsia.empire.ds.QueryException;
+import com.clarkparsia.empire.ds.MutableDataSource;
+import com.clarkparsia.empire.ds.ResultSet;
 import com.clarkparsia.empire.QueryFactory;
-import com.clarkparsia.empire.ResultSet;
-import com.clarkparsia.empire.SupportsTransactions;
+import com.clarkparsia.empire.ds.SupportsTransactions;
 import com.clarkparsia.openrdf.ExtGraph;
 
-import java.net.URI;
 import java.net.ConnectException;
 
 /**
@@ -188,7 +187,7 @@ public class TransactionalDataSource implements DataSource, MutableDataSource, S
 
 	/**
 	 * Asserts that this DataSource should not be in a transaction
-	 * @throws com.clarkparsia.empire.DataSourceException thrown if the data source is in a transaction
+	 * @throws com.clarkparsia.empire.ds.DataSourceException thrown if the data source is in a transaction
 	 */
 	private void assertNotInTransaction() throws DataSourceException {
 		if (isInTransaction()) {

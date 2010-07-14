@@ -31,6 +31,7 @@ import com.clarkparsia.empire.config.EmpireConfiguration;
 import com.clarkparsia.empire.config.io.ConfigReader;
 
 import com.clarkparsia.empire.config.io.impl.PropertiesConfigReader;
+import com.clarkparsia.empire.config.io.impl.XmlConfigReader;
 
 import com.clarkparsia.empire.spi.guice.PersistenceInjectionModule;
 
@@ -47,7 +48,7 @@ import org.apache.log4j.Logger;
  *
  * @author Michael Grove
  * @since 0.6
- * @version 0.6.5
+ * @version 0.6.6
  */
 public class DefaultEmpireModule extends AbstractModule implements EmpireModule {
 
@@ -112,7 +113,11 @@ public class DefaultEmpireModule extends AbstractModule implements EmpireModule 
 					LOGGER.error("Unable to find or create specified configuration reader class: " + System.getProperty("empire.config.reader"), e);
 				}
 			}
-			else if (aConfigFile.getName().endsWith(".properties")) {
+			else if (aConfigFile.getName().endsWith(".xml")) {
+				aReader = new XmlConfigReader();
+
+			}
+			else {
 				aReader = new PropertiesConfigReader();
 			}
 		}

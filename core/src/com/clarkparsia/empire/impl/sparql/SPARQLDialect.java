@@ -35,7 +35,7 @@ import org.openrdf.model.Value;
  * @author Michael Grove
  *
  * @since 0.1
- * @version 0.6.3
+ * @version 0.7
  */
 public class SPARQLDialect implements Dialect {
 	/**
@@ -66,6 +66,11 @@ public class SPARQLDialect implements Dialect {
 	 */
 	public String asQueryString(final Value theValue) {
 		return SesameQueryUtils.getSPARQLQueryString(theValue);
+	}
+
+	private boolean startsWithKeyword(String theQuery) {
+		String q = theQuery.toLowerCase().trim();
+		return q.startsWith("select") || q.startsWith("construct") || q.startsWith("ask") || q.startsWith("describe");
 	}
 
 	/**

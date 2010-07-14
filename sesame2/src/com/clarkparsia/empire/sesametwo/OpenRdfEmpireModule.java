@@ -28,10 +28,10 @@ import com.clarkparsia.empire.util.EmpireModule;
  * @version 0.6.1
  */
 public class OpenRdfEmpireModule extends AbstractModule implements EmpireModule {
+
 	/**
 	 * @inheritDoc
 	 */
-	@Override
 	protected void configure() {
 		Multibinder.newSetBinder(binder(), DataSourceFactory.class)
 				.addBinding().to(RepositoryDataSourceFactory.class);

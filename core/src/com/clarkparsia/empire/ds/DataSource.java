@@ -75,4 +75,20 @@ public interface DataSource {
 	 * @return the factory for this data source
 	 */
 	public QueryFactory getQueryFactory();
+
+	/**
+	 * Execute an ASK query on the DataSource
+	 * @param theQuery the query to execute
+	 * @return the boolean result of the ask query
+	 * @throws QueryException if there is an error while evaluation the query
+	 */
+	public boolean ask(String theQuery) throws QueryException;
+
+	/**
+	 * Perform a describe query on the DataSource
+	 * @param theQuery the query to execute
+	 * @return the result of the describe
+	 * @throws QueryException if there is an error while evaluation the query
+	 */
+	public Graph describe(String theQuery) throws QueryException;
 }

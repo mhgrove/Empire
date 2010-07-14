@@ -40,7 +40,7 @@ import org.apache.log4j.LogManager;
  *
  * @author Michael Grove
  * @since 0.6.2
- * @version 0.6.5
+ * @version 0.7
  * @see EmpireConfiguration
  */
 public class PropertiesConfigReader implements ConfigReader, ConfigKeys {
@@ -50,8 +50,8 @@ public class PropertiesConfigReader implements ConfigReader, ConfigKeys {
 	 */
 	private static final Logger LOGGER = LogManager.getLogger(ConfigReader.class.getName());
 
-	private static final String KEY_NAME = "name";
-	private static final String ANNOTATION_PROVIDER = "annotation.provider";
+	public static final String KEY_NAME = "name";
+	public static final String KEY_ANNOTATION_PROVIDER = "annotation.provider";
 
 	/**
 	 * @inheritDoc
@@ -101,18 +101,18 @@ public class PropertiesConfigReader implements ConfigReader, ConfigKeys {
 
 		EmpireConfiguration aConfig = new EmpireConfiguration(aGeneralConfig, aUnitConfig);
 
-		if (aGeneralConfig.containsKey(ANNOTATION_PROVIDER)) {
+		if (aGeneralConfig.containsKey(KEY_ANNOTATION_PROVIDER)) {
 			try {
 				@SuppressWarnings("unchecked")
-				Class<EmpireAnnotationProvider> aClass = (Class<EmpireAnnotationProvider>) BeanReflectUtil.loadClass(aGeneralConfig.get(ANNOTATION_PROVIDER));
+				Class<EmpireAnnotationProvider> aClass = (Class<EmpireAnnotationProvider>) BeanReflectUtil.loadClass(aGeneralConfig.get(KEY_ANNOTATION_PROVIDER));
 
 				aConfig.setAnnotationProvider(aClass);
 			}
 			catch (ClassNotFoundException e) {
-				LOGGER.warn("Annotation provider implementation '" + aGeneralConfig.get(ANNOTATION_PROVIDER) + "' cannot be found, please check your classpath.");
+				LOGGER.warn("Annotation provider implementation '" + aGeneralConfig.get(KEY_ANNOTATION_PROVIDER) + "' cannot be found, please check your classpath.");
 			}
 			catch (ClassCastException e) {
-				LOGGER.warn("Specified annotation provider implementation '" + aGeneralConfig.get(ANNOTATION_PROVIDER) + "' is not a valid EmpireAnnotationProvider.");
+				LOGGER.warn("Specified annotation provider implementation '" + aGeneralConfig.get(KEY_ANNOTATION_PROVIDER) + "' is not a valid EmpireAnnotationProvider.");
 			}
 		}
 

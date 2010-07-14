@@ -28,7 +28,7 @@ import org.openrdf.query.MalformedQueryException;
  *
  * @author Michael Grove
  * @since 0.1
- * @version 0.6.3
+ * @version 0.7
  */
 public class SerqlDialect implements Dialect {
 	/**
@@ -61,6 +61,11 @@ public class SerqlDialect implements Dialect {
 		return SesameQueryUtils.getSerqlQueryString(theValue);
 	}
 
+	private boolean startsWithKeyword(String theQuery) {
+		String q = theQuery.toLowerCase().trim();
+		return q.startsWith("select") || q.startsWith("construct") || q.startsWith("ask") || q.startsWith("describe");
+	}
+
 	/**
 	 * @inheritDoc
 	 */
@@ -68,7 +73,7 @@ public class SerqlDialect implements Dialect {
 		String aQuery = theQuery.toLowerCase().trim();
 		aQuery = aQuery.replaceAll(RdfQuery.VT_RE, asProjectionVar("x"));
 
-		if (!aQuery.startsWith("select") && !aQuery.startsWith("construct")) {
+		if (!startsWithKeyword(aQuery)) {
             if (!aQuery.contains(patternKeyword())) {
                 aQuery = " " + patternKeyword() + " " + aQuery;
             }

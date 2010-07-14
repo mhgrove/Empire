@@ -28,7 +28,7 @@ import org.openrdf.query.BindingSet;
 import org.openrdf.query.impl.MapBindingSet;
 
 
-import com.clarkparsia.empire.impl.AbstractResultSet;
+import com.clarkparsia.empire.ds.impl.AbstractResultSet;
 
 /**
  *<p>Implementation of an Empire ResultSet backed by a Jena ResultSet</p>

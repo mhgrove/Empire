@@ -1076,7 +1076,7 @@ public class RdfGenerator {
 				return FACTORY.createLiteral(Character.class.cast(theIn));
 			}
 			else if (java.net.URI.class.isInstance(theIn)) {
-				//return SesameValueFactory.instance().createLiteral(theIn.toString(), SesameValueFactory.instance().createURI(XmlSchema.ANYURI));
+//				return FACTORY.createLiteral(theIn.toString(), XMLSchema.ANYURI);
                 return FACTORY.createURI(theIn.toString());
 			}
 			else if (Value.class.isAssignableFrom(theIn.getClass())) {

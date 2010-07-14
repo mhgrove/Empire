@@ -50,7 +50,7 @@ public class DelegatingDataSource implements DataSource {
 	 * Return the underlying DataSource which all calls are delegated to
 	 * @return the actual DataSource
 	 */
-	protected DataSource getDelegate() {
+	public DataSource getDelegate() {
 		return mDelegate;
 	}
 
@@ -94,5 +94,19 @@ public class DelegatingDataSource implements DataSource {
 	 */
 	public QueryFactory getQueryFactory() {
 		return mDelegate.getQueryFactory();
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public boolean ask(final String theQuery) throws QueryException {
+		return mDelegate.ask(theQuery);
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public Graph describe(final String theQuery) throws QueryException {
+		return mDelegate.describe(theQuery);
 	}
 }

@@ -29,6 +29,7 @@ import org.apache.log4j.LogManager;
 
 import com.clarkparsia.empire.ds.DataSource;
 import com.clarkparsia.empire.ds.ResultSet;
+import com.clarkparsia.empire.ds.QueryException;
 import com.clarkparsia.empire.Dialect;
 
 import static com.clarkparsia.empire.util.EmpireUtil.asPrimaryKey;
@@ -59,7 +60,7 @@ import java.util.regex.Pattern;
  *
  * @author Michael Grove
  * @since 0.1
- * @version 0.6.6
+ * @version 0.7
  */
 public class RdfQuery implements Query {
 	/**
@@ -185,7 +186,7 @@ public class RdfQuery implements Query {
 	 */
 	@Override
 	public String toString() {
-		return getQueryString();
+		return query();
 	}
 
 	/**
@@ -310,6 +311,42 @@ public class RdfQuery implements Query {
 	 */
 	public boolean isConstruct() {
 		return mIsConstruct;
+	}
+
+	/**
+	 * Execute the describe query.
+	 * @return the resulting RDF graph
+	 * @throws QueryException if there is an error while querying
+	 */
+	public Graph executeDescribe() throws QueryException {
+		return getSource().describe(query());
+	}
+
+	/**
+	 * Execute an ask query.
+	 * @return the boolean result of the ask query
+	 * @throws QueryException if there is an error while querying
+	 */
+	public boolean executeAsk() throws QueryException {
+		return getSource().ask(query());
+	}
+
+	/**
+	 * Performs a select query
+	 * @return the result set
+	 * @throws QueryException if there is an error while querying
+	 */
+	public ResultSet executeSelect() throws QueryException {
+		return getSource().selectQuery(query());
+	}
+
+	/**
+	 * Performs a construct query
+	 * @return the result graph
+	 * @throws QueryException if there is an error while querying
+	 */
+	public Graph executeConstruct() throws QueryException {
+		return getSource().graphQuery(query());
 	}
 
 	/**
@@ -587,28 +624,6 @@ public class RdfQuery implements Query {
 	}
 
 	/**
-	 * Validate that all parameter variables in the query have values.
-	 * @throws IllegalStateException if there are unescaped parameter variables in th query
-	 */
-	@Deprecated // no longer requiring all variables to be used, we can just let them be normal vars in the query
-	private void validateVariables() {
-		// note: null values for an index/name means the user never set a value for the parameter in the query
-		// which means we have an invalid query!
-
-		for (Integer aIndex : mIndexedParameters.keySet()) {
-			if (mIndexedParameters.get(aIndex) == null) {
-				throw new IllegalStateException("Not all parameters in query were replaced with values, query is invalid. Parameter at index " + aIndex + " was not set.");
-			}
-		}
-
-		for (String aName : mNamedParameters.keySet()) {
-			if (mNamedParameters.get(aName) == null) {
-				throw new IllegalStateException("Not all parameters in query were replaced with values, query is invalid.  Parameter named " + aName + " was not set.");
-			}
-		}
-	}
-
-	/**
 	 * Given the query string fragment, replace all variable parameter tokens with the values specified by the user
 	 * through the various setParameter methods.
 	 * @param theQuery the query fragment
@@ -682,6 +697,11 @@ public class RdfQuery implements Query {
 		}
 	}
 
+	protected boolean startsWithKeyword(String theQuery) {
+		String q = theQuery.toLowerCase().trim();
+		return q.startsWith("select") || q.startsWith("construct") || q.startsWith("ask") || q.startsWith("describe");
+	}
+
 	/**
 	 * Return a valid, executable query instance from the specified query fragment, and user specified settings such
 	 * as parameter values, limit, offset, etc.
@@ -729,15 +749,14 @@ public class RdfQuery implements Query {
 		StringBuffer aQuery = new StringBuffer(queryStr);
 
         if (!aQuery.toString().toLowerCase().startsWith(mQueryDialect.patternKeyword())
-			&& !aQuery.toString().toLowerCase().startsWith("select")
-			&& !aQuery.toString().toLowerCase().startsWith("construct")) {
-			
+			&& !startsWithKeyword(aQuery.toString())) {
             aQuery.insert(0, mQueryDialect.patternKeyword());
         }
 
         StringBuffer aStart = new StringBuffer();
-		if (!getQueryString().toLowerCase().startsWith("select") && !getQueryString().toLowerCase().startsWith("construct")) {
+		if (!startsWithKeyword(getQueryString())) {
 			aStart.insert(0, isConstruct() ? "construct " : "select ").append(isDistinct() ? " distinct " : "").append(" ");
+			
 			if (isConstruct()) {
 				aStart.append(" * ");
 			}

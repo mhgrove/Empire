@@ -191,7 +191,7 @@ public class TestRdfConvert {
 			assertEquals(aGraph.getLiteral(aPersonURI, DC.ontology().title).getLabel(),
 						 aPerson.getTitle());
 
-			assertEquals(URI.create(aGraph.getValue(aPersonURI, DC.ontology().publisher).toString()),
+			assertEquals(URI.create(aGraph.getValue(aPersonURI, DC.ontology().publisher).stringValue()),
 						 aPerson.getWeblogURI());
 
 			assertEquals(aGraph.getLiteral(aPersonURI, FOAF.ontology().firstName).getLabel(),

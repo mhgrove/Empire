@@ -16,10 +16,12 @@
 package com.clarkparsia.empire.jena;
 
 import com.clarkparsia.empire.ds.DataSourceFactory;
+import com.clarkparsia.empire.ds.DataSource;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 
 import java.util.Map;
+import java.util.HashMap;
 
 /**
  * <p>Abstract base class for creating Jena-backed data sources.  Provides a single method for creating an appropriate

@@ -20,18 +20,21 @@ import com.clarkparsia.empire.ds.DataSourceException;
 import com.clarkparsia.empire.ds.QueryException;
 import com.clarkparsia.empire.ds.ResultSet;
 import com.clarkparsia.empire.ds.SupportsNamedGraphs;
+import com.clarkparsia.empire.ds.impl.AbstractDataSource;
 
-import com.clarkparsia.empire.impl.AbstractDataSource;
+import com.clarkparsia.empire.ds.impl.AbstractResultSet;
 
-import com.clarkparsia.empire.impl.AbstractResultSet;
 import com.clarkparsia.empire.impl.RdfQueryFactory;
 
 import com.clarkparsia.empire.impl.sparql.SPARQLDialect;
 
 import org.openrdf.model.Graph;
+import org.openrdf.model.Value;
 import org.openrdf.model.impl.ValueFactoryImpl;
 import org.openrdf.query.QueryEvaluationException;
 import org.openrdf.query.TupleQueryResult;
+import org.openrdf.query.parser.sparql.SPARQLParser;
+import org.openrdf.query.parser.ParsedQuery;
 import org.openrdf.rio.RDFFormat;
 
 import org.apache.log4j.Logger;
@@ -47,6 +50,10 @@ import com.clarkparsia.fourstore.api.Store;
 import com.clarkparsia.fourstore.api.StoreException;
 
 import com.clarkparsia.openrdf.OpenRdfIO;
+import com.clarkparsia.openrdf.ExtGraph;
+import com.clarkparsia.openrdf.query.util.DescribeVisitor;
+import com.clarkparsia.openrdf.query.util.AskVisitor;
+import com.clarkparsia.openrdf.query.sparql.SPARQLQueryRenderer;
 
 import static com.clarkparsia.openrdf.OpenRdfUtil.toIterator;
 
@@ -55,7 +62,7 @@ import static com.clarkparsia.openrdf.OpenRdfUtil.toIterator;
  *
  * @author Michael Grove
  * @since 0.1
- * @version 0.6.5
+ * @version 0.7
  */
 public class FourStoreDataSource extends AbstractDataSource implements MutableDataSource, SupportsNamedGraphs {
 	/**
@@ -159,14 +166,72 @@ public class FourStoreDataSource extends AbstractDataSource implements MutableDa
 	/**
 	 * @inheritDoc
 	 */
-	public Graph describe(final URI theURI) throws DataSourceException {
+	public boolean ask(final String theQuery) throws QueryException {
+		String aQueryStr = theQuery;
+
+		try {
+			ParsedQuery aQuery = new SPARQLParser().parseQuery(theQuery, "http://example.org");
+
+			if (new AskVisitor().checkQuery(aQuery).isAsk()) {
+				// 4Store does not support ask queries, so lets render the partial query, make it a select w/ limit 1
+				// and evalue that to simulate having support for ASK queries.
+				aQueryStr = new SPARQLQueryRenderer().render(new SPARQLParser().parseQuery(theQuery, "http://example.org"));
+
+				aQueryStr = "select distinct * where { " + aQueryStr + " } limit 1";
+			}
+		}
+		catch (Exception e) {
+			throw new QueryException(e);
+		}
+
+		ResultSet aResults = selectQuery(aQueryStr);
+
+		try {
+			return aResults.hasNext();
+		}
+		finally {
+			aResults.close();
+		}
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public Graph describe(final String theQuery) throws QueryException {
 		try {
 			// rasqal doesn't support describe, and thus, neither does 4store.  we'll do a poor man's implementation
 			// of it with a construct query
-			return mStore.constructQuery("construct { ?s ?p ?o }  where { ?s ?p ?o. filter(?s = <" + theURI + ">) } ");
+			//return mStore.constructQuery("construct { ?s ?p ?o }  where { ?s ?p ?o. filter(?s = <" + theURI + ">) } ");
+
+			ParsedQuery aQuery = new SPARQLParser().parseQuery(theQuery, "http://example.org");
+			DescribeVisitor aVisitor = new DescribeVisitor();
+			aVisitor.checkQuery(aQuery);
+
+			if (!aVisitor.isDescribe()) {
+				// not a describe, try a construct?
+				return graphQuery(theQuery);
+			}
+			else {
+				ExtGraph aGraph = new ExtGraph();
+
+				for (Value aValue : aVisitor.getValues()) {
+					if (aValue instanceof org.openrdf.model.URI) {
+						aGraph.addAll(mStore.constructQuery("construct { ?s ?p ?o }  where { ?s ?p ?o. filter(?s = <" + aValue.stringValue() + ">) } "));
+					}
+					else {
+						throw new QueryException("Cannot describe non-URI values");
+					}
+				}
+
+				return aGraph;
+			}
 		}
-		catch (com.clarkparsia.fourstore.api.QueryException e) {
-			throw new DataSourceException(e);
+		catch (Exception e) {
+			if (e instanceof QueryException) {
+				throw (QueryException) e;
+			}
+
+			throw new QueryException(e);
 		}
 	}
 

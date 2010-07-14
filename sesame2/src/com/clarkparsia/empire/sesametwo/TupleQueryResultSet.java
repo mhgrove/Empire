@@ -15,7 +15,7 @@
 
 package com.clarkparsia.empire.sesametwo;
 
-import com.clarkparsia.empire.impl.AbstractResultSet;
+import com.clarkparsia.empire.ds.impl.AbstractResultSet;
 
 import static com.clarkparsia.openrdf.OpenRdfUtil.toIterator;
 
@@ -24,7 +24,7 @@ import org.openrdf.query.TupleQueryResult;
 import org.openrdf.query.QueryEvaluationException;
 
 /**
- * <p>Simple extension of the {@link AbstractResultSet} to provide iteration over a Sesame 2.x result set and to
+ * <p>Simple extension of the {@link com.clarkparsia.empire.ds.impl.AbstractResultSet} to provide iteration over a Sesame 2.x result set and to
  * close the results when completed.</p>
  *
  * @author Michael Grove

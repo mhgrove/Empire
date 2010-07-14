@@ -140,6 +140,10 @@
 			<fileset dir="${core.dir}/resources">
 				<include name="**/*"/>
 			</fileset>
+			<fileset dir="${core.dir}">
+				<include name="**/*"/>
+				<exclude name="**/*.java"/>
+			</fileset>
 		</copy>
 
 		<jar jarfile="${dist.lib.dir}/${project.name}-core.jar" basedir="${core.build.dir}"/>

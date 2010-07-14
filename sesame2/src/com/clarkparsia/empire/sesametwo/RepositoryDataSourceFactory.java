@@ -41,10 +41,16 @@ import org.openrdf.model.Statement;
  *
  * @author Michael Grove
  * @since 0.6
- * @version 0.6.5
+ * @version 0.7
  */
-@Alias("sesame")
+@Alias(RepositoryDataSourceFactory.ALIAS)
 public class RepositoryDataSourceFactory implements DataSourceFactory {
+
+	/**
+	 * Global alias for this factory
+	 */
+	public static final String ALIAS = "sesame";
+
 	/**
 	 * Configuration key for the URL of the sesame service
 	 */
@@ -104,12 +110,10 @@ public class RepositoryDataSourceFactory implements DataSourceFactory {
 		Repository aRepository;
 
 		try {
-
 			if (aURL != null && aRepo != null) {
 				aRepository = new HTTPRepository(aURL.toString(), aRepo.toString());
 
 				aRepository.initialize();
-			
 			}
 			else if (aFiles != null) {
 				aRepository = new SailRepository(new MemoryStore());
@@ -124,7 +128,12 @@ public class RepositoryDataSourceFactory implements DataSourceFactory {
 
 						aParser.setRDFHandler(new SailBuilderRDFHandler(aConn));
 
-						aParser.parse(new FileInputStream(aFile), "");
+						if (BasicUtils.isURL(aFile)) {
+							aParser.parse(new java.net.URL(aFile).openStream(), "");
+						}
+						else {
+							aParser.parse(new FileInputStream(aFile), "");
+						}
 					}
 
 					aConn.commit();

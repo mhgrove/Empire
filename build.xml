@@ -41,6 +41,8 @@
 	<property name="dist.lib.dir" location="${dist.dir}/lib"/>
 	<property name="dist.javadoc.dir" location="${dist.docs.dir}/javadoc"/>
 
+	<property name="javac.debug" value="false"/>
+
 	<path id="project.class.path">
 		<pathelement location="${core.build.dir}"/>
 		<pathelement location="${jena.build.dir}"/>
@@ -92,35 +94,35 @@
 	</target>
 
 	<target name="compile-core" depends="init">
-		<javac source="1.5" target="1.5" destdir="${core.build.dir}">
+		<javac debug="${javac.debug}" source="1.5" target="1.5" destdir="${core.build.dir}">
 			<src path="${core.src.dir}"/>
 			<classpath refid="project.class.path"/>
 		</javac>
 	</target>
 
 	<target name="compile-jena" depends="init, compile-core">
-		<javac source="1.5" target="1.5" destdir="${jena.build.dir}">
+		<javac debug="${javac.debug}" source="1.5" target="1.5" destdir="${jena.build.dir}">
 			<src path="${jena.src.dir}"/>
 			<classpath refid="project.class.path"/>
 		</javac>
 	</target>
 
 	<target name="compile-fourstore" depends="init, compile-core">
-		<javac source="1.5" target="1.5" destdir="${fourstore.build.dir}">
+		<javac debug="${javac.debug}" source="1.5" target="1.5" destdir="${fourstore.build.dir}">
 			<src path="${fourstore.src.dir}"/>
 			<classpath refid="project.class.path"/>
 		</javac>
 	</target>
 
 	<target name="compile-sesame" depends="init, compile-core">
-		<javac source="1.5" target="1.5" destdir="${sesame.build.dir}">
+		<javac debug="${javac.debug}" source="1.5" target="1.5" destdir="${sesame.build.dir}">
 			<src path="${sesame.src.dir}"/>
 			<classpath refid="project.class.path"/>
 		</javac>
 	</target>
 
 	<target name="compile-test" depends="init, compile-core">
-		<javac source="1.5" target="1.5" destdir="${test.build.dir}">
+		<javac debug="${javac.debug}" source="1.5" target="1.5" destdir="${test.build.dir}">
 			<src path="${test.src.dir}"/>
 			<classpath refid="project.class.path"/>
 		</javac>

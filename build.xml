@@ -41,7 +41,7 @@
 	<property name="dist.lib.dir" location="${dist.dir}/lib"/>
 	<property name="dist.javadoc.dir" location="${dist.docs.dir}/javadoc"/>
 
-	<property name="javac.debug" value="false"/>
+	<property name="javac.debug" value="off"/>
 
 	<path id="project.class.path">
 		<pathelement location="${core.build.dir}"/>
@@ -78,16 +78,11 @@
 
 		<mkdir dir="${build.dir}"/>
 		<mkdir dir="${core.build.dir}"/>
-		<mkdir dir="${jena.build.dir}"/>
-		<mkdir dir="${fourstore.build.dir}"/>
-		<mkdir dir="${sesame.build.dir}"/>
-		<mkdir dir="${test.build.dir}"/>
 
 		<mkdir dir="${dist.dir}"/>
-		<mkdir dir="${dist.src.dir}"/>
+
 		<mkdir dir="${dist.lib.dir}"/>
 		<mkdir dir="${dist.docs.dir}"/>
-		<mkdir dir="${dist.javadoc.dir}"/>
 	</target>
 
 	<target name="compile" depends="init, compile-core, compile-sesame, compile-fourstore, compile-jena, compile-test" description="Compile source files">
@@ -101,6 +96,8 @@
 	</target>
 
 	<target name="compile-jena" depends="init, compile-core">
+		<mkdir dir="${jena.build.dir}"/>
+
 		<javac debug="${javac.debug}" source="1.5" target="1.5" destdir="${jena.build.dir}">
 			<src path="${jena.src.dir}"/>
 			<classpath refid="project.class.path"/>
@@ -108,6 +105,8 @@
 	</target>
 
 	<target name="compile-fourstore" depends="init, compile-core">
+		<mkdir dir="${fourstore.build.dir}"/>
+
 		<javac debug="${javac.debug}" source="1.5" target="1.5" destdir="${fourstore.build.dir}">
 			<src path="${fourstore.src.dir}"/>
 			<classpath refid="project.class.path"/>
@@ -115,6 +114,8 @@
 	</target>
 
 	<target name="compile-sesame" depends="init, compile-core">
+		<mkdir dir="${sesame.build.dir}"/>
+
 		<javac debug="${javac.debug}" source="1.5" target="1.5" destdir="${sesame.build.dir}">
 			<src path="${sesame.src.dir}"/>
 			<classpath refid="project.class.path"/>
@@ -122,6 +123,8 @@
 	</target>
 
 	<target name="compile-test" depends="init, compile-core">
+		<mkdir dir="${test.build.dir}"/>
+
 		<javac debug="${javac.debug}" source="1.5" target="1.5" destdir="${test.build.dir}">
 			<src path="${test.src.dir}"/>
 			<classpath refid="project.class.path"/>
@@ -131,7 +134,9 @@
 	<target name="build" depends="compile">
 	</target>
 
-	<target name="dist" depends="build" description="Generate a distribution">
+	<target name="dist" depends="build" description="Build a complete distribution">
+		<mkdir dir="${dist.src.dir}"/>
+
 		<jar jarfile="${dist.src.dir}/${project.name}-core-src.jar" basedir="${core.src.dir}"/>
 		<jar jarfile="${dist.src.dir}/${project.name}-jena-src.jar" basedir="${jena.src.dir}"/>
 		<jar jarfile="${dist.src.dir}/${project.name}-sesame-src.jar" basedir="${sesame.src.dir}"/>
@@ -185,37 +190,37 @@
 		</copy>
 	</target>
 
-	<target name="zip" depends="label-date,dist,distfiles, javadoc"
-		description="Build a zipfile containing source and binaries.">
+	<target name="make-zip" depends="label-release"
+			description="Build a zip file out of the contents of the current distribution">
 		<condition property="project.dirname" value="${project.name}-${DSTAMP}">
 			<not>
 				<isset property="project.dirname"/>
 			</not>
 		</condition>
 
-		<copy todir="${dist.dir}">
-			<fileset dir="">
-				<include name="docs/**"/>
-			</fileset>
-		</copy>
-
 		<zip destfile="${dist.dir}/${project.dirname}.zip">
 			<zipfileset dir="dist" prefix="${project.dirname}"
-				excludes="${project.name}*.zip, dist/test-reports"/>
+						excludes="${project.name}*.zip, dist/test-reports"/>
 		</zip>
 	</target>
 
 	<target name="label-date" depends="init">
 		<property name="project.version.label" value="${DSTAMP}"/>
 		<property name="project.label" value="${project.name}-${DSTAMP}"/>
+		<property name="project.dirname"
+				  value="${project.name}-${DSTAMP}"/>
 	</target>
 
 	<target name="label-release" depends="init">
 		<property name="project.version.label" value="${project.version}"/>
 		<property name="project.label" value="${project.name}-${project.version}"/>
+		<property name="project.dirname"
+				  value="${project.name}-${project.version.label}"/>
 	</target>
 
 	<target name="javadoc" depends="build">
+		<mkdir dir="${dist.javadoc.dir}"/>
+
 		<javadoc destdir="${dist.javadoc.dir}" access="public" use="true" notree="false"
 			nonavbar="false" noindex="false" splitindex="true" author="true"
 			version="true" nodeprecatedlist="false" nodeprecated="false"
@@ -242,10 +247,59 @@
 	******************** RELEASE ********************
 	-->
 
-	<target name="release" depends="label-release">
-		<property name="project.dirname"
-			value="${project.name}-${project.version.label}"/>
-		<antcall target="zip"/>
+	<target name="release" depends="label-release,dist,distfiles,javadoc" description="Create a complete, versioned, release distribution">
+		<antcall target="make-zip"/>
+	</target>
+
+	<target name="dist-core" depends="label-release,build,distfiles,javadoc">
+
+		<copy todir="${core.build.dir}">
+			<fileset dir="${core.dir}/resources">
+				<include name="**/*"/>
+			</fileset>
+		</copy>
+
+		<jar jarfile="${dist.lib.dir}/${project.name}-core.jar" basedir="${core.build.dir}"/>
+
+		<copy todir="${dist.lib.dir}">
+			<fileset dir="${core.lib.dir}">
+				<include name="**/*.jar"/>
+				<include name="**/*.txt"/>
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="dist-fourstore" depends="dist-core"
+			description="Create the dist for using Empire with 4Store">
+
+		<jar jarfile="${dist.lib.dir}/${project.name}-fourstore.jar" basedir="${fourstore.build.dir}"/>
+
+		<copy todir="${dist.lib.dir}">
+
+			<fileset dir="${fourstore.lib.dir}">
+				<include name="**/*.jar"/>
+				<include name="**/*.txt"/>
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="dist-jena" depends="dist-core"
+			description="Create the dist for using Empire with Jena 2.6.x">
+
+		<jar jarfile="${dist.lib.dir}/${project.name}-jena.jar" basedir="${jena.build.dir}"/>
+
+		<copy todir="${dist.lib.dir}">
+
+			<fileset dir="${jena.lib.dir}">
+				<include name="**/*.jar"/>
+				<include name="**/*.txt"/>
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="dist-sesame" depends="dist-core"
+			description="Create the dist for using Empire with Sesame 2.3.x">
+		<jar jarfile="${dist.lib.dir}/${project.name}-sesame.jar" basedir="${sesame.build.dir}"/>
 	</target>
 
 	<!--

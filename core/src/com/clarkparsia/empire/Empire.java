@@ -20,6 +20,8 @@ import com.clarkparsia.empire.util.EmpireAnnotationProvider;
 import com.clarkparsia.empire.util.DefaultEmpireModule;
 import com.clarkparsia.empire.util.EmpireModule;
 import com.clarkparsia.empire.config.EmpireConfiguration;
+import com.clarkparsia.empire.annotation.RdfGenerator;
+import com.clarkparsia.empire.annotation.RdfsClass;
 import com.clarkparsia.utils.Predicate;
 import com.clarkparsia.utils.NamespaceUtils;
 
@@ -41,7 +43,7 @@ import java.util.Arrays;
  *
  * @author Michael Grove
  * @since 0.1
- * @version 0.6.5
+ * @version 0.6.6
  */
 public class Empire {
 
@@ -85,6 +87,8 @@ public class Empire {
 	public static Empire get() {
 		if (INSTANCE == null) {
 			INSTANCE = injector().getInstance(Empire.class);
+			
+			RdfGenerator.init(INSTANCE.getAnnotationProvider().getClassesWithAnnotation(RdfsClass.class));
 		}
 
 		return INSTANCE;

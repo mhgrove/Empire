@@ -5,6 +5,11 @@ Empire 0.7 (TBD)
 =========================
 	* MODIFIED: Repackaged all DataSource specific classes into the com.clarkparsia.empire.ds package.
 	* MODIFIED: Moved some DataSource specific functions from EmpireUtil to DataSourceUtil
+	* MODIFIED: Query results can returned proxied objects, allowing users to defer the loading of the results until they
+				iterate over them.  Disable/Enabling this feature is controlled via EmpireOptions.
+	* MODIFIED: All contains to contains, and persistence operations (merge/persist/remove) in EntityManager have been
+				compacted; the amount of calls to the DataSource has been greatly reduced resulting in a large performance
+				increase when cascading persistence operations, and a modest increase overall.
 	* ADDED: TripleSource interface for allowing triple-level access to a DataSource
 	* ADDED: Ask & Describe query methods introduced to DataSource interface.  Best effort implementations provided for DataSources which do not implement these natively.
 	* ADDED: Query type specific methods to RdfQuery to allow direct access to the query results from the DataSource
@@ -13,10 +18,13 @@ Empire 0.7 (TBD)
 
 Empire 0.6.6 (2010-07-08)
 =========================
+    * MODIFIED: Updates in 4Store & OpenRDF utility libraries to resolve issue regarding escaping quotes in queries.
+    * MODIFIED: Better sniffing for XML formatted configuration files in DefaultEmpireModule
 	* ADDED: Support for MappedSuperclass
+	* ADDED: Build flag for enabling debug in jar files
+	* ADDED: Targets for producing separate builds for each platform (Jena, Sesame, 4Store, etc.)
 	* REMOVED: Global option to inspect bean hierarchy, this is now controlled by @MappedSuperclass
     * FIXED: Bug in query parameter handling introduced in 0.6.5, optional parameters could produce invalid queries in certain cases.
-    * MODIFIED: Updates in 4Store & OpenRDF utility libraries to resolve issue regarding escaping quotes in queries. 
 
 Empire 0.6.5 (2010-06-04)
 =========================

@@ -44,44 +44,7 @@ import org.openrdf.model.Statement;
  * @version 0.7
  */
 @Alias(RepositoryDataSourceFactory.ALIAS)
-public class RepositoryDataSourceFactory implements DataSourceFactory {
-
-	/**
-	 * Global alias for this factory
-	 */
-	public static final String ALIAS = "sesame";
-
-	/**
-	 * Configuration key for the URL of the sesame service
-	 */
-	public static final String URL = "url";
-
-	/**
-	 * Configuration key for the name of the sesame repository
-	 */
-	public static final String REPO = "repo";
-
-	/**
-	 * Configuration key for the files to load for the local sesame repository
-	 */
-	public static final String FILES = "files";
-
-	/**
-	 * Configuration key for the local sesame data directory
-	 */
-	public static final String DIR = "dir";
-
-	/**
-	 * Configuration key for controlling which query dialect is used by the RepositoryDataSource
-	 */
-	public static final String QUERY_LANG = "queryLang";
-
-	/**
-	 * Constant value for the SERQL query language
-	 * @see #QUERY_LANG
-	 */
-	public static final String LANG_SERQL = "serql";
-
+public class RepositoryDataSourceFactory implements DataSourceFactory, RepositoryFactoryKeys {
 	/**
 	 * @inheritDoc
 	 */

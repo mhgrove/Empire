@@ -15,8 +15,6 @@
 
 package com.clarkparsia.empire.ds;
 
-import com.clarkparsia.empire.ds.DataSourceException;
-
 /**
  * <p>Interface for something that supports transactions.  Usually used in conjunction with a
  * {@link MutableDataSource} to provide a transactional database.</p>

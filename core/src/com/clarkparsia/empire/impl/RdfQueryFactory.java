@@ -145,7 +145,7 @@ public class RdfQueryFactory implements QueryFactory {
 				aQuery.setHint(aHint.name(), aHint.value());
 			}
 
-			aQuery.setSource(mSource);
+			aQuery.setSource(getSource());
 
 			return aQuery;
 		}

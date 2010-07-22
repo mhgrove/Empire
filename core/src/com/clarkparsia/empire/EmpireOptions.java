@@ -40,4 +40,11 @@ public class EmpireOptions {
 	 * only literal values with the specified language will be considered for valid values for a field.
 	 */
 	public static boolean ENABLE_LANG_AWARE = false;
+
+	/**
+	 * When query results are returned, if they are bound to a bean class, setting this flag to true will return proxied
+	 * objects, the bean's will not be loaded from the database until you iterate to them in the result set.  This
+	 * allows the initial query to be much faster as it defers most of the load time until iteration.
+	 */
+	public static boolean ENABLE_QUERY_RESULT_PROXY = true;
 }

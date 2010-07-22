@@ -251,6 +251,7 @@ public class RdfGenerator {
 	 * @throws InvalidRdfException thrown if the object does not support the RDF JPA API.
 	 * @throws DataSourceException thrown if there is an error retrieving data from the database
 	 */
+	@SuppressWarnings("unchecked")
 	private static <T> T fromRdf(T theObj, DataSource theSource) throws InvalidRdfException, DataSourceException {
 		SupportsRdfId.RdfKey theKeyObj = asSupportsRdfId(theObj).getRdfId();
 
@@ -952,15 +953,8 @@ public class RdfGenerator {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	private static <T> T getProxyOrDbObject(Object theAccessor, Class<T> theClass, Object theKey, DataSource theSource) throws Exception {
-		// TODO: do we need to provide a reference to the thing we're proxying for.  like, if the getter is proxied
-		// as we do it here, it will always return the same value.  if you do a set on the property expecting the
-		// new value, that will set it on the actual object, but it will not change what this value returns.
-		// I think that maybe the proxy should be tweaked such that it will return the proxied value when it's first
-		// asked for, and then set that value on the object it's proxying for.  that way get/set should work as expected
-		// and once the value is retrieved the first time, it will always return it from the parent object rather than
-		// from the cached copy in the proxy object.
-
 		if (BeanReflectUtil.isFetchTypeLazy(theAccessor)) {
 			Proxy<T> aProxy = new Proxy<T>(theClass, asPrimaryKey(theKey), theSource);
 

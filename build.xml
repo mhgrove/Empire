@@ -147,7 +147,7 @@
 			<fileset dir="${core.dir}/resources">
 				<include name="**/*"/>
 			</fileset>
-			<fileset dir="${core.dir}">
+			<fileset dir="${core.dir}/src">
 				<include name="**/*"/>
 				<exclude name="**/*.java"/>
 			</fileset>

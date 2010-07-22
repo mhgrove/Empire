@@ -31,12 +31,15 @@ import com.clarkparsia.empire.ds.DataSource;
 import com.clarkparsia.empire.ds.ResultSet;
 import com.clarkparsia.empire.ds.QueryException;
 import com.clarkparsia.empire.Dialect;
+import com.clarkparsia.empire.EmpireOptions;
 
 import static com.clarkparsia.empire.util.EmpireUtil.asPrimaryKey;
 
 import com.clarkparsia.empire.util.BeanReflectUtil;
 import com.clarkparsia.empire.annotation.RdfGenerator;
 import com.clarkparsia.empire.annotation.AnnotationChecker;
+import com.clarkparsia.empire.annotation.runtime.Proxy;
+import com.clarkparsia.empire.annotation.runtime.ProxyAwareList;
 import com.clarkparsia.openrdf.ExtBindingSet;
 
 import javax.persistence.FlushModeType;
@@ -46,12 +49,12 @@ import javax.persistence.PersistenceException;
 import javax.persistence.Query;
 import javax.persistence.TemporalType;
 
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -354,7 +357,7 @@ public class RdfQuery implements Query {
 	 */
 	@SuppressWarnings("unchecked")
 	public List getResultList() {
-		List aList = new ArrayList();
+		List aList = new ProxyAwareList();
 
 		try {
 			if (isConstruct()) {
@@ -378,17 +381,26 @@ public class RdfQuery implements Query {
 						String aVarName = getProjectionVarName();
 
 						if (aBinding.getValue(aVarName) instanceof URI && AnnotationChecker.isValid(getBeanClass())) {
-							aObj = RdfGenerator.fromRdf(getBeanClass(),
-														asPrimaryKey(aBinding.getValue(aVarName)),
-														getSource());
+							if (EmpireOptions.ENABLE_QUERY_RESULT_PROXY) {
+								aObj = new Proxy(getBeanClass(), asPrimaryKey(aBinding.getValue(aVarName)), getSource());
+							}
+							else {
+								aObj = RdfGenerator.fromRdf(getBeanClass(),
+															asPrimaryKey(aBinding.getValue(aVarName)),
+															getSource());
+							}
                         }
                         else {
                             aObj = new RdfGenerator.ValueToObject(getSource(), null,
                                                                   getBeanClass(), null).apply(aBinding.getValue(aVarName));
                         }
 
-						if (aObj == null || !getBeanClass().isInstance(aObj)) {
-							throw new PersistenceException("Cannot bind query result to bean: " + mClass);
+						// if the object could not be created, or it was and its not the bean class type, or not a proxy
+						// for something of the bean class type, then we could not bind the value in the result set
+						// which is an error.
+						if (aObj == null
+							|| !(getBeanClass().isInstance(aObj) || (aObj instanceof Proxy && getBeanClass().isAssignableFrom(((Proxy)aObj).getProxyClass())))) {
+							throw new PersistenceException("Cannot bind query result to bean: " + getBeanClass());
 						}
 						else {
 							aList.add(aObj);
@@ -710,11 +722,11 @@ public class RdfQuery implements Query {
 	protected String query() {
 		// use some regexs to look for and remove limits and offsets specified in the query string and store them locally
 		// these will get postfixed to the query later on.
-		boolean containsLimit = Pattern.compile("limit(\\s)*[0-9]{1,}[^}]*").matcher(getQueryString()).find();
-		boolean containsOffset = Pattern.compile("offset(\\s)*[0-9]{1,}[^}]*").matcher(getQueryString()).find();
+		boolean containsLimit = Pattern.compile("limit(\\s)*[0-9]+[^}]*").matcher(getQueryString()).find();
+		boolean containsOffset = Pattern.compile("offset(\\s)*[0-9]+[^}]*").matcher(getQueryString()).find();
 
 		if (containsLimit) {
-			String aLimitGrabRegex = "limit(\\s)*[0-9]{1,}";
+			String aLimitGrabRegex = "limit(\\s)*[0-9]+";
 			Matcher m = Pattern.compile(aLimitGrabRegex).matcher(getQueryString());
 			m.find();
 
@@ -726,7 +738,7 @@ public class RdfQuery implements Query {
 		}
 
 		if (containsOffset) {
-			String aOffsetGrabRegex = "offset(\\s)*[0-9]{1,}";
+			String aOffsetGrabRegex = "offset(\\s)*[0-9]+";
 			Matcher m = Pattern.compile(aOffsetGrabRegex).matcher(getQueryString());
 			m.find();
 

@@ -58,8 +58,13 @@ public class DataSourceUtil {
 	 * @param theSource the source
 	 * @return the DataSource as a TripleSource.
 	 * @see TripleSourceAdapter
+	 * @throws DataSourceException if the TripleSource cannot be created.
 	 */
-	public static TripleSource asTripleSource(DataSource theSource) {
+	public static TripleSource asTripleSource(DataSource theSource) throws DataSourceException {
+		if (theSource == null) {
+			throw new DataSourceException("Cannot create triple source from null data source");
+		}
+
 		if (theSource instanceof TripleSource) {
 			return (TripleSource) theSource;
 		}

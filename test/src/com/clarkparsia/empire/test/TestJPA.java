@@ -522,6 +522,11 @@ public class TestJPA  {
         assertEquals(aCraft.getAlternateName(), Collections.singletonList("00001"));
     }
 
+	@Test(expected=IllegalArgumentException.class)
+	public void testGetInvalidNamedQuery() {
+		mManager.createNamedQuery("not an actual query name");
+	}
+
 	@Test @Ignore
 	public void testLocking() {
 		// TODO: devise a test for the locking stuff...once it's supported

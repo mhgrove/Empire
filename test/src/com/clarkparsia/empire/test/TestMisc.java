@@ -17,11 +17,18 @@ package com.clarkparsia.empire.test;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import org.openrdf.model.Resource;
+import org.openrdf.model.BNode;
+import org.openrdf.model.impl.ValueFactoryImpl;
 import com.clarkparsia.empire.codegen.InstanceGenerator;
 import com.clarkparsia.empire.test.api.TestInterface;
 import com.clarkparsia.empire.SupportsRdfId;
+import com.clarkparsia.empire.util.EmpireUtil;
+import com.clarkparsia.empire.annotation.SupportsRdfIdImpl;
 
 import java.net.URI;
+import java.net.URL;
 
 /**
  * <p>Various miscellaneous tests for non-JPA parts of the Empire API.</p>
@@ -73,6 +80,32 @@ public class TestMisc {
 	@Test(expected=IllegalArgumentException.class)
 	public void testNoSupportsInstGen() throws Exception {
 		InstanceGenerator.generateInstanceClass(NoSupportsTestInterface.class);
+	}
+
+	@Test
+	public void testEmpireUtil() throws Exception {
+		SupportsRdfId aId = new SupportsRdfIdImpl();
+
+		assertTrue(EmpireUtil.asResource(aId) == null);
+
+		Resource aRes = EmpireUtil.asResource(new SupportsRdfIdImpl(new SupportsRdfId.BNodeKey("asdf")));
+		assertTrue(aRes instanceof BNode);
+		assertEquals(((BNode)aRes).getID(), "asdf");
+
+		aId = EmpireUtil.asSupportsRdfId(java.net.URI.create("urn:foo"));
+		assertTrue(aId.getRdfId() instanceof SupportsRdfId.URIKey);
+		assertEquals(aId.getRdfId().value(), java.net.URI.create("urn:foo"));
+
+		assertTrue(EmpireUtil.getNamedGraph("") == null);
+
+		SupportsRdfId.RdfKey aKey = EmpireUtil.asPrimaryKey(new URL("http://example.org"));
+		assertTrue(aKey instanceof SupportsRdfId.URIKey);
+		assertEquals(aKey.value(), new URL("http://example.org").toURI());
+
+		BNode aAnon = ValueFactoryImpl.getInstance().createBNode("foobar");
+		aKey = EmpireUtil.asPrimaryKey(aAnon);
+		assertTrue(aKey instanceof SupportsRdfId.BNodeKey);
+		assertEquals(aKey.value(), "foobar");
 	}
 
 	public interface NoSupportsTestInterface {

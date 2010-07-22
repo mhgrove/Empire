@@ -25,7 +25,7 @@ import com.clarkparsia.empire.annotation.RdfGenerator;
  *
  * @author Michael Grove
  * @since 0.5
- * @version 0.6.3
+ * @version 0.7
  */
 public class Proxy<T> {
 
@@ -77,5 +77,14 @@ public class Proxy<T> {
 		}
 
 		return mValue;
+	}
+
+	/**
+	 * Return the type of the object this is proxying for
+	 * @return the object type
+	 * @see #value
+	 */
+	public Class<T> getProxyClass() {
+		return mClass;
 	}
 }

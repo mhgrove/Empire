@@ -123,7 +123,7 @@ import javassist.util.proxy.MethodHandler;
  *
  * @author Michael Grove
  * @since 0.1
- * @version 0.6.5
+ * @version 0.6.6
  */
 public class RdfGenerator {
 
@@ -148,14 +148,20 @@ public class RdfGenerator {
 	 */
 	private final static Map<Object, Object> OBJECT_M = Collections.synchronizedMap(new HashMap<Object, Object>());
 
-	static {
-		Collection<Class<?>> aClasses = Empire.get().getAnnotationProvider().getClassesWithAnnotation(RdfsClass.class);
-		for (Class<?> aClass : aClasses) {
+	/**
+	 * Initialize some parameters in the RdfGenerator.  This caches namespace and type mapping information locally
+	 * which will be used in subsequent rdf generation requests.
+	 * @param theClasses the list of classes to be handled by the RdfGenerator
+	 */
+	public static void init(Collection<Class<?>> theClasses) {
+		for (Class<?> aClass : theClasses) {
 			RdfsClass aAnnotation = aClass.getAnnotation(RdfsClass.class);
 
-			addNamespaces(aClass);
+			if (aAnnotation != null) {
+				addNamespaces(aClass);
 
-			TYPE_TO_CLASS.put(FACTORY.createURI(NamespaceUtils.uri(aAnnotation.value())), aClass);
+				TYPE_TO_CLASS.put(FACTORY.createURI(NamespaceUtils.uri(aAnnotation.value())), aClass);
+			}
 		}
 	}
 
@@ -486,6 +492,10 @@ public class RdfGenerator {
 	 * @param theObj the object to scan.
 	 */
 	public static void addNamespaces(Class<?> theObj) {
+		if (theObj == null) {
+			return;
+		}
+
 		Namespaces aNS = BeanReflectUtil.getAnnotation(theObj, Namespaces.class);
 
 		if (aNS == null) {
@@ -511,6 +521,10 @@ public class RdfGenerator {
 	 * @throws InvalidRdfException thrown if the object cannot be transformed into RDF.
 	 */
 	public static ExtGraph asRdf(Object theObj) throws InvalidRdfException {
+		if (theObj == null) {
+			return null;
+		}
+
 		RdfsClass aClass = asValidRdfClass(theObj);
 
 		Resource aSubj = id(theObj);

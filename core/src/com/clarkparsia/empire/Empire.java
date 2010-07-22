@@ -43,7 +43,7 @@ import java.util.Arrays;
  *
  * @author Michael Grove
  * @since 0.1
- * @version 0.6.5
+ * @version 0.6.6
  */
 public class Empire {
 

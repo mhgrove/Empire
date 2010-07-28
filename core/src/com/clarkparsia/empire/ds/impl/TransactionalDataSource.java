@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package com.clarkparsia.empire.impl;
+package com.clarkparsia.empire.ds.impl;
 
 import org.openrdf.model.Graph;
 import com.clarkparsia.empire.ds.DataSource;
@@ -62,7 +62,7 @@ public class TransactionalDataSource implements DataSource, MutableDataSource, S
 	/**
 	 * @inheritDoc
 	 */
-	protected TransactionalDataSource(final MutableDataSource theDataSource) {
+	public TransactionalDataSource(final MutableDataSource theDataSource) {
 		mDataSource = theDataSource;
 
 		mRemoveGraph = new ExtGraph();

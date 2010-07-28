@@ -22,6 +22,7 @@ import com.clarkparsia.empire.SupportsRdfId;
 import com.clarkparsia.empire.ds.SupportsTransactions;
 import com.clarkparsia.empire.ds.DataSourceUtil;
 import com.clarkparsia.empire.ds.QueryException;
+import com.clarkparsia.empire.ds.impl.TransactionalDataSource;
 import com.clarkparsia.empire.Empire;
 import com.clarkparsia.empire.EmpireException;
 

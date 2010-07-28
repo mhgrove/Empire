@@ -62,4 +62,16 @@ public @interface RdfProperty {
 	 * those without language types specified.
 	 */
 	public String language() default "";
+
+	/**
+	 * <p>Attribute to control how java.net.URI valued field are handled.  The default behavior is that properties w/ the type of URI are converted to resources
+	 * when serialized as RDF.  Setting this flag to 'true' will serialize them as literal values typed w/ xsd:anyURI.</p>
+	 *
+	 * <p>It is important to note that this does not affect the conversion into Java.  Literals typed with xsd:anyURI will always collapse into java.net.URI objects
+	 * while resources can save into java.net.URI or a bean of the corresponding type.  It's this dual use of java.net.URI that makes this flag necessary so you
+	 * can ensure you can symmetric I/O in your RDF.</p>
+	 *
+	 * @return whether or not java.net.URI objects should be treated as xsd:anyURI typed literal values.
+	 */
+	public boolean isXsdUri() default false;
 }

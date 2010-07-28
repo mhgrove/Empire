@@ -13,7 +13,8 @@ Empire 0.7 (TBD)
 	* ADDED: TripleSource interface for allowing triple-level access to a DataSource
 	* ADDED: Ask & Describe query methods introduced to DataSource interface.  Best effort implementations provided for DataSources which do not implement these natively.
 	* ADDED: Query type specific methods to RdfQuery to allow direct access to the query results from the DataSource
-	* ADDED: Default logging configuration 
+	* ADDED: Default logging configuration
+	* ADDED: Flag to RdfProperty annotation to control how java.net.URI objects are marshalled into RDF.
 	* REMOVED: Global flag in EmpireOptions for handling proxying, this is now completely controlled via JPA annotations
 
 Empire 0.6.6 (2010-07-08)

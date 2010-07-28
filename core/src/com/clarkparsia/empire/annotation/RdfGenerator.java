@@ -1084,8 +1084,14 @@ public class RdfGenerator {
 				return FACTORY.createLiteral(Character.class.cast(theIn));
 			}
 			else if (java.net.URI.class.isInstance(theIn)) {
-//				return FACTORY.createLiteral(theIn.toString(), XMLSchema.ANYURI);
-                return FACTORY.createURI(theIn.toString());
+				RdfProperty aProp = mField == null ? null : mField.getAnnotation(RdfProperty.class);
+
+				if (aProp.isXsdUri()) {
+					return FACTORY.createLiteral(theIn.toString(), XMLSchema.ANYURI);
+				}
+				else {
+                	return FACTORY.createURI(theIn.toString());
+				}
 			}
 			else if (Value.class.isAssignableFrom(theIn.getClass())) {
 				return Value.class.cast(theIn);

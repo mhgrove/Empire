@@ -69,6 +69,9 @@ public class SPARQLDialect implements Dialect {
 	}
 
 	private boolean startsWithKeyword(String theQuery) {
+		// TODO: this will not work if there are already query prefixes, then the startsWith will fail, which is not good.
+		// should probably use regex to jump past them and check that way, so some good regex sniffing would be good.
+		
 		String q = theQuery.toLowerCase().trim();
 		return q.startsWith("select") || q.startsWith("construct") || q.startsWith("ask") || q.startsWith("describe");
 	}
@@ -80,7 +83,7 @@ public class SPARQLDialect implements Dialect {
 		String aQuery = theQuery.toLowerCase().trim();
 		aQuery = aQuery.replaceAll(RdfQuery.VT_RE, asProjectionVar("x"));
 
-		if (!aQuery.startsWith("select") && !aQuery.startsWith("construct")) {
+		if (!startsWithKeyword(aQuery)) {
             if (!aQuery.contains(patternKeyword())) {
                 aQuery = " " + patternKeyword() + " " + aQuery;
             }

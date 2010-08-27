@@ -4,6 +4,7 @@ import com.clarkparsia.empire.ds.ResultSet;
 import com.clarkparsia.empire.ds.QueryException;
 
 import com.clarkparsia.empire.impl.RdfQueryFactory;
+import com.clarkparsia.empire.impl.RdfQuery;
 
 import com.clarkparsia.empire.impl.sparql.SPARQLDialect;
 
@@ -143,7 +144,7 @@ public class SparqlEndpointDataSource extends AbstractDataSource {
 			Response aResponse = createSPARQLQueryRequest(theQuery).execute();
 
 			if (aResponse.hasErrorCode()) {
-				throw responseToException(aResponse);
+				throw responseToException(theQuery, aResponse);
 			}
 			else {
 				try {
@@ -164,15 +165,9 @@ public class SparqlEndpointDataSource extends AbstractDataSource {
 
 		Request aQueryRequest;
 
-		String aQuery = theQuery;
-
 		// auto prefix queries w/ rdf and rdfs namespaces
-		aQuery = "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
-				 "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n" +
-				 aQuery;
-
 		ParameterList aParams = new ParameterList()
-				.add(PARAM_QUERY, aQuery);
+				.add(PARAM_QUERY, theQuery);
 
 		if (mUseGetForQueries) {
 			aQueryRequest = aRes.initGet()
@@ -192,11 +187,12 @@ public class SparqlEndpointDataSource extends AbstractDataSource {
 
 	/**
 	 * Given a response, return it as a QueryException by parsing out the errore message and content
+	 * @param theQuery the query being executed that caused the error
 	 * @param theResponse the response which indicate a server error
 	 * @return the Response as an Exception
 	 */
-	private QueryException responseToException(Response theResponse) {
-		return new QueryException("(" + theResponse.getResponseCode() + ") " + theResponse.getMessage() + "\n\n" + theResponse.getContent());
+	private QueryException responseToException(String theQuery, Response theResponse) {
+		return new QueryException("Error evaluating query: " + theQuery + "\n(" + theResponse.getResponseCode() + ") " + theResponse.getMessage() + "\n\n" + theResponse.getContent());
 	}
 
 	/**
@@ -236,15 +232,8 @@ public class SparqlEndpointDataSource extends AbstractDataSource {
 
 		HttpResource aRes = new HttpResourceImpl(mURL);
 
-		String aQuery = theQuery;
-
-		// auto prefix queries w/ rdf and rdfs namespaces
-		aQuery = "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
-				 "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n" +
-				 aQuery;
-
 		ParameterList aParams = new ParameterList()
-				.add(PARAM_QUERY, aQuery);
+				.add(PARAM_QUERY, theQuery);
 
 		try {
 			Request aQueryRequest;
@@ -264,11 +253,11 @@ public class SparqlEndpointDataSource extends AbstractDataSource {
 			Response aResponse = aQueryRequest.execute();
 
 			if (aResponse.hasErrorCode()) {
-				throw responseToException(aResponse);
+				throw responseToException(theQuery, aResponse);
 			}
 			else {
 				try {
-					return OpenRdfIO.readGraph(new StringReader(aResponse.getContent()), RDFFormat.RDFXML);
+					return OpenRdfIO.readGraph(new StringReader(aResponse.getContent()), RDFFormat.TURTLE);
 				}
 				catch (RDFParseException e) {
 					throw new QueryException("Error while parsing rdf/xml-formatted query results", e);

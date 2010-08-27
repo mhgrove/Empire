@@ -30,7 +30,7 @@ public class MutableTestDataSource extends TestDataSource implements MutableData
 	 */
 	public void add(final Graph theGraph) throws DataSourceException {
 		try {
-			getRepository().addGraph(theGraph);
+			getRepository().add(theGraph);
 		}
 		catch (Exception e) {
 			throw new DataSourceException(e);

@@ -70,7 +70,7 @@ public class TestDataSource extends AbstractDataSource implements DataSource {
 		mRepo = OpenRdfUtil.createInMemoryRepo();
 
 		try {
-			mRepo.addGraph(theGraph);
+			mRepo.add(theGraph);
 		}
 		catch (Exception e) {
 			throw new RuntimeException(e);

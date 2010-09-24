@@ -22,7 +22,7 @@ import com.clarkparsia.empire.config.ConfigKeys;
  *
  * @author Michael Grove
  * @since 0.6.3
- * @version 0.6.3
+ * @version 0.7
  */
 public interface JenaConfig extends ConfigKeys {
 
@@ -64,6 +64,13 @@ public interface JenaConfig extends ConfigKeys {
 	 * @see #TYPE
 	 */
 	public static final String MODEL = "model";
+
+	/**
+	 * Configuration parameter for specifying the location of the TDB repository on disk.
+	 * @see #TYPE
+	 * @see JenaModelType
+	 */
+	public static final String LOCATION = "location";
 
 	/**
 	 * Enumeration of the various types of Jena models.

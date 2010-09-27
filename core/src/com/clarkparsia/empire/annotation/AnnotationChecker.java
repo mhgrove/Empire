@@ -20,6 +20,7 @@ import static com.clarkparsia.empire.util.BeanReflectUtil.getAnnotatedFields;
 import static com.clarkparsia.empire.util.BeanReflectUtil.getAnnotatedGetters;
 import com.clarkparsia.empire.SupportsRdfId;
 import com.clarkparsia.empire.EmpireException;
+import com.clarkparsia.empire.EmpireOptions;
 
 import javax.persistence.Entity;
 import javax.persistence.OneToMany;
@@ -38,7 +39,7 @@ import java.util.HashSet;
  *
  * @author Michael Grove
  * @since 0.6.5
- * @version 0.6.5
+ * @version 0.7
  */
 public class AnnotationChecker {
 	/**
@@ -102,7 +103,7 @@ public class AnnotationChecker {
 	 * @return true if its Empire compatible, false otherwise.
 	 */
 	private static boolean isEmpireCompatible(final Class theClass) {
-		return BeanReflectUtil.hasAnnotation(theClass, Entity.class) &&
+		return (!EmpireOptions.ENFORCE_ENTITY_ANNOTATION || BeanReflectUtil.hasAnnotation(theClass, Entity.class)) &&
 			   BeanReflectUtil.hasAnnotation(theClass, RdfsClass.class) &&
 			   SupportsRdfId.class.isAssignableFrom(theClass);
 	}

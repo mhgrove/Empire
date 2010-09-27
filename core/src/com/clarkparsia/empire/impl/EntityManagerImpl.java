@@ -25,6 +25,7 @@ import com.clarkparsia.empire.ds.QueryException;
 import com.clarkparsia.empire.ds.impl.TransactionalDataSource;
 import com.clarkparsia.empire.Empire;
 import com.clarkparsia.empire.EmpireException;
+import com.clarkparsia.empire.EmpireOptions;
 
 import com.clarkparsia.empire.annotation.InvalidRdfException;
 import com.clarkparsia.empire.annotation.RdfGenerator;
@@ -579,6 +580,13 @@ public class EntityManagerImpl implements EntityManager {
 		assertOpen();
 
 		try {
+			AnnotationChecker.assertValid(theClass);
+		}
+		catch (EmpireException e) {
+			throw new IllegalArgumentException(e);
+		}
+
+		try {
 			if (DataSourceUtil.exists(getDataSource(), EmpireUtil.asPrimaryKey(theObj))) {
 				T aT = RdfGenerator.fromRdf(theClass, EmpireUtil.asPrimaryKey(theObj), getDataSource());
 
@@ -713,7 +721,9 @@ public class EntityManagerImpl implements EntityManager {
 	 * @see Entity
 	 */
 	private void assertEntity(Object theObj) {
-		assertHasAnnotation(theObj, Entity.class);
+		if (EmpireOptions.ENFORCE_ENTITY_ANNOTATION) {
+			assertHasAnnotation(theObj, Entity.class);
+		}
 	}
 
 	/**

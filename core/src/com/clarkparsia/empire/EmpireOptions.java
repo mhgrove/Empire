@@ -47,4 +47,12 @@ public class EmpireOptions {
 	 * allows the initial query to be much faster as it defers most of the load time until iteration.
 	 */
 	public static boolean ENABLE_QUERY_RESULT_PROXY = true;
+
+	/**
+	 * Flag to signal whether or not the @Entity annotation should be required on Empire-enabled beans.  Strictly speaking,
+	 * it is not required for an Empire-only stack; @RdfsClass handles the same responsibility.  But if you want to use Empire
+	 * in conjunction with a standard JPA provider, such as Hibernate & the Play! web framework, you will want this annotation
+	 * on all of your beans. 
+	 */
+	public static boolean ENFORCE_ENTITY_ANNOTATION = true;
 }

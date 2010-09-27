@@ -958,7 +958,7 @@ public class RdfGenerator {
 					}
 				}
 				catch (Exception e) {
-					throw new RuntimeException(e);
+					throw new RuntimeException(mAccessor + " " + e);
 				}
 			}
 			else {

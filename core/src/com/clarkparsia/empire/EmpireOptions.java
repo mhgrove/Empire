@@ -55,4 +55,12 @@ public class EmpireOptions {
 	 * on all of your beans. 
 	 */
 	public static boolean ENFORCE_ENTITY_ANNOTATION = true;
+
+	/**
+	 * Enable this flag if you want Empire to behave in it's legacy transience mode.  That is, when enabled, Empire will not
+	 * bind any fields/properties which are not annotated with @RdfProperty.  Thus, transience is implied by the presence
+	 * (or lack thereof) of the @RdfProperty annotation, which differs from normal JPA implementations in that they will always
+	 * bind a field unless it's marked with @Transient
+	 */
+	public static boolean USE_LEGACY_TRANSIENT_BEHAVIOR = true;
 }

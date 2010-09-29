@@ -18,6 +18,8 @@ package com.clarkparsia.empire.util;
 import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.InvalidRdfException;
 import com.clarkparsia.empire.annotation.RdfId;
+import com.clarkparsia.empire.EmpireOptions;
+import com.clarkparsia.empire.SupportsRdfId;
 
 import javax.persistence.FetchType;
 import javax.persistence.OneToMany;
@@ -26,6 +28,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.ManyToMany;
 import javax.persistence.CascadeType;
 import javax.persistence.MappedSuperclass;
+import javax.persistence.Transient;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -412,7 +415,17 @@ public class BeanReflectUtil {
 		Collection<Field> aProps = new HashSet<Field>();
 
 		for (Field aField : theClass.getDeclaredFields()) {
+			if (aField.getAnnotation(Transient.class) != null
+				|| javassist.util.proxy.ProxyObject.class.isAssignableFrom(theClass)) {
+				continue;
+			}
+
 			if (aField.getAnnotation(RdfProperty.class) != null) {
+				aProps.add(aField);
+			}
+			else if (!EmpireOptions.USE_LEGACY_TRANSIENT_BEHAVIOR && !aField.getType().isAssignableFrom(SupportsRdfId.class)) {
+				// we want to auto-include fields not marked w/ transient, but lacking an @RdfProperty assertion when this
+				// mode is disabled, however, we always want to ignore the implementation/support of SupportsRdfId from concrete classes.
 				aProps.add(aField);
 			}
 		}

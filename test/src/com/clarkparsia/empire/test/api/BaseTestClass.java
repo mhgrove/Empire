@@ -26,6 +26,7 @@ import javax.persistence.PreUpdate;
 import javax.persistence.PostUpdate;
 import javax.persistence.PostLoad;
 import javax.persistence.MappedSuperclass;
+import javax.persistence.Transient;
 
 import java.net.URI;
 
@@ -36,12 +37,19 @@ import java.net.URI;
  */
 @MappedSuperclass
 public class BaseTestClass implements SupportsRdfId {
+	@Transient
 	public boolean preUpdateCalled = false;
+	@Transient
 	public boolean postUpdateCalled = false;
+	@Transient
 	public boolean preRemoveCalled = false;
+	@Transient
 	public boolean postRemoveCalled = false;
+	@Transient
 	public boolean prePersistCalled = false;
+	@Transient
 	public boolean postPersistCalled = false;
+	@Transient
 	public boolean postLoadCalled = false;
 
 	private SupportsRdfId mIdSupport = new SupportsRdfIdImpl();

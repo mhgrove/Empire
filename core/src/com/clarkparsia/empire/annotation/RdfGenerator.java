@@ -278,7 +278,7 @@ public class RdfGenerator {
 			return theObj;
 		}
 
-		Resource aRes = EmpireUtil.asResource(asSupportsRdfId(theObj));
+		final Resource aRes = EmpireUtil.asResource(asSupportsRdfId(theObj));
 		Set<URI> aProps = new HashSet<URI>();
 		Iterator<Statement> sIter = aGraph.match(aRes, null, null);
 
@@ -295,8 +295,20 @@ public class RdfGenerator {
 		
 		CollectionUtil.each(aFields, new AbstractDataCommand<Field>() {
 			public void execute() {
-				aAccessMap.put(FACTORY.createURI(NamespaceUtils.uri(getData().getAnnotation(RdfProperty.class).value())),
-							  getData());
+
+				if (getData().getAnnotation(RdfProperty.class) != null) {
+					aAccessMap.put(FACTORY.createURI(NamespaceUtils.uri(getData().getAnnotation(RdfProperty.class).value())),
+								   getData());
+				}
+				else {
+					String aBase = "urn:empire:clark-parsia:";
+					if (aRes instanceof URI) {
+						aBase = ((URI)aRes).getNamespace();
+					}
+					
+					aAccessMap.put(FACTORY.createURI(aBase + getData().getName()),
+								   getData());
+				}
 			}
 		});
 
@@ -556,7 +568,14 @@ public class RdfGenerator {
 				}
 
 				RdfProperty aPropertyAnnotation = BeanReflectUtil.getAnnotation(aAccess, RdfProperty.class);
-				URI aProperty = aBuilder.getValueFactory().createURI(NamespaceUtils.uri(aPropertyAnnotation.value()));
+				String aBase = "urn:empire:clark-parsia:";
+				if (aRes instanceof URI) {
+					aBase = ((URI)aRes).getNamespace();
+				}
+
+				URI aProperty = aPropertyAnnotation != null
+								? aBuilder.getValueFactory().createURI(NamespaceUtils.uri(aPropertyAnnotation.value()))
+								: (aAccess instanceof Field ? aBuilder.getValueFactory().createURI(aBase + ((Field)aAccess).getName()) : null);
 
 				boolean aOldAccess = aAccess.isAccessible();
 				setAccessible(aAccess, true);
@@ -1104,8 +1123,11 @@ public class RdfGenerator {
 					throw new RuntimeException(e);
 				}
 			}
+			else if (theIn instanceof ProxyHandler) {
+				return this.apply( ((ProxyHandler)theIn).mProxy.value());
+			}
 			else {
-				throw new RuntimeException("Unknown type conversion: " + theIn.getClass() + " " + theIn);
+				throw new RuntimeException("Unknown type conversion: " + theIn.getClass() + " " + theIn + " " + mField);
 			}
 		}
 	}

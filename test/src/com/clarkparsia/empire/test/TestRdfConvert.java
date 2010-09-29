@@ -132,6 +132,7 @@ public class TestRdfConvert {
 			assertEquals(NamespaceUtils.uri("notvalid:test"), "notvalid:test");
 		}
 		catch (InvalidRdfException e) {
+			e.printStackTrace();
 			fail(e.getMessage());
 		}
 	}
@@ -329,23 +330,16 @@ public class TestRdfConvert {
 			assertFalse(aGraph.contains(null, ValueFactoryImpl.getInstance().createURI("urn:baz"), null));
 		}
 		catch (InvalidRdfException e) {
+			e.printStackTrace();
 			fail(e.getMessage());
 		}
 	}
 
 	@RdfsClass("urn:TestClass")
 	@Entity
-	private class NoDefaultConstructor extends BaseTestClass {
+	private static class NoDefaultConstructor extends BaseTestClass {
 		NoDefaultConstructor(String foo) {
 			setRdfId(asPrimaryKey(URI.create("urn:test:no:default")));
-		}
-	}
-
-	@RdfsClass("urn:TestClass")
-	@Entity
-	private class UnreachableConstructor extends BaseTestClass {
-		private UnreachableConstructor() {
-			setRdfId(asPrimaryKey(URI.create("urn:test:unreachable")));
 		}
 	}
 
@@ -356,7 +350,7 @@ public class TestRdfConvert {
 			 "notvalid"})
 	@RdfsClass("foaf:Person")
 	@Entity
-	private class UnbalancedNamespaces extends BaseTestClass {
+	private static class UnbalancedNamespaces extends BaseTestClass {
 		UnbalancedNamespaces() {
 			setRdfId(asPrimaryKey(URI.create("urn:test:unbalanced")));
 		}
@@ -364,7 +358,7 @@ public class TestRdfConvert {
 
 	@RdfsClass("urn:TestClass")
 	@Entity
-	private class MultipleRdfIds {
+	private static class MultipleRdfIds {
 		@RdfId
 		private String one = "one";
 
@@ -373,19 +367,19 @@ public class TestRdfConvert {
 	}
 
 	@RdfsClass("urn:NoEntity")
-	public class NoEntity extends BaseTestClass {
+	public static class NoEntity extends BaseTestClass {
 	}
 
 	@Entity
 	@RdfsClass("urn:NoSupports")
-	public class NoSupports {
+	public static class NoSupports {
 		@RdfId
 		private String one = "one";
 	}
 
 	@Namespaces({"foaf", "http://xmlns.com/foaf/0.1/"})
 	@Entity
-	public class NoRdfsClass extends BaseTestClass {
+	public static class NoRdfsClass extends BaseTestClass {
 		@RdfId
 		@RdfProperty("foaf:name")
 		public String name;
@@ -393,7 +387,7 @@ public class TestRdfConvert {
 
 	@RdfsClass("urn:TestClass")
 	@Entity
-	public class TransientTest extends BaseTestClass {
+	public static class TransientTest extends BaseTestClass {
 		@RdfProperty("urn:foo")
 		private String foo;
 

@@ -15,6 +15,13 @@ Empire 0.7 (TBD)
 	* ADDED: Query type specific methods to RdfQuery to allow direct access to the query results from the DataSource
 	* ADDED: Default logging configuration
 	* ADDED: Flag to RdfProperty annotation to control how java.net.URI objects are marshalled into RDF.
+	* ADDED: Flag in EmpireOptions to disable the enforcement of @Entity annotations on classes
+	* ADDED: TDB support
+	* ADDED: Added support to automatically "infer" RdfProperty annotations when they are not present.  When flag in EmpireOptions is enabled, RdfGenerator
+			 will try to map all fields of a bean, regardless of whether or not RdfProperty annotation is present or not.  Transient annotations can
+			 'hide' these fields from being mapped.  This is more inline with how normal JPA implementations work. (issue #19)
+	* FIXED: Several issues with the SPARQL endpoint data source implementation
+	* FIXED: Bug in InstanceGenerator where the class/interface hierarchy was not being used to generate the bytecode resulting in AbstractMethodError's (issue #38)
 	* REMOVED: Global flag in EmpireOptions for handling proxying, this is now completely controlled via JPA annotations
 
 Empire 0.6.6 (2010-07-08)

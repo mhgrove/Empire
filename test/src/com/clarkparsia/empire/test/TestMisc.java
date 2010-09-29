@@ -18,6 +18,7 @@ package com.clarkparsia.empire.test;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import org.openrdf.model.Resource;
 import org.openrdf.model.BNode;
 import org.openrdf.model.impl.ValueFactoryImpl;
@@ -106,6 +107,37 @@ public class TestMisc {
 		aKey = EmpireUtil.asPrimaryKey(aAnon);
 		assertTrue(aKey instanceof SupportsRdfId.BNodeKey);
 		assertEquals(aKey.value(), "foobar");
+	}
+	
+	@Test
+	public void testGenerateSuperInterfaces() {
+		try {
+			BaseInterface aBase = InstanceGenerator.generateInstanceClass(BaseInterface.class).newInstance();
+
+			aBase.setFoo("some value");
+			assertEquals("some value", aBase.getFoo());
+
+			ChildInterface aChild = InstanceGenerator.generateInstanceClass(ChildInterface.class).newInstance();
+
+			aChild.setBar(23);
+			assertEquals(23, aChild.getBar());
+
+			aChild.setFoo("some value");
+			assertEquals("some value", aChild.getFoo());
+		}
+		catch (Exception e) {
+			fail(e.getMessage());
+		}
+	}
+
+	public interface BaseInterface extends SupportsRdfId {
+		public String getFoo();
+		public void setFoo(String theString);
+	}
+
+	public interface ChildInterface extends BaseInterface {
+		public long getBar();
+		public void setBar(long theString);
 	}
 
 	public interface NoSupportsTestInterface {

@@ -22,6 +22,7 @@ import javassist.CtField;
 import javassist.CtNewMethod;
 import javassist.NotFoundException;
 import javassist.Modifier;
+import javassist.CannotCompileException;
 
 import java.util.Map;
 import java.util.HashMap;
@@ -37,7 +38,7 @@ import com.clarkparsia.empire.util.BeanReflectUtil;
  *
  * @author Michael Grove
  * @since 0.5.1
- * @version 0.6.5
+ * @version 0.7
  */
 public class InstanceGenerator {
 
@@ -97,22 +98,9 @@ public class InstanceGenerator {
 
 		aClass.addConstructor(CtNewConstructor.defaultConstructor(aClass));
 
-		Map<String, Class> aProps = properties(theInterface);
-		for (String aProp : aProps.keySet()) {
-			CtField aNewField = new CtField(aPool.get(aProps.get(aProp).getName()), aProp, aClass);
+		generateMethods(theInterface, aPool, aClass);
 
-			if (!hasField(aClass, aNewField.getName())) {
-				aClass.addField(aNewField);
-			}
-
-			if (!hasMethod(aClass, getterName(aProp))) {
-				aClass.addMethod(CtNewMethod.getter(getterName(aProp), aNewField));
-			}
-
-			if (!hasMethod(aClass, setterName(aProp))) {
-				aClass.addMethod(CtNewMethod.setter(setterName(aProp), aNewField));
-			}
-		}
+		generateMethodsForSuperInterfaces(theInterface, aPool, aClass);
 
 		CtField aIdField = new CtField(aPool.get(SupportsRdfId.class.getName()), "supportsId", aClass);
 		aClass.addField(aIdField, CtField.Initializer.byExpr("new com.clarkparsia.empire.annotation.SupportsRdfIdImpl();"));
@@ -139,6 +127,51 @@ public class InstanceGenerator {
 		aClass.freeze();
 
 		return (Class<T>) aClass.toClass();
+	}
+
+	/**
+	 * For all the parent interfaces of a class, generate implementations of all their methods.  And for their parents, do the same, and the same for their parents, and so on...
+	 * @param theInterface the interface
+	 * @param thePool the class pool to use
+	 * @param theCtClass the concrete implementation of the interface(s)
+	 * @param <T> the type of the interface
+	 * @throws NotFoundException thrown if there is an error generating the methods
+	 * @throws CannotCompileException thrown if there is an error generating the methods
+	 */
+	private static <T> void generateMethodsForSuperInterfaces(final Class<T> theInterface, ClassPool thePool, CtClass theCtClass) throws NotFoundException, CannotCompileException {
+		for (Class<?> aSuperInterface : theInterface.getInterfaces()) {
+			generateMethods(aSuperInterface, thePool, theCtClass);
+
+			generateMethodsForSuperInterfaces(aSuperInterface, thePool, theCtClass);
+		}
+	}
+
+	/**
+	 * For a given interface, generate basic getter and setter methods for all the properties on the interface.
+	 * @param theInterface the interface
+	 * @param thePool the class pool
+	 * @param theClass the concrete implementation of the interface
+	 * @param <T> the type of the interface
+	 * @throws CannotCompileException thrown if there is an error generating the methods
+	 * @throws NotFoundException thrown if there is an error generating the methods
+	 */
+	private static <T> void generateMethods(final Class<T> theInterface, final ClassPool thePool, final CtClass theClass) throws CannotCompileException, NotFoundException {
+		Map<String, Class> aProps = properties(theInterface);
+		for (String aProp : aProps.keySet()) {
+			CtField aNewField = new CtField(thePool.get(aProps.get(aProp).getName()), aProp, theClass);
+
+			if (!hasField(theClass, aNewField.getName())) {
+				theClass.addField(aNewField);
+			}
+
+			if (!hasMethod(theClass, getterName(aProp))) {
+				theClass.addMethod(CtNewMethod.getter(getterName(aProp), aNewField));
+			}
+
+			if (!hasMethod(theClass, setterName(aProp))) {
+				theClass.addMethod(CtNewMethod.setter(setterName(aProp), aNewField));
+			}
+		}
 	}
 
 	/**
@@ -218,6 +251,7 @@ public class InstanceGenerator {
 			
 			if (!aMethod.getName().startsWith("get")
 				&& !aMethod.getName().startsWith("is")
+				&& !aMethod.getName().startsWith("has")
 				&& !aMethod.getName().startsWith("set")) {
 				throw new IllegalArgumentException("Non-bean style methods found, implementations for them cannot not be generated");
 			}
@@ -228,7 +262,7 @@ public class InstanceGenerator {
 
 			Class aType = null;
 
-			if (aMethod.getName().startsWith("get") || aMethod.getName().startsWith("is")) {
+			if (aMethod.getName().startsWith("get") || aMethod.getName().startsWith("is") || aMethod.getName().startsWith("has")) {
 				aType = aMethod.getReturnType();
 			}
 			else if (aMethod.getName().startsWith("set") && aMethod.getParameterTypes().length > 0) {

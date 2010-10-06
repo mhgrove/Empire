@@ -144,6 +144,8 @@ public class EmpirePersistenceProvider implements PersistenceProvider {
 			aConfig.putAll(mContainerConfig.getUnitConfig(theUnitName));
 		}
 
+		aConfig.putAll(mContainerConfig.getGlobalConfig());
+
 		if (theMap != null) {
 			aConfig.putAll(theMap);
 		}

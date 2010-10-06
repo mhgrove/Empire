@@ -33,7 +33,7 @@ import java.lang.reflect.Field;
  *
  * @author Michael Grove
  * @since 0.6.2
- * @version 0.6.2
+ * @version 0.7
  */
 public class EmpireConfiguration {
 	private Class<? extends EmpireAnnotationProvider> mAnnotationProvider = PropertiesAnnotationProvider.class;
@@ -72,6 +72,10 @@ public class EmpireConfiguration {
 
 	public Map<String, String> getUnitConfig(final String theUnitName) {
 		return mUnitConfiguration.get(theUnitName);
+	}
+
+	public Map<String, String> getGlobalConfig() {
+		return mGeneralConfiguration;
 	}
 
 	public String get(String theKey) {

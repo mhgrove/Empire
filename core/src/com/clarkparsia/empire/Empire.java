@@ -38,6 +38,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Arrays;
 
+import org.openrdf.model.vocabulary.XMLSchema;
+
 /**
  * <p>Access class for the RDF ORM/JPA layer to get the local {@link Empire} instance.</p>
  *
@@ -78,6 +80,7 @@ public class Empire {
 		NamespaceUtils.addNamespace("rdfs", "http://www.w3.org/2000/01/rdf-schema#");
 		NamespaceUtils.addNamespace("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#");
 		NamespaceUtils.addNamespace("owl", "http://www.w3.org/2002/07/owl#");
+		NamespaceUtils.addNamespace("xsd", XMLSchema.NAMESPACE);
 	}
 
 	/**

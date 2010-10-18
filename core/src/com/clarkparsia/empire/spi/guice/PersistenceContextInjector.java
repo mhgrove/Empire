@@ -22,6 +22,7 @@ import com.google.inject.MembersInjector;
 
 import javax.persistence.PersistenceContext;
 import javax.persistence.PersistenceProperty;
+import javax.persistence.EntityManagerFactory;
 
 import java.lang.reflect.Field;
 
@@ -34,6 +35,7 @@ import java.util.Map;
  *
  * @author Michael Grove
  * @since 0.6
+ * @version 0.7
  */
 public class PersistenceContextInjector<T> implements MembersInjector<T> {
     /**
@@ -65,9 +67,12 @@ public class PersistenceContextInjector<T> implements MembersInjector<T> {
         }
 
         try {
-            mField.set(theT,
-					   Empire.get().persistenceProvider().createEntityManagerFactory(aContext.name(),
-																					 aMap).createEntityManager());
+			EntityManagerFactory aFactory = Empire.get().persistenceProvider().createEntityManagerFactory(aContext.name(), aMap);
+			if (aFactory == null) {
+				throw new RuntimeException("Factory incorrectly initialized, or a factory provided that does not exists was specified.  Cannot create EntityManager");
+			}
+
+            mField.set(theT, aFactory.createEntityManager());
         }
         catch (IllegalAccessException e) {
             throw new RuntimeException(e);

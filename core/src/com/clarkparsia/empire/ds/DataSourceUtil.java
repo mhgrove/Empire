@@ -182,6 +182,10 @@ public class DataSourceUtil {
 	 * @return the rdf:type of the concept, or null if there is an error or one cannot be found.
 	 */
 	public static org.openrdf.model.URI getType(DataSource theSource, Resource theConcept) {
+		if (theSource == null) {
+			return null;
+		}
+
 		try {
 			return new ExtGraph(describe(theSource, theConcept.toString())).getType(theConcept);
 		}
@@ -223,6 +227,24 @@ public class DataSourceUtil {
 		}
 		catch (Exception e) {
 			throw new DataSourceException(e);
+		}
+	}
+
+	/**
+	 * Return the values for the property on the given resource.
+	 * @param theSource the data source to query for values
+	 * @param theSubject the subject to get property values for
+	 * @param thePredicate the property to get values for
+	 * @return the first value of the resource
+	 * @throws com.clarkparsia.empire.ds.DataSourceException if there is an error while querying the data source.
+	 */
+	public static Value getValue(final DataSource theSource, final Resource theSubject, final org.openrdf.model.URI thePredicate) throws DataSourceException {
+		Collection<Value> aValues = getValues(theSource, theSubject, thePredicate);
+		if (aValues.isEmpty()) {
+			return null;
+		}
+		else {
+			return aValues.iterator().next();
 		}
 	}
 }

@@ -100,6 +100,8 @@ import javax.persistence.Transient;
 
 import javassist.util.proxy.ProxyFactory;
 import javassist.util.proxy.MethodHandler;
+import javassist.util.proxy.ProxyObject;
+import javassist.util.proxy.MethodFilter;
 
 /**
  * <p>Description: Utility for creating RDF from a compliant Java Bean, and for turning RDF (the results of a describe
@@ -147,7 +149,7 @@ public class RdfGenerator {
 	 * Map to keep a record of what instances are currently being created in order to prevent cycles.  Keys are the
 	 * identifiers of the instances and the values are the instances
 	 */
-	private final static Map<Object, Object> OBJECT_M = Collections.synchronizedMap(new HashMap<Object, Object>());
+	public final static Map<Object, Object> OBJECT_M = new HashMap<Object, Object>();
 
 	/**
 	 * Initialize some parameters in the RdfGenerator.  This caches namespace and type mapping information locally
@@ -259,142 +261,143 @@ public class RdfGenerator {
 	 */
 	@SuppressWarnings("unchecked")
 	private static <T> T fromRdf(T theObj, DataSource theSource) throws InvalidRdfException, DataSourceException {
-		SupportsRdfId.RdfKey theKeyObj = asSupportsRdfId(theObj).getRdfId();
+		final SupportsRdfId aSupportsRdfId = asSupportsRdfId(theObj);
+		final SupportsRdfId.RdfKey theKeyObj = aSupportsRdfId.getRdfId();
 
-		if (OBJECT_M.containsKey(theKeyObj)) {
-			// TODO: this is probably a safe cast, i dont see how something w/ the same URI, which should be the same
-			// object would change types
-			return (T) OBJECT_M.get(theKeyObj);
-		}
-		else {
+		try {
+			if (OBJECT_M.containsKey(theKeyObj)) {
+				// TODO: this is probably a safe cast, i dont see how something w/ the same URI, which should be the same
+				// object would change types
+				return (T) OBJECT_M.get(theKeyObj);
+			}
+
 			OBJECT_M.put(theKeyObj, theObj);
-		}
 
-		ExtGraph aGraph = new ExtGraph(DataSourceUtil.describe(theSource, theObj));
+			ExtGraph aGraph = new ExtGraph(DataSourceUtil.describe(theSource, theObj));
 
-		if (aGraph.size() == 0) {
-			OBJECT_M.remove(theKeyObj);
+			if (aGraph.size() == 0) {
+				return theObj;
+			}
+
+			final Resource aRes = EmpireUtil.asResource(aSupportsRdfId);
+			Set<URI> aProps = new HashSet<URI>();
+			Iterator<Statement> sIter = aGraph.match(aRes, null, null);
+
+			while (sIter.hasNext()) {
+				aProps.add(sIter.next().getPredicate());
+			}
+
+			Collection<Field> aFields = getAnnotatedFields(theObj.getClass());
+			Collection<Method> aMethods = getAnnotatedSetters(theObj.getClass(), true);
+
+			addNamespaces(theObj.getClass());
+
+			final Map<URI, AccessibleObject> aAccessMap = new HashMap<URI, AccessibleObject>();
+
+			CollectionUtil.each(aFields, new AbstractDataCommand<Field>() {
+				public void execute() {
+
+					if (getData().getAnnotation(RdfProperty.class) != null) {
+						aAccessMap.put(FACTORY.createURI(NamespaceUtils.uri(getData().getAnnotation(RdfProperty.class).value())),
+									   getData());
+					}
+					else {
+						String aBase = "urn:empire:clark-parsia:";
+						if (aRes instanceof URI) {
+							aBase = ((URI)aRes).getNamespace();
+						}
+
+						aAccessMap.put(FACTORY.createURI(aBase + getData().getName()),
+									   getData());
+					}
+				}
+			});
+
+			CollectionUtil.each(aMethods, new AbstractDataCommand<Method>() {
+				public void execute() {
+					RdfProperty aAnnotation = BeanReflectUtil.getAnnotation(getData(), RdfProperty.class);
+					if (aAnnotation != null) {
+						aAccessMap.put(FACTORY.createURI(NamespaceUtils.uri(aAnnotation.value())),
+									   getData());
+					}
+				}
+			});
+
+			for (URI aProp : aProps) {
+				AccessibleObject aAccess = aAccessMap.get(aProp);
+
+				if (aAccess == null && RDF.TYPE.equals(aProp)) {
+					// we can skip the rdf:type property.  it's basically assigned in the @RdfsClass annotation on the
+					// java class, so we can figure it out later if need be. TODO: of course, if something has multiple types
+					// that information is lost, which is not good.
+
+					URI aType = (URI) aGraph.getValue(aRes, aProp);
+					if (!TYPE_TO_CLASS.containsKey(aType) ||
+						!TYPE_TO_CLASS.get(aType).isAssignableFrom(theObj.getClass())) {
+
+						if (TYPE_TO_CLASS.containsKey(aType) && !TYPE_TO_CLASS.get(aType).getName().equals(theObj.getClass().getName())) {
+							// TODO: this might just be an error
+							LOGGER.warn("Asserted rdf:type of the individual does not match the rdf:type annotation on the object. " + aType + " " + TYPE_TO_CLASS.get(aType) + " " + theObj.getClass() + " " +TYPE_TO_CLASS.get(aType).isAssignableFrom(theObj.getClass())+ " " +TYPE_TO_CLASS.get(aType).equals(theObj.getClass()) + " " + TYPE_TO_CLASS.get(aType).getName().equals(theObj.getClass().getName()));
+						}
+						else {
+							// if they're not equals() or isAssignableFrom, but have the same name, this is usually
+							// means that the class loaders don't match.  so probably not an error, so no warning.
+						}
+					}
+
+					continue;
+				}
+				else if (aAccess == null) {
+					// TODO: this is a lossy transformation, there's rdf data which is not represented by a field on the java class
+					// so if we don't convert it into something on the java bean, they don't have a full representation of
+					// what was in the database AND if they save that back to the database, they will lose this information
+					// that is not good either.
+					continue;
+				}
+
+				ToObjectFunction aFunc = new ToObjectFunction(theSource, aRes, aAccess, aProp);
+
+				Object aValue = aFunc.apply(aGraph.getValues(aRes, aProp));
+
+				boolean aOldAccess = aAccess.isAccessible();
+
+				try {
+					setAccessible(aAccess, true);
+					set(aAccess, theObj, aValue);
+				}
+				catch (InvocationTargetException e) {
+					// oh crap
+					throw new InvalidRdfException(e);
+				}
+				catch (IllegalAccessException e) {
+					// this should not happen since we toggle the accessibility of the field, but we'll re-throw regardless
+					throw new InvalidRdfException(e);
+				}
+				catch (IllegalArgumentException e) {
+					// this is "likely" to happen.  we'll get this exception if the rdf does not match the java.  for example
+					// if something is specified to be an int in the java class, but it typed as a float (though down conversion
+					// in that case might work) the set call will fail.
+					// TODO: shouldnt this be an error?
+					LOGGER.warn("Probable type mismatch: " + aValue + " " + aAccess);
+				}
+				catch (RuntimeException e) {
+					// TODO: i dont like keying on a RuntimeException here to get the error condition, but since the
+					// Function interface does not throw anything, this is the best we can do.  maybe consider a
+					// version of the Function interface that has a throws clause, it would make this more clear.
+
+					// this was probably an error converting from a Value to an Object
+					throw new InvalidRdfException(e);
+				}
+				finally {
+					setAccessible(aAccess, aOldAccess);
+				}
+			}
 
 			return theObj;
 		}
-
-		final Resource aRes = EmpireUtil.asResource(asSupportsRdfId(theObj));
-		Set<URI> aProps = new HashSet<URI>();
-		Iterator<Statement> sIter = aGraph.match(aRes, null, null);
-
-		while (sIter.hasNext()) {
-			aProps.add(sIter.next().getPredicate());
+		finally {
+			OBJECT_M.remove(theKeyObj);
 		}
-
-		Collection<Field> aFields = getAnnotatedFields(theObj.getClass());
-		Collection<Method> aMethods = getAnnotatedSetters(theObj.getClass(), true);
-
-		addNamespaces(theObj.getClass());
-
-		final Map<URI, AccessibleObject> aAccessMap = new HashMap<URI, AccessibleObject>();
-		
-		CollectionUtil.each(aFields, new AbstractDataCommand<Field>() {
-			public void execute() {
-
-				if (getData().getAnnotation(RdfProperty.class) != null) {
-					aAccessMap.put(FACTORY.createURI(NamespaceUtils.uri(getData().getAnnotation(RdfProperty.class).value())),
-								   getData());
-				}
-				else {
-					String aBase = "urn:empire:clark-parsia:";
-					if (aRes instanceof URI) {
-						aBase = ((URI)aRes).getNamespace();
-					}
-					
-					aAccessMap.put(FACTORY.createURI(aBase + getData().getName()),
-								   getData());
-				}
-			}
-		});
-
-		CollectionUtil.each(aMethods, new AbstractDataCommand<Method>() {
-			public void execute() {
-				RdfProperty aAnnotation = BeanReflectUtil.getAnnotation(getData(), RdfProperty.class);
-				if (aAnnotation != null) {
-					aAccessMap.put(FACTORY.createURI(NamespaceUtils.uri(aAnnotation.value())),
-								   getData());
-				}
-			}
-		});
-
-		for (URI aProp : aProps) {
-			AccessibleObject aAccess = aAccessMap.get(aProp);
-
-			if (aAccess == null && RDF.TYPE.equals(aProp)) {
-				// we can skip the rdf:type property.  it's basically assigned in the @RdfsClass annotation on the
-				// java class, so we can figure it out later if need be. TODO: of course, if something has multiple types
-				// that information is lost, which is not good.
-
-				URI aType = (URI) aGraph.getValue(aRes, aProp);
-				if (!TYPE_TO_CLASS.containsKey(aType) ||
-					!TYPE_TO_CLASS.get(aType).isAssignableFrom(theObj.getClass())) {
-
-					if (TYPE_TO_CLASS.containsKey(aType) && !TYPE_TO_CLASS.get(aType).getName().equals(theObj.getClass().getName())) {
-						// TODO: this might just be an error
-						LOGGER.warn("Asserted rdf:type of the individual does not match the rdf:type annotation on the object. " + aType + " " + TYPE_TO_CLASS.get(aType) + " " + theObj.getClass() + " " +TYPE_TO_CLASS.get(aType).isAssignableFrom(theObj.getClass())+ " " +TYPE_TO_CLASS.get(aType).equals(theObj.getClass()) + " " + TYPE_TO_CLASS.get(aType).getName().equals(theObj.getClass().getName()));
-					}
-					else {
-						// if they're not equals() or isAssignableFrom, but have the same name, this is usually
-						// means that the class loaders don't match.  so probably not an error, so no warning.
-					}
-				}
-
-				continue;
-			}
-			else if (aAccess == null) {
-				// TODO: this is a lossy transformation, there's rdf data which is not represented by a field on the java class
-				// so if we don't convert it into something on the java bean, they don't have a full representation of
-				// what was in the database AND if they save that back to the database, they will lose this information
-				// that is not good either.
-				continue;
-			}
-
-			ToObjectFunction aFunc = new ToObjectFunction(theSource, aRes, aAccess, aProp);
-
-			Object aValue = aFunc.apply(aGraph.getValues(aRes, aProp));
-
-			boolean aOldAccess = aAccess.isAccessible();
-
-			try {
-				setAccessible(aAccess, true);
-				set(aAccess, theObj, aValue);
-			}
-			catch (InvocationTargetException e) {
-				// oh crap
-				throw new InvalidRdfException(e);
-			}
-			catch (IllegalAccessException e) {
-				// this should not happen since we toggle the accessibility of the field, but we'll re-throw regardless
-				throw new InvalidRdfException(e);
-			}
-			catch (IllegalArgumentException e) {
-				// this is "likely" to happen.  we'll get this exception if the rdf does not match the java.  for example
-				// if something is specified to be an int in the java class, but it typed as a float (though down conversion
-				// in that case might work) the set call will fail.
-				// TODO: shouldnt this be an error?
-				LOGGER.warn("Probable type mismatch: " + aValue + " " + aAccess);
-			}
-			catch (RuntimeException e) {
-				// TODO: i dont like keying on a RuntimeException here to get the error condition, but since the
-				// Function interface does not throw anything, this is the best we can do.  maybe consider a
-				// version of the Function interface that has a throws clause, it would make this more clear.
-
-				// this was probably an error converting from a Value to an Object
-				throw new InvalidRdfException(e);
-			}
-			finally {
-				setAccessible(aAccess, aOldAccess);
-			}
-		}
-
-		OBJECT_M.remove(theKeyObj);
-		
-		return theObj;
 	}
 
 
@@ -410,7 +413,7 @@ public class RdfGenerator {
 			throw new InvalidRdfException("Specified value is not an RdfsClass object");
 		}
 
-		if (!BeanReflectUtil.hasAnnotation(theObj.getClass(), Entity.class)) {
+		if (EmpireOptions.ENFORCE_ENTITY_ANNOTATION && !BeanReflectUtil.hasAnnotation(theObj.getClass(), Entity.class)) {
 			throw new InvalidRdfException("Specified value is not a JPA Entity object");
 		}
 
@@ -649,6 +652,81 @@ public class RdfGenerator {
 	}
 
 	/**
+	 * Javassist {@link MethodHandler} implementation for method proxying.
+	 * @param <T> the proxy class type
+	 */
+	private static class CollectionProxyHandler implements MethodHandler {
+
+		/**
+		 * The proxy object which wraps the instance being proxied.
+		 */
+		private CollectionProxy mProxy;
+
+		/**
+		 * Create a new ProxyHandler
+		 * @param theProxy the proxy object
+		 */
+		private CollectionProxyHandler(final CollectionProxy theProxy) {
+			mProxy = theProxy;
+		}
+
+		/**
+		 * Delegates the methods to the Proxy
+		 * @inheritDoc
+		 */
+		public Object invoke(final Object theThis, final Method theMethod, final Method theProxyMethod, final Object[] theArgs) throws Throwable {
+			return theMethod.invoke(mProxy.value(), theArgs);
+		}
+	}
+
+	private static class CollectionProxy {
+		private Collection mCollection;
+		private AccessibleObject mField;
+		private Collection<Value> theList;
+		private ValueToObject valueToObject;
+
+		public CollectionProxy(final AccessibleObject theField, final Collection<Value> theTheList, final ValueToObject theValueToObject) {
+			mField = theField;
+			theList = theTheList;
+			valueToObject = theValueToObject;
+		}
+
+		private void init() {
+			Collection<Object> aValues = BeanReflectUtil.instantiateCollectionFromField(BeanReflectUtil.classFrom(mField));
+
+			for (Value aValue : theList) {
+				Object aListValue = valueToObject.apply(aValue);
+
+				if (aListValue == null) {
+					throw new RuntimeException("Error converting a list value.");
+				}
+
+				aValues.add(aListValue);
+			}
+
+			mCollection = aValues;
+		}
+
+		public Collection value() {
+			if (mCollection == null) {
+				init();
+				theList.clear();
+
+				theList = null;
+				mField = null;
+				valueToObject = null;
+			}
+
+			return mCollection;
+		}
+	}
+
+	/**
+	 * Enabling this seems to use more memory than per-object proxying (or none at all).  Is javassist leaking memory?
+	 */
+	public static final boolean PROXY_COLLECTIONS = true;
+
+	/**
 	 * Implementation of the function interface to turn a Collection of RDF values into Java bean(s).
 	 */
 	private static class ToObjectFunction implements Function<Collection<Value>, Object> {
@@ -674,19 +752,34 @@ public class RdfGenerator {
 			}
 			if (Collection.class.isAssignableFrom(BeanReflectUtil.classFrom(mField))) {
 				try {
-					Collection<Object> aValues = BeanReflectUtil.instantiateCollectionFromField(BeanReflectUtil.classFrom(mField));
 
-					for (Value aValue : theList) {
-						Object aListValue = valueToObject.apply(aValue);
+					if (PROXY_COLLECTIONS && !BeanReflectUtil.isPrimitive(refineClass(mField, BeanReflectUtil.classFrom(mField), null, null))) {
+						Object aColType = BeanReflectUtil.instantiateCollectionFromField(BeanReflectUtil.classFrom(mField));
 
-						if (aListValue == null) {
-							throw new RuntimeException("Error converting a list value.");
+						ProxyFactory aFactory = new ProxyFactory();
+						aFactory.setInterfaces(aColType.getClass().getInterfaces());
+						aFactory.setSuperclass(aColType.getClass());
+						aFactory.setFilter(METHOD_FILTER);
+
+						Object aResult = aFactory.createClass().newInstance();
+						((ProxyObject) aResult).setHandler(new CollectionProxyHandler(new CollectionProxy(mField, theList, valueToObject)));
+						return aResult;
+					}
+					else {
+						Collection<Object> aValues = BeanReflectUtil.instantiateCollectionFromField(BeanReflectUtil.classFrom(mField));
+
+						for (Value aValue : theList) {
+							Object aListValue = valueToObject.apply(aValue);
+
+							if (aListValue == null) {
+								throw new RuntimeException("Error converting a list value.");
+							}
+
+							aValues.add(aListValue);
 						}
 
-						aValues.add(aListValue);
+						return aValues;
 					}
-
-					return aValues;
 				}
 				catch (Exception e) {
 					throw new RuntimeException(e);
@@ -986,6 +1079,12 @@ public class RdfGenerator {
 		}
 	}
 
+	private static final MethodFilter METHOD_FILTER = new MethodFilter() {
+		public boolean isHandled(final Method theMethod) {
+			return !theMethod.getName().equals("finalize");
+		}
+	};
+
 	@SuppressWarnings("unchecked")
 	private static <T> T getProxyOrDbObject(Object theAccessor, Class<T> theClass, Object theKey, DataSource theSource) throws Exception {
 		if (BeanReflectUtil.isFetchTypeLazy(theAccessor)) {
@@ -993,9 +1092,13 @@ public class RdfGenerator {
 
 			ProxyFactory aFactory = new ProxyFactory();
 			aFactory.setSuperclass(theClass);
-			aFactory.setHandler(new ProxyHandler<T>(aProxy));
+			aFactory.setFilter(METHOD_FILTER);
+			
+			Object aObj = aFactory.createClass().newInstance();
 
-			return (T) aFactory.createClass().newInstance();
+			((ProxyObject) aObj).setHandler(new ProxyHandler<T>(aProxy));
+
+			return (T) aObj;
 		}
 		else {
 			return fromRdf(theClass, asPrimaryKey(theKey), theSource);
@@ -1029,7 +1132,6 @@ public class RdfGenerator {
 			return theMethod.invoke(mProxy.value(), theArgs);
 		}
 	}
-
 	
 	private static String getBNodeConstructQuery(DataSource theSource, Resource theRes, URI theProperty) {
 		Dialect aDialect = theSource.getQueryFactory().getDialect();
@@ -1053,12 +1155,14 @@ public class RdfGenerator {
 
 	public static class AsValueFunction implements Function<Object, Value> {
 		private AccessibleObject mField;
+		private RdfProperty annotation;
 
 		public AsValueFunction() {
 		}
 
 		public AsValueFunction(final AccessibleObject theField) {
 			mField = theField;
+			annotation = mField == null ? null : mField.getAnnotation(RdfProperty.class);
 		}
 
 		public Value apply(final Object theIn) {
@@ -1090,10 +1194,8 @@ public class RdfGenerator {
 				return FACTORY.createLiteral(BasicUtils.datetime(Date.class.cast(theIn)), XMLSchema.DATETIME);
 			}
 			else if (String.class.isInstance(theIn)) {
-				RdfProperty aProp = mField == null ? null : mField.getAnnotation(RdfProperty.class);
-
-				if (aProp != null && !aProp.language().equals("")) {
-					return FACTORY.createLiteral(String.class.cast(theIn), aProp.language());
+				if (annotation != null && !annotation.language().equals("")) {
+					return FACTORY.createLiteral(String.class.cast(theIn), annotation.language());
 				}
 				else {
 					return FACTORY.createLiteral(String.class.cast(theIn));
@@ -1103,9 +1205,7 @@ public class RdfGenerator {
 				return FACTORY.createLiteral(Character.class.cast(theIn));
 			}
 			else if (java.net.URI.class.isInstance(theIn)) {
-				RdfProperty aProp = mField == null ? null : mField.getAnnotation(RdfProperty.class);
-
-				if (aProp.isXsdUri()) {
+				if (annotation.isXsdUri()) {
 					return FACTORY.createLiteral(theIn.toString(), XMLSchema.ANYURI);
 				}
 				else {
@@ -1127,7 +1227,13 @@ public class RdfGenerator {
 				return this.apply( ((ProxyHandler)theIn).mProxy.value());
 			}
 			else {
-				throw new RuntimeException("Unknown type conversion: " + theIn.getClass() + " " + theIn + " " + mField);
+				try {
+					Field aProxy =  theIn.getClass().getDeclaredField("handler");
+					return this.apply(((ProxyHandler)BeanReflectUtil.safeGet(aProxy, theIn)).mProxy.value());
+				}
+				catch (Exception e) {
+					throw new RuntimeException("Unknown type conversion: " + theIn.getClass() + " " + theIn + " " + mField);
+				}
 			}
 		}
 	}

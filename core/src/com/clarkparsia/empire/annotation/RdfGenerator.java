@@ -268,13 +268,14 @@ public class RdfGenerator {
 	private static <T> T fromRdf(T theObj, DataSource theSource) throws InvalidRdfException, DataSourceException {
 		final SupportsRdfId aSupportsRdfId = asSupportsRdfId(theObj);
 		final SupportsRdfId.RdfKey theKeyObj = aSupportsRdfId.getRdfId();
+		
+		if (OBJECT_M.containsKey(theKeyObj)) {
+			// TODO: this is probably a safe cast, i dont see how something w/ the same URI, which should be the same
+			// object would change types
+			return (T) OBJECT_M.get(theKeyObj);
+		}
 
 		try {
-			if (OBJECT_M.containsKey(theKeyObj)) {
-				// TODO: this is probably a safe cast, i dont see how something w/ the same URI, which should be the same
-				// object would change types
-				return (T) OBJECT_M.get(theKeyObj);
-			}
 
 			OBJECT_M.put(theKeyObj, theObj);
 
@@ -1085,6 +1086,7 @@ public class RdfGenerator {
 
 	@SuppressWarnings("unchecked")
 	private static <T> T getProxyOrDbObject(Object theAccessor, Class<T> theClass, Object theKey, DataSource theSource) throws Exception {
+System.err.println("proxying " + theAccessor + " for " + theClass + " and key " + theKey);
 		if (BeanReflectUtil.isFetchTypeLazy(theAccessor)) {
 			Proxy<T> aProxy = new Proxy<T>(theClass, asPrimaryKey(theKey), theSource);
 

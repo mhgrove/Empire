@@ -34,18 +34,18 @@ import com.clarkparsia.utils.BasicUtils;
  *
  * @author Michael Grove
  */
-@Namespaces({"", "http://purl.org/net/schemas/space/",
+@Namespaces({"space", "http://purl.org/net/schemas/space/",
 			 "foaf", "http://xmlns.com/foaf/0.1/",
 			 "dc", "http://purl.org/dc/elements/1.1/"})
 @Entity
-@RdfsClass("Mission")
+@RdfsClass("space:Mission")
 @NamedGraph(type = NamedGraph.NamedGraphType.Instance)
 public class Mission extends BaseTestClass {
 	@RdfId
 	@RdfProperty("dc:title")
 	private String title;
 
-	@RdfProperty("missionRole")
+	@RdfProperty("space:missionRole")
 	private List<MissionRole> missionRoles = new ArrayList<MissionRole>();
 
 	public String getTitle() {

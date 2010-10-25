@@ -30,11 +30,11 @@ import com.clarkparsia.utils.BasicUtils;
  *
  * @author Michael Grove
  */
-@Namespaces({"", "http://purl.org/net/schemas/space/",
+@Namespaces({"space", "http://purl.org/net/schemas/space/",
 			 "foaf", "http://xmlns.com/foaf/0.1/",
 			 "dc", "http://purl.org/dc/elements/1.1/"})
 @Entity
-@RdfsClass("Discipline")
+@RdfsClass("space:Discipline")
 @NamedGraph(type = NamedGraph.NamedGraphType.Instance)
 public class Discipline extends BaseTestClass {
 	@RdfProperty("rdfs:label")

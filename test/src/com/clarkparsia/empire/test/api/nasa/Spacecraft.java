@@ -42,19 +42,18 @@ import com.clarkparsia.utils.collections.CollectionUtil;
 @NamedQuery(name="sovietSpacecraft",
 			query="from {result} space:agency {\"U.S.S.R\"}")
 
-@Namespaces({"", "http://purl.org/net/schemas/space/",
-			 "space", "http://purl.org/net/schemas/space/",
+@Namespaces({"space", "http://purl.org/net/schemas/space/",
 			 "foaf", "http://xmlns.com/foaf/0.1/",
 			 "dc", "http://purl.org/dc/elements/1.1/"})
 @Entity
 @EntityListeners({TestEntityListener.class})
-@RdfsClass("Spacecraft")
+@RdfsClass("space:Spacecraft")
 @NamedGraph(type = NamedGraph.NamedGraphType.Instance)
 public class Spacecraft extends BaseTestClass {
-	@RdfProperty("agency")
+	@RdfProperty("space:agency")
 	private String agency;
 
-	@RdfProperty("alternateName")
+	@RdfProperty("space:alternateName")
 	private List<String> alternateName;
 	
 	@RdfProperty("foaf:depiction")
@@ -69,19 +68,19 @@ public class Spacecraft extends BaseTestClass {
 	@RdfProperty("foaf:name")
 	private String name;
 
-	@RdfProperty("mission")
+	@RdfProperty("space:mission")
 	private Mission mission;
 
-	@RdfProperty("mass")
+	@RdfProperty("space:mass")
 	private String mass;
 
-	@RdfProperty("internationalDesignator")
+	@RdfProperty("space:internationalDesignator")
 	private String internationalDesignator;
 
-	@RdfProperty("launch")
+	@RdfProperty("space:launch")
 	private Launch launch;
 
-	@RdfProperty("discipline")
+	@RdfProperty("space:discipline")
 	private List<Discipline> disciplines = new ArrayList<Discipline>();
 
 	public Spacecraft() {

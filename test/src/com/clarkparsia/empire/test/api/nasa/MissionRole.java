@@ -37,24 +37,24 @@ import com.clarkparsia.utils.BasicUtils;
 @NamedQuery(name="sovietSpacecraftSPARQL",
 			query="where { ?result <http://purl.org/net/schemas/space/agency> \"U.S.S.R\" }")
 
-@Namespaces({"", "http://purl.org/net/schemas/space/",
+@Namespaces({"space", "http://purl.org/net/schemas/space/",
 			 "foaf", "http://xmlns.com/foaf/0.1/",
 			 "dc", "http://purl.org/dc/elements/1.1/"})
 @Entity
-@RdfsClass("MissionRole")
+@RdfsClass("space:MissionRole")
 @NamedGraph(type = NamedGraph.NamedGraphType.Instance)
 public class MissionRole extends BaseTestClass {
-	@RdfProperty("role")
+	@RdfProperty("space:role")
 	private URI role;
 
-	@RdfProperty("mission")
+	@RdfProperty("space:mission")
 	private Mission mission;
 
 	@RdfId
 	@RdfProperty("rdfs:label")
 	private String label;
 
-	@RdfProperty("actor")
+	@RdfProperty("space:actor")
 	private FoafPerson actor;
 
 	public URI getRole() {

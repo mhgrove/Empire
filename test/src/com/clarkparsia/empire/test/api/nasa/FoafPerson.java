@@ -34,7 +34,7 @@ import com.clarkparsia.utils.BasicUtils;
  *
  * @author Michael Grove
  */
-@Namespaces({"", "http://purl.org/net/schemas/space/",
+@Namespaces({"space", "http://purl.org/net/schemas/space/",
 			 "foaf", "http://xmlns.com/foaf/0.1/",
 			 "dc", "http://purl.org/dc/elements/1.1/"})
 @Entity
@@ -45,7 +45,7 @@ public class FoafPerson extends BaseTestClass {
 	@RdfProperty("foaf:name")
 	private String name;
 
-	@RdfProperty("performed")
+	@RdfProperty("space:performed")
 	private List<MissionRole> performed = new ArrayList<MissionRole>();
 
 	public String getName() {

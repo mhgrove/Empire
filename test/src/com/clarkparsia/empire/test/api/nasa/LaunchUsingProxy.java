@@ -38,30 +38,30 @@ import java.util.ArrayList;
  *
  * @author Michael Grove
  */
-@Namespaces({"", "http://purl.org/net/schemas/space/"})
+@Namespaces({"space", "http://purl.org/net/schemas/space/"})
 @Entity
-@RdfsClass("Launch")
+@RdfsClass("space:Launch")
 @NamedGraph(type = NamedGraph.NamedGraphType.Instance)
 
 public class LaunchUsingProxy extends BaseTestClass {
 	
-	@RdfProperty("spacecraft")
+	@RdfProperty("space:spacecraft")
 	@OneToMany(targetEntity=Spacecraft.class, fetch=FetchType.LAZY,
 			   cascade={CascadeType.REMOVE})
 	private List spacecraft = new ArrayList<Spacecraft>();
 
-	@RdfProperty("launched")
+	@RdfProperty("space:launched")
 	private String launched;
 
-	@RdfProperty("launchvehicle")
+	@RdfProperty("space:launchvehicle")
 	private List<String> launchvehicle;
 
-	@RdfProperty("launchsite")
+	@RdfProperty("space:launchsite")
 	@ManyToOne(fetch=FetchType.LAZY,
 			   cascade={CascadeType.ALL})
 	private LaunchSite launchSite;
 
-	@RdfProperty("spacecraftOther")
+	@RdfProperty("space:spacecraftOther")
 	@OneToOne(cascade={CascadeType.PERSIST, CascadeType.MERGE})
 	private Spacecraft otherSpacecraft;
 

@@ -32,20 +32,20 @@ import java.util.List;
  *
  * @author Michael Grove
  */
-@Namespaces({"", "http://purl.org/net/schemas/space/",
+@Namespaces({"space", "http://purl.org/net/schemas/space/",
 			 "foaf", "http://xmlns.com/foaf/0.1/",
 			 "dc", "http://purl.org/dc/elements/1.1/"})
 @Entity
-@RdfsClass("LaunchSite")
+@RdfsClass("space:LaunchSite")
 @NamedGraph(type = NamedGraph.NamedGraphType.Instance)
 public class LaunchSite extends BaseTestClass {
-	@RdfProperty("country")
+	@RdfProperty("space:country")
 	private List<String> country;
 
 	@RdfProperty("rdfs:label")
 	private List<String> label;
 
-	@RdfProperty("place")
+	@RdfProperty("space:place")
 	private List<String> place;
 
 	public List<String> getCountry() {

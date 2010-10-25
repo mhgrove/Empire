@@ -36,24 +36,24 @@ import com.clarkparsia.utils.collections.CollectionUtil;
  *
  * @author Michael Grove
  */
-@Namespaces({"", "http://purl.org/net/schemas/space/"})
+@Namespaces({"space", "http://purl.org/net/schemas/space/"})
 @Entity
-@RdfsClass("Launch")
+@RdfsClass("space:Launch")
 @NamedGraph(type = NamedGraph.NamedGraphType.Instance)
 public class Launch extends BaseTestClass {
-	@RdfProperty("spacecraft")
+	@RdfProperty("space:spacecraft")
 	private List<Spacecraft> spacecraft = new ArrayList<Spacecraft>();
 
-	@RdfProperty("launched")
+	@RdfProperty("space:launched")
 	private String launched;
 
-	@RdfProperty("launchvehicle")
+	@RdfProperty("space:launchvehicle")
 	private List<String> launchvehicle;
 
-	@RdfProperty("launchsite")
+	@RdfProperty("space:launchsite")
 	private LaunchSite launchSite;
 
-	@RdfProperty("spacecraftOther")
+	@RdfProperty("space:spacecraftOther")
 	private Spacecraft otherSpacecraft;
 
 	public Spacecraft getOtherSpacecraft() {

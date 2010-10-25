@@ -1028,6 +1028,7 @@ public class EntityManagerImpl implements EntityManager {
 
 			mAdd.put(theGraphURI, aGraph);
 		}
+		
 		/**
 		 * Add this graph to the set of data to be removed when this operation is executed
 		 * @param theGraph the graph to be removed

@@ -164,8 +164,6 @@ public class RdfQuery implements Query {
 	 * @param theQueryString the query string
 	 */
 	public RdfQuery(final DataSource theSource, String theQueryString) {
-		// TODO: support for ASK and DESCRIBE
-
 		mSource = theSource;
 
 		mQuery = theQueryString;

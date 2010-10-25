@@ -32,7 +32,6 @@ import org.openrdf.model.vocabulary.RDFS;
 
 import java.lang.reflect.Type;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Date;
 import java.util.Collection;
 import java.util.HashMap;
@@ -135,6 +134,10 @@ public class RdfGenerator {
 	 */
 	private static final ValueFactory FACTORY = new ValueFactoryImpl();
 
+	private static final ContainsResourceValues CONTAINS_RESOURCES = new ContainsResourceValues();
+
+	private static final LanguageFilter LANG_FILTER = new LanguageFilter(getLanguageForLocale());
+
 	/**
 	 * The logger
 	 */
@@ -150,6 +153,8 @@ public class RdfGenerator {
 	 * identifiers of the instances and the values are the instances
 	 */
 	public final static Map<Object, Object> OBJECT_M = new HashMap<Object, Object>();
+
+	private final static Set<Class<?>> REGISTERED_FOR_NS = new HashSet<Class<?>>();
 
 	/**
 	 * Initialize some parameters in the RdfGenerator.  This caches namespace and type mapping information locally
@@ -509,9 +514,11 @@ public class RdfGenerator {
 	 * @param theObj the object to scan.
 	 */
 	public static void addNamespaces(Class<?> theObj) {
-		if (theObj == null) {
+		if (theObj == null || REGISTERED_FOR_NS.contains(theObj)) {
 			return;
 		}
+
+		REGISTERED_FOR_NS.add(theObj);
 
 		Namespaces aNS = BeanReflectUtil.getAnnotation(theObj, Namespaces.class);
 
@@ -723,8 +730,10 @@ public class RdfGenerator {
 
 	/**
 	 * Enabling this seems to use more memory than per-object proxying (or none at all).  Is javassist leaking memory?
+	 * Experimental option, not currently used.
 	 */
-	public static final boolean PROXY_COLLECTIONS = true;
+	@Deprecated
+	public static final boolean PROXY_COLLECTIONS = false;
 
 	/**
 	 * Implementation of the function interface to turn a Collection of RDF values into Java bean(s).
@@ -806,12 +815,13 @@ public class RdfGenerator {
 
 			Collection<Value> aList = new HashSet<Value>(theList);
 
-			if (!find(aList, new ContainsResourceValues())) {
+			if (!find(aList, CONTAINS_RESOURCES)) {
 				if (!EmpireOptions.ENABLE_LANG_AWARE) {
 					Collection<Value> aLangFiltered = filter(aList, new Predicate<Value>() { public boolean accept(final Value theValue) { return ((Literal)theValue).getLanguage() == null; }});
 
 					if (aLangFiltered.isEmpty()) {
-						aLangFiltered = filter(aList, new LanguageFilter(getLanguageForLocale()));
+						LANG_FILTER.setLangCode(getLanguageForLocale());
+						aLangFiltered = filter(aList, LANG_FILTER);
 					}
 
 					if (!aLangFiltered.isEmpty()) {
@@ -819,7 +829,8 @@ public class RdfGenerator {
 					}
 				}
 				else {
-					aList = filter(aList, new LanguageFilter(mField.getAnnotation(RdfProperty.class).language()));
+					LANG_FILTER.setLangCode(mField.getAnnotation(RdfProperty.class).language());
+					aList = filter(aList, LANG_FILTER);
 				}
 			}
 
@@ -857,19 +868,6 @@ public class RdfGenerator {
 
 	private static String getLanguageForLocale() {
 		return Locale.getDefault() == null ? "en" : Locale.getDefault().toString().substring(0, Locale.getDefault().toString().indexOf("_"));
-	}
-
-	private static class ContainsResourceValues implements Predicate<Value> { public boolean accept(final Value theValue) { return theValue instanceof Resource; }}
-	private static class LanguageFilter implements Predicate<Value> {
-		private String mLangCode;
-
-		private LanguageFilter(final String theLangCode) {
-			mLangCode = theLangCode;
-		}
-
-		public boolean accept(final Value theValue) {
-			return theValue instanceof Literal && mLangCode.equals(((Literal)theValue).getLanguage());
-		}
 	}
 
 	private static Class refineClass(Object theAccessor, Class theClass, DataSource theSource, Resource theId) {
@@ -1235,6 +1233,28 @@ public class RdfGenerator {
 					throw new RuntimeException("Unknown type conversion: " + theIn.getClass() + " " + theIn + " " + mField);
 				}
 			}
+		}
+	}
+
+	private static class ContainsResourceValues implements Predicate<Value> {
+		public boolean accept(final Value theValue) {
+			return theValue instanceof Resource;
+		}
+	}
+
+	private static class LanguageFilter implements Predicate<Value> {
+		private String mLangCode;
+
+		private LanguageFilter(final String theLangCode) {
+			mLangCode = theLangCode;
+		}
+
+		public void setLangCode(final String theLangCode) {
+			mLangCode = theLangCode;
+		}
+
+		public boolean accept(final Value theValue) {
+			return theValue instanceof Literal && mLangCode.equals(((Literal)theValue).getLanguage());
 		}
 	}
 }

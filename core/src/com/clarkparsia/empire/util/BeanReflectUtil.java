@@ -20,6 +20,7 @@ import com.clarkparsia.empire.annotation.InvalidRdfException;
 import com.clarkparsia.empire.annotation.RdfId;
 import com.clarkparsia.empire.EmpireOptions;
 import com.clarkparsia.empire.SupportsRdfId;
+import com.google.inject.internal.Maps;
 
 import javax.persistence.FetchType;
 import javax.persistence.OneToMany;
@@ -46,6 +47,8 @@ import java.util.TreeSet;
 import java.util.LinkedHashSet;
 import java.util.Date;
 import java.util.Arrays;
+import java.util.Map;
+import java.util.HashMap;
 
 /**
  * <p>Some utility methods which use the Java reflect stuff to do a lot of the runtime accessing of fields and methods
@@ -53,9 +56,11 @@ import java.util.Arrays;
  *
  * @author Michael Grove
  * @since 0.5.1
- * @version 0.6.6
+ * @version 0.7
  */
 public class BeanReflectUtil {
+
+	private final static Map<Class<?>, BeanReflectCacheEntry> cache = new HashMap<Class<?>, BeanReflectCacheEntry>();
 
 	/**
 	 * More or less a more robust version of Class.forName.  Attempts to get around custom class loaders and
@@ -114,6 +119,15 @@ public class BeanReflectUtil {
 	 * @return the class's annotation, or it's "inherited" annotation, or null if the annotation cannot be found.
 	 */
 	public static <T extends Annotation> T getAnnotation(Class<?> theClass, Class<T> theAnnotation) {
+		BeanReflectCacheEntry entry = cache.get(theClass);
+		if (entry == null) {
+			entry = new BeanReflectCacheEntry();
+			cache.put(theClass, entry);
+		}
+		if (entry.mAnnotations.containsKey(theAnnotation)) {
+			return (T) entry.mAnnotations.get(theAnnotation);
+		}
+
 		T aAnnotation = null;
 
 		if (theClass.isAnnotationPresent(theAnnotation)) {
@@ -134,6 +148,8 @@ public class BeanReflectUtil {
 				}
 			}
 		}
+
+		entry.mAnnotations.put(theAnnotation, aAnnotation);
 
 		return aAnnotation;
 	}
@@ -173,27 +189,7 @@ public class BeanReflectUtil {
 	 * @return if the class has the annotation, or one of its parents does and it "inherited" the annotation, false otherwise
 	 */
 	public static boolean hasAnnotation(Class theClass, Class<? extends Annotation> theAnnotation) {
-		boolean aHasAnnotation = false;
-		if (theClass.isAnnotationPresent(theAnnotation)) {
-			aHasAnnotation = true;
-		}
-		else {
-			if (theClass.getSuperclass() != null && hasAnnotation(theClass.getSuperclass(), MappedSuperclass.class)) {
-				aHasAnnotation = hasAnnotation(theClass.getSuperclass(), theAnnotation);
-			}
-
-			if (!aHasAnnotation) {
-				for (Class aInt : theClass.getInterfaces()) {
-					aHasAnnotation = hasAnnotation(aInt, theAnnotation);
-
-					if (aHasAnnotation) {
-						break;
-					}
-				}
-			}
-		}
-
-		return aHasAnnotation;
+		return getAnnotation(theClass, theAnnotation) != null;
 	}
 
     /**
@@ -267,6 +263,20 @@ public class BeanReflectUtil {
 	 * @return the list of annotated setter methods
 	 */
 	public static Collection<Method> getAnnotatedSetters(Class theClass, boolean theInfer) {
+		BeanReflectCacheEntry entry = cache.get(theClass);
+		
+		if (entry == null) {
+			entry = new BeanReflectCacheEntry();
+			cache.put(theClass, entry);
+		}
+
+		if (theInfer && entry.mInferredSetters != null) {
+			return entry.mInferredSetters;
+		}
+		else if (!theInfer && entry.mSetters != null) {
+			return entry.mSetters;
+		}
+
 		Collection<Method> aMethods = new HashSet<Method>();
 
 		for (Method aMethod : theClass.getDeclaredMethods()) {
@@ -328,6 +338,13 @@ public class BeanReflectUtil {
 			aMethods.addAll(getAnnotatedSetters(aInterface, theInfer));
 		}
 
+		if (theInfer) {
+			entry.mInferredSetters = aMethods;
+		}
+		else {
+			entry.mSetters = aMethods;
+		}
+
 		return aMethods;
 	}
 
@@ -341,6 +358,20 @@ public class BeanReflectUtil {
 	 * @return the list of annotated get methods
 	 */
 	public static Collection<Method> getAnnotatedGetters(Class theClass, boolean theInfer) {
+		BeanReflectCacheEntry entry = cache.get(theClass);
+
+		if (entry == null) {
+			entry = new BeanReflectCacheEntry();
+			cache.put(theClass, entry);
+		}
+
+		if (theInfer && entry.mInferredGetters != null) {
+			return entry.mInferredGetters;
+		}
+		else if (!theInfer && entry.mGetters != null) {
+			return entry.mGetters;
+		}
+
 		Collection<Method> aMethods = new HashSet<Method>();
 
 		for (Method aMethod : theClass.getDeclaredMethods()) {
@@ -403,6 +434,13 @@ public class BeanReflectUtil {
 			aMethods.addAll(getAnnotatedGetters(aInterface, theInfer));
 		}
 
+		if (theInfer) {
+			entry.mInferredGetters = aMethods;
+		}
+		else {
+			entry.mGetters = aMethods;
+		}
+
 		return aMethods;
 	}
 
@@ -412,6 +450,17 @@ public class BeanReflectUtil {
 	 * @return the list of annotated fields on the class
 	 */
 	public static Collection<Field> getAnnotatedFields(Class theClass) {
+		BeanReflectCacheEntry entry = cache.get(theClass);
+
+		if (entry == null) {
+			entry = new BeanReflectCacheEntry();
+			cache.put(theClass, entry);
+		}
+
+		if (entry.mFields != null) {
+			return entry.mFields;
+		}
+
 		Collection<Field> aProps = new HashSet<Field>();
 
 		for (Field aField : theClass.getDeclaredFields()) {
@@ -437,6 +486,8 @@ public class BeanReflectUtil {
 		for (Class aInterface : theClass.getInterfaces()) {
 			aProps.addAll(getAnnotatedFields(aInterface));
 		}
+
+		entry.mFields = aProps;
 
 		return aProps;
 	}
@@ -620,6 +671,17 @@ public class BeanReflectUtil {
         return (Boolean.class.isInstance(theObj) || Integer.class.isInstance(theObj) || Long.class.isInstance(theObj)
                 || Short.class.isInstance(theObj) || Double.class.isInstance(theObj) || Float.class.isInstance(theObj)
                 || Date.class.isInstance(theObj) || String.class.isInstance(theObj) || Character.class.isInstance(theObj));
+    }
+
+	/**
+	 * Return whether or not the given class represents a Java primitive type (String is included as a primitive).
+	 * @param theObj the object
+	 * @return true if its a primitive, false otherwise.
+	 */
+    public static boolean isPrimitive(Class theObj) {
+        return (Boolean.class.equals(theObj) || Integer.class.equals(theObj) || Long.class.equals(theObj)
+                || Short.class.equals(theObj) || Double.class.equals(theObj) || Float.class.equals(theObj)
+                || Date.class.equals(theObj) || String.class.equals(theObj) || Character.class.equals(theObj));
     }
 
 	/**
@@ -854,5 +916,18 @@ public class BeanReflectUtil {
 		}
 
 		return aClass;
+	}
+
+	private static class BeanReflectCacheEntry {
+		public Field mIdField;
+
+		public Collection<Field> mFields;
+		public Collection<Method> mSetters;
+		public Collection<Method> mGetters;
+
+		public Collection<Method> mInferredSetters;
+		public Collection<Method> mInferredGetters;
+
+		public Map<Class<? extends Annotation>, Annotation> mAnnotations = Maps.newHashMap();
 	}
 }

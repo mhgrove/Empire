@@ -758,7 +758,7 @@ public class RdfGenerator {
 
 		public Object apply(final Collection<Value> theList) {
 			if (theList == null || theList.isEmpty()) {
-				return null;
+				return BeanReflectUtil.instantiateCollectionFromField(BeanReflectUtil.classFrom(mField));
 			}
 			if (Collection.class.isAssignableFrom(BeanReflectUtil.classFrom(mField))) {
 				try {
@@ -855,7 +855,7 @@ public class RdfGenerator {
 			if (aList.isEmpty()) {
 				// yes, we checked for emptiness to begin the method, but we might have done some filtering based on the
 				// language tags, so we need to check again.
-				return null;
+				return BeanReflectUtil.instantiateCollectionFromField(BeanReflectUtil.classFrom(mField));
 			}
 			else if (aList.size() == 1) {
 				// collection of one element, just convert the single element and send that back
@@ -1086,7 +1086,6 @@ public class RdfGenerator {
 
 	@SuppressWarnings("unchecked")
 	private static <T> T getProxyOrDbObject(Object theAccessor, Class<T> theClass, Object theKey, DataSource theSource) throws Exception {
-System.err.println("proxying " + theAccessor + " for " + theClass + " and key " + theKey);
 		if (BeanReflectUtil.isFetchTypeLazy(theAccessor)) {
 			Proxy<T> aProxy = new Proxy<T>(theClass, asPrimaryKey(theKey), theSource);
 

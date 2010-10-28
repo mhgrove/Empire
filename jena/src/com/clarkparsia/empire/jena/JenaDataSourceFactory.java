@@ -15,9 +15,11 @@
 
 package com.clarkparsia.empire.jena;
 
-import com.clarkparsia.empire.DataSourceFactory;
+import com.clarkparsia.empire.ds.DataSourceFactory;
+
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.tdb.TDBFactory;
 
 import java.util.Map;
 
@@ -27,7 +29,7 @@ import java.util.Map;
  *
  * @author Michael Grove
  * @since 0.6.3
- * @version 0.6.3
+ * @version 0.7
  */
 public abstract class JenaDataSourceFactory implements DataSourceFactory, JenaConfig {
 
@@ -46,10 +48,10 @@ public abstract class JenaDataSourceFactory implements DataSourceFactory, JenaCo
 			if (aType.equals(MODEL)) {
 				aModel = (Model) theConfig.get(MODEL);
 			}
-
-			// TODO: create other types of jena models from the values in the config file here
-			// if (isTdb(config))
-			//   aModel = TDBFactory.createModel(...);
+			else if (isTdb(aType)) {
+			   aModel = TDBFactory.createModel(theConfig.get(LOCATION).toString());
+			}
+			
 			// else if isSdb(config)
 			//   aModel = SDBFactory.createModel(...);
 			//
@@ -57,6 +59,10 @@ public abstract class JenaDataSourceFactory implements DataSourceFactory, JenaCo
 		}
 
 		return aModel;
+	}
+
+	private boolean isTdb(final String theType) {
+		return JenaModelType.TDB.toString().equals(theType);
 	}
 
 }

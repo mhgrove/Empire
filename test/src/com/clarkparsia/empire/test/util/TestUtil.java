@@ -16,7 +16,13 @@
 package com.clarkparsia.empire.test.util;
 
 import com.clarkparsia.empire.Empire;
+import com.clarkparsia.empire.test.TestJPA;
+import com.clarkparsia.empire.ds.DataSource;
+import com.clarkparsia.empire.ds.DataSourceException;
 import com.clarkparsia.empire.util.DefaultEmpireModule;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * <p>Utility methods for the test suite.</p>
@@ -24,7 +30,11 @@ import com.clarkparsia.empire.util.DefaultEmpireModule;
  * @author Michael Grove
  */
 public class TestUtil {
-	public static void initEmpire() {
-		Empire.init(new DefaultEmpireModule(), new TestModule());
+	public static DataSource createTestSource() throws DataSourceException {
+		Map<String, Object> aMap = new HashMap<String, Object>();
+		aMap.put("factory", "test-source");
+		aMap.put("files", TestJPA.DATA_FILE);
+
+		return Empire.get().persistenceProvider().createDataSource("test", aMap);
 	}
 }

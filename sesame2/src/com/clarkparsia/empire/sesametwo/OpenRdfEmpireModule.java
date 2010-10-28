@@ -17,7 +17,7 @@ package com.clarkparsia.empire.sesametwo;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
-import com.clarkparsia.empire.DataSourceFactory;
+import com.clarkparsia.empire.ds.DataSourceFactory;
 import com.clarkparsia.empire.util.EmpireModule;
 
 /**
@@ -28,10 +28,10 @@ import com.clarkparsia.empire.util.EmpireModule;
  * @version 0.6.1
  */
 public class OpenRdfEmpireModule extends AbstractModule implements EmpireModule {
+
 	/**
 	 * @inheritDoc
 	 */
-	@Override
 	protected void configure() {
 		Multibinder.newSetBinder(binder(), DataSourceFactory.class)
 				.addBinding().to(RepositoryDataSourceFactory.class);

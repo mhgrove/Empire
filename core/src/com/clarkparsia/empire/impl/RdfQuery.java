@@ -27,15 +27,19 @@ import org.openrdf.query.BindingSet;
 import org.apache.log4j.Logger;
 import org.apache.log4j.LogManager;
 
-import com.clarkparsia.empire.DataSource;
-import com.clarkparsia.empire.ResultSet;
+import com.clarkparsia.empire.ds.DataSource;
+import com.clarkparsia.empire.ds.ResultSet;
+import com.clarkparsia.empire.ds.QueryException;
 import com.clarkparsia.empire.Dialect;
+import com.clarkparsia.empire.EmpireOptions;
 
 import static com.clarkparsia.empire.util.EmpireUtil.asPrimaryKey;
 
 import com.clarkparsia.empire.util.BeanReflectUtil;
 import com.clarkparsia.empire.annotation.RdfGenerator;
 import com.clarkparsia.empire.annotation.AnnotationChecker;
+import com.clarkparsia.empire.annotation.runtime.Proxy;
+import com.clarkparsia.empire.annotation.runtime.ProxyAwareList;
 import com.clarkparsia.openrdf.ExtBindingSet;
 
 import javax.persistence.FlushModeType;
@@ -45,12 +49,12 @@ import javax.persistence.PersistenceException;
 import javax.persistence.Query;
 import javax.persistence.TemporalType;
 
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -59,7 +63,7 @@ import java.util.regex.Pattern;
  *
  * @author Michael Grove
  * @since 0.1
- * @version 0.6.6
+ * @version 0.7
  */
 public class RdfQuery implements Query {
 	/**
@@ -185,7 +189,7 @@ public class RdfQuery implements Query {
 	 */
 	@Override
 	public String toString() {
-		return getQueryString();
+		return query();
 	}
 
 	/**
@@ -313,11 +317,47 @@ public class RdfQuery implements Query {
 	}
 
 	/**
+	 * Execute the describe query.
+	 * @return the resulting RDF graph
+	 * @throws QueryException if there is an error while querying
+	 */
+	public Graph executeDescribe() throws QueryException {
+		return getSource().describe(query());
+	}
+
+	/**
+	 * Execute an ask query.
+	 * @return the boolean result of the ask query
+	 * @throws QueryException if there is an error while querying
+	 */
+	public boolean executeAsk() throws QueryException {
+		return getSource().ask(query());
+	}
+
+	/**
+	 * Performs a select query
+	 * @return the result set
+	 * @throws QueryException if there is an error while querying
+	 */
+	public ResultSet executeSelect() throws QueryException {
+		return getSource().selectQuery(query());
+	}
+
+	/**
+	 * Performs a construct query
+	 * @return the result graph
+	 * @throws QueryException if there is an error while querying
+	 */
+	public Graph executeConstruct() throws QueryException {
+		return getSource().graphQuery(query());
+	}
+
+	/**
 	 * @inheritDoc
 	 */
 	@SuppressWarnings("unchecked")
 	public List getResultList() {
-		List aList = new ArrayList();
+		List aList = new ProxyAwareList();
 
 		try {
 			if (isConstruct()) {
@@ -341,17 +381,26 @@ public class RdfQuery implements Query {
 						String aVarName = getProjectionVarName();
 
 						if (aBinding.getValue(aVarName) instanceof URI && AnnotationChecker.isValid(getBeanClass())) {
-							aObj = RdfGenerator.fromRdf(getBeanClass(),
-														asPrimaryKey(aBinding.getValue(aVarName)),
-														getSource());
+							if (EmpireOptions.ENABLE_QUERY_RESULT_PROXY) {
+								aObj = new Proxy(getBeanClass(), asPrimaryKey(aBinding.getValue(aVarName)), getSource());
+							}
+							else {
+								aObj = RdfGenerator.fromRdf(getBeanClass(),
+															asPrimaryKey(aBinding.getValue(aVarName)),
+															getSource());
+							}
                         }
                         else {
                             aObj = new RdfGenerator.ValueToObject(getSource(), null,
                                                                   getBeanClass(), null).apply(aBinding.getValue(aVarName));
                         }
 
-						if (aObj == null || !getBeanClass().isInstance(aObj)) {
-							throw new PersistenceException("Cannot bind query result to bean: " + mClass);
+						// if the object could not be created, or it was and its not the bean class type, or not a proxy
+						// for something of the bean class type, then we could not bind the value in the result set
+						// which is an error.
+						if (aObj == null
+							|| !(getBeanClass().isInstance(aObj) || (aObj instanceof Proxy && getBeanClass().isAssignableFrom(((Proxy)aObj).getProxyClass())))) {
+							throw new PersistenceException("Cannot bind query result to bean: " + getBeanClass());
 						}
 						else {
 							aList.add(aObj);
@@ -359,7 +408,7 @@ public class RdfQuery implements Query {
 					}
 				}
 				else {
-					aList.addAll(CollectionUtil.list( (Iterable<BindingSet>) aResults));
+					aList.addAll(CollectionUtil.list(aResults));
 				}
 
 				aResults.close();
@@ -587,28 +636,6 @@ public class RdfQuery implements Query {
 	}
 
 	/**
-	 * Validate that all parameter variables in the query have values.
-	 * @throws IllegalStateException if there are unescaped parameter variables in th query
-	 */
-	@Deprecated // no longer requiring all variables to be used, we can just let them be normal vars in the query
-	private void validateVariables() {
-		// note: null values for an index/name means the user never set a value for the parameter in the query
-		// which means we have an invalid query!
-
-		for (Integer aIndex : mIndexedParameters.keySet()) {
-			if (mIndexedParameters.get(aIndex) == null) {
-				throw new IllegalStateException("Not all parameters in query were replaced with values, query is invalid. Parameter at index " + aIndex + " was not set.");
-			}
-		}
-
-		for (String aName : mNamedParameters.keySet()) {
-			if (mNamedParameters.get(aName) == null) {
-				throw new IllegalStateException("Not all parameters in query were replaced with values, query is invalid.  Parameter named " + aName + " was not set.");
-			}
-		}
-	}
-
-	/**
 	 * Given the query string fragment, replace all variable parameter tokens with the values specified by the user
 	 * through the various setParameter methods.
 	 * @param theQuery the query fragment
@@ -682,6 +709,11 @@ public class RdfQuery implements Query {
 		}
 	}
 
+	protected boolean startsWithKeyword(String theQuery) {
+		String q = theQuery.toLowerCase().trim();
+		return q.startsWith("select") || q.startsWith("construct") || q.startsWith("ask") || q.startsWith("describe");
+	}
+
 	/**
 	 * Return a valid, executable query instance from the specified query fragment, and user specified settings such
 	 * as parameter values, limit, offset, etc.
@@ -690,11 +722,11 @@ public class RdfQuery implements Query {
 	protected String query() {
 		// use some regexs to look for and remove limits and offsets specified in the query string and store them locally
 		// these will get postfixed to the query later on.
-		boolean containsLimit = Pattern.compile("limit(\\s)*[0-9]{1,}[^}]*").matcher(getQueryString()).find();
-		boolean containsOffset = Pattern.compile("offset(\\s)*[0-9]{1,}[^}]*").matcher(getQueryString()).find();
+		boolean containsLimit = Pattern.compile("limit(\\s)*[0-9]+[^}]*").matcher(getQueryString()).find();
+		boolean containsOffset = Pattern.compile("offset(\\s)*[0-9]+[^}]*").matcher(getQueryString()).find();
 
 		if (containsLimit) {
-			String aLimitGrabRegex = "limit(\\s)*[0-9]{1,}";
+			String aLimitGrabRegex = "limit(\\s)*[0-9]+";
 			Matcher m = Pattern.compile(aLimitGrabRegex).matcher(getQueryString());
 			m.find();
 
@@ -706,7 +738,7 @@ public class RdfQuery implements Query {
 		}
 
 		if (containsOffset) {
-			String aOffsetGrabRegex = "offset(\\s)*[0-9]{1,}";
+			String aOffsetGrabRegex = "offset(\\s)*[0-9]+";
 			Matcher m = Pattern.compile(aOffsetGrabRegex).matcher(getQueryString());
 			m.find();
 
@@ -729,15 +761,14 @@ public class RdfQuery implements Query {
 		StringBuffer aQuery = new StringBuffer(queryStr);
 
         if (!aQuery.toString().toLowerCase().startsWith(mQueryDialect.patternKeyword())
-			&& !aQuery.toString().toLowerCase().startsWith("select")
-			&& !aQuery.toString().toLowerCase().startsWith("construct")) {
-			
+			&& !startsWithKeyword(aQuery.toString())) {
             aQuery.insert(0, mQueryDialect.patternKeyword());
         }
 
         StringBuffer aStart = new StringBuffer();
-		if (!getQueryString().toLowerCase().startsWith("select") && !getQueryString().toLowerCase().startsWith("construct")) {
+		if (!startsWithKeyword(getQueryString())) {
 			aStart.insert(0, isConstruct() ? "construct " : "select ").append(isDistinct() ? " distinct " : "").append(" ");
+			
 			if (isConstruct()) {
 				aStart.append(" * ");
 			}

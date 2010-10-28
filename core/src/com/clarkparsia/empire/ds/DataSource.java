@@ -13,15 +13,14 @@
  * limitations under the License.
  */
 
-package com.clarkparsia.empire;
+package com.clarkparsia.empire.ds;
 
 import org.openrdf.model.Graph;
 
 import java.net.ConnectException;
 
-import com.clarkparsia.empire.ResultSet;
-import com.clarkparsia.empire.QueryException;
-import com.clarkparsia.empire.DataSourceException;
+import com.clarkparsia.empire.ds.ResultSet;
+import com.clarkparsia.empire.ds.QueryException;
 import com.clarkparsia.empire.QueryFactory;
 
 /**
@@ -31,7 +30,7 @@ import com.clarkparsia.empire.QueryFactory;
  *
  * @author Michael Grove
  * @since 0.1
- * @version 0.6.5
+ * @version 0.7
  */
 public interface DataSource {
 
@@ -76,4 +75,20 @@ public interface DataSource {
 	 * @return the factory for this data source
 	 */
 	public QueryFactory getQueryFactory();
+
+	/**
+	 * Execute an ASK query on the DataSource
+	 * @param theQuery the query to execute
+	 * @return the boolean result of the ask query
+	 * @throws QueryException if there is an error while evaluation the query
+	 */
+	public boolean ask(String theQuery) throws QueryException;
+
+	/**
+	 * Perform a describe query on the DataSource
+	 * @param theQuery the query to execute
+	 * @return the result of the describe
+	 * @throws QueryException if there is an error while evaluation the query
+	 */
+	public Graph describe(String theQuery) throws QueryException;
 }

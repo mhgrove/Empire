@@ -13,18 +13,19 @@
  * limitations under the License.
  */
 
-package com.clarkparsia.empire.impl;
+package com.clarkparsia.empire.ds.impl;
 
-import com.clarkparsia.empire.DataSource;
+import com.clarkparsia.empire.ds.DataSource;
 import com.clarkparsia.empire.QueryFactory;
 
 /**
- * <p>Abstract implementation of some parts of the {@link DataSource} interface.</p>
+ * <p>Abstract implementation of some parts of the {@link com.clarkparsia.empire.ds.DataSource} interface.</p>
  *
  * @author Michael Grove
  * @since 0.1
- * @see EntityManagerImpl
- * @see com.clarkparsia.empire.DataSourceFactory
+ * @version 0.7
+ * @see com.clarkparsia.empire.impl.EntityManagerImpl
+ * @see com.clarkparsia.empire.ds.DataSourceFactory
  */
 public abstract class AbstractDataSource implements DataSource {
 

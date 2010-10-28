@@ -16,20 +16,23 @@
 package com.clarkparsia.empire.test.api;
 
 import org.openrdf.model.Graph;
+import org.openrdf.model.Value;
 
 import org.openrdf.model.impl.GraphImpl;
 import org.openrdf.model.impl.ValueFactoryImpl;
 import org.openrdf.query.MalformedQueryException;
 import org.openrdf.query.QueryEvaluationException;
-import org.openrdf.repository.Repository;
+import org.openrdf.query.parser.ParsedQuery;
+import org.openrdf.query.parser.serql.SeRQLParser;
+import org.openrdf.query.parser.sparql.SPARQLParser;
 
-import com.clarkparsia.empire.DataSource;
-import com.clarkparsia.empire.DataSourceException;
-import com.clarkparsia.empire.QueryException;
-import com.clarkparsia.empire.ResultSet;
+import com.clarkparsia.empire.ds.DataSource;
+import com.clarkparsia.empire.ds.DataSourceException;
+import com.clarkparsia.empire.ds.QueryException;
+import com.clarkparsia.empire.ds.ResultSet;
+import com.clarkparsia.empire.ds.impl.AbstractDataSource;
 import com.clarkparsia.empire.sesametwo.TupleQueryResultSet;
 
-import com.clarkparsia.empire.impl.AbstractDataSource;
 import com.clarkparsia.empire.impl.RdfQueryFactory;
 
 import com.clarkparsia.empire.impl.serql.SerqlDialect;
@@ -37,6 +40,11 @@ import com.clarkparsia.empire.impl.serql.SerqlDialect;
 import com.clarkparsia.openrdf.ExtRepository;
 import com.clarkparsia.openrdf.OpenRdfUtil;
 import com.clarkparsia.openrdf.SesameQuery;
+import com.clarkparsia.openrdf.ExtGraph;
+import com.clarkparsia.openrdf.query.util.AskVisitor;
+import com.clarkparsia.openrdf.query.util.DescribeVisitor;
+import com.clarkparsia.openrdf.query.sparql.SPARQLQueryRenderer;
+import com.clarkparsia.openrdf.query.serql.SeRQLQueryRenderer;
 
 import java.net.URI;
 import java.net.ConnectException;
@@ -62,7 +70,7 @@ public class TestDataSource extends AbstractDataSource implements DataSource {
 		mRepo = OpenRdfUtil.createInMemoryRepo();
 
 		try {
-			mRepo.addGraph(theGraph);
+			mRepo.add(theGraph);
 		}
 		catch (Exception e) {
 			throw new RuntimeException(e);
@@ -126,7 +134,14 @@ public class TestDataSource extends AbstractDataSource implements DataSource {
 	/**
 	 * @inheritDoc
 	 */
-	public Graph describe(final URI theURI) throws DataSourceException {
-		return mRepo.describe(ValueFactoryImpl.getInstance().createURI(theURI.toString()));
+	public boolean ask(final String theQuery) throws QueryException {
+		throw new UnsupportedOperationException("SeRQL does not support ASK queries");
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public Graph describe(final String theQuery) throws QueryException {
+		throw new UnsupportedOperationException("SeRQL does not support DESCRIBE queries");
 	}
 }

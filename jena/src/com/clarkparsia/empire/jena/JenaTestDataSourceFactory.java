@@ -15,8 +15,8 @@
 
 package com.clarkparsia.empire.jena;
 
-import com.clarkparsia.empire.DataSource;
-import com.clarkparsia.empire.DataSourceException;
+import com.clarkparsia.empire.ds.DataSource;
+import com.clarkparsia.empire.ds.DataSourceException;
 
 import com.clarkparsia.empire.ds.Alias;
 

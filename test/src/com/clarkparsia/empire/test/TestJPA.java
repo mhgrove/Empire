@@ -25,10 +25,9 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import com.clarkparsia.empire.Empire;
-import com.clarkparsia.empire.DataSource;
+import com.clarkparsia.empire.ds.DataSource;
 import com.clarkparsia.empire.EmpireOptions;
 import com.clarkparsia.empire.config.ConfigKeys;
-import com.clarkparsia.empire.jena.JenaTestDataSourceFactory;
 import com.clarkparsia.empire.jena.JenaConfig;
 import com.clarkparsia.empire.sesametwo.RepositoryDataSourceFactory;
 
@@ -522,6 +521,11 @@ public class TestJPA  {
         assertEquals(aCraft.getAgency(), "U.S.S.R");
         assertEquals(aCraft.getAlternateName(), Collections.singletonList("00001"));
     }
+
+	@Test(expected=IllegalArgumentException.class)
+	public void testGetInvalidNamedQuery() {
+		mManager.createNamedQuery("not an actual query name");
+	}
 
 	@Test @Ignore
 	public void testLocking() {

@@ -15,9 +15,9 @@
 
 package com.clarkparsia.empire.sesametwo;
 
-import com.clarkparsia.empire.DataSourceFactory;
-import com.clarkparsia.empire.DataSource;
-import com.clarkparsia.empire.DataSourceException;
+import com.clarkparsia.empire.ds.DataSourceFactory;
+import com.clarkparsia.empire.ds.DataSource;
+import com.clarkparsia.empire.ds.DataSourceException;
 import com.clarkparsia.empire.ds.Alias;
 import com.clarkparsia.utils.BasicUtils;
 
@@ -41,41 +41,10 @@ import org.openrdf.model.Statement;
  *
  * @author Michael Grove
  * @since 0.6
- * @version 0.6.5
+ * @version 0.7
  */
-@Alias("sesame")
-public class RepositoryDataSourceFactory implements DataSourceFactory {
-	/**
-	 * Configuration key for the URL of the sesame service
-	 */
-	public static final String URL = "url";
-
-	/**
-	 * Configuration key for the name of the sesame repository
-	 */
-	public static final String REPO = "repo";
-
-	/**
-	 * Configuration key for the files to load for the local sesame repository
-	 */
-	public static final String FILES = "files";
-
-	/**
-	 * Configuration key for the local sesame data directory
-	 */
-	public static final String DIR = "dir";
-
-	/**
-	 * Configuration key for controlling which query dialect is used by the RepositoryDataSource
-	 */
-	public static final String QUERY_LANG = "queryLang";
-
-	/**
-	 * Constant value for the SERQL query language
-	 * @see #QUERY_LANG
-	 */
-	public static final String LANG_SERQL = "serql";
-
+@Alias(RepositoryDataSourceFactory.ALIAS)
+public class RepositoryDataSourceFactory implements DataSourceFactory, RepositoryFactoryKeys {
 	/**
 	 * @inheritDoc
 	 */
@@ -104,12 +73,10 @@ public class RepositoryDataSourceFactory implements DataSourceFactory {
 		Repository aRepository;
 
 		try {
-
 			if (aURL != null && aRepo != null) {
 				aRepository = new HTTPRepository(aURL.toString(), aRepo.toString());
 
 				aRepository.initialize();
-			
 			}
 			else if (aFiles != null) {
 				aRepository = new SailRepository(new MemoryStore());
@@ -124,7 +91,12 @@ public class RepositoryDataSourceFactory implements DataSourceFactory {
 
 						aParser.setRDFHandler(new SailBuilderRDFHandler(aConn));
 
-						aParser.parse(new FileInputStream(aFile), "");
+						if (BasicUtils.isURL(aFile)) {
+							aParser.parse(new java.net.URL(aFile).openStream(), "");
+						}
+						else {
+							aParser.parse(new FileInputStream(aFile), "");
+						}
 					}
 
 					aConn.commit();

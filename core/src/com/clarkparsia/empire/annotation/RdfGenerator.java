@@ -66,10 +66,11 @@ import org.openrdf.model.impl.ValueFactoryImpl;
 import org.apache.log4j.Logger;
 import org.apache.log4j.LogManager;
 
-import com.clarkparsia.empire.DataSource;
-import com.clarkparsia.empire.DataSourceException;
+import com.clarkparsia.empire.ds.DataSource;
+import com.clarkparsia.empire.ds.DataSourceException;
+import com.clarkparsia.empire.ds.QueryException;
+import com.clarkparsia.empire.ds.DataSourceUtil;
 import com.clarkparsia.empire.EmpireOptions;
-import com.clarkparsia.empire.QueryException;
 import com.clarkparsia.empire.SupportsRdfId;
 import com.clarkparsia.empire.Empire;
 import com.clarkparsia.empire.Dialect;
@@ -123,7 +124,7 @@ import javassist.util.proxy.MethodHandler;
  *
  * @author Michael Grove
  * @since 0.1
- * @version 0.6.6
+ * @version 0.7
  */
 public class RdfGenerator {
 
@@ -256,6 +257,7 @@ public class RdfGenerator {
 	 * @throws InvalidRdfException thrown if the object does not support the RDF JPA API.
 	 * @throws DataSourceException thrown if there is an error retrieving data from the database
 	 */
+	@SuppressWarnings("unchecked")
 	private static <T> T fromRdf(T theObj, DataSource theSource) throws InvalidRdfException, DataSourceException {
 		SupportsRdfId.RdfKey theKeyObj = asSupportsRdfId(theObj).getRdfId();
 
@@ -268,7 +270,7 @@ public class RdfGenerator {
 			OBJECT_M.put(theKeyObj, theObj);
 		}
 
-		ExtGraph aGraph = new ExtGraph(EmpireUtil.describe(theSource, theObj));
+		ExtGraph aGraph = new ExtGraph(DataSourceUtil.describe(theSource, theObj));
 
 		if (aGraph.size() == 0) {
 			OBJECT_M.remove(theKeyObj);
@@ -802,7 +804,7 @@ public class RdfGenerator {
 			// create an instance of that.  that will work, and pushes the likely failure back off to
 			// the assignment of the created instance
 
-			URI aType = EmpireUtil.getType(theSource, theId);
+			URI aType = DataSourceUtil.getType(theSource, theId);
 
 			// k, so now we know the type, if we can match the type to a class then we're in business
 			if (aType != null) {
@@ -965,16 +967,9 @@ public class RdfGenerator {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	private static <T> T getProxyOrDbObject(Object theAccessor, Class<T> theClass, Object theKey, DataSource theSource) throws Exception {
-		// TODO: do we need to provide a reference to the thing we're proxying for.  like, if the getter is proxied
-		// as we do it here, it will always return the same value.  if you do a set on the property expecting the
-		// new value, that will set it on the actual object, but it will not change what this value returns.
-		// I think that maybe the proxy should be tweaked such that it will return the proxied value when it's first
-		// asked for, and then set that value on the object it's proxying for.  that way get/set should work as expected
-		// and once the value is retrieved the first time, it will always return it from the parent object rather than
-		// from the cached copy in the proxy object.
-
-		if (BeanReflectUtil.isFetchTypeLazy(theAccessor) || EmpireOptions.ENABLE_PROXY_OBJECTS) {
+		if (BeanReflectUtil.isFetchTypeLazy(theAccessor)) {
 			Proxy<T> aProxy = new Proxy<T>(theClass, asPrimaryKey(theKey), theSource);
 
 			ProxyFactory aFactory = new ProxyFactory();
@@ -1089,8 +1084,14 @@ public class RdfGenerator {
 				return FACTORY.createLiteral(Character.class.cast(theIn));
 			}
 			else if (java.net.URI.class.isInstance(theIn)) {
-				//return SesameValueFactory.instance().createLiteral(theIn.toString(), SesameValueFactory.instance().createURI(XmlSchema.ANYURI));
-                return FACTORY.createURI(theIn.toString());
+				RdfProperty aProp = mField == null ? null : mField.getAnnotation(RdfProperty.class);
+
+				if (aProp.isXsdUri()) {
+					return FACTORY.createLiteral(theIn.toString(), XMLSchema.ANYURI);
+				}
+				else {
+                	return FACTORY.createURI(theIn.toString());
+				}
 			}
 			else if (Value.class.isAssignableFrom(theIn.getClass())) {
 				return Value.class.cast(theIn);

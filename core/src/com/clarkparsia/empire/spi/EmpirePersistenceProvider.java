@@ -15,9 +15,9 @@
 
 package com.clarkparsia.empire.spi;
 
-import com.clarkparsia.empire.DataSourceFactory;
-import com.clarkparsia.empire.DataSource;
-import com.clarkparsia.empire.DataSourceException;
+import com.clarkparsia.empire.ds.DataSourceFactory;
+import com.clarkparsia.empire.ds.DataSource;
+import com.clarkparsia.empire.ds.DataSourceException;
 import com.clarkparsia.empire.ds.Alias;
 import com.clarkparsia.empire.config.EmpireConfiguration;
 import com.clarkparsia.empire.config.ConfigKeys;
@@ -96,7 +96,7 @@ public class EmpirePersistenceProvider implements PersistenceProvider {
 	 * @param theUnitName the persistence unit to create
 	 * @param theMap additional persistence context parameters
 	 * @return a new data source, or null if one cannot be created.
-	 * @throws com.clarkparsia.empire.DataSourceException if there is an error while creating the data source
+	 * @throws com.clarkparsia.empire.ds.DataSourceException if there is an error while creating the data source
 	 */
 	public DataSource createDataSource(final String theUnitName, final Map theMap) throws DataSourceException {
 		DataSourceFactory aFactory = selectFactory(theUnitName, theMap);

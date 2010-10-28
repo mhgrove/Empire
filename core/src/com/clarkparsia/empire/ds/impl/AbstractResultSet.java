@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-package com.clarkparsia.empire.impl;
+package com.clarkparsia.empire.ds.impl;
 
-import com.clarkparsia.empire.ResultSet;
+import com.clarkparsia.empire.ds.ResultSet;
 
 import java.util.Iterator;
 import java.util.Collection;
@@ -27,7 +27,7 @@ import org.openrdf.query.BindingSet;
  *
  * @author Michael Grove
  * @since 0.1
- * @version 0.6.5
+ * @version 0.7
  */
 public abstract class AbstractResultSet implements ResultSet {
 
@@ -72,7 +72,6 @@ public abstract class AbstractResultSet implements ResultSet {
 	public void remove() {
 		mIter.remove();
 	}
-
 
 	/**
 	 * @inheritDoc

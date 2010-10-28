@@ -15,17 +15,18 @@
 
 package com.clarkparsia.empire.jena;
 
-import com.clarkparsia.empire.MutableDataSource;
-import com.clarkparsia.empire.ResultSet;
-import com.clarkparsia.empire.QueryException;
-import com.clarkparsia.empire.DataSourceException;
-import com.clarkparsia.empire.SupportsTransactions;
-import com.clarkparsia.empire.impl.AbstractDataSource;
+import com.clarkparsia.empire.ds.MutableDataSource;
+import com.clarkparsia.empire.ds.ResultSet;
+import com.clarkparsia.empire.ds.QueryException;
+import com.clarkparsia.empire.ds.DataSourceException;
+import com.clarkparsia.empire.ds.TripleSource;
+import com.clarkparsia.empire.ds.SupportsTransactions;
+import com.clarkparsia.empire.ds.impl.AbstractDataSource;
 
 import java.net.ConnectException;
-import java.net.URI;
 
 import com.hp.hpl.jena.rdf.model.Model;
+import com.hp.hpl.jena.rdf.model.StmtIterator;
 import com.hp.hpl.jena.query.QueryFactory;
 import com.hp.hpl.jena.query.QueryExecutionFactory;
 import com.hp.hpl.jena.query.QueryExecution;
@@ -33,16 +34,23 @@ import com.hp.hpl.jena.query.Syntax;
 
 import com.clarkparsia.empire.jena.util.JenaSesameUtils;
 
+import static com.clarkparsia.utils.collections.CollectionUtil.transform;
+
+import com.clarkparsia.utils.Function;
+
 import org.openrdf.model.Graph;
+import org.openrdf.model.Resource;
+import org.openrdf.model.Statement;
+import org.openrdf.model.Value;
 
 /**
  * <p>Implementation of the Empire DataSource API backed by a Jena Model</p>
  *
  * @author Michael Grove
  * @since 0.1
- * @version 0.6.3
+ * @version 0.7
  */
-public class JenaDataSource extends AbstractDataSource implements MutableDataSource, SupportsTransactions {
+public class JenaDataSource extends AbstractDataSource implements MutableDataSource, TripleSource, SupportsTransactions {
 
 	/**
 	 * The underlying Jena model
@@ -107,19 +115,29 @@ public class JenaDataSource extends AbstractDataSource implements MutableDataSou
 		}
 	}
 
-	private QueryExecution query(final String theQuery) {
+	/**
+	 * @inheritDoc
+	 */
+	public boolean ask(final String theQuery) throws QueryException {
 		assertConnected();
 
-		return QueryExecutionFactory.create(QueryFactory.create(theQuery, Syntax.syntaxSPARQL), mModel);
+		QueryExecution aQueryExec = query(theQuery);
+
+		try {
+			return aQueryExec.execAsk();
+		}
+		finally {
+			aQueryExec.close();
+		}
 	}
 
 	/**
 	 * @inheritDoc
 	 */
-	public Graph describe(final URI theURI) throws DataSourceException {
+	public Graph describe(final String theQuery) throws QueryException {
 		assertConnected();
 
-		QueryExecution aQueryExec = query("describe <" + theURI + ">");
+		QueryExecution aQueryExec = query(theQuery);
 
 		try {
 			return JenaSesameUtils.asSesameGraph(aQueryExec.execDescribe());
@@ -127,6 +145,15 @@ public class JenaDataSource extends AbstractDataSource implements MutableDataSou
 		finally {
 			aQueryExec.close();
 		}
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	private QueryExecution query(final String theQuery) {
+		assertConnected();
+
+		return QueryExecutionFactory.create(QueryFactory.create(theQuery, Syntax.syntaxSPARQL), mModel);
 	}
 
 	/**
@@ -178,5 +205,21 @@ public class JenaDataSource extends AbstractDataSource implements MutableDataSou
 	 */
 	public void rollback() throws DataSourceException {
 		mModel.abort();
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+    public Iterable<Statement> getStatements(Resource subject, org.openrdf.model.URI predicate, Value object) throws DataSourceException {
+
+		final StmtIterator aStmts = mModel.listStatements(JenaSesameUtils.asJenaResource(subject), JenaSesameUtils
+		                .asJenaURI(predicate), JenaSesameUtils.asJenaNode(object));
+
+		return transform(aStmts,
+						 new Function<com.hp.hpl.jena.rdf.model.Statement, Statement>() {
+							 public Statement apply(com.hp.hpl.jena.rdf.model.Statement theStatement) {
+								 return JenaSesameUtils.asSesameStatement(theStatement);
+							 }
+						 });
 	}
 }

@@ -13,17 +13,19 @@
  * limitations under the License.
  */
 
-package com.clarkparsia.empire;
+package com.clarkparsia.empire.ds;
 
 import org.openrdf.model.Graph;
-import com.clarkparsia.empire.DataSource;
+import com.clarkparsia.empire.ds.DataSource;
+import com.clarkparsia.empire.ds.DataSourceException;
 
 /**
- * <p>Interface for a {@link com.clarkparsia.empire.DataSource} which can be mutated, that is, it supports
+ * <p>Interface for a {@link com.clarkparsia.empire.ds.DataSource} which can be mutated, that is, it supports
  * add and remove operations.</p>
  *
  * @author Michael Grove
  * @since 0.1
+ * @version 0.7
  */
 public interface MutableDataSource extends DataSource {
 	/**
@@ -36,7 +38,7 @@ public interface MutableDataSource extends DataSource {
 	/**
 	 * Remove the triples in the graph from the data source
 	 * @param theGraph the graph to remove
-	 * @throws DataSourceException thrown if there is an error while removing the triples
+	 * @throws com.clarkparsia.empire.ds.DataSourceException thrown if there is an error while removing the triples
 	 */
 	public void remove(Graph theGraph) throws DataSourceException;
 }

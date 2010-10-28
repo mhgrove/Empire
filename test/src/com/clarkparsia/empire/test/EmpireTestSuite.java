@@ -39,7 +39,7 @@ import org.junit.AfterClass;
  */
 @RunWith(Suite.class)
 @Suite.SuiteClasses({TestRdfConvert.class, TestJPA.class, TestSPI.class, TestMisc.class,
-					 TestConfig.class, TestProxyFetchAndCascade.class})
+					 TestConfig.class, TestProxyFetchAndCascade.class, TestDS.class})
 public class EmpireTestSuite {
 
 	@BeforeClass
@@ -48,5 +48,13 @@ public class EmpireTestSuite {
 		
 		Empire.init(new DefaultEmpireModule(), new OpenRdfEmpireModule(), new FourStoreEmpireModule(),
 					new JenaEmpireModule(), new TestModule());
+
+		// TODO: tests for TripleSource stuff
+		// TODO: tests for persistence injectors
+		// TODO: tests for transactions
+		// TODO: more failure tests -- badly annotated beans, misconfigured datasources, etc.
+		// TODO: 4store & sparql endpoint test configurations
+		// TODO: delegating data source tests
+		// TODO: named query tests
 	}
 }

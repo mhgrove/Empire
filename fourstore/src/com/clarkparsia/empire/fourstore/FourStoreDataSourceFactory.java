@@ -15,9 +15,9 @@
 
 package com.clarkparsia.empire.fourstore;
 
-import com.clarkparsia.empire.DataSourceFactory;
-import com.clarkparsia.empire.DataSource;
-import com.clarkparsia.empire.DataSourceException;
+import com.clarkparsia.empire.ds.DataSourceFactory;
+import com.clarkparsia.empire.ds.DataSource;
+import com.clarkparsia.empire.ds.DataSourceException;
 import com.clarkparsia.empire.ds.Alias;
 
 import java.util.Map;
@@ -37,10 +37,16 @@ import org.apache.log4j.Logger;
  *
  * @author Michael Grove
  * @since 0.1
- * @version 0.6.3
+ * @version 0.7
  */
-@Alias("4store")
+@Alias(FourStoreDataSourceFactory.ALIAS)
 public class FourStoreDataSourceFactory implements DataSourceFactory {
+
+	/**
+	 * The global alias for this factory
+	 */
+	public static final String ALIAS = "4store";
+
 	/**
 	 * The logger
 	 */
@@ -83,6 +89,10 @@ public class FourStoreDataSourceFactory implements DataSourceFactory {
 				catch (NumberFormatException e) {
 					LOGGER.warn("Invalid soft limit value specified: " + theMap.get(KEY_SOFT_LIMIT));
 				}
+			}
+			else {
+				// this is our default soft limit
+				aStore.setSoftLimit(100000);
 			}
 
 			return new FourStoreDataSource(aStore);

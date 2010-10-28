@@ -15,11 +15,14 @@
 
 package com.clarkparsia.empire.impl;
 
-import com.clarkparsia.empire.DataSourceException;
-import com.clarkparsia.empire.MutableDataSource;
-import com.clarkparsia.empire.SupportsNamedGraphs;
+import com.clarkparsia.empire.ds.DataSourceException;
+import com.clarkparsia.empire.ds.MutableDataSource;
+import com.clarkparsia.empire.ds.SupportsNamedGraphs;
 import com.clarkparsia.empire.SupportsRdfId;
-import com.clarkparsia.empire.SupportsTransactions;
+import com.clarkparsia.empire.ds.SupportsTransactions;
+import com.clarkparsia.empire.ds.DataSourceUtil;
+import com.clarkparsia.empire.ds.QueryException;
+import com.clarkparsia.empire.ds.impl.TransactionalDataSource;
 import com.clarkparsia.empire.Empire;
 import com.clarkparsia.empire.EmpireException;
 
@@ -63,6 +66,10 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Collections;
 import java.util.WeakHashMap;
+import java.util.HashMap;
+import java.util.Set;
+
+import java.net.URI;
 
 import static com.clarkparsia.empire.util.BeanReflectUtil.getAnnotatedFields;
 import static com.clarkparsia.empire.util.BeanReflectUtil.getAnnotatedGetters;
@@ -71,10 +78,13 @@ import static com.clarkparsia.empire.util.BeanReflectUtil.safeGet;
 import static com.clarkparsia.empire.util.BeanReflectUtil.safeSet;
 import static com.clarkparsia.empire.util.BeanReflectUtil.hasAnnotation;
 import static com.clarkparsia.empire.util.BeanReflectUtil.getAnnotatedMethods;
+
 import com.clarkparsia.empire.util.EmpireUtil;
 import com.clarkparsia.empire.util.BeanReflectUtil;
 import com.clarkparsia.utils.Predicate;
 import com.clarkparsia.utils.AbstractDataCommand;
+
+import com.clarkparsia.openrdf.ExtGraph;
 
 /**
  * <p>Implementation of the JPA {@link EntityManager} interface to support the persistence model over
@@ -82,9 +92,9 @@ import com.clarkparsia.utils.AbstractDataCommand;
  *
  * @author Michael Grove
  * @since 0.1
- * @version 0.6.6
+ * @version 0.7
  * @see EntityManager
- * @see com.clarkparsia.empire.DataSource
+ * @see com.clarkparsia.empire.ds.DataSource
  */
 public class EntityManagerImpl implements EntityManager {
 	/**
@@ -103,11 +113,6 @@ public class EntityManagerImpl implements EntityManager {
 	private MutableDataSource mDataSource;
 
 	/**
-	 * The DataSource wrapped in Transaction support
-	 */
-	private SupportsTransactions mTransactionSource;
-
-	/**
 	 * The current transaction
 	 */
 	private EntityTransaction mTransaction;
@@ -116,6 +121,12 @@ public class EntityManagerImpl implements EntityManager {
 	 * The Entity Listeners for our managed entities.
 	 */
 	private Map<Object, Collection<Object>> mManagedEntityListeners = new WeakHashMap<Object, Collection<Object>>();
+
+	/**
+	 * The current collapsed view of a DataSourceOperation which is a merged set of adds & removes to the DataSource.
+	 * Used during the canonical EntityManager operations such as merge, persist, remove
+	 */
+	private DataSourceOperation mOp;
 
 	/**
 	 * Create a new EntityManagerImpl
@@ -131,14 +142,6 @@ public class EntityManagerImpl implements EntityManager {
 		mIsOpen = true;
 
 		mDataSource = theSource;
-
-		if (theSource instanceof SupportsTransactions) {
-			mTransactionSource = (SupportsTransactions) theSource;
-		}
-		else {
-			// it doesnt support transactions natively, so we'll wrap it in our naive transaction support.
-			mTransactionSource = new TransactionalDataSource(theSource);
-		}
 	}
 
 	/**
@@ -223,7 +226,7 @@ public class EntityManagerImpl implements EntityManager {
 		assertStateOk(theObj);
 
 		try {
-			return EmpireUtil.exists(getDataSource(), theObj);
+			return DataSourceUtil.exists(getDataSource(), theObj);
 		}
 		catch (DataSourceException e) {
 			throw new PersistenceException(e);
@@ -317,7 +320,7 @@ public class EntityManagerImpl implements EntityManager {
 	 */
 	public EntityTransaction getTransaction() {
 		if (mTransaction == null) {
-			mTransaction = new DataSourceEntityTransaction(mTransactionSource);
+			mTransaction = new DataSourceEntityTransaction(asSupportsTransactions());
 		}
 
 		return mTransaction;
@@ -339,20 +342,24 @@ public class EntityManagerImpl implements EntityManager {
 		try {
 			prePersist(theObj);
 
+			boolean isTopOperation = (mOp == null);
+
+			DataSourceOperation aOp = new DataSourceOperation();
+
 			Graph aData = RdfGenerator.asRdf(theObj);
 
 			if (doesSupportNamedGraphs() && EmpireUtil.hasNamedGraphSpecified(theObj)) {
-				asSupportsNamedGraphs().add(EmpireUtil.getNamedGraph(theObj), aData);
+				aOp.add(EmpireUtil.getNamedGraph(theObj), aData);
 			}
 			else {
-				getDataSource().add(aData);
+				aOp.add(aData);
 			}
 
-			if (!contains(theObj)) {
-				throw new PersistenceException("Addition failed for object: " + theObj.getClass() + " -> " + EmpireUtil.asSupportsRdfId(theObj).getRdfId());
-			}
+			joinCurrentDataSourceOperation(aOp);
 
 			cascadeOperation(theObj, new IsPersistCascade(), new MergeCascade());
+
+			finishCurrentDataSourceOperation(isTopOperation);
 
 			postPersist(theObj);
 		}
@@ -368,6 +375,13 @@ public class EntityManagerImpl implements EntityManager {
 		return (MutableDataSource) getDelegate();
 	}
 
+	private void finishCurrentDataSourceOperation(boolean theIsTop) throws DataSourceException {
+		if (theIsTop) {
+			mOp.execute();
+			mOp = null;
+		}
+	}
+
 	/**
 	 * @inheritDoc
 	 */
@@ -375,28 +389,34 @@ public class EntityManagerImpl implements EntityManager {
 	public <T> T merge(final T theT) {
 		assertStateOk(theT);
 
-		assertContains(theT);
+		Graph aExistingData = assertContainsAndDescribe(theT);
 
 		try {
 			preUpdate(theT);
 
-			Graph aExistingData = EmpireUtil.describe(getDataSource(), theT);
 			Graph aData = RdfGenerator.asRdf(theT);
+
+			boolean isTopOperation = (mOp == null);
+
+			DataSourceOperation aOp = new DataSourceOperation();
 
 			if (doesSupportNamedGraphs() && EmpireUtil.hasNamedGraphSpecified(theT)) {
 				java.net.URI aGraphURI = EmpireUtil.getNamedGraph(theT);
 
-				asSupportsNamedGraphs().remove(aGraphURI, aExistingData);
-				asSupportsNamedGraphs().add(aGraphURI, aData);
+				aOp.remove(aGraphURI, aExistingData);
+				aOp.add(aGraphURI, aData);
 			}
 			else {
-				getDataSource().remove(aExistingData);
-
-				getDataSource().add(aData);
+				aOp.remove(aExistingData);
+				aOp.add(aData);
 			}
+
+			joinCurrentDataSourceOperation(aOp);
 
 			// cascade the merge
 			cascadeOperation(theT, new IsMergeCascade(), new MergeCascade());
+
+			finishCurrentDataSourceOperation(isTopOperation);
 
 			postUpdate(theT);
 
@@ -410,10 +430,21 @@ public class EntityManagerImpl implements EntityManager {
 		}
 	}
 
+	private void joinCurrentDataSourceOperation(final DataSourceOperation theOp) {
+		if (mOp == null) {
+			mOp = theOp;
+		}
+		else {
+			mOp.merge(theOp);
+		}
+	}
+
 	private <T> void cascadeOperation(T theT, CascadeTest theCascadeTest, CascadeAction theAction) {
 		Collection<AccessibleObject> aAccessors = new HashSet<AccessibleObject>();
+		
 		aAccessors.addAll(getAnnotatedFields(theT.getClass()));
 		aAccessors.addAll(getAnnotatedGetters(theT.getClass(), true));
+
 		for (AccessibleObject aObj : aAccessors) {
 			if (theCascadeTest.accept(aObj)) {
 				try {
@@ -503,10 +534,14 @@ public class EntityManagerImpl implements EntityManager {
 	public void remove(final Object theObj) {
 		assertStateOk(theObj);
 
-		assertContains(theObj);
+		Graph aData = assertContainsAndDescribe(theObj);
 
 		try {
 			preRemove(theObj);
+
+			boolean isTopOperation = (mOp == null);
+
+			DataSourceOperation aOp = new DataSourceOperation();
 
 			// we were transforming the current object to RDF and deleting that, but i dont think that's the intended
 			// behavior.  you want to delete everything about the object in the database, not the properties specifically
@@ -515,29 +550,26 @@ public class EntityManagerImpl implements EntityManager {
 			// i.e. everything where its in the subject position.
 
 			//Graph aData = RdfGenerator.asRdf(theObj);
-			Graph aData = EmpireUtil.describe(getDataSource(), theObj);
+			//Graph aData = DataSourceUtil.describe(getDataSource(), theObj);
 
 			if (doesSupportNamedGraphs() && EmpireUtil.hasNamedGraphSpecified(theObj)) {
-				asSupportsNamedGraphs().remove(EmpireUtil.getNamedGraph(theObj), aData);
+				aOp.remove(EmpireUtil.getNamedGraph(theObj), aData);
 			}
 			else {
-				getDataSource().remove(aData);
+				aOp.remove(aData);
 			}
 
-			if (contains(theObj)) {
-				throw new PersistenceException("Remove failed for object: " + theObj.getClass() + " -> " + EmpireUtil.asSupportsRdfId(theObj).getRdfId());
-			}
+			joinCurrentDataSourceOperation(aOp);
 
 			cascadeOperation(theObj, new IsRemoveCascade(), new RemoveCascade());
+
+			finishCurrentDataSourceOperation(isTopOperation);
 
 			postRemove(theObj);
 		}
 		catch (DataSourceException ex) {
 			throw new PersistenceException(ex);
 		}
-//		catch (InvalidRdfException ex) {
-//			throw new IllegalStateException(ex);
-//		}
 	}
 
 	/**
@@ -547,7 +579,7 @@ public class EntityManagerImpl implements EntityManager {
 		assertOpen();
 
 		try {
-			if (EmpireUtil.exists(getDataSource(), EmpireUtil.asPrimaryKey(theObj))) {
+			if (DataSourceUtil.exists(getDataSource(), EmpireUtil.asPrimaryKey(theObj))) {
 				T aT = RdfGenerator.fromRdf(theClass, EmpireUtil.asPrimaryKey(theObj), getDataSource());
 
 				postLoad(aT);
@@ -589,6 +621,31 @@ public class EntityManagerImpl implements EntityManager {
 	private void assertContains(Object theObj) {
 		if (!contains(theObj)) {
 			throw new IllegalArgumentException("Entity does not exist: " + theObj);
+		}
+	}
+
+	/**
+	 * Performs the same checks as assertContains, but returns the Graph describing the resource as a result so you
+	 * do not need to perform a subsequent call to the database to get the data that is checked during containment
+	 * checks in the first place, thus saving a query to the database.
+	 * @param theObj the object that should exist.
+	 * @return The graph describing the resource
+	 * @throws IllegalArgumentException thrown if the object does not exist in the database
+	 */
+	private ExtGraph assertContainsAndDescribe(Object theObj) {
+		assertStateOk(theObj);
+
+		try {
+			ExtGraph aGraph = DataSourceUtil.describe(getDataSource(), theObj);
+
+			if (aGraph.isEmpty()) {
+				throw new IllegalArgumentException("Entity does not exist: " + theObj);
+			}
+
+			return aGraph;
+		}
+		catch (QueryException e) {
+			throw new PersistenceException(e);
 		}
 	}
 
@@ -692,11 +749,27 @@ public class EntityManagerImpl implements EntityManager {
 
 	/**
 	 * Returns a reference to an object (the data source) which can perform operations on named sub-graphs
-	 * @return the data source as a {@link SupportsNamedGraphs}
+	 * @return the data source as a {@link com.clarkparsia.empire.ds.SupportsNamedGraphs}
 	 * @throws ClassCastException thrown if the data source does not implements SupportsNamedGraphs
 	 */
 	private SupportsNamedGraphs asSupportsNamedGraphs() {
 		return (SupportsNamedGraphs) getDataSource();
+	}
+
+	/**
+	 * Returns a reference to an object (the DataSource) which supports Transactions.  Transaction support is
+	 * provided by either the DataSource's native transaction support, or via our naive
+	 * {@link TransactionalDataSource transactional wrapper}.
+	 * @return a source which supports transactions
+	 */
+	private SupportsTransactions asSupportsTransactions() {
+		if (mDataSource instanceof SupportsTransactions) {
+			return (SupportsTransactions) mDataSource;
+		}
+		else {
+			// it doesnt support transactions natively, so we'll wrap it in our naive transaction support.
+			return new TransactionalDataSource(mDataSource);
+		}
 	}
 
 	/**
@@ -826,5 +899,166 @@ public class EntityManagerImpl implements EntityManager {
 		}
 
 		return aListeners;
+	}
+
+	/**
+	 * Class which encapsulates a set of adds & removes to a DataSource.  Used to process a set of changes in a single
+	 * operation, well, two operations.  Remove and then Add.  Also will verify that all objects that should have been
+	 * added/removed from the KB have been added or removed.
+	 * @author Michael Grove
+	 * @since 0.7
+	 * @version 0.7
+	 */
+	protected class DataSourceOperation {
+		// HashMap's used here rather than the more generic Map interface because we allow null keys (no specified
+		// named graph) which HashMap allows, while generically Map makes no guarantees about this, so we're explicit here.
+
+		private HashMap<java.net.URI, Graph> mAdd;
+		private HashMap<java.net.URI, Graph> mRemove;
+		//private MutableDataSource mSource;
+
+		private Set<Object> mVerifyAdd = new HashSet<Object>();
+		private Set<Object> mVerifyRemove = new HashSet<Object>();
+
+		/**
+		 * Create a new DataSourceOperation
+		 */
+		DataSourceOperation() {
+			mAdd = new HashMap<java.net.URI, Graph>();
+			mRemove = new HashMap<java.net.URI, Graph>();
+		}
+
+		/**
+		 * Execute this operation.  Removes & adds all the specified data in as few database calls as possible.  Then
+		 * verifies the results of the operations
+		 * @throws DataSourceException if there is an error while performing the add/remove operations
+		 * @throws PersistenceException if any objects were failed to be added or removed from the database
+		 */
+		public void execute() throws DataSourceException {
+			// TODO: should this be in its own transaction?  or join the current one?
+
+			for (URI aGraphURI : mRemove.keySet()) {
+				if (doesSupportNamedGraphs() && aGraphURI != null) {
+					asSupportsNamedGraphs().remove(aGraphURI, mRemove.get(aGraphURI));
+				}
+				else {
+					getDataSource().remove(mRemove.get(aGraphURI));
+				}
+			}
+
+			for (URI aGraphURI : mAdd.keySet()) {
+				if (doesSupportNamedGraphs() && aGraphURI != null) {
+					asSupportsNamedGraphs().add(aGraphURI, mAdd.get(aGraphURI));
+				}
+				else {
+					getDataSource().add(mAdd.get(aGraphURI));
+				}
+			}
+
+			verify();
+		}
+
+		/**
+		 * Add the specified object to the list of objects that should be removed from the database when this operation
+		 * is executed.
+		 * @param theObj the object that should be revmoed from the database when the operation is executed
+		 */
+		public void verifyRemove(Object theObj) {
+			mVerifyRemove.add(theObj);
+		}
+
+		/**
+		 * Add the specified object to the list of objects that should be added to the database when this operation
+		 * is executed.
+		 * @param theObj the object that should be added to the database when the operation is executed
+		 */
+		public void verifyAdd(Object theObj) {
+			mVerifyAdd.add(theObj);
+		}
+
+		/**
+		 * Verify that all the objects to be added/removed were completed successfully.
+		 * @throws PersistenceException if an add or remove failed for any reason
+		 */
+		private void verify() {
+			for (Object aObj : mVerifyRemove) {
+				if (contains(aObj)) {
+					throw new PersistenceException("Remove failed for object: " + aObj.getClass() + " -> " + EmpireUtil.asSupportsRdfId(aObj).getRdfId());
+				}
+			}
+
+			for (Object aObj : mVerifyAdd) {
+				if (!contains(aObj)) {
+					throw new PersistenceException("Addition failed for object: " + aObj.getClass() + " -> " + EmpireUtil.asSupportsRdfId(aObj).getRdfId());
+				}
+			}
+		}
+
+		/**
+		 * Add this graph to the set of data to be added when this operation is executed
+		 * @param theGraph the graph to be added
+		 */
+		public void add(Graph theGraph) {
+			add(null, theGraph);
+		}
+
+		/**
+		 * Add this graph to the set of data to be added, to the specified named graph, when this operation is executed
+		 * @param theGraphURI the named graph the data should be added to
+		 * @param theGraph the data to add
+		 */
+		public void add(java.net.URI theGraphURI, Graph theGraph) {
+			Graph aGraph = mAdd.get(theGraphURI);
+
+			if (aGraph == null) {
+				aGraph = new ExtGraph();
+			}
+
+			aGraph.addAll(theGraph);
+
+			mAdd.put(theGraphURI, aGraph);
+		}
+		/**
+		 * Add this graph to the set of data to be removed when this operation is executed
+		 * @param theGraph the graph to be removed
+		 */
+		public void remove(Graph theGraph) {
+			remove(null, theGraph);
+		}
+
+		/**
+		 * Add this graph to the set of data to be removed, from the specified named graph, when this operation is executed
+		 * @param theGraphURI the named graph the data should be removed from
+		 * @param theGraph the data to remove
+		 */
+		public void remove(java.net.URI theGraphURI, Graph theGraph) {
+			Graph aGraph = mRemove.get(theGraphURI);
+
+			if (aGraph == null) {
+				aGraph = new ExtGraph();
+			}
+
+			aGraph.addAll(theGraph);
+
+			mRemove.put(theGraphURI, aGraph);
+		}
+
+		/**
+		 * Merge the operation with this one.  This will merge all the changes being tracked into a single operation.
+		 * @param theOp the operation to merge
+		 */
+		public void merge(final DataSourceOperation theOp) {
+
+			for (Map.Entry<URI, Graph> aEntry : theOp.mRemove.entrySet()) {
+				remove(aEntry.getKey(), aEntry.getValue());
+			}
+
+			for (Map.Entry<URI, Graph> aEntry : theOp.mAdd.entrySet()) {
+				add(aEntry.getKey(), aEntry.getValue());
+			}
+
+			mVerifyAdd.addAll(theOp.mVerifyAdd);
+			mVerifyRemove.addAll(theOp.mVerifyRemove);
+		}
 	}
 }

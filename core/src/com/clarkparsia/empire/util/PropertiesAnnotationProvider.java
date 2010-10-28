@@ -139,7 +139,7 @@ public class PropertiesAnnotationProvider implements EmpireAnnotationProvider {
 					}
 				}
 				catch (ClassNotFoundException e) {
-					LOGGER.warn("Class specified in AnnotationProvider file '" + aName + "' cannot be found.", e);
+					LOGGER.warn("Class specified in AnnotationProvider file '" + aName + "' cannot be found.");
 				}
 			}
 		}

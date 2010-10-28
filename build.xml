@@ -9,7 +9,7 @@
 	<property environment="env"/>
 
 	<property name="project.name" value="empire"/>
-	<property name="project.version" value="0.6.6"/>
+	<property name="project.version" value="0.7"/>
 
 	<property name="core.dir" location="core"/>
 	<property name="jena.dir" location="jena"/>
@@ -146,6 +146,10 @@
 		<copy todir="${core.build.dir}">
 			<fileset dir="${core.dir}/resources">
 				<include name="**/*"/>
+			</fileset>
+			<fileset dir="${core.dir}/src">
+				<include name="**/*"/>
+				<exclude name="**/*.java"/>
 			</fileset>
 		</copy>
 

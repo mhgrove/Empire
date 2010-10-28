@@ -15,19 +15,17 @@
 
 package com.clarkparsia.empire.annotation.runtime;
 
-import com.clarkparsia.empire.DataSource;
+import com.clarkparsia.empire.ds.DataSource;
 import com.clarkparsia.empire.SupportsRdfId;
 
 import com.clarkparsia.empire.annotation.RdfGenerator;
-
-import java.net.URI;
 
 /**
  * <p>Wrapper class which serves as a proxy for an object to the database.</p>
  *
  * @author Michael Grove
  * @since 0.5
- * @version 0.6.3
+ * @version 0.7
  */
 public class Proxy<T> {
 
@@ -79,5 +77,14 @@ public class Proxy<T> {
 		}
 
 		return mValue;
+	}
+
+	/**
+	 * Return the type of the object this is proxying for
+	 * @return the object type
+	 * @see #value
+	 */
+	public Class<T> getProxyClass() {
+		return mClass;
 	}
 }

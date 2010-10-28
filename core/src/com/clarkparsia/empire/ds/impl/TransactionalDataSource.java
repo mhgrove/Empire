@@ -13,19 +13,18 @@
  * limitations under the License.
  */
 
-package com.clarkparsia.empire.impl;
+package com.clarkparsia.empire.ds.impl;
 
 import org.openrdf.model.Graph;
-import com.clarkparsia.empire.DataSource;
-import com.clarkparsia.empire.DataSourceException;
-import com.clarkparsia.empire.MutableDataSource;
-import com.clarkparsia.empire.QueryException;
+import com.clarkparsia.empire.ds.DataSource;
+import com.clarkparsia.empire.ds.DataSourceException;
+import com.clarkparsia.empire.ds.QueryException;
+import com.clarkparsia.empire.ds.MutableDataSource;
+import com.clarkparsia.empire.ds.ResultSet;
 import com.clarkparsia.empire.QueryFactory;
-import com.clarkparsia.empire.ResultSet;
-import com.clarkparsia.empire.SupportsTransactions;
+import com.clarkparsia.empire.ds.SupportsTransactions;
 import com.clarkparsia.openrdf.ExtGraph;
 
-import java.net.URI;
 import java.net.ConnectException;
 
 /**
@@ -36,7 +35,7 @@ import java.net.ConnectException;
  *
  * @author Michael Grove
  * @since 0.1
- * @version 0.6.1
+ * @version 0.7
  */
 public class TransactionalDataSource implements DataSource, MutableDataSource, SupportsTransactions {
 
@@ -63,7 +62,7 @@ public class TransactionalDataSource implements DataSource, MutableDataSource, S
 	/**
 	 * @inheritDoc
 	 */
-	protected TransactionalDataSource(final MutableDataSource theDataSource) {
+	public TransactionalDataSource(final MutableDataSource theDataSource) {
 		mDataSource = theDataSource;
 
 		mRemoveGraph = new ExtGraph();
@@ -174,6 +173,20 @@ public class TransactionalDataSource implements DataSource, MutableDataSource, S
 	/**
 	 * @inheritDoc
 	 */
+	public Graph describe(final String theQuery) throws QueryException {
+		return mDataSource.describe(theQuery);
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public boolean ask(final String theQuery) throws QueryException {
+		return mDataSource.ask(theQuery);
+	}
+
+	/**
+	 * @inheritDoc
+	 */
 	public QueryFactory getQueryFactory() {
 		return mDataSource.getQueryFactory();
 	}
@@ -188,7 +201,7 @@ public class TransactionalDataSource implements DataSource, MutableDataSource, S
 
 	/**
 	 * Asserts that this DataSource should not be in a transaction
-	 * @throws com.clarkparsia.empire.DataSourceException thrown if the data source is in a transaction
+	 * @throws com.clarkparsia.empire.ds.DataSourceException thrown if the data source is in a transaction
 	 */
 	private void assertNotInTransaction() throws DataSourceException {
 		if (isInTransaction()) {

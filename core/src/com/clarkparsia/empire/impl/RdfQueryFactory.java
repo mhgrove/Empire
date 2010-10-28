@@ -15,7 +15,7 @@
 
 package com.clarkparsia.empire.impl;
 
-import com.clarkparsia.empire.DataSource;
+import com.clarkparsia.empire.ds.DataSource;
 import com.clarkparsia.empire.QueryFactory;
 import com.clarkparsia.empire.Empire;
 import com.clarkparsia.empire.Dialect;
@@ -145,7 +145,7 @@ public class RdfQueryFactory implements QueryFactory {
 				aQuery.setHint(aHint.name(), aHint.value());
 			}
 
-			aQuery.setSource(mSource);
+			aQuery.setSource(getSource());
 
 			return aQuery;
 		}

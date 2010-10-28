@@ -318,10 +318,10 @@
 
     		<classpath refid="project.class.path"/>
   		</junit>
-
   		<junitreport todir="dist/test-reports">
     		<fileset dir="dist/test-reports">
       			<include name="TEST-*.xml" />
+      			<include name="report.xml" />
     		</fileset>
     		<report todir="dist/test-reports" />
   		</junitreport>

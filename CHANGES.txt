@@ -3,7 +3,7 @@ Change Log
 
 Empire 0.7 (TBD)
 =========================
-	* MODIFIED: Repackaged all DataSource specific classes into the com.clarkparsia.empire.ds package.
+	* MODIFIED: Repackaged all DataSource specific classes into the com.clarkparsia.empire.ds package. (issue #25)
 	* MODIFIED: Moved some DataSource specific functions from EmpireUtil to DataSourceUtil
 	* MODIFIED: Query results can returned proxied objects, allowing users to defer the loading of the results until they
 				iterate over them.  Disable/Enabling this feature is controlled via EmpireOptions.
@@ -11,6 +11,7 @@ Empire 0.7 (TBD)
 				compacted; the amount of calls to the DataSource has been greatly reduced resulting in a large performance
 				increase when cascading persistence operations, and a modest increase overall.
 	* MODIFIED: Global config passed through to EntityManagers in the unit config so parameters do not have to be duplicated.
+	* MODIFIED: Properties mapped as collections, with no values, return empty collections instead of null. (issue #40)
 	* ADDED: TripleSource interface for allowing triple-level access to a DataSource
 	* ADDED: Ask & Describe query methods introduced to DataSource interface.  Best effort implementations provided for DataSources which do not implement these natively.
 	* ADDED: Query type specific methods to RdfQuery to allow direct access to the query results from the DataSource
@@ -21,15 +22,15 @@ Empire 0.7 (TBD)
 	* ADDED: Added support to automatically "infer" RdfProperty annotations when they are not present.  When flag in EmpireOptions is enabled, RdfGenerator
 			 will try to map all fields of a bean, regardless of whether or not RdfProperty annotation is present or not.  Transient annotations can
 			 'hide' these fields from being mapped.  This is more inline with how normal JPA implementations work. (issue #19)
-	* ADDED: Simple cache to support reflection which increases performance of the serialization/deserialization into and out of Java.
-	* FIXED: Bug where global configuration information was not being passed through to the individual unit configurations
+	* ADDED: Simple cache to support reflection which increases performance of the serialization/deserialization into and out of Java. (issue #44)
 	* FIXED: Several issues with the SPARQL endpoint data source implementation
 	* FIXED: Bug in InstanceGenerator where the class/interface hierarchy was not being used to generate the bytecode resulting in AbstractMethodError's (issue #38)
-	* FIXED: Upgraded to Javassist 3.14.0 and altered how proxies are created when objects are constructed.  This solves both the PermGen OutOfMemory error 
+	* FIXED: Upgraded to Javassist 3.14.0 and altered how proxies are created when objects are constructed.  This solves both the PermGen OutOfMemory error  (issue #52)
 	         regarding a bug in Javassist and resolves a significant memory leak within RdfGenerator.
 	* FIXED: Bug in BNode detection for building and using them as primary keys for instances
-	* FIXED: Bug in InstanceGenerator to allow creating instances of abstract classes
-	* REMOVED: Global flag in EmpireOptions for handling proxying, this is now completely controlled via JPA annotations
+	* FIXED: Bug in InstanceGenerator to allow creating instances of abstract classes (issue #38)
+	* FIXED: Ant/JUnit integration, annotation configuration was not correctly configured and the xml for the JUnit reports was missing (from patch from ManuelB) (issue #49-51)
+	* REMOVED: Global flag in EmpireOptions for handling proxying, this is now completely controlled via JPA annotations (issue #32)
 
 Empire 0.6.6 (2010-07-08)
 =========================

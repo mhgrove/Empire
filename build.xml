@@ -14,6 +14,7 @@
 	<property name="core.dir" location="core"/>
 	<property name="jena.dir" location="jena"/>
 	<property name="fourstore.dir" location="fourstore"/>
+	<property name="icu4j.dir" location="icu4j"/>
 	<property name="sesame.dir" location="sesame2"/>
 	<property name="test.dir" location="test"/>
 
@@ -26,6 +27,7 @@
 	<property name="core.lib.dir" location="${core.dir}/lib"/>
 	<property name="jena.lib.dir" location="${jena.dir}/lib"/>
 	<property name="fourstore.lib.dir" location="${fourstore.dir}/lib"/>
+	<property name="icu4j.lib.dir" location="${icu4j.dir}/lib"/>
 	<property name="test.lib.dir" location="${jena.dir}/lib"/>
 
 	<property name="build.dir" location="build"/>
@@ -64,6 +66,12 @@
 			<include name="**/*.jar"/>
 			<exclude name="**/${project.name}*.jar"/>
 		</fileset>
+        
+        <fileset dir="${icu4j.lib.dir}">
+			<include name="**/*.jar"/>
+			<exclude name="**/${project.name}*.jar"/>
+		</fileset>
+
 
 		<fileset dir="${test.lib.dir}">
 			<include name="**/*.jar"/>
@@ -174,6 +182,12 @@
 				<include name="**/*.jar"/>
 				<include name="**/*.txt"/>
 			</fileset>
+
+			<fileset dir="${icu4j.lib.dir}">
+				<include name="**/*.jar"/>
+				<include name="**/*.txt"/>
+			</fileset>
+
 
 			<fileset dir="${test.lib.dir}">
 				<include name="**/*.jar"/>

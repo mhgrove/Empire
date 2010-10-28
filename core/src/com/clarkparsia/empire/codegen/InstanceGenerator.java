@@ -268,20 +268,24 @@ public class InstanceGenerator {
 		Map<String, Class> aMap = new HashMap<String, Class>();
 
 		for (Method aMethod : theClass.getDeclaredMethods()) {
+
+			// see if we've already processed this method.  Normal .equals for a method will not work because the classes have to be the same,
+			// what we want is the semantics of isAssignableFrom, not .equals between the classes declaring the methods.  Thus, the FINDER
+			// predicate implementation does exactly that.  It's a copy of the Method.equals function, but with the .equals for the declaring
+			// class changed to isAssignableFrom so we get the expected behavior.
 			FINDER.method = aMethod;
+
 			if (find(processedMethods, FINDER)) {
 				continue;
 			}
 
 			// we want to ignore methods with implementations, we should not override them.
 			if (!Modifier.isAbstract(aMethod.getModifiers())) {
+
+				// mark the method as one we've already handled in case we get this method again on a superclass/interface
 				processedMethods.add(aMethod);
 				continue;
 			}
-
-			String aProp = aMethod.getName().substring(aMethod.getName().startsWith("is") ? 2 : 3);
-
-			aProp = String.valueOf(aProp.charAt(0)).toLowerCase() + aProp.substring(1);
 
 			if (!aMethod.getName().startsWith("get")
 				&& !aMethod.getName().startsWith("is")
@@ -290,6 +294,10 @@ public class InstanceGenerator {
 
 				throw new IllegalArgumentException("Non-bean style methods found, implementations for them cannot not be generated.  Method was: " + aMethod);
 			}
+
+			String aProp = aMethod.getName().substring(aMethod.getName().startsWith("is") ? 2 : 3);
+
+			aProp = String.valueOf(aProp.charAt(0)).toLowerCase() + aProp.substring(1);
 
 			Class aType = null;
 
@@ -304,6 +312,7 @@ public class InstanceGenerator {
 				aMap.put(aProp, aType);
 			}
 
+			// mark the method as one we've already handled in case we get this method again on a superclass/interface
 			processedMethods.add(aMethod);
 		}
 
@@ -323,9 +332,9 @@ public class InstanceGenerator {
 	/**
 	 * Basically a copy of Method.equals, but rather than enforcing a strict equals, it tests for "overridable" equals.  So this will
 	 * return true if the methods are .equals or if the second method can override the first.
-	 * @param obj
-	 * @param other
-	 * @return
+	 * @param obj the first object
+	 * @param other the other object
+	 * @return true if the method is equal to or overrides the other, false otherwise
 	 */
 	private static boolean overrideEquals(Method obj, Method other) {
 		if ((other.getDeclaringClass().isAssignableFrom(obj.getDeclaringClass())) && (obj.getName().equals(other.getName()))) {

@@ -125,10 +125,10 @@
 	<target name="compile-test" depends="init, compile-core">
 		<mkdir dir="${test.build.dir}"/>
 
-		<javac debug="${javac.debug}" source="1.5" target="1.5" destdir="${test.build.dir}">
+		<apt debug="${javac.debug}" source="1.5" target="1.5" factory="com.clarkparsia.empire.util.apt.EmpireAnnotationProcessorFactory" destdir="${test.build.dir}">
 			<src path="${test.src.dir}"/>
 			<classpath refid="project.class.path"/>
-		</javac>
+		</apt>
 	</target>
 
 	<target name="build" depends="compile">
@@ -322,7 +322,8 @@
 
     		<classpath refid="project.class.path"/>
   		</junit>
-  		<junitreport todir="dist/test-reports">
+  
+		<junitreport todir="dist/test-reports">
     		<fileset dir="dist/test-reports">
       			<include name="TEST-*.xml" />
       			<include name="report.xml" />

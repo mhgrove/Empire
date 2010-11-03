@@ -1,20 +1,13 @@
 package com.clarkparsia.empire.sql;
 
-import java.io.PrintWriter;
-import java.sql.Connection;
-import java.sql.SQLException;
-
 import javax.annotation.PostConstruct;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
 
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
-
 /**
  * Datasource using JNDI context to provide connections
- * @author ultan
+ * @author uoccou
  *
  */
 public class DSJndi extends AbstractSqlDS{

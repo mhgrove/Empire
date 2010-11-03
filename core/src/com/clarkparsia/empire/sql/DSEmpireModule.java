@@ -15,13 +15,8 @@
 
 package com.clarkparsia.empire.sql;
 
-import com.google.inject.multibindings.Multibinder;
-
-import com.google.inject.AbstractModule;
-
-import com.clarkparsia.empire.ds.DataSourceFactory;
-
 import com.clarkparsia.empire.util.EmpireModule;
+import com.google.inject.AbstractModule;
 
 /**
  * <p>Guice module for initialising DataSourceManager singleton</p>

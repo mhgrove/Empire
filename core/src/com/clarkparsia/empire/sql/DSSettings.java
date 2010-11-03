@@ -18,7 +18,7 @@ import org.apache.commons.logging.LogFactory;
  * <li>maxIdle (default 5)</li>
  * <li>maxWait (default 5000)</li>
  * </ul>
- * @author ultan
+ * @author uoccou
  *
 http://purl.org/skytwenty/regperson.owl#Location/http://purl.org/skytwenty/regperson.owl#Location/http%3A%2F%2Fpurl.org%2Fskytwenty%2Fregperson.owl%23OpenIDRegisteredPerson%2Fhttp%253A%252F%252Fwww.google.com%252Fprofiles%252FTreasureCorpIsland%252F_ANY_Midp21+Device_84766997133853%2F
  */

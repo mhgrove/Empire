@@ -20,14 +20,13 @@ import com.clarkparsia.empire.config.io.ConfigReader;
 import com.clarkparsia.empire.config.io.impl.PropertiesConfigReader;
 import com.clarkparsia.empire.config.io.impl.XmlConfigReader;
 import com.clarkparsia.empire.util.BeanReflectUtil;
-import com.clarkparsia.empire.util.DefaultEmpireModule;
 import static com.clarkparsia.empire.jena.JenaConfig.*;
 /**
  * Creates and caches Data sources defined in empire.properties and from JNDI.
  * Uses instance of {@link DSSettings}
  * Duplicates most of EmpireConfiguration initialisation as seen in DefaultEmpireModule. 
  * @TODO replace duplicate code with Singleton EmpireConfigration ?
- * @author ultan
+ * @author uoccou
  *
  */
 public class DataSourceManager {

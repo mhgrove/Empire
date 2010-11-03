@@ -11,6 +11,12 @@ import javax.sql.DataSource;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
+/**
+ * Abstract basic functionality for DataSource wrappers
+ * 
+ * @author uoccou
+ *
+ */
 public abstract class AbstractSqlDS implements DataSource {
 	protected final Logger LOGGER = LogManager.getLogger(this.getClass());
 	private DataSource ds = null;

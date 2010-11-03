@@ -1,9 +1,5 @@
 package com.clarkparsia.empire.sql;
 
-import java.io.PrintWriter;
-import java.sql.Connection;
-import java.sql.SQLException;
-
 import javax.annotation.PostConstruct;
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -12,16 +8,10 @@ import javax.naming.Reference;
 import javax.naming.StringRefAddr;
 import javax.sql.DataSource;
 
-
-import org.apache.commons.dbcp.BasicDataSource;
-
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
-
 /**
  * javax.sql.Datasource using DBCP BasicDataSourceFactory
  * 
- * @author ultan
+ * @author uoccou
  *
  */
 public class DSContext extends AbstractSqlDS{

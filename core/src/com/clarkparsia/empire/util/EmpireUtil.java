@@ -187,13 +187,19 @@ public class EmpireUtil {
 	 */
 	public static <T> List<T> all(EntityManager theManager, Class<T> theClass) {
 		List<T> aList = new ArrayList<T>();
-
+		LOGGER.debug("Starting read all");
+		long start = System.currentTimeMillis();
+		
 		if (!AnnotationChecker.isValid(theClass) || !(theManager.getDelegate() instanceof DataSource)) {
 			return aList;
 		}
-
+		LOGGER.debug("Class valid check : " + (System.currentTimeMillis() - start));
+		start = System.currentTimeMillis();
+		
 		RdfsClass aClass = theClass.getAnnotation(RdfsClass.class);
-
+		LOGGER.debug("Got annotation : " + (System.currentTimeMillis() - start));
+		start = System.currentTimeMillis();
+		
 		// this init should be handled by the static block in RdfGenerator, but if there is no annotation index,
 		// or RdfGenerator has not been referenced, the namespace stuff will not have been initialized.  so we'll
 		// call this here as a backup.
@@ -201,23 +207,38 @@ public class EmpireUtil {
 
 		QueryBuilder<ParsedTupleQuery> aQuery = QueryBuilderFactory.select("result").distinct()
 				.group().atom("result", RDF.TYPE, ValueFactoryImpl.getInstance().createURI(NamespaceUtils.uri(aClass.value()))).closeGroup();
-
+		
+		LOGGER.debug("Created query : " + (System.currentTimeMillis() - start));
+		start = System.currentTimeMillis();
+		
 		String aQueryStr = null;
 
 		try {
 			DataSource aSource = (DataSource) theManager.getDelegate();
+			LOGGER.debug("Got source : " + (System.currentTimeMillis() - start));
+			start = System.currentTimeMillis();
+			
 			if (aSource.getQueryFactory().getDialect() instanceof SPARQLDialect) {
 				aQueryStr = new SPARQLQueryRenderer().render(aQuery.query());
 			}
 			else if (aSource.getQueryFactory().getDialect() instanceof SerqlDialect) {
 				aQueryStr = new SeRQLQueryRenderer().render(aQuery.query());
 			}
+			LOGGER.debug("Got query string : " + (System.currentTimeMillis() - start));
+			start = System.currentTimeMillis();
+			
 		}
 		catch (Exception e) {
 			throw new PersistenceException(e);
 		}
-
+		
+		if(LOGGER.isDebugEnabled())
+			LOGGER.debug("EntityManager open : " + theManager.isOpen() ) ;
+		
 		List aResults = theManager.createNativeQuery(aQueryStr, theClass).getResultList();
+		LOGGER.debug("Created native query : " + (System.currentTimeMillis() - start));
+		start = System.currentTimeMillis();
+		
 		for (Object aObj : aResults) {
 			try {
 				aList.add( theClass.cast(aObj));
@@ -225,6 +246,9 @@ public class EmpireUtil {
 			catch (ClassCastException e) {
 				throw new PersistenceException(e);
 			}
+			LOGGER.debug("Added result item : " + (System.currentTimeMillis() - start));
+			start = System.currentTimeMillis();
+			
 		}
 
 		return aList;
@@ -275,4 +299,5 @@ public class EmpireUtil {
 			throw new IllegalArgumentException(theObj + " is not a valid primary key, it is not a URI.", e);
 		}
 	}
+
 }

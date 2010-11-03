@@ -40,16 +40,20 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
 
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
+
 /**
  * <p>Default implementation for creating DataSources backed by Jena models</p>
  *
  * @author Michael Grove
+ *  @author uoccou
  * @since 0.6.3
  * @version 0.6.3
  */
 @Alias("jena")
 public class DefaultJenaDataSourceFactory extends JenaDataSourceFactory implements JenaConfig {
-
+	private final Logger LOGGER = LogManager.getLogger(this.getClass());
 	/**
 	 * @inheritDoc
 	 */
@@ -62,23 +66,60 @@ public class DefaultJenaDataSourceFactory extends JenaDataSourceFactory implemen
 	 * @inheritDoc
 	 */
 	public DataSource create(final Map<String, Object> theMap) throws DataSourceException {
+		
+		DataSource ds = null;
 		Model aModel = createModel(theMap);
+		
+		if ( null != aModel ) {
 
-		if (theMap.containsKey(STREAM) && theMap.containsKey(FORMAT)) {
-			load(aModel, asReader(theMap.get(STREAM)),
-				 theMap.get(FORMAT).toString(),
-				 theMap.containsKey(BASE) ? theMap.get(BASE).toString() : "");
+			LOGGER.debug("Got a model - creating DataSource ");
+			
+			if (theMap.containsKey(STREAM) && theMap.containsKey(FORMAT)) {
+				load(aModel, asReader(theMap.get(STREAM)),
+					 theMap.get(FORMAT).toString(),
+					 theMap.containsKey(BASE) ? theMap.get(BASE).toString() : "");
+			}
+	
+			if (theMap.containsKey(FILES)) {
+				loadFiles(aModel,
+						  theMap.get(FILES).toString(),
+						  theMap.containsKey(BASE) ? theMap.get(BASE).toString() : "");
+			}
+	
+			if ( isTdb(theMap) ) {
+				ds = new TDBJenaDataSource(aModel);	
+				//
+				//@uoccou would be nicer to user TransactionalDataSource but needs something like
+				//TDB.sync(((TDBModel)((JenaDataSource)DataSourceUtil.asTripleStore(mDataSource)).getModel()))
+				//
+				//ds = new TransactionalDataSource(new JenaDataSource(aModel));
+			}
+			else {
+				//only TDB needs special treatment atm
+				ds = new JenaDataSource(aModel);
+				
+			}
+		} else {
+			LOGGER.error("Could not get a model - not creating DataSource. ");
 		}
-
-		if (theMap.containsKey(FILES)) {
-			loadFiles(aModel,
-					  theMap.get(FILES).toString(),
-					  theMap.containsKey(BASE) ? theMap.get(BASE).toString() : "");
-		}
-
-		return new JenaDataSource(aModel);
+		
+		return ds;
 	}
 
+	/**
+	 * like isTdb in {@link JenaDataSourceFactory#isTdb(String)} but uses whole config map
+	 * @param theConfig
+	 * @return
+	 */
+	private boolean isTdb(Map<String,Object> theConfig) {
+		boolean rc = false;
+		if (theConfig.containsKey(TYPE)) {
+			String aType = theConfig.get(TYPE).toString();
+			if (isTdb(aType))
+				rc = true;
+		}
+		return rc;
+	}
 	/**
 	 * Return the unknown object as a Reader.  Supported conversions are provided for {@link Reader}, {@link InputStream},
 	 * {@link java.io.File}, {@link java.net.URI}, and {@link java.net.URL}.

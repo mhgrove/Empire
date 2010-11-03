@@ -82,8 +82,10 @@ public class JenaDataSource extends AbstractDataSource implements MutableDataSou
 	 * @inheritDoc
 	 */
 	public void disconnect() {
-		setConnected(false);
-
+		//System.out.println("Disconnecting");
+		mModel.close();
+		setConnected(false);		
+		
 		// TODO: should we close the model here?
 		//mModel.close();
 	}
@@ -196,7 +198,7 @@ public class JenaDataSource extends AbstractDataSource implements MutableDataSou
 	/**
 	 * @inheritDoc
 	 */
-	public void commit() throws DataSourceException {
+	public void commit() throws DataSourceException {		
 		mModel.commit();
 	}
 

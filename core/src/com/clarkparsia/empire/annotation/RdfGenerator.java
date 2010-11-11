@@ -868,7 +868,7 @@ public class RdfGenerator {
 	}
 
 	private static String getLanguageForLocale() {
-		return Locale.getDefault() == null ? "en" : Locale.getDefault().toString().substring(0, Locale.getDefault().toString().indexOf("_"));
+		return Locale.getDefault() == null || Locale.getDefault().toString().equals("") ? "en" : Locale.getDefault().toString().substring(0, Locale.getDefault().toString().indexOf("_"));
 	}
 
 	private static Class refineClass(Object theAccessor, Class theClass, DataSource theSource, Resource theId) {

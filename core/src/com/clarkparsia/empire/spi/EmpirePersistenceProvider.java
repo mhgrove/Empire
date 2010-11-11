@@ -116,7 +116,7 @@ public class EmpirePersistenceProvider implements PersistenceProvider {
 			return null;
 		}
 
-		final String aName = aConfig.get(ConfigKeys.FACTORY).toString();
+		final String aName = aConfig.get(ConfigKeys.FACTORY).toString().trim();
 
 		for (DataSourceFactory aFactory  : mFactories) {
 			String aAlias = aFactory.getClass().isAnnotationPresent(Alias.class) ? aFactory.getClass().getAnnotation(Alias.class).value() : "";

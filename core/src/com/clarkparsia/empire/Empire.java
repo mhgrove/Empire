@@ -33,6 +33,7 @@ import com.google.inject.Module;
 import com.google.inject.Inject;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Collection;
 import java.util.HashSet;
@@ -155,6 +156,28 @@ public class Empire {
 		mModules.clear();
 
 		Collection<EmpireModule> aModules = new HashSet<EmpireModule>(Arrays.asList(theModules));
+		
+		init(aModules);
+//		if (aModules.isEmpty() || !find(aModules, new FindDefaultEmpireModulePredicate())) {
+//			aModules.add(new DefaultEmpireModule());
+//		}
+//
+//		// keep track of the modules we've "installed"
+//		for (Module aModule : aModules) {
+//			mModules.put(aModule.getClass(), aModule);
+//		}
+//		
+//		injector = Guice.createInjector(mModules.values());
+	}
+	
+	/**
+	 * Initialize Empire with the given set of Guice Modules
+	 * @param theModules the modules to use with Empire
+	 */
+	public static void init(Collection<EmpireModule> theModules) {
+		mModules.clear();
+
+		Collection<EmpireModule> aModules = theModules;
 
 		if (aModules.isEmpty() || !find(aModules, new FindDefaultEmpireModulePredicate())) {
 			aModules.add(new DefaultEmpireModule());
@@ -203,4 +226,6 @@ public class Empire {
 
 		return injector;
 	}
+
+	
 }

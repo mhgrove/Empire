@@ -31,6 +31,9 @@ import java.util.Collection;
 
 import java.lang.reflect.Method;
 
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
+
 import com.clarkparsia.empire.SupportsRdfId;
 import com.clarkparsia.empire.util.BeanReflectUtil;
 import static com.clarkparsia.utils.collections.CollectionUtil.find;
@@ -45,6 +48,7 @@ import com.google.inject.internal.Sets;
  * @version 0.7
  */
 public class InstanceGenerator {
+	private static final Logger LOGGER = LogManager.getLogger(BeanGenerator.class);
 
 	private static final Collection<Method> processedMethods = Sets.newHashSet();
 
@@ -291,8 +295,8 @@ public class InstanceGenerator {
 				&& !aMethod.getName().startsWith("is")
 				&& !aMethod.getName().startsWith("has")
 				&& !aMethod.getName().startsWith("set")) {
-
-				throw new IllegalArgumentException("Non-bean style methods found, implementations for them cannot not be generated.  Method was: " + aMethod);
+				LOGGER.warn("Non-bean style methods found, implementations for them cannot not be generated : " + aMethod.getName() );
+				//throw new IllegalArgumentException("Non-bean style methods found, implementations for them cannot not be generated");
 			}
 
 			String aProp = aMethod.getName().substring(aMethod.getName().startsWith("is") ? 2 : 3);

@@ -65,7 +65,7 @@ public class AnnotationChecker {
 							  : ((Method)aObj).getReturnType();
 
 				if (!Collection.class.isAssignableFrom(aType)) {
-					throw new EmpireException("Using OneToMany or ManyToMany annotation on a non-collection field.");
+					throw new EmpireException("Using OneToMany or ManyToMany annotation on a non-collection field : " + theClass + "." + aType);
 				}
 			}
 		}

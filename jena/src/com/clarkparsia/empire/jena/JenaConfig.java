@@ -16,11 +16,15 @@
 package com.clarkparsia.empire.jena;
 
 import com.clarkparsia.empire.config.ConfigKeys;
+import com.clarkparsia.empire.sql.DSSettings;
+import com.hp.hpl.jena.sdb.store.DatabaseType;
+import com.hp.hpl.jena.sdb.store.LayoutType;
 
 /**
  * <p>The list of valid Jena configuration parameters for creating Jena backed datasources.</p>
  *
  * @author Michael Grove
+ * @author uoccou
  * @since 0.6.3
  * @version 0.7
  */
@@ -71,7 +75,45 @@ public interface JenaConfig extends ConfigKeys {
 	 * @see JenaModelType
 	 */
 	public static final String LOCATION = "location";
-
+	/**
+	 * Configuration parameter for specifying the location of the TDB repository on disk.
+	 * @see #TYPE
+	 * @see JenaModelType
+	 */
+	public static final String ONTOLOGY = "ontology";
+	/**
+	 * Configuration parameter for specifying the key name of a NON container (jndi) datasource
+	 * </p>
+	 * there should be corresponding global config entries on that keyname that can be used
+	 * to populate {@link DSSettings}
+	 * 
+	 */
+	public static final String LOCAL_DS = "localDS";
+	/**
+	 * Configuration parameter for specifying the key name of a container (jndi) datasource
+	 * 
+	 * 	 
+	 */
+	public static final String JNDI_DS = "jndiDS";
+	/**
+	 * Configuration parameter for specifying the database type Jena expects for SDB StoreDesc
+	 * {@link DatabaseType}
+	 * will default to "MySQL" if not present
+	 */
+	public static final String DATABASE_TYPE = "databaseType";
+	/**
+	 * Configuration parameter for specifying the layout type Jena expects for SDB StoreDesc
+	 * {@link LayoutType}
+	 * will default to "layout2/index" if not present
+	 */
+	public static final String LAYOUT_TYPE = "layoutType";
+	/**
+	 * Configuration parameter for specifying that SDB database initialisation should happen. Check NOT performed unless
+	 * this is set. That is, by default the database is assumed to have been initialised.
+	 * 
+	 */
+	public static final String INIT_SDB = "initSDB";
+	
 	/**
 	 * Enumeration of the various types of Jena models.
 	 */

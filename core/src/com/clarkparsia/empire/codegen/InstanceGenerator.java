@@ -35,6 +35,7 @@ import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
 import com.clarkparsia.empire.SupportsRdfId;
+import com.clarkparsia.empire.EmpireOptions;
 import com.clarkparsia.empire.util.BeanReflectUtil;
 import static com.clarkparsia.utils.collections.CollectionUtil.find;
 import com.clarkparsia.utils.Predicate;
@@ -295,8 +296,13 @@ public class InstanceGenerator {
 				&& !aMethod.getName().startsWith("is")
 				&& !aMethod.getName().startsWith("has")
 				&& !aMethod.getName().startsWith("set")) {
-				LOGGER.warn("Non-bean style methods found, implementations for them cannot not be generated : " + aMethod.getName() );
-				//throw new IllegalArgumentException("Non-bean style methods found, implementations for them cannot not be generated");
+
+				if (EmpireOptions.STRICT_MODE) {
+					throw new IllegalArgumentException("Non-bean style methods found, implementations for them cannot not be generated");
+				}
+				else {
+					LOGGER.warn("Non-bean style methods found, implementations for them cannot not be generated : " + aMethod.getName() );
+				}
 			}
 
 			String aProp = aMethod.getName().substring(aMethod.getName().startsWith("is") ? 2 : 3);

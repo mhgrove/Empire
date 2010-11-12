@@ -13,27 +13,42 @@
  * limitations under the License.
  */
 
-package com.clarkparsia.empire.sql;
+package com.clarkparsia.empire.jena;
 
-import com.clarkparsia.empire.util.EmpireModule;
-import com.google.inject.AbstractModule;
+import com.google.inject.internal.Maps;
+
+import java.util.Map;
+import java.util.Collections;
 
 /**
- * <p>Guice module for initialising DataSourceManager singleton</p>
+ * <p>A basic cache implementation backed by a Map</p>
  *
  * @author Michael Grove
- * @since 0.6
- * @version 0.6.3
+ * @since 0.7
+ * @version 0.7
  */
-public class DSEmpireModule extends AbstractModule implements EmpireModule {
+class DefaultCache<K,V> implements Cache<K,V> {
 
-	private static DataSourceManager utils = null;
+	/**
+	 * The actual cache
+	 */
+	private Map<K,V> cache = Collections.synchronizedMap(Maps.<K,V>newHashMap());
+
 	/**
 	 * @inheritDoc
 	 */
-	@Override
-	protected void configure() {
-		utils = DataSourceManager.getInstance();
-		
+	public V get(final K theKey) {
+		return cache.get(theKey);
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public Cache<K, V> add(final K theKey, final V theValue) {
+		if (!cache.containsKey(theKey)) {
+			cache.put(theKey, theValue);
+		}
+
+		return this;
 	}
 }

@@ -16,69 +16,99 @@ import com.hp.hpl.jena.sdb.sql.SDBConnection;
  * can be committed and closed in synchrony.
  * 
  * @author uoccou
- *
+ * @since 0.7
+ * @version 0.7
  */
-public class ModelWithStore extends AbstractDelegateModel {
+class SDBModelWithStore extends AbstractDelegateModel {
 
+	/**
+	 * JDBC connection to the actual store
+	 */
 	private Connection sdbc = null;
-	
-	public ModelWithStore(Model m, Connection sdbc) {
+
+	/**
+	 * Create a new ModelWithStore
+	 *
+	 * @param m the jena model of SDB
+	 * @param sdbc the jdbc connection
+	 */
+	public SDBModelWithStore(Model m, Connection sdbc) {
 		super(m);
 		this.sdbc = sdbc;
-		// TODO Auto-generated constructor stub
 	}
 
+	/**
+	 * @inheritDoc
+	 */
 	@Override
 	public void enterCriticalSection(boolean readLockRequested) {
-		// TODO Auto-generated method stub
 		//super.enterCriticalSection(readLockRequested);
 		log.debug("spoofing critical section");
 	}
 
+	/**
+	 * @inheritDoc
+	 */
 	@Override
 	public void leaveCriticalSection() {
-		// TODO Auto-generated method stub
 		//super.leaveCriticalSection();
 		log.debug("end of spoof critical section");
 	}
-	
+
+	/**
+	 * @inheritDoc
+	 */
+	@Override
 	public void close() {
-		
+
 		try {
-			if ( null != sdbc && !sdbc.isClosed() )
-        		sdbc.close();
-			
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
+			if (null != sdbc && !sdbc.isClosed()) {
+				sdbc.close();
+			}
+		}
+		catch (SQLException e) {
 			e.printStackTrace();
 		}
 		super.close();
 	}
+
+	/**
+	 * @inheritDoc
+	 */
+	@Override
 	public Model commit() {
 		Model m = null;
 		try {
-			
-			if ( null != sdbc && !sdbc.isClosed() )
+
+			if (null != sdbc && !sdbc.isClosed()) {
 				sdbc.commit();
-			
+			}
+
 			m = super.commit();
-			
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			//e.printStackTrace();
+		}
+		catch (SQLException e) {
+			log.error("SQL Exception trying to commit to the underlying JDBC connection", e);
 		}
 		return m;
 	}
+
+	/**
+	 * @inheritDoc
+	 */
+	@Override
 	public Model begin() {
 		Model m = super.begin();
+
 		try {
 			sdbc.setAutoCommit(false);
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			//e.printStackTrace();
 		}
+		catch (SQLException e) {
+			log.error("SQL Exception trying to disable auto commit", e);
+		}
+
 		return m;
 	}
+
 	public Connection getSDBConnection() {
 		return sdbc;
 	}
@@ -86,6 +116,4 @@ public class ModelWithStore extends AbstractDelegateModel {
 	public void setSDBConnection(Connection sdbc) {
 		this.sdbc = sdbc;
 	}
-
-	
 }

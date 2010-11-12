@@ -36,7 +36,7 @@ import com.clarkparsia.empire.ds.impl.AbstractResultSet;
  * @author Michael Grove
  * @since 0.1
  */
-public class JenaResultSet extends AbstractResultSet {
+class JenaResultSet extends AbstractResultSet {
 	/**
 	 * The Jena Results
 	 */

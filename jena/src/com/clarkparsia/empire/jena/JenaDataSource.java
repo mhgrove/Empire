@@ -47,6 +47,7 @@ import org.openrdf.model.Value;
  * <p>Implementation of the Empire DataSource API backed by a Jena Model</p>
  *
  * @author Michael Grove
+ * @author uoccou
  * @since 0.1
  * @version 0.7
  */
@@ -82,12 +83,9 @@ public class JenaDataSource extends AbstractDataSource implements MutableDataSou
 	 * @inheritDoc
 	 */
 	public void disconnect() {
-		//System.out.println("Disconnecting");
 		mModel.close();
-		setConnected(false);		
-		
-		// TODO: should we close the model here?
-		//mModel.close();
+
+		setConnected(false);
 	}
 
 	/**

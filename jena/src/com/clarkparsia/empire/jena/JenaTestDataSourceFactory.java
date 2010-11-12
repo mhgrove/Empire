@@ -19,6 +19,7 @@ import com.clarkparsia.empire.ds.DataSource;
 import com.clarkparsia.empire.ds.DataSourceException;
 
 import com.clarkparsia.empire.ds.Alias;
+import com.clarkparsia.empire.config.EmpireConfiguration;
 
 import com.clarkparsia.utils.BasicUtils;
 
@@ -29,6 +30,8 @@ import java.io.FileInputStream;
 
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.RDFReader;
+import com.google.inject.name.Named;
+import com.google.inject.Inject;
 
 /**
  * <p>Implementation of the DataSourceFactory interface for creating in-memory Jena-backed data sources
@@ -36,11 +39,26 @@ import com.hp.hpl.jena.rdf.model.RDFReader;
  * files each time.  Intended to only be used for testing.</p>
  *
  * @author Michael Grove
+ * @since 0.6
+ * @version 0.7
  */
 @Alias("jena-test")
-public class JenaTestDataSourceFactory extends JenaDataSourceFactory {
+class JenaTestDataSourceFactory extends JenaDataSourceFactory {
+
+	/**
+	 * Cache of data sources
+	 */
 	private static Map<String, DataSource> mSourceCache = new HashMap<String, DataSource>();
-	
+
+	/**
+	 * Create a new JenaTestDataSourceFactory
+	 * @param theContainerConfig the configuration of the container
+	 */
+	@Inject
+	public JenaTestDataSourceFactory(@Named("ec") EmpireConfiguration theContainerConfig) {
+		super(theContainerConfig);
+	}
+
 	/**
 	 * @inheritDoc
 	 */

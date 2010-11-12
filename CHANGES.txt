@@ -23,6 +23,7 @@ Empire 0.7 (TBD)
 			 will try to map all fields of a bean, regardless of whether or not RdfProperty annotation is present or not.  Transient annotations can
 			 'hide' these fields from being mapped.  This is more inline with how normal JPA implementations work. (issue #19)
 	* ADDED: Simple cache to support reflection which increases performance of the serialization/deserialization into and out of Java. (issue #44)
+	* ADDED: Extensive improvements and additions to TDB & SDB support via contributions from Ultan O'Carroll -- includes support for JDBC data sources via DBCP & C3P0 DataSource wrappers. (issue #55)
 	* FIXED: Several issues with the SPARQL endpoint data source implementation
 	* FIXED: Bug in InstanceGenerator where the class/interface hierarchy was not being used to generate the bytecode resulting in AbstractMethodError's (issue #38)
 	* FIXED: Upgraded to Javassist 3.14.0 and altered how proxies are created when objects are constructed.  This solves both the PermGen OutOfMemory error  (issue #52)

@@ -15,18 +15,27 @@
 
 package com.clarkparsia.empire.jena;
 
-import com.clarkparsia.empire.impl.RdfQueryFactory;
-import com.clarkparsia.empire.impl.sparql.ARQSPARQLDialect;
-
 /**
- * <p>Jena/ARQ specific query factory.</p>
+ * <p>Basic interface for a cache.</p>
  *
  * @author Michael Grove
- * @since 0.6.3
- * @version 0.6.3
+ * @since 0.7
+ * @version 0.7
  */
-class JenaSPARQLQueryFactory extends RdfQueryFactory {
-	public JenaSPARQLQueryFactory(final JenaDataSource theJenaDataSource) {
-		super(theJenaDataSource, ARQSPARQLDialect.instance());
-	}
+interface Cache<K,V> {
+
+	/**
+	 * Get a value from the cache
+	 * @param theKey the key of the item to get from the cache
+	 * @return the cached object, or null if it is not in the cache
+	 */
+	public V get(K theKey);
+
+	/**
+	 * Add a value to the cache
+	 * @param theKey the key of the value to add
+	 * @param theValue the object being cached
+	 * @return this cache
+	 */
+	public Cache<K,V> add(K theKey, V theValue);
 }

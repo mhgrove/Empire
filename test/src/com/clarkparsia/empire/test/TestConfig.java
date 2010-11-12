@@ -35,7 +35,7 @@ import com.clarkparsia.empire.config.io.impl.PropertiesConfigReader;
 import com.clarkparsia.empire.config.io.impl.XmlConfigReader;
 import com.clarkparsia.empire.config.EmpireConfiguration;
 import com.clarkparsia.empire.EmpireException;
-import com.clarkparsia.empire.jena.JenaTestDataSourceFactory;
+
 import com.clarkparsia.empire.sesametwo.RepositoryDataSourceFactory;
 import com.clarkparsia.empire.util.EmpireAnnotationProvider;
 import com.clarkparsia.empire.util.PropertiesAnnotationProvider;
@@ -123,7 +123,7 @@ public class TestConfig {
 		assertEquals(aConfig.getUnitConfig("context1").get("url"), "http://localhost:8080/openrdf-sesame/");
 		assertEquals(aConfig.getUnitConfig("context1").get("repo"), "mem-rdf-db");
 
-		assertEquals(aConfig.getUnitConfig("context2").get("factory"), JenaTestDataSourceFactory.class.getName());
+		assertEquals(aConfig.getUnitConfig("context2").get("factory"), "jena-test");
 		assertEquals(aConfig.getUnitConfig("context2").get("files"), "foo, bar, baz");
 	}
 

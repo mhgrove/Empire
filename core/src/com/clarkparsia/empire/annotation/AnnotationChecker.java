@@ -38,6 +38,7 @@ import java.util.HashSet;
  * and all classes need an {@link RdfsClass} annotation.</p>
  *
  * @author Michael Grove
+ * @author uoccou
  * @since 0.6.5
  * @version 0.7
  */

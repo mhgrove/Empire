@@ -63,4 +63,12 @@ public class EmpireOptions {
 	 * bind a field unless it's marked with @Transient
 	 */
 	public static boolean USE_LEGACY_TRANSIENT_BEHAVIOR = true;
+
+	/**
+	 * Flag to control how strict the various failure condition in things like RDF<->Java conversion or bean generation are handled.
+	 * The default is true, which means all potentially fatal errors will throw unchecked exceptions (Runtime/IllegalArgument/IllegalState).
+	 * When set to false, these situations are ignored, and the operations continue as best as they can, all errors in this mode are
+	 * logged as warnings to the logger.
+	 */
+	public static boolean STRICT_MODE = true;
 }

@@ -1031,9 +1031,9 @@ public class RdfGenerator {
 				BNode aBNode = (BNode) theValue;
 
 				// we need to figure out what type of bean this instance maps to.
-					Class<?> aClass = BeanReflectUtil.classFrom(mAccessor);
+				Class<?> aClass = BeanReflectUtil.classFrom(mAccessor);
 
-					aClass = refineClass(mAccessor, aClass, mSource, aBNode);
+				aClass = refineClass(mAccessor, aClass, mSource, aBNode);
 
 				if (Collection.class.isAssignableFrom(BeanReflectUtil.classFrom(mAccessor))) {
 					// the field takes a collection, lets create a new instance of said collection, and hopefully the
@@ -1043,7 +1043,6 @@ public class RdfGenerator {
 					// since bnode id references are not guaranteed to be stable in SPARQL, ie just because its id "a"
 					// in the result set, does not mean i can do another query for _:a and get the expected results.
 					// and you can't do a describe for the same reason.
-
 
 					try {
 						String aQuery = getBNodeConstructQuery(mSource, mResource, mProperty);
@@ -1066,7 +1065,12 @@ public class RdfGenerator {
 					return getProxyOrDbObject(mAccessor, aClass, aBNode, mSource);
 				}
 				catch (Exception e) {
-					throw new RuntimeException(e);
+					if (EmpireOptions.STRICT_MODE) {
+						throw new RuntimeException(e);
+					}
+					else {
+						return null;
+					}
 				}
 			}
 			else if (theValue instanceof URI) {
@@ -1085,15 +1089,23 @@ public class RdfGenerator {
 					}
 				}
 				catch (Exception e) {
-					LOGGER.warn("Problem applying value : " + e.toString() + ", " + e.getCause() );
-					return null;
-					//throw new RuntimeException(e);
+					if (EmpireOptions.STRICT_MODE) {
+						throw new RuntimeException(e);
+					}
+					else {
+						LOGGER.warn("Problem applying value : " + e.toString() + ", " + e.getCause() );
+						return null;
+					}
 				}
 			}
 			else {
-				LOGGER.warn("Problem applying value : Unexpected Value type" );
-				return null;
-				//throw new RuntimeException("Unexpected Value type");
+				if (EmpireOptions.STRICT_MODE) {
+					throw new RuntimeException("Unexpected Value type");
+				}
+				else {
+					LOGGER.warn("Problem applying value : Unexpected Value type" );
+					return null;
+				}
 			}
 		}
 	}

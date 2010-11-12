@@ -32,8 +32,8 @@ import com.google.inject.Guice;
 import com.google.inject.Module;
 import com.google.inject.Inject;
 
+
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Collection;
 import java.util.HashSet;
@@ -46,7 +46,7 @@ import org.openrdf.model.vocabulary.XMLSchema;
  *
  * @author Michael Grove
  * @since 0.1
- * @version 0.6.6
+ * @version 0.7
  */
 public class Empire {
 
@@ -154,20 +154,8 @@ public class Empire {
 	 */
 	public static void init(EmpireModule... theModules) {
 		mModules.clear();
-
-		Collection<EmpireModule> aModules = new HashSet<EmpireModule>(Arrays.asList(theModules));
 		
-		init(aModules);
-//		if (aModules.isEmpty() || !find(aModules, new FindDefaultEmpireModulePredicate())) {
-//			aModules.add(new DefaultEmpireModule());
-//		}
-//
-//		// keep track of the modules we've "installed"
-//		for (Module aModule : aModules) {
-//			mModules.put(aModule.getClass(), aModule);
-//		}
-//		
-//		injector = Guice.createInjector(mModules.values());
+		init(new HashSet<EmpireModule>(Arrays.asList(theModules)));
 	}
 	
 	/**
@@ -177,7 +165,7 @@ public class Empire {
 	public static void init(Collection<EmpireModule> theModules) {
 		mModules.clear();
 
-		Collection<EmpireModule> aModules = theModules;
+		Collection<EmpireModule> aModules = new HashSet<EmpireModule>(theModules);
 
 		if (aModules.isEmpty() || !find(aModules, new FindDefaultEmpireModulePredicate())) {
 			aModules.add(new DefaultEmpireModule());
@@ -226,6 +214,4 @@ public class Empire {
 
 		return injector;
 	}
-
-	
 }

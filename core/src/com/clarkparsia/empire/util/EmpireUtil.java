@@ -187,16 +187,19 @@ public class EmpireUtil {
 	 */
 	public static <T> List<T> all(EntityManager theManager, Class<T> theClass) {
 		List<T> aList = new ArrayList<T>();
+
 		LOGGER.debug("Starting read all");
 		long start = System.currentTimeMillis();
 		
 		if (!AnnotationChecker.isValid(theClass) || !(theManager.getDelegate() instanceof DataSource)) {
 			return aList;
 		}
+
 		LOGGER.debug("Class valid check : " + (System.currentTimeMillis() - start));
 		start = System.currentTimeMillis();
 		
 		RdfsClass aClass = theClass.getAnnotation(RdfsClass.class);
+
 		LOGGER.debug("Got annotation : " + (System.currentTimeMillis() - start));
 		start = System.currentTimeMillis();
 		
@@ -215,6 +218,7 @@ public class EmpireUtil {
 
 		try {
 			DataSource aSource = (DataSource) theManager.getDelegate();
+
 			LOGGER.debug("Got source : " + (System.currentTimeMillis() - start));
 			start = System.currentTimeMillis();
 			
@@ -224,18 +228,18 @@ public class EmpireUtil {
 			else if (aSource.getQueryFactory().getDialect() instanceof SerqlDialect) {
 				aQueryStr = new SeRQLQueryRenderer().render(aQuery.query());
 			}
+
 			LOGGER.debug("Got query string : " + (System.currentTimeMillis() - start));
 			start = System.currentTimeMillis();
-			
 		}
 		catch (Exception e) {
 			throw new PersistenceException(e);
 		}
 		
-		if(LOGGER.isDebugEnabled())
-			LOGGER.debug("EntityManager open : " + theManager.isOpen() ) ;
+		if (LOGGER.isDebugEnabled()) LOGGER.debug("EntityManager open : " + theManager.isOpen());
 		
 		List aResults = theManager.createNativeQuery(aQueryStr, theClass).getResultList();
+
 		LOGGER.debug("Created native query : " + (System.currentTimeMillis() - start));
 		start = System.currentTimeMillis();
 		
@@ -246,9 +250,9 @@ public class EmpireUtil {
 			catch (ClassCastException e) {
 				throw new PersistenceException(e);
 			}
+
 			LOGGER.debug("Added result item : " + (System.currentTimeMillis() - start));
 			start = System.currentTimeMillis();
-			
 		}
 
 		return aList;

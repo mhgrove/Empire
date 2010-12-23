@@ -1,0 +1,11 @@
+The following people and organizations have contributed in some way to
+Empire, and we gratefully acknowledge them and their contributions:
+
+Pedro Oliviera
+Blazej Bulka
+Manuel Blechschmidt
+Ultan O'Carroll
+
+Others who preferred not to be named: you know who you are.
+
+Please contact us on the mailing list if we've left you off this list in error.

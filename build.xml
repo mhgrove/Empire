@@ -16,15 +16,18 @@
 	<property name="fourstore.dir" location="fourstore"/>
 	<property name="sesame.dir" location="sesame2"/>
 	<property name="test.dir" location="test"/>
+	<property name="sql.dir" location="sql"/>
 
 	<property name="core.src.dir" location="${core.dir}/src"/>
 	<property name="jena.src.dir" location="${jena.dir}/src"/>
 	<property name="fourstore.src.dir" location="${fourstore.dir}/src"/>
 	<property name="sesame.src.dir" location="${sesame.dir}/src"/>
 	<property name="test.src.dir" location="${test.dir}/src"/>
+	<property name="sql.src.dir" location="${sql.dir}/src"/>
 
 	<property name="core.lib.dir" location="${core.dir}/lib"/>
 	<property name="jena.lib.dir" location="${jena.dir}/lib"/>
+	<property name="sql.lib.dir" location="${sql.dir}/lib"/>
 	<property name="fourstore.lib.dir" location="${fourstore.dir}/lib"/>
 	<property name="test.lib.dir" location="${jena.dir}/lib"/>
 
@@ -69,6 +72,11 @@
 			<include name="**/*.jar"/>
 			<exclude name="**/${project.name}*.jar"/>
 		</fileset>
+
+		<fileset dir="${sql.lib.dir}">
+			<include name="**/*.jar"/>
+			<exclude name="**/${project.name}*.jar"/>
+		</fileset>
 	</path>
 
 	<target name="init">
@@ -97,6 +105,11 @@
 
 	<target name="compile-jena" depends="init, compile-core">
 		<mkdir dir="${jena.build.dir}"/>
+
+		<javac debug="${javac.debug}" source="1.5" target="1.5" destdir="${jena.build.dir}">
+			<src path="${sql.src.dir}"/>
+			<classpath refid="project.class.path"/>
+		</javac>
 
 		<javac debug="${javac.debug}" source="1.5" target="1.5" destdir="${jena.build.dir}">
 			<src path="${jena.src.dir}"/>

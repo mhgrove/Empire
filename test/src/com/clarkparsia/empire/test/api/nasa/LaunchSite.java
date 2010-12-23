@@ -74,7 +74,7 @@ public class LaunchSite extends BaseTestClass {
 
 	@Override
 	public String toString() {
-		return label.toString();
+		return label == null ? "Launch Site" : label.toString();
 	}
 
 	@Override

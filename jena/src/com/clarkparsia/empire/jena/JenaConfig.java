@@ -26,7 +26,7 @@ import com.clarkparsia.empire.sql.DSSettings;
  * @since 0.6.3
  * @version 0.7
  */
-interface JenaConfig extends ConfigKeys {
+public interface JenaConfig extends ConfigKeys {
 
 	/**
 	 * Key for specifying the Jena model implementation to create

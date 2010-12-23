@@ -660,14 +660,4 @@ public class TestJPA  {
 
 		return aMap;
 	}
-
-//	private static Map<String, String> getFourStoreTestConfigMap() {
-//		Map<String, String> aMap = new HashMap<String, String>();
-//
-//		aMap.put(EmpirePersistenceProvider.FACTORY, FourStoreDataSourceFactory.class.getName());
-//
-//		aMap.put(FourStoreDataSourceFactory.KEY_URL, "http://localhost:4040");
-//
-//		return aMap;
-//	}
 }

@@ -81,7 +81,7 @@ public class TestConfig {
 			       "\n" +
 				   "	<unit>\n" +
 			       "		<name>context2</name>\n" +
-			       "		<factory>com.clarkparsia.empire.jena.JenaTestDataSourceFactory</factory>\n" +
+			       "		<factory>jena-test</factory>\n" +
 			       "		<files>foo, bar, baz</files>\n" +
 			       "	</unit>\n" +
 			       "</empire>";
@@ -98,7 +98,7 @@ public class TestConfig {
 			   "0.repo = mem-rdf-db\n" +
 			   "\n" +
 			   "1.name = context2\n" +
-			   "1.factory = com.clarkparsia.empire.jena.JenaTestDataSourceFactory\n" +
+			   "1.factory = jena-test\n" +
 			   "1.files = foo, bar, baz\n";
 	}
 

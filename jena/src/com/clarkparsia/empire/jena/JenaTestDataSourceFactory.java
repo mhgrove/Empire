@@ -109,7 +109,7 @@ class JenaTestDataSourceFactory extends JenaDataSourceFactory {
 
 		DataSource aSource = new JenaDataSource(aModel);
 
-		mSourceCache.put(theMap.get("files").toString(), aSource);
+		//mSourceCache.put(theMap.get("files").toString(), aSource);
 
 		return aSource;
 	}

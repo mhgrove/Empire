@@ -311,6 +311,11 @@
 				<include name="**/*.jar"/>
 				<include name="**/*.txt"/>
 			</fileset>
+
+			<fileset dir="${sql.lib.dir}">
+				<include name="**/*.jar"/>
+				<include name="**/*.txt"/>
+			</fileset>
 		</copy>
 	</target>
 

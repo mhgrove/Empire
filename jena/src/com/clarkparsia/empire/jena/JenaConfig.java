@@ -16,7 +16,6 @@
 package com.clarkparsia.empire.jena;
 
 import com.clarkparsia.empire.config.ConfigKeys;
-import com.clarkparsia.empire.sql.DSSettings;
 
 /**
  * <p>The list of valid Jena configuration parameters for creating Jena backed datasources.</p>

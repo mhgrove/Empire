@@ -53,8 +53,9 @@ public class RepositoryDataSourceFactory implements DataSourceFactory, Repositor
 		Object aRepo = theMap.get(REPO);
 		Object aFiles = theMap.get(FILES);
 		Object aDir = theMap.get(DIR);
+		Object aPhysRepo = theMap.get(REPO_HANDLE);
 
-		return (aURL != null && aRepo != null) || aFiles != null || aDir != null;
+		return (aURL != null && aRepo != null) || aFiles != null || aDir != null || (aPhysRepo != null && aPhysRepo instanceof Repository);
 	}
 
 	/**
@@ -69,11 +70,15 @@ public class RepositoryDataSourceFactory implements DataSourceFactory, Repositor
 		Object aRepo = theMap.get(REPO);
 		Object aFiles = theMap.get(FILES);
 		Object aDir = theMap.get(DIR);
+		Object aPhysRepo = theMap.get(REPO_HANDLE);
 
 		Repository aRepository;
 
 		try {
-			if (aURL != null && aRepo != null) {
+			if (aPhysRepo != null) {
+				aRepository = (Repository) aPhysRepo;
+			}
+			else if (aURL != null && aRepo != null) {
 				aRepository = new HTTPRepository(aURL.toString(), aRepo.toString());
 
 				aRepository.initialize();

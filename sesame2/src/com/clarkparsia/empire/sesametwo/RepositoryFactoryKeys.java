@@ -59,4 +59,10 @@ public interface RepositoryFactoryKeys {
 	 * @see #QUERY_LANG
 	 */
 	public static final String LANG_SERQL = "serql";
+
+	/**
+	 * Configuration key to allow users to directly pass in a sesame Repository object that can be used
+	 * to back an EntityManager.
+	 */
+	public static final String REPO_HANDLE = "repo_handle";
 }

@@ -23,6 +23,11 @@ import javassist.CtNewMethod;
 import javassist.NotFoundException;
 import javassist.Modifier;
 import javassist.CannotCompileException;
+import javassist.CtMethod;
+import javassist.bytecode.ConstPool;
+import javassist.bytecode.AnnotationsAttribute;
+import javassist.bytecode.SignatureAttribute;
+import javassist.bytecode.annotation.Annotation;
 
 import java.util.Map;
 import java.util.HashMap;
@@ -30,6 +35,8 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
+import java.security.Signature;
 
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -40,6 +47,7 @@ import com.clarkparsia.empire.util.BeanReflectUtil;
 import static com.clarkparsia.utils.collections.CollectionUtil.find;
 import com.clarkparsia.utils.Predicate;
 import com.google.inject.internal.Sets;
+import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl;
 
 /**
  * <p>Generate implementations of interfaces at runtime via bytecode manipulation.</p>
@@ -77,7 +85,7 @@ public class InstanceGenerator {
 
 		if (!Arrays.asList(aInterface.getInterfaces()).contains(aSupportsRdfIdInterface)
 			&& !SupportsRdfId.class.isAssignableFrom(theInterface)) {
-			throw new IllegalArgumentException("Class does not implement SupportsRdfId, cannot generate Empire suitable implementation.");
+			throw new IllegalArgumentException("Class '" + theInterface.getName() + "' does not implement SupportsRdfId, cannot generate Empire suitable implementation.");
 		}
 
 		String aName = aInterface.getPackageName()+ ".impl." + aInterface.getSimpleName() + "Impl";
@@ -184,24 +192,161 @@ public class InstanceGenerator {
 	 * @throws NotFoundException thrown if there is an error generating the methods
 	 */
 	private static <T> void generateMethods(final Class<T> theInterface, final ClassPool thePool, final CtClass theClass) throws CannotCompileException, NotFoundException {
-		Map<String, Class> aProps = properties(theInterface);
+		Map<String, CtField> aProps = properties(thePool, theClass, theInterface);
 
 		for (String aProp : aProps.keySet()) {
-			CtField aNewField = new CtField(thePool.get(aProps.get(aProp).getName()), aProp, theClass);
+			//CtField aNewField = new CtField(thePool.get(aProps.get(aProp).getName()), aProp, theClass);
+//			CtField aNewField = field(theInterface, thePool, theClass, aProp);
+			CtField aNewField = aProps.get(aProp);
 
 			if (!hasField(theClass, aNewField.getName())) {
 				theClass.addField(aNewField);
 			}
 
 			if (!hasMethod(theClass, getterName(aProp))) {
-				theClass.addMethod(CtNewMethod.getter(getterName(aProp), aNewField));
+				CtMethod aMethod = CtNewMethod.getter(getterName(aProp), aNewField);
+
+				inheritAnnotations(theClass, aMethod);
+
+				SignatureAttribute attr = (SignatureAttribute) aNewField.getFieldInfo().getAttribute(SignatureAttribute.tag);
+				if (attr != null) {
+					aMethod.getMethodInfo().addAttribute(new SignatureAttribute(aMethod.getMethodInfo().getConstPool(), "()"+attr.getSignature()));
+				}
+
+				theClass.addMethod(aMethod);
 			}
 
 			if (!hasMethod(theClass, setterName(aProp))) {
-				theClass.addMethod(CtNewMethod.setter(setterName(aProp), aNewField));
+				CtMethod aMethod = CtNewMethod.setter(setterName(aProp), aNewField);
+
+				inheritAnnotations(theClass, aMethod);
+
+				SignatureAttribute attr = (SignatureAttribute) aNewField.getFieldInfo().getAttribute(SignatureAttribute.tag);
+				if (attr != null) {
+					aMethod.getMethodInfo().addAttribute(new SignatureAttribute(aMethod.getMethodInfo().getConstPool(), "("+attr.getSignature()+")V"));
+				}
+
+				theClass.addMethod(aMethod);
 			}
 		}
 	}
+
+	private static void inheritAnnotations(final CtClass theClass, final CtMethod theMethod) throws NotFoundException {
+		if (theClass.getMethod(theMethod.getName(), theMethod.getSignature()) != null) {
+			CtMethod aOtherMethod = theClass.getMethod(theMethod.getName(), theMethod.getSignature());
+			// method we're probably overriding or implementing in the case of an abstract method.
+
+			AnnotationsAttribute annotationsAttribute = (AnnotationsAttribute) aOtherMethod.getMethodInfo().getAttribute(AnnotationsAttribute.visibleTag);
+
+			if (annotationsAttribute != null) {
+				ConstPool cp = theClass.getClassFile().getConstPool();
+				AnnotationsAttribute attr = new AnnotationsAttribute(cp, AnnotationsAttribute.visibleTag);
+
+				for (Object obj : annotationsAttribute.getAnnotations()) {
+
+					Annotation a = (Annotation) obj;
+
+					Annotation theAnnotation = new Annotation(a.getTypeName(), cp);
+
+					if (a.getMemberNames() != null) {
+						for (Object aName : a.getMemberNames()) {
+							theAnnotation.addMemberValue(aName.toString(), a.getMemberValue(aName.toString()));
+						}
+					}
+
+					attr.setAnnotation(theAnnotation);
+				}
+				theMethod.getMethodInfo().addAttribute(attr);
+			}
+		}
+	}
+
+	private static String classToStringRepresentation(Class c) {
+		if (byte.class.equals(c)) {
+			return "B";
+		}
+		else if (char.class.equals(c)) {
+			return "C";
+		}
+		else if (double.class.equals(c)) {
+			return "D";
+		}
+		else if (float.class.equals(c)) {
+			return "F";
+		}
+		else if (int.class.equals(c)) {
+			return "I";
+		}
+		else if (long.class.equals(c)) {
+			return "J";
+		}
+		else if (short.class.equals(c)) {
+			return "S";
+		}
+		else if (boolean.class.equals(c)) {
+			return "Z";
+		}
+		else if (c.isArray()) {
+			return c.getName().replace(".", "/");
+		}
+		else if (c.equals(Void.class)) {
+			return "V";
+		}
+		else {
+			return "L" + c.getName().replace('.', '/') + ";";
+		}
+	}
+
+
+//	private static <T> CtField field(Class<T> theInterface, ClassPool thePool, CtClass theClass, String theProp) throws NotFoundException, CannotCompileException {
+//		for (Method aMethod : theInterface.getDeclaredMethods()) {
+//			if (!aMethod.getName().startsWith("get")
+//				&& !aMethod.getName().startsWith("is")
+//				&& !aMethod.getName().startsWith("has")
+//				&& !aMethod.getName().startsWith("set")) {
+//
+//				if (EmpireOptions.STRICT_MODE) {
+//					throw new IllegalArgumentException("Non-bean style methods found, implementations for them cannot not be generated");
+//				}
+//				else {
+//					LOGGER.warn("Non-bean style methods found, implementations for them cannot not be generated : " + aMethod.getName() );
+//				}
+//			}
+//
+//			String aProp = aMethod.getName().substring(aMethod.getName().startsWith("is") ? 2 : 3);
+//
+//			aProp = String.valueOf(aProp.charAt(0)).toLowerCase() + aProp.substring(1);
+//
+//			if (aProp.equals(theProp)) {
+//				Class aType = null;
+//				Type generics = null;
+//
+//				if (aMethod.getName().startsWith("get") || aMethod.getName().startsWith("is") || aMethod.getName().startsWith("has")) {
+//					aType = aMethod.getReturnType();
+//					generics = aMethod.getGenericReturnType();
+//				}
+//				else if (aMethod.getName().startsWith("set") && aMethod.getParameterTypes().length > 0) {
+//					aType = aMethod.getParameterTypes()[0];
+//
+//					if (aMethod.getGenericParameterTypes() != null && aMethod.getGenericParameterTypes().length > 0)
+//						generics = aMethod.getGenericParameterTypes()[0];
+//				}
+//
+//				CtField aNewField = new CtField(thePool.get(aType.getName()), aProp, theClass);
+//
+//				if (generics != null && generics instanceof ParameterizedTypeImpl) {
+//					for (Type t : ((ParameterizedTypeImpl)generics).getActualTypeArguments()) {
+//
+//						aNewField.getFieldInfo().addAttribute(new SignatureAttribute(aNewField.getFieldInfo().getConstPool(), "L"+aType.getName().replace('.','/')+ "<L" + ((Class)t).getName().replace('.','/') + ";>;")) ;
+//					}
+//				}
+//
+//				return aNewField;
+//			}
+//		}
+//
+//		return null;
+//	}
 
 	/**
 	 * Return whether or not the class has a field with the given name
@@ -266,13 +411,17 @@ public class InstanceGenerator {
 
 	/**
 	 * Get the bean proeprties from the given class
-	 * @param theClass the bean class
-	 * @return a Map of the bean property names with the type the property as the value
+	 * @param thePool the class pool to use when creating new fields
+	 * @param theClass the class the new fields will belong to
+	 * @param theInterface the original bean class
+	 * @return a Map of the bean property names with the new field for the property as the value
+	 * @throws javassist.CannotCompileException thrown if there is an error generating the methods
+	 * @throws javassist.NotFoundException thrown if there is an error generating the methods
 	 */
-	private static Map<String, Class> properties(Class theClass) {
-		Map<String, Class> aMap = new HashMap<String, Class>();
+	private static <T> Map<String, CtField> properties(final ClassPool thePool, final CtClass theClass, final Class<T> theInterface) throws NotFoundException, CannotCompileException {
+		Map<String, CtField> aMap = new HashMap<String, CtField>();
 
-		for (Method aMethod : theClass.getDeclaredMethods()) {
+		for (Method aMethod : theInterface.getDeclaredMethods()) {
 
 			// see if we've already processed this method.  Normal .equals for a method will not work because the classes have to be the same,
 			// what we want is the semantics of isAssignableFrom, not .equals between the classes declaring the methods.  Thus, the FINDER
@@ -309,17 +458,32 @@ public class InstanceGenerator {
 
 			aProp = String.valueOf(aProp.charAt(0)).toLowerCase() + aProp.substring(1);
 
-			Class aType = null;
+				Class aType = null;
+				Type generics = null;
 
-			if (aMethod.getName().startsWith("get") || aMethod.getName().startsWith("is") || aMethod.getName().startsWith("has")) {
-				aType = aMethod.getReturnType();
-			}
-			else if (aMethod.getName().startsWith("set") && aMethod.getParameterTypes().length > 0) {
-				aType = aMethod.getParameterTypes()[0];
-			}
+				if (aMethod.getName().startsWith("get") || aMethod.getName().startsWith("is") || aMethod.getName().startsWith("has")) {
+					aType = aMethod.getReturnType();
+					generics = aMethod.getGenericReturnType();
+				}
+				else if (aMethod.getName().startsWith("set") && aMethod.getParameterTypes().length > 0) {
+					aType = aMethod.getParameterTypes()[0];
+
+					if (aMethod.getGenericParameterTypes() != null && aMethod.getGenericParameterTypes().length > 0) {
+						generics = aMethod.getGenericParameterTypes()[0];
+					}
+				}
 
 			if (aType != null) {
-				aMap.put(aProp, aType);
+				CtField aNewField = new CtField(thePool.get(aType.getName()), aProp, theClass);
+
+				if (generics != null && generics instanceof ParameterizedTypeImpl) {
+					for (Type t : ((ParameterizedTypeImpl)generics).getActualTypeArguments()) {
+
+						aNewField.getFieldInfo().addAttribute(new SignatureAttribute(aNewField.getFieldInfo().getConstPool(), "L"+aType.getName().replace('.','/')+ "<L" + ((Class)t).getName().replace('.','/') + ";>;")) ;
+					}
+				}
+
+				aMap.put(aProp, aNewField);
 			}
 
 			// mark the method as one we've already handled in case we get this method again on a superclass/interface

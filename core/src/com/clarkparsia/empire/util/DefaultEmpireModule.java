@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2010 Clark & Parsia, LLC. <http://www.clarkparsia.com>
+ * Copyright (c) 2009-2011 Clark & Parsia, LLC. <http://www.clarkparsia.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 package com.clarkparsia.empire.util;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Provider;
 import com.google.inject.multibindings.Multibinder;
 
 import com.google.inject.name.Names;
@@ -27,6 +28,7 @@ import com.clarkparsia.empire.ds.DataSourceFactory;
 import com.clarkparsia.empire.ds.impl.SparqlEndpointSourceFactory;
 
 import com.clarkparsia.empire.config.EmpireConfiguration;
+import com.clarkparsia.empire.config.ConfigKeys;
 
 import com.clarkparsia.empire.config.io.ConfigReader;
 
@@ -34,28 +36,31 @@ import com.clarkparsia.empire.config.io.impl.PropertiesConfigReader;
 import com.clarkparsia.empire.config.io.impl.XmlConfigReader;
 
 import com.clarkparsia.empire.spi.guice.PersistenceInjectionModule;
+import com.clarkparsia.empire.spi.Instrumentor;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.File;
 import java.io.InputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 /**
  * <p>Standard Guice module for Empire</p>
  *
  * @author Michael Grove
  * @since 0.6
- * @version 0.6.6
+ * @version 0.7
  */
-public class DefaultEmpireModule extends AbstractModule implements EmpireModule {
+public final class DefaultEmpireModule extends AbstractModule implements EmpireModule {
 
 	/**
 	 * The logger
 	 */
-	private static final Logger LOGGER = LogManager.getLogger(DefaultEmpireModule.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(DefaultEmpireModule.class);
 
 	/**
 	 * Application configuration properties
@@ -66,30 +71,52 @@ public class DefaultEmpireModule extends AbstractModule implements EmpireModule 
 	 * Create a new DefaultEmpireModule
 	 */
 	public DefaultEmpireModule() {
-		File aConfigFile = null;
+		InputStream aConfigFile = null;
 
-		// not ideal, really we want just a single standard config file name with the system property which can override
-		// that.  but since we don't have a standard yet, we'll check a bunch of them.
-		if (System.getProperty("empire.configuration.file") != null && new File(System.getProperty("empire.configuration.file")).exists()) {
-			aConfigFile = new File(System.getProperty("empire.configuration.file"));
-		}
-		else if (new File("empire.config").exists()) {
-			aConfigFile = new File("empire.config");
-		}
-		else if (new File("empire.properties").exists()) {
-			aConfigFile = new File("empire.properties");
-		}
-		else if (new File("empire.config.properties").exists()) {
-			aConfigFile = new File("empire.config.properties");
-		}
-		else if (new File("empire.xml").exists()) {
-			aConfigFile = new File("empire.xml");
-		}
-		else if (new File("empire.config.xml").exists()) {
-			aConfigFile = new File("empire.config.xml");
-		}
+		// the default configuration reader
+		ConfigReader aReader = new PropertiesConfigReader();
 
-		ConfigReader aReader = null;
+		try {
+			// not ideal, really we want just a single standard config file name with the system property which can override
+			// that.  but since we don't have a standard yet, we'll check a bunch of them.
+			if (System.getProperty("empire.configuration.file") != null && new File(System.getProperty("empire.configuration.file")).exists()) {
+				aConfigFile = new FileInputStream(System.getProperty("empire.configuration.file"));
+			}
+			// check inside the jar to see if the config file is there
+			else if (getClass().getResourceAsStream("/empire.configuration") != null) {
+				aConfigFile = getClass().getResourceAsStream("/empire.configuration");
+			}
+			// this is the default non-jar location
+			else if (new File("empire.configuration").exists()) {
+				aConfigFile = new FileInputStream("empire.configuration");
+				aReader = new PropertiesConfigReader();
+			}
+
+			// these locations are @deprecated in 0.7, to be removed in 0.9
+			else if (new File("empire.config").exists()) {
+				aConfigFile = new FileInputStream("empire.config");
+				aReader = new PropertiesConfigReader();
+			}
+			else if (new File("empire.properties").exists()) {
+				aConfigFile = new FileInputStream("empire.properties");
+				aReader = new PropertiesConfigReader();
+			}
+			else if (new File("empire.config.properties").exists()) {
+				aConfigFile = new FileInputStream("empire.config.properties");
+				aReader = new PropertiesConfigReader();
+			}
+			else if (new File("empire.xml").exists()) {
+				aConfigFile = new FileInputStream("empire.xml");
+				aReader = new XmlConfigReader();
+			}
+			else if (new File("empire.config.xml").exists()) {
+				aConfigFile = new FileInputStream("empire.config.xml");
+				aReader = new XmlConfigReader();
+			}
+		}
+		catch (FileNotFoundException e) {
+			LOGGER.error("Count not find config file: " + e.getMessage());
+		}
 
 		if (aConfigFile == null) {
 			// TODO: should this just be an Error -- throw a RTE?
@@ -110,20 +137,11 @@ public class DefaultEmpireModule extends AbstractModule implements EmpireModule 
 					LOGGER.error("Unable to find or create specified configuration reader class: " + System.getProperty("empire.config.reader"), e);
 				}
 			}
-			else if (aConfigFile.getName().endsWith(".xml")) {
-				aReader = new XmlConfigReader();
-
-			}
-			else {
-				aReader = new PropertiesConfigReader();
-			}
 		}
 
-		InputStream aStream = null;
-		if (aReader != null) {
+		if (aConfigFile != null && aReader != null) {
 			try {
-				aStream = new FileInputStream(aConfigFile);
-				mConfig = aReader.read(aStream);
+				mConfig = aReader.read(aConfigFile);
 			}
 			catch (IOException e) {
 				LOGGER.error("Error while reading default Empire configuration file from the path", e);
@@ -133,8 +151,8 @@ public class DefaultEmpireModule extends AbstractModule implements EmpireModule 
 			}
 			finally {
 				try {
-					if (aStream != null) {
-						aStream.close();
+					if (aConfigFile != null) {
+						aConfigFile.close();
 					}
 				}
 				catch (IOException e) {
@@ -168,9 +186,25 @@ public class DefaultEmpireModule extends AbstractModule implements EmpireModule 
 
 		 bind(EmpireConfiguration.class).annotatedWith(Names.named("ec")).toInstance(mConfig);
 
-		 mConfig.installBindings(this.binder());
+		 if (Instrumentor.isInitialized()) {
+			 bind(EmpireAnnotationProvider.class).to(InstrumentorAnnotationProvider.class);
+		 }
+		 else {
+			 bind(File.class)
+				 .annotatedWith(Names.named("annotation.index"))
+				 .toProvider(new Provider<File>() {
+					 public File get() {
+						 if (mConfig.getGlobalConfig().containsKey(ConfigKeys.ANNOTATION_INDEX)) {
+							 return new File(mConfig.get(ConfigKeys.ANNOTATION_INDEX));
+						 }
+						 else {
+							 return new File("empire.annotation.index");
+						 }
+					 }
+				 });
 
-		 bind(EmpireAnnotationProvider.class).to(mConfig.getAnnotationProvider());
+			 bind(EmpireAnnotationProvider.class).to(mConfig.getAnnotationProvider());
+		 }
 
 		 Multibinder.newSetBinder(binder(), DataSourceFactory.class).addBinding().to(SparqlEndpointSourceFactory.class);
 	 }

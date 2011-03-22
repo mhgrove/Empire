@@ -44,6 +44,8 @@
 	<property name="dist.lib.dir" location="${dist.dir}/lib"/>
 	<property name="dist.javadoc.dir" location="${dist.docs.dir}/javadoc"/>
 
+	<property name="premainclass" value="com.clarkparsia.empire.spi.Instrumentor"/>
+
 	<property name="javac.debug" value="off"/>
 
 	<path id="project.class.path">
@@ -166,7 +168,12 @@
 			</fileset>
 		</copy>
 
-		<jar jarfile="${dist.lib.dir}/${project.name}-core.jar" basedir="${core.build.dir}"/>
+		<jar jarfile="${dist.lib.dir}/${project.name}-core.jar" basedir="${core.build.dir}">
+			<manifest>
+				<attribute name="Premain-Class" value="${premainclass}"/>
+			</manifest>
+		</jar>
+		
 		<jar jarfile="${dist.lib.dir}/${project.name}-jena.jar" basedir="${jena.build.dir}"/>
 		<jar jarfile="${dist.lib.dir}/${project.name}-sesame.jar" basedir="${sesame.build.dir}"/>
 		<jar jarfile="${dist.lib.dir}/${project.name}-fourstore.jar" basedir="${fourstore.build.dir}"/>
@@ -243,7 +250,7 @@
 			version="true" nodeprecatedlist="false" nodeprecated="false"
 			packagenames="com.clarkparsia.*"
 			doctitle="${project.name}-${project.version.label}"
-			bottom="Copyright (c) 2009-2010 Clark &amp; Parsia, LLC (http://clarkparsia.com). All Rights Reserved.">
+			bottom="Copyright (c) 2009-2011 Clark &amp; Parsia, LLC (http://clarkparsia.com). All Rights Reserved.">
 			<classpath refid="project.class.path"/>
 			<fileset dir="${core.src.dir}" defaultexcludes="yes">
 				<include name="**/*.java"/>

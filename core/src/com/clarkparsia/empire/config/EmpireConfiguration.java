@@ -18,16 +18,13 @@ package com.clarkparsia.empire.config;
 import com.clarkparsia.empire.util.EmpireAnnotationProvider;
 import com.clarkparsia.empire.util.PropertiesAnnotationProvider;
 import com.clarkparsia.empire.EmpireOptions;
+
 import com.clarkparsia.utils.BasicUtils;
 import com.clarkparsia.utils.NamespaceUtils;
 
-import com.google.inject.Binder;
-import com.google.inject.Provider;
-import com.google.inject.name.Names;
-
 import java.util.Map;
 import java.util.HashMap;
-import java.io.File;
+
 import java.lang.reflect.Field;
 
 /**
@@ -93,23 +90,6 @@ public class EmpireConfiguration {
 
 	public String get(String theKey) {
 		return mGeneralConfiguration.get(theKey);
-	}
-
-	public void installBindings(final Binder theBinder) {
-		// TODO: is there a more general binding scheme that makes more sense?
-		// TODO: or is this overkill and we should just not worry about context specific bindings?
-		theBinder.bind(File.class)
-				.annotatedWith(Names.named("annotation.index"))
-				.toProvider(new Provider<File>() {
-					public File get() {
-						if (mGeneralConfiguration.containsKey(ConfigKeys.ANNOTATION_INDEX)) {
-							return new File(EmpireConfiguration.this.get(ConfigKeys.ANNOTATION_INDEX));
-						}
-						else {
-							return new File("empire.annotation.index");
-						}
-					}
-				});
 	}
 
 	public boolean hasUnit(final String theUnitName) {

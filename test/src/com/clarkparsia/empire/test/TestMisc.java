@@ -22,6 +22,7 @@ import static org.junit.Assert.fail;
 import org.openrdf.model.Resource;
 import org.openrdf.model.BNode;
 import org.openrdf.model.Statement;
+import org.openrdf.model.Graph;
 import org.openrdf.model.impl.ValueFactoryImpl;
 import com.clarkparsia.empire.codegen.InstanceGenerator;
 import com.clarkparsia.empire.test.api.TestInterface;
@@ -37,6 +38,11 @@ import com.clarkparsia.empire.util.EmpireUtil;
 import com.clarkparsia.empire.annotation.SupportsRdfIdImpl;
 import com.clarkparsia.empire.annotation.RdfsClass;
 import com.clarkparsia.empire.annotation.RdfProperty;
+import com.clarkparsia.empire.annotation.RdfGenerator;
+import com.clarkparsia.empire.annotation.InvalidRdfException;
+import com.clarkparsia.openrdf.OpenRdfUtil;
+import com.clarkparsia.openrdf.ExtGraph;
+import com.clarkparsia.utils.NamespaceUtils;
 
 import javax.persistence.OneToOne;
 import javax.persistence.CascadeType;
@@ -44,6 +50,7 @@ import javax.persistence.Persistence;
 import javax.persistence.EntityManager;
 import javax.persistence.Entity;
 import javax.persistence.OneToMany;
+import javax.persistence.MappedSuperclass;
 
 import java.net.URI;
 import java.net.URL;
@@ -263,6 +270,30 @@ public class TestMisc {
 		@Override
 		public String toString() {
 			return "Elem: " + name;
+		}
+	}
+
+	@Test
+	public void testTimesTwo() throws InvalidRdfException {
+		TestDoubleImpl obj = new TestDoubleImpl();
+
+		Graph g = RdfGenerator.asRdf(obj);
+
+		assertEquals(1, new ExtGraph(g).getValues(EmpireUtil.asResource(obj), ValueFactoryImpl.getInstance().createURI(NamespaceUtils.uri("test:foo"))).size());
+	}
+
+	@MappedSuperclass
+	public interface TestDouble extends SupportsRdfId {
+		@RdfProperty("test:foo")
+		public String getFoo();
+	}
+
+	@Entity
+	@RdfsClass("http://empire.clarkparsia.com/TestDouble")
+	public class TestDoubleImpl extends BaseTestClass implements TestDouble {
+		@RdfProperty("test:foo")
+		public String getFoo() {
+			return "foo";
 		}
 	}
 }

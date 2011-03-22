@@ -35,6 +35,7 @@ Empire 0.7 (TBD)
 	* FIXED: Bug in InstanceGenerator to allow creating instances of abstract classes (issue #38)
 	* FIXED: Ant/JUnit integration, annotation configuration was not correctly configured and the xml for the JUnit reports was missing (from patch from ManuelB) (issue #49-51)
 	* FIXED: Infinite loops in bi-directional cascades (issue #57)
+	* FIXED: Duplicated property assertions when a method is annotated with @RdfProperty in a concrete class and in an interface/abstract class (issue #56)
 	* REMOVED: Global flag in EmpireOptions for handling proxying, this is now completely controlled via JPA annotations (issue #32)
 
 Empire 0.6.6 (2010-07-08)

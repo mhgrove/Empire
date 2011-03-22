@@ -381,14 +381,16 @@ public final class BeanReflectUtil {
 			return entry.mGetters;
 		}
 
-		Collection<Method> aMethods = new HashSet<Method>();
+		Map<String, Method> aMethods = new HashMap<String, Method>();
 
 		for (Method aMethod : theClass.getDeclaredMethods()) {
 			if (aMethod.getAnnotation(RdfProperty.class) != null
 				&& !aMethod.getGenericReturnType().equals(Void.class)
 				&& aMethod.getParameterTypes().length == 0) {
 
-				aMethods.add(aMethod);
+				if (!aMethods.containsKey(aMethod.getName())) {
+					aMethods.put(aMethod.getName(), aMethod);
+				}
 			}
 		}
 
@@ -404,8 +406,8 @@ public final class BeanReflectUtil {
 					// so we have a setter for a annotated getter, so here we will add this to the list
 					// of setters to infer the annotation on the setter even though its not explicit
 
-					if (!aMethods.contains(aGetter)) {
-						aMethods.add(aGetter);
+					if (!aMethods.containsKey(aGetter.getName())) {
+						aMethods.put(aGetter.getName(), aGetter);
 					}
 				}
 				catch (NoSuchMethodException e) {
@@ -424,8 +426,8 @@ public final class BeanReflectUtil {
 						// so we have a setter for a annotated getter, so here we will add this to the list
 						// of setters to infer the annotation on the setter even though its not explicit
 
-						if (!aMethods.contains(aGetter)) {
-							aMethods.add(aGetter);
+						if (!aMethods.containsKey(aGetter.getName())) {
+							aMethods.put(aGetter.getName(), aGetter);
 						}
 					}
 					catch (NoSuchMethodException e) {
@@ -436,21 +438,29 @@ public final class BeanReflectUtil {
 		}
 
 		if (theClass.getSuperclass() != null && hasAnnotation(theClass.getSuperclass(), MappedSuperclass.class)) {
-			aMethods.addAll(getAnnotatedGetters(theClass.getSuperclass(), theInfer));
+			for (Method m : getAnnotatedGetters(theClass.getSuperclass(), theInfer)) {
+				if (!aMethods.containsKey(m.getName())) {
+					aMethods.put(m.getName(), m);
+				}
+			}
 		}
 
 		for (Class aInterface : theClass.getInterfaces()) {
-			aMethods.addAll(getAnnotatedGetters(aInterface, theInfer));
+			for (Method m : getAnnotatedGetters(aInterface, theInfer)) {
+				if (!aMethods.containsKey(m.getName())) {
+					aMethods.put(m.getName(), m);
+				}
+			}
 		}
 
 		if (theInfer) {
-			entry.mInferredGetters = aMethods;
+			entry.mInferredGetters = aMethods.values();
 		}
 		else {
-			entry.mGetters = aMethods;
+			entry.mGetters = aMethods.values();
 		}
 
-		return aMethods;
+		return aMethods.values();
 	}
 
 	/**

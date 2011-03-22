@@ -12,6 +12,9 @@ Empire 0.7 (TBD)
 				increase when cascading persistence operations, and a modest increase overall.
 	* MODIFIED: Global config passed through to EntityManagers in the unit config so parameters do not have to be duplicated.
 	* MODIFIED: Properties mapped as collections, with no values, return empty collections instead of null. (issue #40)
+	* MODIFIED: Laundry list of names checked for configuration files, settling on 'empire.configuration' with the Properties format as the default
+	* ADDED: Support for loading the configuration from the jar (issue #58)
+	* ADDED: Support for using Empire as the Java Agent and an AnnotationProvider implementation based on this (issue #46)
 	* ADDED: TripleSource interface for allowing triple-level access to a DataSource
 	* ADDED: Ask & Describe query methods introduced to DataSource interface.  Best effort implementations provided for DataSources which do not implement these natively.
 	* ADDED: Query type specific methods to RdfQuery to allow direct access to the query results from the DataSource
@@ -31,6 +34,7 @@ Empire 0.7 (TBD)
 	* FIXED: Bug in BNode detection for building and using them as primary keys for instances
 	* FIXED: Bug in InstanceGenerator to allow creating instances of abstract classes (issue #38)
 	* FIXED: Ant/JUnit integration, annotation configuration was not correctly configured and the xml for the JUnit reports was missing (from patch from ManuelB) (issue #49-51)
+	* FIXED: Infinite loops in bi-directional cascades (issue #57)
 	* REMOVED: Global flag in EmpireOptions for handling proxying, this is now completely controlled via JPA annotations (issue #32)
 
 Empire 0.6.6 (2010-07-08)

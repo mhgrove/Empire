@@ -1429,13 +1429,6 @@ class AbstractDelegateModel implements Model {
 	/**
 	 * @inheritDoc
 	 */
-	public Resource wrapAsResource(Node n) {
-		return m.wrapAsResource(n);
-	}
-
-	/**
-	 * @inheritDoc
-	 */
 	public Model write(OutputStream out, String lang, String base) {
 		return m.write(out, lang, base);
 	}

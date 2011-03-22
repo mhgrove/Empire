@@ -28,6 +28,7 @@ import com.clarkparsia.empire.impl.sparql.SPARQLDialect;
 
 import com.clarkparsia.empire.impl.serql.SerqlDialect;
 import com.clarkparsia.openrdf.OpenRdfUtil;
+import com.clarkparsia.openrdf.ExtRepository;
 import com.clarkparsia.openrdf.util.GraphBuildingRDFHandler;
 
 import org.openrdf.model.Graph;
@@ -38,16 +39,22 @@ import org.openrdf.model.Value;
 import org.openrdf.repository.Repository;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
+import org.openrdf.repository.http.HTTPRepository;
 
 import org.openrdf.query.GraphQuery;
 import org.openrdf.query.QueryLanguage;
 import org.openrdf.query.TupleQueryResult;
+import org.openrdf.query.GraphQueryResult;
+import org.openrdf.rio.RDFWriterRegistry;
+import org.openrdf.rio.RDFFormat;
+import org.openrdf.rio.RDFWriter;
 
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
 import java.net.ConnectException;
 import java.net.URI;
+import java.io.FileOutputStream;
 
 
 /**
@@ -340,4 +347,25 @@ public class RepositoryDataSource extends AbstractDataSource implements MutableD
 			throw new DataSourceException(e);
 		}
     }
+
+	public static void main(String[] args) throws Exception {
+		HTTPRepository r = new HTTPRepository("http://fatduck.sef.hq.nasa.gov:9000/openrdf-sesame", "spanner");
+
+		FileOutputStream fout = new FileOutputStream("/tmp/spanner.ttl");
+		RDFWriter writer = RDFWriterRegistry.getInstance().get(RDFFormat.TURTLE).getWriter(fout);
+
+		GraphQueryResult result = r.getConnection().prepareGraphQuery(QueryLanguage.SPARQL, "construct { ?s ?p ?o } where { graph <file://data.ttl> {?s ?p ?o.}}").evaluate();
+
+		writer.startRDF();
+		while (result.hasNext()) {
+			writer.handleStatement(result.next());
+		}
+
+		writer.endRDF();
+
+		fout.flush();
+		fout.close();
+
+
+	}
 }

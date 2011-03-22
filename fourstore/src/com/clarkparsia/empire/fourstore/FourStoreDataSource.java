@@ -33,6 +33,7 @@ import org.openrdf.model.Value;
 import org.openrdf.model.impl.ValueFactoryImpl;
 import org.openrdf.query.QueryEvaluationException;
 import org.openrdf.query.TupleQueryResult;
+import org.openrdf.query.algebra.TupleExpr;
 import org.openrdf.query.parser.sparql.SPARQLParser;
 import org.openrdf.query.parser.ParsedQuery;
 import org.openrdf.rio.RDFFormat;
@@ -53,7 +54,9 @@ import com.clarkparsia.openrdf.OpenRdfIO;
 import com.clarkparsia.openrdf.ExtGraph;
 import com.clarkparsia.openrdf.query.util.DescribeVisitor;
 import com.clarkparsia.openrdf.query.util.AskVisitor;
+import com.clarkparsia.openrdf.query.util.DescribeRewriter;
 import com.clarkparsia.openrdf.query.sparql.SPARQLQueryRenderer;
+import com.clarkparsia.openrdf.query.SesameQueryUtils;
 
 import static com.clarkparsia.openrdf.OpenRdfUtil.toIterator;
 
@@ -212,17 +215,12 @@ public class FourStoreDataSource extends AbstractDataSource implements MutableDa
 				return graphQuery(theQuery);
 			}
 			else {
-				ExtGraph aGraph = new ExtGraph();
+				TupleExpr aExpr = aQuery.getTupleExpr();
+				SesameQueryUtils.rewriteDescribe(aExpr);
+				aQuery.setTupleExpr(aExpr);
 
-				for (Value aValue : aVisitor.getValues()) {
-					if (aValue instanceof org.openrdf.model.URI) {
-						aGraph.addAll(mStore.constructQuery("construct { ?s ?p ?o }  where { ?s ?p ?o. filter(?s = <" + aValue.stringValue() + ">) } "));
-					}
-					else {
-						throw new QueryException("Cannot describe non-URI values");
-					}
-				}
-
+				Graph aGraph = mStore.constructQuery(new SPARQLQueryRenderer().render(aQuery));
+				
 				return aGraph;
 			}
 		}

@@ -140,8 +140,9 @@ public class SparqlEndpointDataSource extends AbstractDataSource {
 	}
 
 	private SparqlXmlResultSetParser executeSPARQLQuery(String theQuery) throws QueryException {
+		Response aResponse = null;
 		try {
-			Response aResponse = createSPARQLQueryRequest(theQuery).execute();
+			aResponse = createSPARQLQueryRequest(theQuery).execute();
 
 			if (aResponse.hasErrorCode()) {
 				throw responseToException(theQuery, aResponse);
@@ -157,6 +158,16 @@ public class SparqlEndpointDataSource extends AbstractDataSource {
 		}
 		catch (IOException e) {
 			throw new QueryException(e);
+		}
+		finally {
+			if (aResponse != null) {
+				try {
+					aResponse.close();
+				}
+				catch (IOException e) {
+					System.err.println("There was an error while closing the http connection: " + e.getMessage());
+				}
+			}
 		}
 	}
 
@@ -212,7 +223,7 @@ public class SparqlEndpointDataSource extends AbstractDataSource {
 		aParser.setContentHandler(aHandler);
 		aParser.setFeature("http://xml.org/sax/features/validation", false);
 
-		aParser.parse(new InputSource(new ByteArrayInputStream(theResponse.getContent().getBytes(Encoder.UTF8.name()))));
+		aParser.parse(new InputSource(theResponse.getContent()));
 
 		return aHandler;
 	}
@@ -235,8 +246,9 @@ public class SparqlEndpointDataSource extends AbstractDataSource {
 		ParameterList aParams = new ParameterList()
 				.add(PARAM_QUERY, theQuery);
 
+		Request aQueryRequest;
+		Response aResponse = null;
 		try {
-			Request aQueryRequest;
 
 			if (mUseGetForQueries) {
 				aQueryRequest = aRes.initGet()
@@ -250,14 +262,14 @@ public class SparqlEndpointDataSource extends AbstractDataSource {
 						.setBody(aParams.getURLEncoded());
 			}
 
-			Response aResponse = aQueryRequest.execute();
+			aResponse = aQueryRequest.execute();
 
 			if (aResponse.hasErrorCode()) {
 				throw responseToException(theQuery, aResponse);
 			}
 			else {
 				try {
-					return OpenRdfIO.readGraph(new StringReader(aResponse.getContent()), RDFFormat.TURTLE);
+					return OpenRdfIO.readGraph(aResponse.getContent(), RDFFormat.TURTLE);
 				}
 				catch (RDFParseException e) {
 					throw new QueryException("Error while parsing rdf/xml-formatted query results", e);
@@ -266,6 +278,16 @@ public class SparqlEndpointDataSource extends AbstractDataSource {
 		}
 		catch (IOException e) {
 			throw new QueryException(e);
+		}
+		finally {
+			if (aResponse != null) {
+				try {
+					aResponse.close();
+				}
+				catch (IOException e) {
+					System.err.println("There was an error while closing the http connection: " + e.getMessage());
+				}
+			}
 		}
 	}
 }

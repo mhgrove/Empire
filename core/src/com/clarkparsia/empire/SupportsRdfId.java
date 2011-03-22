@@ -37,7 +37,16 @@ public interface SupportsRdfId {
 	 */
 	void setRdfId(RdfKey theId);
 
+	/**
+	 * Interface for a primary key of a resource
+	 * @param <T> the key type
+	 */
 	public interface RdfKey<T> {
+
+		/**
+		 * Return the primary key
+		 * @return the PK
+		 */
 		public T value();
 	}
 
@@ -48,17 +57,30 @@ public interface SupportsRdfId {
 			mURI = theURI;
 		}
 
+		/**
+		 * @inheritDoc
+		 */
 		public java.net.URI value() { return mURI; }
 
+		/**
+		 * @inheritDoc
+		 */
 		@Override
 		public int hashCode() {
 			return mURI.hashCode();
 		}
+
+		/**
+		 * @inheritDoc
+		 */
 		@Override
 		public String toString() {
 			return mURI.toASCIIString();
 		}
 
+		/**
+		 * @inheritDoc
+		 */
 		@Override
 		public boolean equals(Object theObj) {
 			if (theObj == null) {
@@ -80,17 +102,30 @@ public interface SupportsRdfId {
 			mId = theId;
 		}
 
+		/**
+		 * @inheritDoc
+		 */
 		public String value() { return mId; }
 
+		/**
+		 * @inheritDoc
+		 */
 		@Override
 		public int hashCode() {
 			return mId.hashCode();
 		}
+
+		/**
+		 * @inheritDoc
+		 */
 		@Override
 		public String toString() {
 			return mId;
 		}
 
+		/**
+		 * @inheritDoc
+		 */
 		@Override
 		public boolean equals(Object theObj) {
 			if (theObj == null) {

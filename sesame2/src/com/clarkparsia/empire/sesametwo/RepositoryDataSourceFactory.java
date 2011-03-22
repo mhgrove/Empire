@@ -49,13 +49,14 @@ public class RepositoryDataSourceFactory implements DataSourceFactory, Repositor
 	 * @inheritDoc
 	 */
 	public boolean canCreate(final Map<String, Object> theMap) {
-		Object aURL = theMap.get(URL);
-		Object aRepo = theMap.get(REPO);
-		Object aFiles = theMap.get(FILES);
-		Object aDir = theMap.get(DIR);
-		Object aPhysRepo = theMap.get(REPO_HANDLE);
-
-		return (aURL != null && aRepo != null) || aFiles != null || aDir != null || (aPhysRepo != null && aPhysRepo instanceof Repository);
+		return true;
+//		Object aURL = theMap.get(URL);
+//		Object aRepo = theMap.get(REPO);
+//		Object aFiles = theMap.get(FILES);
+//		Object aDir = theMap.get(DIR);
+//		Object aPhysRepo = theMap.get(REPO_HANDLE);
+//
+//		return (aURL != null && aRepo != null) || aFiles != null || aDir != null || (aPhysRepo != null && aPhysRepo instanceof Repository);
 	}
 
 	/**
@@ -110,9 +111,13 @@ public class RepositoryDataSourceFactory implements DataSourceFactory, Repositor
 					throw new DataSourceException(e);
 				}
 			}
-			else {
+			else if (aDir != null) {
 				aRepository = new SailRepository(new MemoryStore(new File(aDir.toString())));
 
+				aRepository.initialize();
+			}
+			else {
+				aRepository = new SailRepository(new MemoryStore());
 				aRepository.initialize();
 			}
 

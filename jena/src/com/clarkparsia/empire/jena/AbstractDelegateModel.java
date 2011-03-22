@@ -217,6 +217,13 @@ class AbstractDelegateModel implements Model {
 	/**
 	 * @inheritDoc
 	 */
+	public Resource wrapAsResource(final Node theNode) {
+		return m.wrapAsResource(theNode);
+	}
+
+	/**
+	 * @inheritDoc
+	 */
 	public Statement asStatement(Triple t) {
 		return m.asStatement(t);
 	}

@@ -13,6 +13,7 @@ Empire 0.7 (TBD)
 	* MODIFIED: Global config passed through to EntityManagers in the unit config so parameters do not have to be duplicated.
 	* MODIFIED: Properties mapped as collections, with no values, return empty collections instead of null. (issue #40)
 	* MODIFIED: Laundry list of names checked for configuration files, settling on 'empire.configuration' with the Properties format as the default
+	* MODIFIED: Upgrade to TDB 0.8.7, Jena 2.6.4, CP OpenRdfUtil 0.3
 	* ADDED: Support for loading the configuration from the jar (issue #58)
 	* ADDED: Support for using Empire as the Java Agent and an AnnotationProvider implementation based on this (issue #46)
 	* ADDED: TripleSource interface for allowing triple-level access to a DataSource

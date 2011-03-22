@@ -20,6 +20,7 @@ import com.clarkparsia.empire.Dialect;
 import com.clarkparsia.empire.Empire;
 import com.clarkparsia.empire.util.EmpireUtil;
 import com.clarkparsia.empire.impl.serql.SerqlDialect;
+import com.clarkparsia.empire.impl.sparql.ARQSPARQLDialect;
 import com.clarkparsia.openrdf.ExtGraph;
 import com.clarkparsia.openrdf.query.builder.QueryBuilderFactory;
 import com.clarkparsia.openrdf.query.serql.SeRQLQueryRenderer;
@@ -29,6 +30,7 @@ import com.clarkparsia.utils.collections.CollectionUtil;
 import org.openrdf.model.Resource;
 import org.openrdf.model.Graph;
 import org.openrdf.model.Value;
+import org.openrdf.model.BNode;
 import org.openrdf.query.parser.ParsedTupleQuery;
 import org.openrdf.query.BindingSet;
 import org.apache.log4j.Logger;
@@ -99,6 +101,12 @@ public class DataSourceUtil {
 		Dialect aDialect = theSource.getQueryFactory().getDialect();
 
 		Resource aResource = EmpireUtil.asResource(EmpireUtil.asSupportsRdfId(theObj));
+
+		// bnode instabilty in queries will just yield either a parse error or incorrect query results because the bnode
+		// will get treated as a variable, and it will just grab the entire database, which is not what we want
+		if (aResource instanceof BNode && !(aDialect instanceof ARQSPARQLDialect)) {
+			return new ExtGraph();
+		}
 
 		// TODO: if source supports describe queries, use that.
 
@@ -205,18 +213,22 @@ public class DataSourceUtil {
 	 * @throws com.clarkparsia.empire.ds.DataSourceException if there is an error while querying the data source.
 	 */
 	public static Collection<Value> getValues(final DataSource theSource, final Resource theSubject, final org.openrdf.model.URI thePredicate) throws DataSourceException {
-		ParsedTupleQuery aQuery = QueryBuilderFactory.select("obj")
-				.group()
-				.atom(theSubject, thePredicate, "obj").closeGroup().query();
+		final String aSPARQLQuery = "select ?obj\n" +
+									"where {\n" +
+									theSource.getQueryFactory().getDialect().asQueryString(theSubject) + " <" + thePredicate.stringValue() + "> ?obj.  }";
+
+		final String aSERQLQuery = "select obj\n" +
+								   "from\n" +
+								   "{"+theSource.getQueryFactory().getDialect().asQueryString(theSubject) + "} <" + thePredicate.stringValue() + "> {obj}  ";
 
 		ResultSet aResults;
 
 		try {
 			if (theSource.getQueryFactory().getDialect().equals(SerqlDialect.instance())) {
-				aResults = theSource.selectQuery(new SeRQLQueryRenderer().render(aQuery));
+				aResults = theSource.selectQuery(aSERQLQuery);
 			}
 			else {
-				aResults = theSource.selectQuery(new SPARQLQueryRenderer().render(aQuery));
+				aResults = theSource.selectQuery(aSPARQLQuery);
 			}
 
 			return CollectionUtil.transform(CollectionUtil.set(aResults), new Function<BindingSet, Value>() {

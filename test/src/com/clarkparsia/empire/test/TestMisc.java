@@ -28,6 +28,8 @@ import com.clarkparsia.empire.test.api.TestInterface;
 import com.clarkparsia.empire.test.api.BaseTestClass;
 import com.clarkparsia.empire.SupportsRdfId;
 import com.clarkparsia.empire.Empire;
+import com.clarkparsia.empire.jena.JenaEmpireModule;
+import com.clarkparsia.empire.jena.JenaDataSource;
 import com.clarkparsia.empire.ds.DataSourceException;
 import com.clarkparsia.empire.sesametwo.OpenRdfEmpireModule;
 import com.clarkparsia.empire.sesametwo.RepositoryDataSource;
@@ -41,9 +43,12 @@ import javax.persistence.CascadeType;
 import javax.persistence.Persistence;
 import javax.persistence.EntityManager;
 import javax.persistence.Entity;
+import javax.persistence.OneToMany;
 
 import java.net.URI;
 import java.net.URL;
+import java.util.Collection;
+import java.util.ArrayList;
 
 /**
  * <p>Various miscellaneous tests for non-JPA parts of the Empire API.</p>
@@ -167,7 +172,7 @@ public class TestMisc {
 	}
 
 	@Test
-	public void infiniteLoopsAreBad() {
+	public void infiniteLoopsAreBadMmmK() {
 		System.setProperty("empire.configuration.file", "test.empire.config.properties");
 
 		Empire.init(new OpenRdfEmpireModule());
@@ -201,4 +206,63 @@ public class TestMisc {
 		One one;
 	}
 
+	@Test
+	public void testNPEUsingIsList() {
+		System.setProperty("empire.configuration.file", "test.empire.config.properties");
+
+		Empire.init(new JenaEmpireModule());
+
+		EntityManager aMgr = Persistence.createEntityManagerFactory("jena-test-data-source").createEntityManager();
+
+		OneWithList one = new OneWithList();
+
+		one.list.add(new Elem("a"));
+		one.list.add(new Elem("b"));
+		one.list.add(new Elem("c"));
+		one.list.add(new Elem("d"));
+
+		aMgr.persist(one);
+
+//		try {
+//			for (Statement s : ((JenaDataSource) aMgr.getDelegate()).getStatements(null, null, null)) {
+//				System.err.println(s);
+//			}
+//		}
+//		catch (DataSourceException e) {
+//			e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+//		}
+
+		System.err.println(aMgr.find(OneWithList.class, one.getRdfId()).list);
+	}
+
+	@Entity
+	@RdfsClass("http://empire.clarkparsia.com/OneWithList")
+	public static class OneWithList extends BaseTestClass {
+		@RdfProperty(value="http://empire.clarkparsia.com/list", isList=true)
+		@OneToMany(cascade={CascadeType.MERGE, CascadeType.PERSIST})
+		Collection<Elem> list = new ArrayList<Elem>();
+
+		public OneWithList() {
+		}
+	}
+
+	@Entity
+	@RdfsClass("http://empire.clarkparsia.com/Elem")
+	public static class Elem extends BaseTestClass {
+
+		public Elem() {
+		}
+
+		private Elem(final String theName) {
+			name = theName;
+		}
+
+		@RdfProperty("rdfs:label")
+		public String name;
+
+		@Override
+		public String toString() {
+			return "Elem: " + name;
+		}
+	}
 }

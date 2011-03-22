@@ -51,6 +51,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Iterator;
 import java.util.Locale;
+import java.util.ArrayList;
 import java.net.URISyntaxException;
 
 import com.clarkparsia.utils.BasicUtils;
@@ -78,6 +79,7 @@ import com.clarkparsia.empire.Dialect;
 import com.clarkparsia.empire.annotation.runtime.Proxy;
 
 import com.clarkparsia.empire.impl.serql.SerqlDialect;
+import com.clarkparsia.empire.impl.sparql.ARQSPARQLDialect;
 
 import static com.clarkparsia.empire.util.BeanReflectUtil.set;
 import static com.clarkparsia.empire.util.BeanReflectUtil.setAccessible;
@@ -1040,6 +1042,9 @@ public class RdfGenerator {
 				aClass = refineClass(mAccessor, aClass, mSource, aBNode);
 
 				if (Collection.class.isAssignableFrom(BeanReflectUtil.classFrom(mAccessor))) {
+					AccessibleObject aAccess = (AccessibleObject) mAccessor;
+					RdfProperty aPropAnnotation = aAccess.getAnnotation(RdfProperty.class);
+
 					// the field takes a collection, lets create a new instance of said collection, and hopefully the
 					// bnode is a list.  this approach will only work if the property is a singleton value, eg
 					// :inst someProperty _:a where _:a is the head of a list.  if you have another value _:b for
@@ -1055,9 +1060,46 @@ public class RdfGenerator {
 						Resource aPossibleListHead = (Resource) aGraph.getValue(mResource, mProperty);
 						
 						if (aGraph.isList(aPossibleListHead)) {
-							List<Value> aList = aGraph.asList(aPossibleListHead);
+							List<Value> aList;
 
-							return new ToObjectFunction(mSource, null, null, null).apply(aList);
+							// getting the list is only safe the the query dialect supports stable bnode ids in the query language, which is just 4store and Jena
+							// sesame does not support this.  I know this is a shitty hack to detect this, but it works.  Future work will add this detection as an
+							// interface to the dialect or as some sort of proeprty of the dialect, like dialect.supports(StableBNodeIds)
+							if (aPropAnnotation != null && aPropAnnotation.isList() && mSource.getQueryFactory().getDialect() instanceof ARQSPARQLDialect) {
+								try {
+									aList = asList(mSource, aPossibleListHead);
+								}
+								catch (DataSourceException e) {
+									throw new RuntimeException(e);
+								}
+							}
+							else {
+								aList = new ArrayList<Value>(aGraph.getValues(mResource, mProperty));
+							}
+
+
+							//return new ToObjectFunction(mSource, null, (AccessibleObject) mAccessor, null).apply(aList);
+							Collection<Object> aValues = BeanReflectUtil.instantiateCollectionFromField(BeanReflectUtil.classFrom(aAccess));
+
+							for (Value aValue : aList) {
+								Object aListValue = null;
+
+								try {
+									aListValue = getProxyOrDbObject(mAccessor, aClass, aValue, mSource);
+								}
+								catch (Exception e) {
+									// we'll throw an error in a second...
+								}
+
+								if (aListValue == null) {
+									throw new RuntimeException("Error converting a list value: " + aValue + " -> " + aClass);
+								}
+
+								aValues.add(aListValue);
+
+							}
+							
+							return aValues;
 						}
 					}
 					catch (QueryException e) {
@@ -1112,6 +1154,31 @@ public class RdfGenerator {
 				}
 			}
 		}
+	}
+
+	private static List<Value> asList(DataSource theSource, Resource theRes) throws DataSourceException {
+        List<Value> aList = new ArrayList<Value>();
+
+        Resource aListRes = theRes;
+
+        while (aListRes != null) {
+
+            Resource aFirst = (Resource) DataSourceUtil.getValue(theSource, aListRes, RDF.FIRST);
+            Resource aRest = (Resource) DataSourceUtil.getValue(theSource, aListRes, RDF.REST);
+
+            if (aFirst != null) {
+               aList.add(aFirst);
+            }
+
+            if (aRest == null || aRest.equals(RDF.NIL)) {
+               aListRes = null;
+            }
+            else {
+                aListRes = aRest;
+            }
+        }
+
+        return aList;
 	}
 
 	private static final MethodFilter METHOD_FILTER = new MethodFilter() {
@@ -1170,7 +1237,10 @@ public class RdfGenerator {
 	
 	private static String getBNodeConstructQuery(DataSource theSource, Resource theRes, URI theProperty) {
 		Dialect aDialect = theSource.getQueryFactory().getDialect();
-
+System.err.println(theRes + " " + theProperty);
+if (theRes == null && theProperty == null) {
+	int f = 0;
+}
 		String aSerqlQuery = "construct * from {" + aDialect.asQueryString(theRes) + "} <" + theProperty.toString() + "> {o}, {o} po {oo}";
 
 		String aSparqlQuery = "CONSTRUCT  { " + aDialect.asQueryString(theRes) + " <"+theProperty.toString()+"> ?o . ?o ?po ?oo  } \n" +

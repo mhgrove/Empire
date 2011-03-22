@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2010 Clark & Parsia, LLC. <http://www.clarkparsia.com>
+ * Copyright (c) 2009-2011 Clark & Parsia, LLC. <http://www.clarkparsia.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,8 @@ package com.clarkparsia.empire.config;
 import com.clarkparsia.empire.util.EmpireAnnotationProvider;
 import com.clarkparsia.empire.util.PropertiesAnnotationProvider;
 import com.clarkparsia.empire.EmpireOptions;
+import com.clarkparsia.utils.BasicUtils;
+import com.clarkparsia.utils.NamespaceUtils;
 
 import com.google.inject.Binder;
 import com.google.inject.Provider;
@@ -54,10 +56,21 @@ public class EmpireConfiguration {
 		for (String aKey : mGeneralConfiguration.keySet()) {
 			try {
 				Field aField = EmpireOptions.class.getField(aKey);
+				
 				aField.setBoolean(null, Boolean.parseBoolean(mGeneralConfiguration.get(aKey)));
 			}
 			catch (Exception e) {
 				// no-op, field doesn't exist, or the value is badly formatted. oh well
+			}
+		}
+
+		// auto add any namespace declarations in the configuration file.
+		if (mGeneralConfiguration.containsKey("ns_list")) {
+			String aList = mGeneralConfiguration.get("ns_list");
+			for (String aKey : BasicUtils.split(aList, ",")) {
+				if (mGeneralConfiguration.containsKey(aKey)) {
+					NamespaceUtils.addNamespace(aKey, mGeneralConfiguration.get(aKey));
+				}
 			}
 		}
 	}

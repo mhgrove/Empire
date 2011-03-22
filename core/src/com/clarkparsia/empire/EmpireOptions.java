@@ -22,7 +22,13 @@ package com.clarkparsia.empire;
  * @since 0.1
  * @version 0.7
  */
-public class EmpireOptions {
+public final class EmpireOptions {
+
+	/**
+	 * Cannot create instances of this class
+	 */
+	private EmpireOptions() {
+	}
 
 	/**
 	 * Whether or not to force strong typing of literals during I/O from the database.  When this is true, literals

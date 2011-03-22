@@ -26,6 +26,8 @@ import java.lang.annotation.Annotation;
  * start-up.</p>
  *
  * @author Michael Grove
+ * @since 0.1
+ * @version 0.1
  */
 public interface EmpireAnnotationProvider {
 

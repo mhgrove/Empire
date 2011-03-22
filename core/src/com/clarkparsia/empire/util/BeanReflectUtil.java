@@ -58,9 +58,18 @@ import java.util.HashMap;
  * @since 0.5.1
  * @version 0.7
  */
-public class BeanReflectUtil {
+public final class BeanReflectUtil {
 
+	/**
+	 * Small cache so we don't have to recalcuation information via java.lang.reflect every time, which can be expensive
+	 */
 	private final static Map<Class<?>, BeanReflectCacheEntry> cache = new HashMap<Class<?>, BeanReflectCacheEntry>();
+
+	/**
+	 * Cannot create instances of this class
+	 */
+	private BeanReflectUtil() {
+	}
 
 	/**
 	 * More or less a more robust version of Class.forName.  Attempts to get around custom class loaders and

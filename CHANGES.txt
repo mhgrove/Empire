@@ -36,6 +36,7 @@ Empire 0.7 (TBD)
 	* FIXED: Ant/JUnit integration, annotation configuration was not correctly configured and the xml for the JUnit reports was missing (from patch from ManuelB) (issue #49-51)
 	* FIXED: Infinite loops in bi-directional cascades (issue #57)
 	* FIXED: Duplicated property assertions when a method is annotated with @RdfProperty in a concrete class and in an interface/abstract class (issue #56)
+	* FIXED: Calls to CtClass.getMethod -- catching NotFoundException and handling properly, was incorrectly expecting a null to be returned (issue #60)
 	* REMOVED: Global flag in EmpireOptions for handling proxying, this is now completely controlled via JPA annotations (issue #32)
 
 Empire 0.6.6 (2010-07-08)

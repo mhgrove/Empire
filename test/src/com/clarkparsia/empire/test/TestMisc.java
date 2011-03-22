@@ -21,12 +21,26 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import org.openrdf.model.Resource;
 import org.openrdf.model.BNode;
+import org.openrdf.model.Statement;
 import org.openrdf.model.impl.ValueFactoryImpl;
 import com.clarkparsia.empire.codegen.InstanceGenerator;
 import com.clarkparsia.empire.test.api.TestInterface;
+import com.clarkparsia.empire.test.api.BaseTestClass;
 import com.clarkparsia.empire.SupportsRdfId;
+import com.clarkparsia.empire.Empire;
+import com.clarkparsia.empire.ds.DataSourceException;
+import com.clarkparsia.empire.sesametwo.OpenRdfEmpireModule;
+import com.clarkparsia.empire.sesametwo.RepositoryDataSource;
 import com.clarkparsia.empire.util.EmpireUtil;
 import com.clarkparsia.empire.annotation.SupportsRdfIdImpl;
+import com.clarkparsia.empire.annotation.RdfsClass;
+import com.clarkparsia.empire.annotation.RdfProperty;
+
+import javax.persistence.OneToOne;
+import javax.persistence.CascadeType;
+import javax.persistence.Persistence;
+import javax.persistence.EntityManager;
+import javax.persistence.Entity;
 
 import java.net.URI;
 import java.net.URL;
@@ -36,7 +50,7 @@ import java.net.URL;
  *
  * @author Michael Grove
  * @version 0.6.4
- * @since 0.6.4
+ * @since 0.7
  */
 public class TestMisc {
 	@Test
@@ -151,4 +165,40 @@ public class TestMisc {
 		public String getBar();
 		public void setBar(String theStr);
 	}
+
+	@Test
+	public void infiniteLoopsAreBad() {
+		System.setProperty("empire.configuration.file", "test.empire.config.properties");
+
+		Empire.init(new OpenRdfEmpireModule());
+		
+		EntityManager aMgr = Persistence.createEntityManagerFactory("test-data-source").createEntityManager();
+
+		One one = new One();
+		Two two = new Two();
+
+		one.two = two;
+		two.one = one;
+
+		aMgr.persist(one);
+
+		// i'm not testing correctness of the persistence here, the other test cases should catch that
+	}
+
+	@Entity
+	@RdfsClass("http://empire.clarkparsia.com/one")
+	private class One extends BaseTestClass {
+		@OneToOne(cascade={CascadeType.MERGE, CascadeType.PERSIST})
+		@RdfProperty("http://empire.clarkparsia.com/hasTwo")
+		Two two;
+	}
+
+	@Entity
+	@RdfsClass("http://empire.clarkparsia.com/two")
+	private class Two extends BaseTestClass {
+		@OneToOne(cascade={CascadeType.MERGE, CascadeType.PERSIST})
+		@RdfProperty("http://empire.clarkparsia.com/hasOne")
+		One one;
+	}
+
 }

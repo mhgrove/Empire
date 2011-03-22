@@ -130,6 +130,11 @@ public class EntityManagerImpl implements EntityManager {
 	private DataSourceOperation mOp;
 
 	/**
+	 * The list of things which are ready to be cascaded.  They are tracked in this list to help prevent infinite loops
+	 */
+	private Collection<Object> mCascadePending = new HashSet<Object>();
+
+	/**
 	 * Create a new EntityManagerImpl
 	 * @param theSource the underlying RDF datasource used for persistence operations
 	 */
@@ -378,6 +383,7 @@ public class EntityManagerImpl implements EntityManager {
 
 	private void finishCurrentDataSourceOperation(boolean theIsTop) throws DataSourceException {
 		if (theIsTop) {
+			mCascadePending.clear();
 			mOp.execute();
 			mOp = null;
 		}
@@ -441,6 +447,14 @@ public class EntityManagerImpl implements EntityManager {
 	}
 
 	private <T> void cascadeOperation(T theT, CascadeTest theCascadeTest, CascadeAction theAction) {
+		// if we've already cascaded this, move on to the next thing, we don't want infinite loops
+		if (mCascadePending.contains(theT)) {
+			return;
+		}
+		else {
+			mCascadePending.add(theT);
+		}
+
 		Collection<AccessibleObject> aAccessors = new HashSet<AccessibleObject>();
 		
 		aAccessors.addAll(getAnnotatedFields(theT.getClass()));
@@ -450,7 +464,7 @@ public class EntityManagerImpl implements EntityManager {
 			if (theCascadeTest.accept(aObj)) {
 				try {
 					Object aAccessorValue = BeanReflectUtil.safeGet(aObj, theT);
-					
+
 					if (aAccessorValue == null) {
 						continue;
 					}
@@ -923,12 +937,11 @@ public class EntityManagerImpl implements EntityManager {
 		// HashMap's used here rather than the more generic Map interface because we allow null keys (no specified
 		// named graph) which HashMap allows, while generically Map makes no guarantees about this, so we're explicit here.
 
-		private HashMap<java.net.URI, Graph> mAdd;
-		private HashMap<java.net.URI, Graph> mRemove;
-		//private MutableDataSource mSource;
+		private final Map<java.net.URI, Graph> mAdd;
+		private final Map<java.net.URI, Graph> mRemove;
 
-		private Set<Object> mVerifyAdd = new HashSet<Object>();
-		private Set<Object> mVerifyRemove = new HashSet<Object>();
+		private final Set<Object> mVerifyAdd = new HashSet<Object>();
+		private final Set<Object> mVerifyRemove = new HashSet<Object>();
 
 		/**
 		 * Create a new DataSourceOperation
@@ -1059,7 +1072,6 @@ public class EntityManagerImpl implements EntityManager {
 		 * @param theOp the operation to merge
 		 */
 		public void merge(final DataSourceOperation theOp) {
-
 			for (Map.Entry<URI, Graph> aEntry : theOp.mRemove.entrySet()) {
 				remove(aEntry.getKey(), aEntry.getValue());
 			}

@@ -24,6 +24,7 @@ import javassist.NotFoundException;
 import javassist.Modifier;
 import javassist.CannotCompileException;
 import javassist.CtMethod;
+import javassist.CtPrimitiveType;
 import javassist.bytecode.ConstPool;
 import javassist.bytecode.AnnotationsAttribute;
 import javassist.bytecode.SignatureAttribute;
@@ -206,6 +207,10 @@ public class InstanceGenerator {
 			if (!hasMethod(theClass, getterName(aProp))) {
 				CtMethod aMethod = CtNewMethod.getter(getterName(aProp), aNewField);
 
+				if (aNewField.getType() == CtPrimitiveType.booleanType && !hasMethod(theClass, aMethod)) {	
+					aMethod = CtNewMethod.getter(booleanGetterName(aProp), aNewField);
+				}
+
 				inheritAnnotations(theClass, aMethod);
 
 				SignatureAttribute attr = (SignatureAttribute) aNewField.getFieldInfo().getAttribute(SignatureAttribute.tag);
@@ -231,8 +236,17 @@ public class InstanceGenerator {
 		}
 	}
 
+	private static boolean hasMethod(final CtClass theClass, final CtMethod theMethod) {
+		try {
+			return theClass.getMethod(theMethod.getName(), theMethod.getSignature()) != null;
+		}
+		catch (NotFoundException e) {
+			return false;
+		}
+	}
+
 	private static void inheritAnnotations(final CtClass theClass, final CtMethod theMethod) throws NotFoundException {
-		if (theClass.getMethod(theMethod.getName(), theMethod.getSignature()) != null) {
+		if (hasMethod(theClass, theMethod)) {
 			CtMethod aOtherMethod = theClass.getMethod(theMethod.getName(), theMethod.getSignature());
 			// method we're probably overriding or implementing in the case of an abstract method.
 
@@ -397,6 +411,16 @@ public class InstanceGenerator {
 	 */
 	private static String getterName(String theProperyName) {
 		return "get" + String.valueOf(theProperyName.charAt(0)).toUpperCase() + theProperyName.substring(1);
+	}
+
+	/**
+	 * Reurn the name of the getter method given the bean property name.  For example, if there is a property "connected"
+	 * this will return "isConnected"
+	 * @param theProperyName the bean property name
+	 * @return the name of the getter for the property
+	 */
+	private static String booleanGetterName(String theProperyName) {
+		return "is" + String.valueOf(theProperyName.charAt(0)).toUpperCase() + theProperyName.substring(1);
 	}
 
 	/**

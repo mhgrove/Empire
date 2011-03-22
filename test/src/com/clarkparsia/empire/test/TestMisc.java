@@ -21,7 +21,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import org.openrdf.model.Resource;
 import org.openrdf.model.BNode;
-import org.openrdf.model.Statement;
 import org.openrdf.model.Graph;
 import org.openrdf.model.impl.ValueFactoryImpl;
 import com.clarkparsia.empire.codegen.InstanceGenerator;
@@ -30,17 +29,13 @@ import com.clarkparsia.empire.test.api.BaseTestClass;
 import com.clarkparsia.empire.SupportsRdfId;
 import com.clarkparsia.empire.Empire;
 import com.clarkparsia.empire.jena.JenaEmpireModule;
-import com.clarkparsia.empire.jena.JenaDataSource;
-import com.clarkparsia.empire.ds.DataSourceException;
 import com.clarkparsia.empire.sesametwo.OpenRdfEmpireModule;
-import com.clarkparsia.empire.sesametwo.RepositoryDataSource;
 import com.clarkparsia.empire.util.EmpireUtil;
 import com.clarkparsia.empire.annotation.SupportsRdfIdImpl;
 import com.clarkparsia.empire.annotation.RdfsClass;
 import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.RdfGenerator;
 import com.clarkparsia.empire.annotation.InvalidRdfException;
-import com.clarkparsia.openrdf.OpenRdfUtil;
 import com.clarkparsia.openrdf.ExtGraph;
 import com.clarkparsia.utils.NamespaceUtils;
 
@@ -270,6 +265,30 @@ public class TestMisc {
 		@Override
 		public String toString() {
 			return "Elem: " + name;
+		}
+	}
+
+	@Test
+	public void testFunkyInstGenWithBoolean() throws Exception {
+		InstanceGenerator.generateInstanceClass(FooImpl.class);
+	}
+
+	public static abstract class FooImpl extends AbstractFoo implements IFoo {
+	}
+	
+	public static interface IFoo {
+		public boolean isDereferenced();
+	}
+
+	@MappedSuperclass
+	public static abstract class AbstractFoo implements SupportsRdfId {
+		private boolean dereferenced;
+
+		/**
+		 * @inheritDoc
+		 */
+		public boolean isDereferenced() {
+			return dereferenced;
 		}
 	}
 

@@ -192,6 +192,7 @@ public class RepositoryDataSource extends AbstractDataSource implements MutableD
 
 		try {
 			mConnection.close();
+			mRepository.shutDown();
 
 			setConnected(false);
 		}

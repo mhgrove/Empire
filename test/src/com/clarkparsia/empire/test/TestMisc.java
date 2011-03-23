@@ -212,8 +212,6 @@ public class TestMisc {
 	public void testNPEUsingIsList() {
 		System.setProperty("empire.configuration.file", "test.empire.config.properties");
 
-		Empire.init(new JenaEmpireModule());
-
 		EntityManager aMgr = Persistence.createEntityManagerFactory("jena-test-data-source").createEntityManager();
 
 		OneWithList one = new OneWithList();
@@ -270,7 +268,9 @@ public class TestMisc {
 
 	@Test
 	public void testFunkyInstGenWithBoolean() throws Exception {
-		InstanceGenerator.generateInstanceClass(FooImpl.class);
+		IFoo aFoo = InstanceGenerator.generateInstanceClass(FooImpl.class).newInstance();
+
+		assertTrue(aFoo.isDereferenced());
 	}
 
 	public static abstract class FooImpl extends AbstractFoo implements IFoo {
@@ -282,13 +282,11 @@ public class TestMisc {
 
 	@MappedSuperclass
 	public static abstract class AbstractFoo implements SupportsRdfId {
-		private boolean dereferenced;
-
 		/**
 		 * @inheritDoc
 		 */
 		public boolean isDereferenced() {
-			return dereferenced;
+			return true;
 		}
 	}
 

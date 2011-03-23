@@ -204,7 +204,7 @@ public class InstanceGenerator {
 				theClass.addField(aNewField);
 			}
 
-			if (!hasMethod(theClass, getterName(aProp))) {
+			if (!hasMethod(theClass, getterName(aProp)) && !hasMethod(theClass, booleanGetterName(aProp))) {
 				CtMethod aMethod = CtNewMethod.getter(getterName(aProp), aNewField);
 
 				if (aNewField.getType() == CtPrimitiveType.booleanType && !hasMethod(theClass, aMethod)) {	

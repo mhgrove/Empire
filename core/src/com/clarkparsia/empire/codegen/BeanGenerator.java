@@ -20,6 +20,7 @@ import org.openrdf.model.URI;
 import org.openrdf.model.Statement;
 import org.openrdf.model.Value;
 import org.openrdf.model.Literal;
+import org.openrdf.model.BNode;
 import org.openrdf.model.vocabulary.OWL;
 import org.openrdf.model.vocabulary.XMLSchema;
 import org.openrdf.model.vocabulary.RDFS;
@@ -199,7 +200,13 @@ public class BeanGenerator {
 	private static String functionType(final ExtRepository theGraph, final URI theProp) throws Exception {
 		String aType;
 
-		URI aRange = (URI) theGraph.getValue(theProp, RDFS.RANGE);
+		Resource aRangeRes = (Resource) theGraph.getValue(theProp, RDFS.RANGE);
+		if (aRangeRes instanceof BNode) {
+			// we can't handle bnodes very well, so we're just going to assume Object
+			return "Object";
+		}
+
+		URI aRange = (URI) aRangeRes;
 
 		if (aRange == null) {
 			// no explicit range, try to infer it...
@@ -430,6 +437,8 @@ public class BeanGenerator {
 																			   OpenRdfUtil.toIterator(aRepository.getStatements(null, RDF.TYPE, OWL.CLASS))),
 												  new StatementToSubject());
 
+		aClasses = filter(aClasses, new Predicate<Resource>() { public boolean accept(Resource theRes) { return theRes instanceof URI; } });
+
 		Collection<Resource> aIndClasses = transform(OpenRdfUtil.toIterator(aRepository.getStatements(null, RDF.TYPE, null)),
 													 compose(new StatementToObject(),
 															 new FunctionUtil.Cast<Value, Resource>(Resource.class)));
@@ -447,6 +456,7 @@ public class BeanGenerator {
 		Map<Resource, Collection<URI>> aMap = new HashMap<Resource, Collection<URI>>();
 
 		for (Resource aClass : aClasses) {
+			if (aClass instanceof BNode) { continue; }
 			Collection<URI> aProps = new HashSet<URI>(transform(OpenRdfUtil.toIterator(aRepository.getStatements(null, RDFS.DOMAIN, aClass)),
 																compose(new StatementToSubject(),
 																		new FunctionUtil.Cast<Resource, URI>(URI.class))));

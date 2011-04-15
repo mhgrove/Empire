@@ -46,7 +46,7 @@ import org.apache.log4j.LogManager;
  *
  * @author Michael Grove
  * @since 0.1
- * @version 0.6.5
+ * @version 0.7
  */
 public class PropertiesAnnotationProvider implements EmpireAnnotationProvider {
 
@@ -92,9 +92,19 @@ public class PropertiesAnnotationProvider implements EmpireAnnotationProvider {
 
 			InputStream aStream = null;
 			try {
-				aStream = new FileInputStream(mFile);
+				if (mFile.exists()) {
+					aStream = new FileInputStream(mFile);
+				}
+				else {
+					aStream = getClass().getResourceAsStream("/" + mFile.getName());
+				}
 
-				mProperties.load(aStream);
+				if (aStream != null) {
+					mProperties.load(aStream);
+				}
+				else {
+					LOGGER.warn("Annotation properties file could not be found on disk or in the jar");
+				}
 			}
 			catch (FileNotFoundException ex) {
 				LOGGER.warn("Reading annotation index properties for Annotation provider failed, index file not found.");

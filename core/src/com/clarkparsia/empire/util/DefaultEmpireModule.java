@@ -55,7 +55,7 @@ import org.slf4j.LoggerFactory;
  * @since 0.6
  * @version 0.7
  */
-public final class DefaultEmpireModule extends AbstractModule implements EmpireModule {
+public  class DefaultEmpireModule extends AbstractModule implements EmpireModule {
 
 	/**
 	 * The logger
@@ -119,7 +119,6 @@ public final class DefaultEmpireModule extends AbstractModule implements EmpireM
 		}
 
 		if (aConfigFile == null) {
-			// TODO: should this just be an Error -- throw a RTE?
 			mConfig = new EmpireConfiguration();
 
 			LOGGER.warn("No configuration found or specified, Empire may not start or function correctly.");

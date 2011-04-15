@@ -76,7 +76,7 @@ public class EmpireConfiguration {
 		return mAnnotationProvider;
 	}
 
-	public void setAnnotationProvider(final Class<EmpireAnnotationProvider> theAnnotationProvider) {
+	public void setAnnotationProvider(final Class<? extends EmpireAnnotationProvider> theAnnotationProvider) {
 		mAnnotationProvider = theAnnotationProvider;
 	}
 

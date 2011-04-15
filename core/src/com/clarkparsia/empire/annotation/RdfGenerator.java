@@ -282,8 +282,8 @@ public class RdfGenerator {
 	 */
 	@SuppressWarnings("unchecked")
 	private static <T> T fromRdf(T theObj, DataSource theSource) throws InvalidRdfException, DataSourceException {
-		final SupportsRdfId aSupportsRdfId = asSupportsRdfId(theObj);
-		final SupportsRdfId.RdfKey theKeyObj = aSupportsRdfId.getRdfId();
+		final SupportsRdfId aTmpSupportsRdfId = asSupportsRdfId(theObj);
+		final SupportsRdfId.RdfKey theKeyObj = aTmpSupportsRdfId.getRdfId();
 		
 		LOGGER.debug("Got obj : " + theObj );
 		
@@ -303,14 +303,37 @@ public class RdfGenerator {
 				return theObj;
 			}
 
-			final Resource aRes = EmpireUtil.asResource(aSupportsRdfId);
+			final Resource aTmpRes = EmpireUtil.asResource(aTmpSupportsRdfId);
 			Set<URI> aProps = new HashSet<URI>();
-			Iterator<Statement> sIter = aGraph.match(aRes, null, null);
+
+			Iterator<Statement> sIter = aGraph.match(aTmpRes, null, null);
 
 			while (sIter.hasNext()) {
 				aProps.add(sIter.next().getPredicate());
 			}
+			
+			for (URI aProp : aProps) {
+				if (RDF.TYPE.equals(aProp)) {
+					
+					URI aType = (URI) aGraph.getValue(aTmpRes, aProp);
+					if((TYPE_TO_CLASS.containsKey(aType)) && (!theObj.getClass().equals(TYPE_TO_CLASS.get(aType)))) {
+						try {
+							theObj = (T) (TYPE_TO_CLASS.get(aType).newInstance());
+							asSupportsRdfId(theObj).setRdfId(theKeyObj);
+						}
+						catch (Exception e) {
+							/* Forget it */
+						}
 
+					}
+				}
+			}
+			
+			final SupportsRdfId aSupportsRdfId = asSupportsRdfId(theObj);
+			
+			OBJECT_M.put(theKeyObj, theObj);
+			final Resource aRes = EmpireUtil.asResource(aSupportsRdfId);
+			
 			Collection<Field> aFields = getAnnotatedFields(theObj.getClass());
 			Collection<Method> aMethods = getAnnotatedSetters(theObj.getClass(), true);
 

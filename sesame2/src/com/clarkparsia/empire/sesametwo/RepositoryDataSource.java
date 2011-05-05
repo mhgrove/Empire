@@ -348,25 +348,4 @@ public class RepositoryDataSource extends AbstractDataSource implements MutableD
 			throw new DataSourceException(e);
 		}
     }
-
-	public static void main(String[] args) throws Exception {
-		HTTPRepository r = new HTTPRepository("http://fatduck.sef.hq.nasa.gov:9000/openrdf-sesame", "spanner");
-
-		FileOutputStream fout = new FileOutputStream("/tmp/spanner.ttl");
-		RDFWriter writer = RDFWriterRegistry.getInstance().get(RDFFormat.TURTLE).getWriter(fout);
-
-		GraphQueryResult result = r.getConnection().prepareGraphQuery(QueryLanguage.SPARQL, "construct { ?s ?p ?o } where { graph <file://data.ttl> {?s ?p ?o.}}").evaluate();
-
-		writer.startRDF();
-		while (result.hasNext()) {
-			writer.handleStatement(result.next());
-		}
-
-		writer.endRDF();
-
-		fout.flush();
-		fout.close();
-
-
-	}
 }

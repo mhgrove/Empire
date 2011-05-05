@@ -57,532 +57,532 @@ class AbstractDelegateModel implements Model {
 
 	protected Logger log = LoggerFactory.getLogger(this.getClass());
 
-	private Model m = null;
+	private Model mModel = null;
 
 	/**
 	 * Create a new AbstractDelegateModel
 	 * @param m the model that will serve as the delegate
 	 */
 	public AbstractDelegateModel(Model m) {
-		this.m = m;
+		this.mModel = m;
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Model abort() {
-		return m.abort();
+		return mModel.abort();
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Model add(List<Statement> statements) {
-		return m.add(statements);
+		return mModel.add(statements);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Model add(Model m, boolean suppressReifications) {
-		return m.add(m, suppressReifications);
+		return mModel.add(m, suppressReifications);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Model add(Model m) {
-		return m.add(m);
+		return mModel.add(m);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Model add(Resource s, Property p, RDFNode o) {
-		return m.add(s, p, o);
+		return mModel.add(s, p, o);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Model add(Resource s, Property p, String o, boolean wellFormed) {
-		return m.add(s, p, o, wellFormed);
+		return mModel.add(s, p, o, wellFormed);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Model add(Resource s, Property p, String lex, RDFDatatype datatype) {
-		return m.add(s, p, lex, datatype);
+		return mModel.add(s, p, lex, datatype);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Model add(Resource s, Property p, String o, String l) {
-		return m.add(s, p, o, l);
+		return mModel.add(s, p, o, l);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Model add(Resource s, Property p, String o) {
-		return m.add(s, p, o);
+		return mModel.add(s, p, o);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Model add(Statement s) {
-		return m.add(s);
+		return mModel.add(s);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Model add(Statement[] statements) {
-		return m.add(statements);
+		return mModel.add(statements);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Model add(StmtIterator iter) {
-		return m.add(iter);
+		return mModel.add(iter);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Model addLiteral(Resource s, Property p, boolean o) {
-		return m.addLiteral(s, p, o);
+		return mModel.addLiteral(s, p, o);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Model addLiteral(Resource s, Property p, char o) {
-		return m.addLiteral(s, p, o);
+		return mModel.addLiteral(s, p, o);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Model addLiteral(Resource s, Property p, double o) {
-		return m.addLiteral(s, p, o);
+		return mModel.addLiteral(s, p, o);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Model addLiteral(Resource s, Property p, float o) {
-		return m.addLiteral(s, p, o);
+		return mModel.addLiteral(s, p, o);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Model addLiteral(Resource s, Property p, int o) {
-		return m.addLiteral(s, p, o);
+		return mModel.addLiteral(s, p, o);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Model addLiteral(Resource s, Property p, Literal o) {
-		return m.addLiteral(s, p, o);
+		return mModel.addLiteral(s, p, o);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Model addLiteral(Resource s, Property p, long o) {
-		return m.addLiteral(s, p, o);
+		return mModel.addLiteral(s, p, o);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Model addLiteral(Resource s, Property p, Object o) {
-		return m.addLiteral(s, p, o);
+		return mModel.addLiteral(s, p, o);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public RDFNode asRDFNode(Node n) {
-		return m.asRDFNode(n);
+		return mModel.asRDFNode(n);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Resource wrapAsResource(final Node theNode) {
-		return m.wrapAsResource(theNode);
+		return mModel.wrapAsResource(theNode);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Statement asStatement(Triple t) {
-		return m.asStatement(t);
+		return mModel.asStatement(t);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Model begin() {
-		return m.begin();
+		return mModel.begin();
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public void close() {
-		m.close();
+		mModel.close();
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Model commit() {
-		return m.commit();
+		return mModel.commit();
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public boolean contains(Resource s, Property p, RDFNode o) {
-		return m.contains(s, p, o);
+		return mModel.contains(s, p, o);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public boolean contains(Resource s, Property p, String o, String l) {
-		return m.contains(s, p, o, l);
+		return mModel.contains(s, p, o, l);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public boolean contains(Resource s, Property p, String o) {
-		return m.contains(s, p, o);
+		return mModel.contains(s, p, o);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public boolean contains(Resource s, Property p) {
-		return m.contains(s, p);
+		return mModel.contains(s, p);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public boolean contains(Statement s) {
-		return m.contains(s);
+		return mModel.contains(s);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public boolean containsAll(Model model) {
-		return m.containsAll(model);
+		return mModel.containsAll(model);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public boolean containsAll(StmtIterator iter) {
-		return m.containsAll(iter);
+		return mModel.containsAll(iter);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public boolean containsAny(Model model) {
-		return m.containsAny(model);
+		return mModel.containsAny(model);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public boolean containsAny(StmtIterator iter) {
-		return m.containsAny(iter);
+		return mModel.containsAny(iter);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public boolean containsLiteral(Resource s, Property p, boolean o) {
-		return m.containsLiteral(s, p, o);
+		return mModel.containsLiteral(s, p, o);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public boolean containsLiteral(Resource s, Property p, char o) {
-		return m.containsLiteral(s, p, o);
+		return mModel.containsLiteral(s, p, o);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public boolean containsLiteral(Resource s, Property p, double o) {
-		return m.containsLiteral(s, p, o);
+		return mModel.containsLiteral(s, p, o);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public boolean containsLiteral(Resource s, Property p, float o) {
-		return m.containsLiteral(s, p, o);
+		return mModel.containsLiteral(s, p, o);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public boolean containsLiteral(Resource s, Property p, int o) {
-		return m.containsLiteral(s, p, o);
+		return mModel.containsLiteral(s, p, o);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public boolean containsLiteral(Resource s, Property p, long o) {
-		return m.containsLiteral(s, p, o);
+		return mModel.containsLiteral(s, p, o);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public boolean containsLiteral(Resource s, Property p, Object o) {
-		return m.containsLiteral(s, p, o);
+		return mModel.containsLiteral(s, p, o);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public boolean containsResource(RDFNode r) {
-		return m.containsResource(r);
+		return mModel.containsResource(r);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Alt createAlt() {
-		return m.createAlt();
+		return mModel.createAlt();
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Alt createAlt(String uri) {
-		return m.createAlt(uri);
+		return mModel.createAlt(uri);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Bag createBag() {
-		return m.createBag();
+		return mModel.createBag();
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Bag createBag(String uri) {
-		return m.createBag(uri);
+		return mModel.createBag(uri);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public RDFList createList() {
-		return m.createList();
+		return mModel.createList();
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public RDFList createList(Iterator<? extends RDFNode> members) {
-		return m.createList(members);
+		return mModel.createList(members);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public RDFList createList(RDFNode[] members) {
-		return m.createList(members);
+		return mModel.createList(members);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Literal createLiteral(String v, boolean wellFormed) {
-		return m.createLiteral(v, wellFormed);
+		return mModel.createLiteral(v, wellFormed);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Literal createLiteral(String v, String language) {
-		return m.createLiteral(v, language);
+		return mModel.createLiteral(v, language);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Literal createLiteral(String v) {
-		return m.createLiteral(v);
+		return mModel.createLiteral(v);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Statement createLiteralStatement(Resource s, Property p, boolean o) {
-		return m.createLiteralStatement(s, p, o);
+		return mModel.createLiteralStatement(s, p, o);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Statement createLiteralStatement(Resource s, Property p, char o) {
-		return m.createLiteralStatement(s, p, o);
+		return mModel.createLiteralStatement(s, p, o);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Statement createLiteralStatement(Resource s, Property p, double o) {
-		return m.createLiteralStatement(s, p, o);
+		return mModel.createLiteralStatement(s, p, o);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Statement createLiteralStatement(Resource s, Property p, float o) {
-		return m.createLiteralStatement(s, p, o);
+		return mModel.createLiteralStatement(s, p, o);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Statement createLiteralStatement(Resource s, Property p, int o) {
-		return m.createLiteralStatement(s, p, o);
+		return mModel.createLiteralStatement(s, p, o);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Statement createLiteralStatement(Resource s, Property p, long o) {
-		return m.createLiteralStatement(s, p, o);
+		return mModel.createLiteralStatement(s, p, o);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Statement createLiteralStatement(Resource s, Property p, Object o) {
-		return m.createLiteralStatement(s, p, o);
+		return mModel.createLiteralStatement(s, p, o);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Property createProperty(String nameSpace, String localName) {
-		return m.createProperty(nameSpace, localName);
+		return mModel.createProperty(nameSpace, localName);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Property createProperty(String uri) {
-		return m.createProperty(uri);
+		return mModel.createProperty(uri);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public ReifiedStatement createReifiedStatement(Statement s) {
-		return m.createReifiedStatement(s);
+		return mModel.createReifiedStatement(s);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public ReifiedStatement createReifiedStatement(String uri, Statement s) {
-		return m.createReifiedStatement(uri, s);
+		return mModel.createReifiedStatement(uri, s);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Resource createResource() {
-		return m.createResource();
+		return mModel.createResource();
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Resource createResource(AnonId id) {
-		return m.createResource(id);
+		return mModel.createResource(id);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Resource createResource(Resource type) {
-		return m.createResource(type);
+		return mModel.createResource(type);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Resource createResource(ResourceF f) {
-		return m.createResource(f);
+		return mModel.createResource(f);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Resource createResource(String uri, Resource type) {
-		return m.createResource(uri, type);
+		return mModel.createResource(uri, type);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Resource createResource(String uri, ResourceF f) {
-		return m.createResource(uri, f);
+		return mModel.createResource(uri, f);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Resource createResource(String uri) {
-		return m.createResource(uri);
+		return mModel.createResource(uri);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Seq createSeq() {
-		return m.createSeq();
+		return mModel.createSeq();
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Seq createSeq(String uri) {
-		return m.createSeq(uri);
+		return mModel.createSeq(uri);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Statement createStatement(Resource s, Property p, RDFNode o) {
-		return m.createStatement(s, p, o);
+		return mModel.createStatement(s, p, o);
 	}
 
 	/**
@@ -590,7 +590,7 @@ class AbstractDelegateModel implements Model {
 	 */
 	public Statement createStatement(Resource s, Property p, String o,
 									 boolean wellFormed) {
-		return m.createStatement(s, p, o, wellFormed);
+		return mModel.createStatement(s, p, o, wellFormed);
 	}
 
 	/**
@@ -598,126 +598,126 @@ class AbstractDelegateModel implements Model {
 	 */
 	public Statement createStatement(Resource s, Property p, String o,
 									 String l, boolean wellFormed) {
-		return m.createStatement(s, p, o, l, wellFormed);
+		return mModel.createStatement(s, p, o, l, wellFormed);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Statement createStatement(Resource s, Property p, String o, String l) {
-		return m.createStatement(s, p, o, l);
+		return mModel.createStatement(s, p, o, l);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Statement createStatement(Resource s, Property p, String o) {
-		return m.createStatement(s, p, o);
+		return mModel.createStatement(s, p, o);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Literal createTypedLiteral(boolean v) {
-		return m.createTypedLiteral(v);
+		return mModel.createTypedLiteral(v);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Literal createTypedLiteral(Calendar d) {
-		return m.createTypedLiteral(d);
+		return mModel.createTypedLiteral(d);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Literal createTypedLiteral(char v) {
-		return m.createTypedLiteral(v);
+		return mModel.createTypedLiteral(v);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Literal createTypedLiteral(double v) {
-		return m.createTypedLiteral(v);
+		return mModel.createTypedLiteral(v);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Literal createTypedLiteral(float v) {
-		return m.createTypedLiteral(v);
+		return mModel.createTypedLiteral(v);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Literal createTypedLiteral(int v) {
-		return m.createTypedLiteral(v);
+		return mModel.createTypedLiteral(v);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Literal createTypedLiteral(long v) {
-		return m.createTypedLiteral(v);
+		return mModel.createTypedLiteral(v);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Literal createTypedLiteral(Object value, RDFDatatype dtype) {
-		return m.createTypedLiteral(value, dtype);
+		return mModel.createTypedLiteral(value, dtype);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Literal createTypedLiteral(Object value, String typeURI) {
-		return m.createTypedLiteral(value, typeURI);
+		return mModel.createTypedLiteral(value, typeURI);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Literal createTypedLiteral(Object value) {
-		return m.createTypedLiteral(value);
+		return mModel.createTypedLiteral(value);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Literal createTypedLiteral(String lex, RDFDatatype dtype) {
-		return m.createTypedLiteral(lex, dtype);
+		return mModel.createTypedLiteral(lex, dtype);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Literal createTypedLiteral(String lex, String typeURI) {
-		return m.createTypedLiteral(lex, typeURI);
+		return mModel.createTypedLiteral(lex, typeURI);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Literal createTypedLiteral(String v) {
-		return m.createTypedLiteral(v);
+		return mModel.createTypedLiteral(v);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Model difference(Model model) {
-		return m.difference(model);
+		return mModel.difference(model);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public void enterCriticalSection(boolean readLockRequested) {
-		m.enterCriticalSection(readLockRequested);
+		mModel.enterCriticalSection(readLockRequested);
 	}
 
 	/**
@@ -732,231 +732,231 @@ class AbstractDelegateModel implements Model {
 	 * @inheritDoc
 	 */
 	public Object executeInTransaction(Command cmd) {
-		return m.executeInTransaction(cmd);
+		return mModel.executeInTransaction(cmd);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public String expandPrefix(String prefixed) {
-		return m.expandPrefix(prefixed);
+		return mModel.expandPrefix(prefixed);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Alt getAlt(Resource r) {
-		return m.getAlt(r);
+		return mModel.getAlt(r);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Alt getAlt(String uri) {
-		return m.getAlt(uri);
+		return mModel.getAlt(uri);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Resource getAnyReifiedStatement(Statement s) {
-		return m.getAnyReifiedStatement(s);
+		return mModel.getAnyReifiedStatement(s);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Bag getBag(Resource r) {
-		return m.getBag(r);
+		return mModel.getBag(r);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Bag getBag(String uri) {
-		return m.getBag(uri);
+		return mModel.getBag(uri);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Graph getGraph() {
-		return m.getGraph();
+		return mModel.getGraph();
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Lock getLock() {
-		return m.getLock();
+		return mModel.getLock();
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Map<String, String> getNsPrefixMap() {
-		return m.getNsPrefixMap();
+		return mModel.getNsPrefixMap();
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public String getNsPrefixURI(String prefix) {
-		return m.getNsPrefixURI(prefix);
+		return mModel.getNsPrefixURI(prefix);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public String getNsURIPrefix(String uri) {
-		return m.getNsURIPrefix(uri);
+		return mModel.getNsURIPrefix(uri);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Statement getProperty(Resource s, Property p) {
-		return m.getProperty(s, p);
+		return mModel.getProperty(s, p);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Property getProperty(String nameSpace, String localName) {
-		return m.getProperty(nameSpace, localName);
+		return mModel.getProperty(nameSpace, localName);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Property getProperty(String uri) {
-		return m.getProperty(uri);
+		return mModel.getProperty(uri);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public RDFNode getRDFNode(Node n) {
-		return m.getRDFNode(n);
+		return mModel.getRDFNode(n);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public RDFReader getReader() {
-		return m.getReader();
+		return mModel.getReader();
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public RDFReader getReader(String lang) {
-		return m.getReader(lang);
+		return mModel.getReader(lang);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public ReificationStyle getReificationStyle() {
-		return m.getReificationStyle();
+		return mModel.getReificationStyle();
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Statement getRequiredProperty(Resource s, Property p) {
-		return m.getRequiredProperty(s, p);
+		return mModel.getRequiredProperty(s, p);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Resource getResource(String uri, ResourceF f) {
-		return m.getResource(uri, f);
+		return mModel.getResource(uri, f);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Resource getResource(String uri) {
-		return m.getResource(uri);
+		return mModel.getResource(uri);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Seq getSeq(Resource r) {
-		return m.getSeq(r);
+		return mModel.getSeq(r);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Seq getSeq(String uri) {
-		return m.getSeq(uri);
+		return mModel.getSeq(uri);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public RDFWriter getWriter() {
-		return m.getWriter();
+		return mModel.getWriter();
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public RDFWriter getWriter(String lang) {
-		return m.getWriter(lang);
+		return mModel.getWriter(lang);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public boolean independent() {
-		return m.independent();
+		return mModel.independent();
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Model intersection(Model model) {
-		return m.intersection(model);
+		return mModel.intersection(model);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public boolean isClosed() {
-		return m.isClosed();
+		return mModel.isClosed();
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public boolean isEmpty() {
-		return m.isEmpty();
+		return mModel.isEmpty();
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public boolean isIsomorphicWith(Model g) {
-		return m.isIsomorphicWith(g);
+		return mModel.isIsomorphicWith(g);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public boolean isReified(Statement s) {
-		return m.isReified(s);
+		return mModel.isReified(s);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public void leaveCriticalSection() {
-		m.leaveCriticalSection();
+		mModel.leaveCriticalSection();
 	}
 
 	/**
@@ -964,7 +964,7 @@ class AbstractDelegateModel implements Model {
 	 */
 	public StmtIterator listLiteralStatements(Resource subject,
 											  Property predicate, boolean object) {
-		return m.listLiteralStatements(subject, predicate, object);
+		return mModel.listLiteralStatements(subject, predicate, object);
 	}
 
 	/**
@@ -972,7 +972,7 @@ class AbstractDelegateModel implements Model {
 	 */
 	public StmtIterator listLiteralStatements(Resource subject,
 											  Property predicate, char object) {
-		return m.listLiteralStatements(subject, predicate, object);
+		return mModel.listLiteralStatements(subject, predicate, object);
 	}
 
 	/**
@@ -980,7 +980,7 @@ class AbstractDelegateModel implements Model {
 	 */
 	public StmtIterator listLiteralStatements(Resource subject,
 											  Property predicate, double object) {
-		return m.listLiteralStatements(subject, predicate, object);
+		return mModel.listLiteralStatements(subject, predicate, object);
 	}
 
 	/**
@@ -988,133 +988,133 @@ class AbstractDelegateModel implements Model {
 	 */
 	public StmtIterator listLiteralStatements(Resource subject,
 											  Property predicate, float object) {
-		return m.listLiteralStatements(subject, predicate, object);
+		return mModel.listLiteralStatements(subject, predicate, object);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public StmtIterator listLiteralStatements(Resource subject, Property predicate, long object) {
-		return m.listLiteralStatements(subject, predicate, object);
+		return mModel.listLiteralStatements(subject, predicate, object);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public NsIterator listNameSpaces() {
-		return m.listNameSpaces();
+		return mModel.listNameSpaces();
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public NodeIterator listObjects() {
-		return m.listObjects();
+		return mModel.listObjects();
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public NodeIterator listObjectsOfProperty(Property p) {
-		return m.listObjectsOfProperty(p);
+		return mModel.listObjectsOfProperty(p);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public NodeIterator listObjectsOfProperty(Resource s, Property p) {
-		return m.listObjectsOfProperty(s, p);
+		return mModel.listObjectsOfProperty(s, p);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public RSIterator listReifiedStatements() {
-		return m.listReifiedStatements();
+		return mModel.listReifiedStatements();
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public RSIterator listReifiedStatements(Statement st) {
-		return m.listReifiedStatements(st);
+		return mModel.listReifiedStatements(st);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public ResIterator listResourcesWithProperty(Property p, boolean o) {
-		return m.listResourcesWithProperty(p, o);
+		return mModel.listResourcesWithProperty(p, o);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public ResIterator listResourcesWithProperty(Property p, char o) {
-		return m.listResourcesWithProperty(p, o);
+		return mModel.listResourcesWithProperty(p, o);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public ResIterator listResourcesWithProperty(Property p, double o) {
-		return m.listResourcesWithProperty(p, o);
+		return mModel.listResourcesWithProperty(p, o);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public ResIterator listResourcesWithProperty(Property p, float o) {
-		return m.listResourcesWithProperty(p, o);
+		return mModel.listResourcesWithProperty(p, o);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public ResIterator listResourcesWithProperty(Property p, long o) {
-		return m.listResourcesWithProperty(p, o);
+		return mModel.listResourcesWithProperty(p, o);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public ResIterator listResourcesWithProperty(Property p, Object o) {
-		return m.listResourcesWithProperty(p, o);
+		return mModel.listResourcesWithProperty(p, o);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public ResIterator listResourcesWithProperty(Property p, RDFNode o) {
-		return m.listResourcesWithProperty(p, o);
+		return mModel.listResourcesWithProperty(p, o);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public ResIterator listResourcesWithProperty(Property p) {
-		return m.listResourcesWithProperty(p);
+		return mModel.listResourcesWithProperty(p);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public StmtIterator listStatements() {
-		return m.listStatements();
+		return mModel.listStatements();
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public StmtIterator listStatements(Resource s, Property p, RDFNode o) {
-		return m.listStatements(s, p, o);
+		return mModel.listStatements(s, p, o);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public StmtIterator listStatements(Resource subject, Property predicate, String object, String lang) {
-		return m.listStatements(subject, predicate, object, lang);
+		return mModel.listStatements(subject, predicate, object, lang);
 	}
 
 	/**
@@ -1122,147 +1122,147 @@ class AbstractDelegateModel implements Model {
 	 */
 	public StmtIterator listStatements(Resource subject, Property predicate,
 									   String object) {
-		return m.listStatements(subject, predicate, object);
+		return mModel.listStatements(subject, predicate, object);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public StmtIterator listStatements(Selector s) {
-		return m.listStatements(s);
+		return mModel.listStatements(s);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public ResIterator listSubjects() {
-		return m.listSubjects();
+		return mModel.listSubjects();
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public ResIterator listSubjectsWithProperty(Property p, RDFNode o) {
-		return m.listSubjectsWithProperty(p, o);
+		return mModel.listSubjectsWithProperty(p, o);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public ResIterator listSubjectsWithProperty(Property p, String o, String l) {
-		return m.listSubjectsWithProperty(p, o, l);
+		return mModel.listSubjectsWithProperty(p, o, l);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public ResIterator listSubjectsWithProperty(Property p, String o) {
-		return m.listSubjectsWithProperty(p, o);
+		return mModel.listSubjectsWithProperty(p, o);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public ResIterator listSubjectsWithProperty(Property p) {
-		return m.listSubjectsWithProperty(p);
+		return mModel.listSubjectsWithProperty(p);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public PrefixMapping lock() {
-		return m.lock();
+		return mModel.lock();
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Model notifyEvent(Object e) {
-		return m.notifyEvent(e);
+		return mModel.notifyEvent(e);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public String qnameFor(String uri) {
-		return m.qnameFor(uri);
+		return mModel.qnameFor(uri);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Model query(Selector s) {
-		return m.query(s);
+		return mModel.query(s);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public QueryHandler queryHandler() {
-		return m.queryHandler();
+		return mModel.queryHandler();
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Model read(InputStream in, String base, String lang) {
-		return m.read(in, base, lang);
+		return mModel.read(in, base, lang);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Model read(InputStream in, String base) {
-		return m.read(in, base);
+		return mModel.read(in, base);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Model read(Reader reader, String base, String lang) {
-		return m.read(reader, base, lang);
+		return mModel.read(reader, base, lang);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Model read(Reader reader, String base) {
-		return m.read(reader, base);
+		return mModel.read(reader, base);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Model read(String url, String base, String lang) {
-		return m.read(url, base, lang);
+		return mModel.read(url, base, lang);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Model read(String url, String lang) {
-		return m.read(url, lang);
+		return mModel.read(url, lang);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Model read(String url) {
-		return m.read(url);
+		return mModel.read(url);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Model register(ModelChangedListener listener) {
-		return m.register(listener);
+		return mModel.register(listener);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Model remove(List<Statement> statements) {
-		return m.remove(statements);
+		return mModel.remove(statements);
 	}
 
 	/**
@@ -1283,196 +1283,196 @@ class AbstractDelegateModel implements Model {
 	 * @inheritDoc
 	 */
 	public Model remove(Resource s, Property p, RDFNode o) {
-		return m.remove(s, p, o);
+		return mModel.remove(s, p, o);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Model remove(Statement s) {
-		return m.remove(s);
+		return mModel.remove(s);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Model remove(Statement[] statements) {
-		return m.remove(statements);
+		return mModel.remove(statements);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Model remove(StmtIterator iter) {
-		return m.remove(iter);
+		return mModel.remove(iter);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Model removeAll() {
-		return m.removeAll();
+		return mModel.removeAll();
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Model removeAll(Resource s, Property p, RDFNode r) {
-		return m.removeAll(s, p, r);
+		return mModel.removeAll(s, p, r);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public void removeAllReifications(Statement s) {
-		m.removeAllReifications(s);
+		mModel.removeAllReifications(s);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public PrefixMapping removeNsPrefix(String prefix) {
-		return m.removeNsPrefix(prefix);
+		return mModel.removeNsPrefix(prefix);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public void removeReification(ReifiedStatement rs) {
-		m.removeReification(rs);
+		mModel.removeReification(rs);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public boolean samePrefixMappingAs(PrefixMapping other) {
-		return m.samePrefixMappingAs(other);
+		return mModel.samePrefixMappingAs(other);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public PrefixMapping setNsPrefix(String prefix, String uri) {
-		return m.setNsPrefix(prefix, uri);
+		return mModel.setNsPrefix(prefix, uri);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public PrefixMapping setNsPrefixes(Map<String, String> map) {
-		return m.setNsPrefixes(map);
+		return mModel.setNsPrefixes(map);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public PrefixMapping setNsPrefixes(PrefixMapping other) {
-		return m.setNsPrefixes(other);
+		return mModel.setNsPrefixes(other);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public String setReaderClassName(String lang, String className) {
-		return m.setReaderClassName(lang, className);
+		return mModel.setReaderClassName(lang, className);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public String setWriterClassName(String lang, String className) {
-		return m.setWriterClassName(lang, className);
+		return mModel.setWriterClassName(lang, className);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public String shortForm(String uri) {
-		return m.shortForm(uri);
+		return mModel.shortForm(uri);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public long size() {
-		return m.size();
+		return mModel.size();
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public boolean supportsSetOperations() {
-		return m.supportsSetOperations();
+		return mModel.supportsSetOperations();
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public boolean supportsTransactions() {
-		return m.supportsTransactions();
+		return mModel.supportsTransactions();
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Model union(Model model) {
-		return m.union(model);
+		return mModel.union(model);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Model unregister(ModelChangedListener listener) {
-		return m.unregister(listener);
+		return mModel.unregister(listener);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public PrefixMapping withDefaultMappings(PrefixMapping map) {
-		return m.withDefaultMappings(map);
+		return mModel.withDefaultMappings(map);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Model write(OutputStream out, String lang, String base) {
-		return m.write(out, lang, base);
+		return mModel.write(out, lang, base);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Model write(OutputStream out, String lang) {
-		return m.write(out, lang);
+		return mModel.write(out, lang);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Model write(OutputStream out) {
-		return m.write(out);
+		return mModel.write(out);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Model write(Writer writer, String lang, String base) {
-		return m.write(writer, lang, base);
+		return mModel.write(writer, lang, base);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Model write(Writer writer, String lang) {
-		return m.write(writer, lang);
+		return mModel.write(writer, lang);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Model write(Writer writer) {
-		return m.write(writer);
+		return mModel.write(writer);
 	}
 
 	/**

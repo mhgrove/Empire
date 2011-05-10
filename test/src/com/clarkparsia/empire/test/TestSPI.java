@@ -22,14 +22,10 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 
 import com.clarkparsia.empire.Empire;
-import com.clarkparsia.empire.jena.JenaEmpireModule;
-import com.clarkparsia.empire.fourstore.FourStoreEmpireModule;
-import com.clarkparsia.empire.sesametwo.OpenRdfEmpireModule;
-import com.clarkparsia.empire.util.DefaultEmpireModule;
+
 import com.clarkparsia.empire.impl.EntityManagerFactoryImpl;
 
 import com.clarkparsia.empire.test.api.TestDataSourceFactory;
-import com.clarkparsia.empire.test.util.TestModule;
 
 import javax.persistence.Persistence;
 
@@ -44,13 +40,6 @@ import java.util.HashMap;
  */
 public class TestSPI {
 	// TODO: we could use some more tests here...
-
-//	@BeforeClass
-//	public static void beforeClass () {
-//		Empire.init(new DefaultEmpireModule(), new OpenRdfEmpireModule(), new FourStoreEmpireModule(),
-//					new JenaEmpireModule(), new TestModule());
-//
-//	}
 
 	@Test
 	public void testInvalidFactory() {

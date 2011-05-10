@@ -221,7 +221,7 @@ public class DataSourceUtil {
 								   "from\n" +
 								   "{"+theSource.getQueryFactory().getDialect().asQueryString(theSubject) + "} <" + thePredicate.stringValue() + "> {obj}  ";
 
-		ResultSet aResults;
+		ResultSet aResults = null;
 
 		try {
 			if (theSource.getQueryFactory().getDialect().equals(SerqlDialect.instance())) {
@@ -240,6 +240,11 @@ public class DataSourceUtil {
 		catch (Exception e) {
 			throw new DataSourceException(e);
 		}
+        finally {
+            if (aResults != null) {
+                aResults.close();
+            }
+        }
 	}
 
 	/**

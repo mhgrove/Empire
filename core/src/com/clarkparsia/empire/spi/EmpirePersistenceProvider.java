@@ -32,6 +32,7 @@ import javax.persistence.spi.PersistenceUnitInfo;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.locks.Condition;
 
 /**
  * <p>Implementation of the JPA {@link PersistenceProvider} interface.</p>
@@ -63,6 +64,23 @@ public class EmpirePersistenceProvider implements PersistenceProvider {
 							  @Named("ec") EmpireConfiguration theContainerConfig) {
         mFactories = theFactories;
         mContainerConfig = theContainerConfig;
+
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            public void run() {
+                close();
+            }
+        });
+    }
+
+    public void close() {
+        for (DataSourceFactory aFactory : mFactories) {
+//            try {
+//                aFactory.close();
+//            }
+//            catch (DataSourceException e) {
+//                // TODO: log me
+//            }
+        }
     }
 
 	/**
@@ -149,6 +167,8 @@ public class EmpirePersistenceProvider implements PersistenceProvider {
 		if (theMap != null) {
 			aConfig.putAll(theMap);
 		}
+
+        aConfig.put(ConfigKeys.NAME, theUnitName);
 
 		return aConfig;
 	}

@@ -50,7 +50,7 @@ public class PropertiesConfigReader implements ConfigReader, ConfigKeys {
 	 */
 	private static final Logger LOGGER = LogManager.getLogger(ConfigReader.class.getName());
 
-	public static final String KEY_NAME = "name";
+	public static final String KEY_NAME = ConfigKeys.NAME;
 	public static final String KEY_ANNOTATION_PROVIDER = "annotation.provider";
 
 	/**

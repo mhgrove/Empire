@@ -88,9 +88,9 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory {
 	 */
 	protected EntityManager newEntityManager(Map<String, Object> theMap) {
 		try {
-			Map<String, Object> aConfig = new HashMap<String, Object>(theMap);
+			Map<String, Object> aConfig = new HashMap<String, Object>(mConfig);
 
-			aConfig.putAll(mConfig);
+			aConfig.putAll(theMap);
 
 			DataSource aSource = mDataSourceFactoryProvider.create(aConfig);
 

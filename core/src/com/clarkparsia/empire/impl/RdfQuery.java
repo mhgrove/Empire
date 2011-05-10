@@ -365,51 +365,54 @@ public class RdfQuery implements Query {
 			else {
 				ResultSet aResults = getSource().selectQuery(query());
 
-				if (getBeanClass() != null) {
-					// for now, by convention, for this to work like the JPQL stuff where you do something like
-					// "from Product pr join pr.poc as p where p.id = ?" and expect to get a list of Product instances
-					// back as the result set, you *MUST* have a var in the projection called 'result' which is
-					// the URI of the things you want to get back; when you don't do this, we prefix your partial query
-					// with this string
-					for (BindingSet aBS : CollectionUtil.iterable(aResults)) {
-						ExtBindingSet aBinding = new ExtBindingSet(aBS);
+                try {
+                    if (getBeanClass() != null) {
+                        // for now, by convention, for this to work like the JPQL stuff where you do something like
+                        // "from Product pr join pr.poc as p where p.id = ?" and expect to get a list of Product instances
+                        // back as the result set, you *MUST* have a var in the projection called 'result' which is
+                        // the URI of the things you want to get back; when you don't do this, we prefix your partial query
+                        // with this string
+                        for (BindingSet aBS : CollectionUtil.iterable(aResults)) {
+                            ExtBindingSet aBinding = new ExtBindingSet(aBS);
 
-						Object aObj;
+                            Object aObj;
 
-						String aVarName = getProjectionVarName();
+                            String aVarName = getProjectionVarName();
 
-						if (aBinding.getValue(aVarName) instanceof URI && AnnotationChecker.isValid(getBeanClass())) {
-							if (EmpireOptions.ENABLE_QUERY_RESULT_PROXY) {
-								aObj = new Proxy(getBeanClass(), asPrimaryKey(aBinding.getValue(aVarName)), getSource());
-							}
-							else {
-								aObj = RdfGenerator.fromRdf(getBeanClass(),
-															asPrimaryKey(aBinding.getValue(aVarName)),
-															getSource());
-							}
+                            if (aBinding.getValue(aVarName) instanceof URI && AnnotationChecker.isValid(getBeanClass())) {
+                                if (EmpireOptions.ENABLE_QUERY_RESULT_PROXY) {
+                                    aObj = new Proxy(getBeanClass(), asPrimaryKey(aBinding.getValue(aVarName)), getSource());
+                                }
+                                else {
+                                    aObj = RdfGenerator.fromRdf(getBeanClass(),
+                                                                asPrimaryKey(aBinding.getValue(aVarName)),
+                                                                getSource());
+                                }
+                            }
+                            else {
+                                aObj = new RdfGenerator.ValueToObject(getSource(), null,
+                                                                      getBeanClass(), null).apply(aBinding.getValue(aVarName));
+                            }
+
+                            // if the object could not be created, or it was and its not the bean class type, or not a proxy
+                            // for something of the bean class type, then we could not bind the value in the result set
+                            // which is an error.
+                            if (aObj == null
+                                || !(getBeanClass().isInstance(aObj) || (aObj instanceof Proxy && getBeanClass().isAssignableFrom(((Proxy)aObj).getProxyClass())))) {
+                                throw new PersistenceException("Cannot bind query result to bean: " + getBeanClass());
+                            }
+                            else {
+                                aList.add(aObj);
+                            }
                         }
-                        else {
-                            aObj = new RdfGenerator.ValueToObject(getSource(), null,
-                                                                  getBeanClass(), null).apply(aBinding.getValue(aVarName));
-                        }
-
-						// if the object could not be created, or it was and its not the bean class type, or not a proxy
-						// for something of the bean class type, then we could not bind the value in the result set
-						// which is an error.
-						if (aObj == null
-							|| !(getBeanClass().isInstance(aObj) || (aObj instanceof Proxy && getBeanClass().isAssignableFrom(((Proxy)aObj).getProxyClass())))) {
-							throw new PersistenceException("Cannot bind query result to bean: " + getBeanClass());
-						}
-						else {
-							aList.add(aObj);
-						}
-					}
-				}
-				else {
-					aList.addAll(CollectionUtil.list(aResults));
-				}
-
-				aResults.close();
+                    }
+                    else {
+                        aList.addAll(CollectionUtil.list(aResults));
+                    }
+                }
+                finally {
+                    aResults.close();
+                }
 			}
 		}
 		catch (Exception e) {

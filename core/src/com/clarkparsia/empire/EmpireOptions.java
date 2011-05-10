@@ -24,7 +24,7 @@ package com.clarkparsia.empire;
  */
 public final class EmpireOptions {
 
-	/**
+    /**
 	 * Cannot create instances of this class
 	 */
 	private EmpireOptions() {

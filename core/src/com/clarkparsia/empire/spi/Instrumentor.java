@@ -15,7 +15,7 @@
 
 package com.clarkparsia.empire.spi;
 
-import com.google.inject.internal.Sets;
+import com.google.common.collect.Sets;
 
 import java.lang.instrument.Instrumentation;
 import java.lang.annotation.Annotation;

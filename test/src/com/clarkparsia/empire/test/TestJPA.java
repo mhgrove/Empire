@@ -17,6 +17,8 @@ package com.clarkparsia.empire.test;
 
 import com.clarkparsia.utils.collections.CollectionUtil;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.BeforeClass;
 import org.junit.AfterClass;
@@ -70,9 +72,9 @@ import java.net.URI;
 public class TestJPA  {
 	public static final String DATA_FILE = System.getProperty("test.data") != null ? System.getProperty("test.data") : "test/data/nasa.nt";
 
-	private EntityManagerFactory mFactory;
+	private static EntityManagerFactory mFactory;
 
-    private EntityManager mManager;
+    private static EntityManager mManager;
 
 	private String mTestQuery;
 	private String mNativeQuery;
@@ -82,13 +84,17 @@ public class TestJPA  {
 	private String mParameterizedQuery;
 	private String mNamedQueryName;
 
-	public TestJPA(final Map<String, String> theConfig, String theTestQuery, String theNativeQuery,
+    private Map<String,String> mConfig;
+
+    public TestJPA(final Map<String, String> theConfig, String theTestQuery, String theNativeQuery,
 				   String theNativeQueryFragment, String theAgencyQuery, String theAgencyWildcardQuery,
 				   String theParameterizedQuery, String theQueryName) {
 
 		mFactory = Empire.get().persistenceProvider().createEntityManagerFactory("test", theConfig);
+        mConfig = theConfig;
+        
+        mManager = mFactory.createEntityManager(mConfig);
 
-		mManager = mFactory.createEntityManager(theConfig);
 		mTestQuery = theTestQuery;
 		mNativeQuery = theNativeQuery;
 		mNativeFragment = theNativeQueryFragment;
@@ -143,9 +149,11 @@ public class TestJPA  {
         EmpireOptions.STRONG_TYPING = false;
 	}
 
-	@AfterClass
-	public static void afterClass() {
-	}
+    @AfterClass
+    public static void afterClass() {
+        mManager.close();
+        mFactory.close();
+    }
 
 	@Test
 	public void testEntityManagerBasics() {
@@ -216,23 +224,47 @@ public class TestJPA  {
 
 	@Test(expected=IllegalArgumentException.class)
 	public void testGetReferenceWithInvalidPk() {
-		createEntityManager().getReference(FoafPerson.class, "{invalid}");
-	}
+        EntityManager aMgr = createEntityManager();
+        try {
+            aMgr.getReference(FoafPerson.class, "{invalid}");
+        }
+        finally {
+            aMgr.close();
+        }
+    }
 
 	@Test(expected=IllegalArgumentException.class)
 	public void testGetReferenceWithNullPk() {
-		createEntityManager().getReference(FoafPerson.class, null);
-	}
+        EntityManager aMgr = createEntityManager();
+        try {
+            aMgr.getReference(FoafPerson.class, null);
+        }
+        finally {
+            aMgr.close();
+        }
+    }
 
 	@Test(expected=IllegalArgumentException.class)
 	public void testContainsWithNullParam() {
-		createEntityManager().contains(null);
-	}
+        EntityManager aMgr = createEntityManager();
+        try {
+            aMgr.contains(null);
+        }
+        finally {
+            aMgr.close();
+        }
+    }
 
 	@Test(expected=IllegalArgumentException.class)
 	public void testContainsWithInvalidParam() {
-		createEntityManager().contains(42);
-	}
+        EntityManager aMgr = createEntityManager();
+        try {
+            aMgr.contains(42);
+        }
+        finally {
+            aMgr.close();
+        }
+    }
 
 	@Test(expected=IllegalStateException.class)
 	public void testContainsWhenClosed() {
@@ -246,13 +278,27 @@ public class TestJPA  {
 
 	@Test(expected=IllegalArgumentException.class)
 	public void testFindWithInvalidPk() {
-		createEntityManager().find(FoafPerson.class, new Date());
-	}
+        EntityManager aMgr = createEntityManager();
+
+        try {
+            aMgr.find(FoafPerson.class, new Date());
+        }
+        finally {
+            aMgr.close();
+        }
+    }
 
 	@Test(expected=IllegalArgumentException.class)
 	public void testFindWithNullPk() {
-		createEntityManager().find(FoafPerson.class, null);
-	}
+        EntityManager aMgr = createEntityManager();
+
+        try {
+            aMgr.find(FoafPerson.class, null);
+        }
+        finally {
+            aMgr.close();
+        }
+    }
 
 	@Test
 	public void testPreAndPostHooks() {

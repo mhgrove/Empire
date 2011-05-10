@@ -15,7 +15,7 @@
 
 package com.clarkparsia.empire.jena;
 
-import com.google.inject.internal.Maps;
+import com.google.common.collect.Maps;
 
 import java.util.Map;
 import java.util.Collections;

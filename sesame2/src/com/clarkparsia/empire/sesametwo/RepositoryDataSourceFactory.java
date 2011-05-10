@@ -15,6 +15,7 @@
 
 package com.clarkparsia.empire.sesametwo;
 
+import com.clarkparsia.empire.config.ConfigKeys;
 import com.clarkparsia.empire.ds.DataSourceFactory;
 import com.clarkparsia.empire.ds.DataSource;
 import com.clarkparsia.empire.ds.DataSourceException;
@@ -25,6 +26,7 @@ import java.util.Map;
 import java.io.File;
 import java.io.FileInputStream;
 
+import com.google.common.collect.Maps;
 import org.openrdf.sail.memory.MemoryStore;
 import org.openrdf.repository.sail.SailRepository;
 import org.openrdf.repository.Repository;
@@ -67,6 +69,7 @@ public class RepositoryDataSourceFactory implements DataSourceFactory, Repositor
 			throw new DataSourceException("Invalid configuration map: " + theMap);
 		}
 
+        Object aName = theMap.get(ConfigKeys.NAME);
 		Object aURL = theMap.get(URL);
 		Object aRepo = theMap.get(REPO);
 		Object aFiles = theMap.get(FILES);
@@ -90,23 +93,33 @@ public class RepositoryDataSourceFactory implements DataSourceFactory, Repositor
 				try {
 					aRepository.initialize();
 				
-					RepositoryConnection aConn = aRepository.getConnection();
+					RepositoryConnection aConn = null;
 
-					for (String aFile : BasicUtils.split(aFiles.toString(), ",")) {
-						RDFParser aParser = Rio.createParser(Rio.getParserFormatForFileName(aFile));
+                    try {
+                        aConn = aRepository.getConnection();
+                        aConn.setAutoCommit(false);
 
-						aParser.setRDFHandler(new SailBuilderRDFHandler(aConn));
+                        for (String aFile : BasicUtils.split(aFiles.toString(), ",")) {
+                            RDFParser aParser = Rio.createParser(Rio.getParserFormatForFileName(aFile));
 
-						if (BasicUtils.isURL(aFile)) {
-							aParser.parse(new java.net.URL(aFile).openStream(), "");
-						}
-						else {
-							aParser.parse(new FileInputStream(aFile), "");
-						}
-					}
+                            aParser.setRDFHandler(new SailBuilderRDFHandler(aConn));
 
-					aConn.commit();
-				}
+                            if (BasicUtils.isURL(aFile)) {
+                                aParser.parse(new java.net.URL(aFile).openStream(), "");
+                            }
+                            else {
+                                aParser.parse(new FileInputStream(aFile), "");
+                            }
+                        }
+
+                        aConn.commit();
+                    }
+                    finally {
+                        if (aConn != null) {
+                            aConn.close();
+                        }
+                    }
+                }
 				catch (Exception e) {
 					throw new DataSourceException(e);
 				}

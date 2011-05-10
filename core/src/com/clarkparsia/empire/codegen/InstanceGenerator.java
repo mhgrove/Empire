@@ -15,6 +15,7 @@
 
 package com.clarkparsia.empire.codegen;
 
+import com.google.common.collect.Sets;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtNewConstructor;
@@ -37,7 +38,6 @@ import java.util.Collection;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
-import java.security.Signature;
 
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -47,7 +47,7 @@ import com.clarkparsia.empire.EmpireOptions;
 import com.clarkparsia.empire.util.BeanReflectUtil;
 import static com.clarkparsia.utils.collections.CollectionUtil.find;
 import com.clarkparsia.utils.Predicate;
-import com.google.inject.internal.Sets;
+
 import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl;
 
 /**

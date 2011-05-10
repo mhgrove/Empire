@@ -16,7 +16,7 @@
 package com.clarkparsia.empire.test;
 
 import com.clarkparsia.empire.Empire;
-import com.clarkparsia.empire.fourstore.FourStoreEmpireModule;
+
 import com.clarkparsia.empire.sesametwo.OpenRdfEmpireModule;
 import com.clarkparsia.empire.jena.JenaEmpireModule;
 import com.clarkparsia.empire.util.DefaultEmpireModule;
@@ -46,7 +46,7 @@ public class EmpireTestSuite {
 	public static void beforeClass () {
 		System.setProperty("empire.configuration.file", "test.empire.config.properties");
 		
-		Empire.init(new DefaultEmpireModule(), new OpenRdfEmpireModule(), new FourStoreEmpireModule(),
+		Empire.init(new DefaultEmpireModule(), new OpenRdfEmpireModule(),
 					new JenaEmpireModule(), new TestModule());
 
 		// TODO: tests for TripleSource stuff

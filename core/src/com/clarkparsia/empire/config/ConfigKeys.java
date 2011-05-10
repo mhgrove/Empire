@@ -20,17 +20,22 @@ package com.clarkparsia.empire.config;
  *
  * @author Michael Grove
  * @version 0.6.2
- * @since 0.6.3
+ * @since 0.7
  */
 public interface ConfigKeys {
 
 	/**
 	 * Key to get the file on disk where the annotation index is located
 	 */
-	public String ANNOTATION_INDEX = "annotation.index";
+	public final String ANNOTATION_INDEX = "annotation.index";
 
 	/**
 	 * Key constant for finding the class name of the factory we want to create
 	 */
-	public String FACTORY = "factory";
+	public final String FACTORY = "factory";
+
+    /**
+     * Key constant for the name of a datasource
+     */
+    public final String NAME = "name";
 }

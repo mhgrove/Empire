@@ -25,7 +25,7 @@ import com.clarkparsia.empire.test.util.TestModule;
 import com.clarkparsia.empire.Empire;
 import com.clarkparsia.empire.SupportsRdfId;
 import com.clarkparsia.empire.jena.JenaEmpireModule;
-import com.clarkparsia.empire.fourstore.FourStoreEmpireModule;
+
 import com.clarkparsia.empire.sesametwo.OpenRdfEmpireModule;
 import com.clarkparsia.empire.util.DefaultEmpireModule;
 import static com.clarkparsia.utils.collections.CollectionUtil.contentsEqual;
@@ -58,7 +58,7 @@ public class TestProxyFetchAndCascade {
 
 	@BeforeClass
 	public static void beforeClass () {
-		Empire.init(new DefaultEmpireModule(), new OpenRdfEmpireModule(), new FourStoreEmpireModule(),
+		Empire.init(new DefaultEmpireModule(), new OpenRdfEmpireModule(),
 					new JenaEmpireModule(), new TestModule());
 	}
 

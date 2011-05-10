@@ -22,8 +22,6 @@ import org.apache.log4j.Logger;
 import javax.sql.DataSource;
 import javax.naming.NamingException;
 
-import com.google.inject.internal.ImmutableList;
-
 /**
  * <p>Dumb Mutable value object for DataSource connection settings</p>
  * <ul>

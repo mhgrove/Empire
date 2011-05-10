@@ -20,7 +20,7 @@ import com.clarkparsia.empire.annotation.InvalidRdfException;
 import com.clarkparsia.empire.annotation.RdfId;
 import com.clarkparsia.empire.EmpireOptions;
 import com.clarkparsia.empire.SupportsRdfId;
-import com.google.inject.internal.Maps;
+import com.google.common.collect.Maps;
 
 import javax.persistence.FetchType;
 import javax.persistence.OneToMany;

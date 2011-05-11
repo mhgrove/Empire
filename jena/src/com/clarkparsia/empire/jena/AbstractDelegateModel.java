@@ -55,9 +55,9 @@ import com.hp.hpl.jena.shared.ReificationStyle;
  */
 class AbstractDelegateModel implements Model {
 
-	protected Logger log = LoggerFactory.getLogger(this.getClass());
+	protected final Logger log = LoggerFactory.getLogger(this.getClass());
 
-	private Model mModel = null;
+	private final Model mModel;
 
 	/**
 	 * Create a new AbstractDelegateModel
@@ -725,7 +725,7 @@ class AbstractDelegateModel implements Model {
 	 */
 	@Override
 	public boolean equals(Object m) {
-		return m.equals(m);
+		return mModel.equals(m);
 	}
 
 	/**
@@ -1269,14 +1269,14 @@ class AbstractDelegateModel implements Model {
 	 * @inheritDoc
 	 */
 	public Model remove(Model m, boolean suppressReifications) {
-		return m.remove(m, suppressReifications);
+		return mModel.remove(m, suppressReifications);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Model remove(Model m) {
-		return m.remove(m);
+		return mModel.remove(m);
 	}
 
 	/**

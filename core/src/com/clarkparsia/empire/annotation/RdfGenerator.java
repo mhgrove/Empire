@@ -165,7 +165,7 @@ public class RdfGenerator {
 	 * which will be used in subsequent rdf generation requests.
 	 * @param theClasses the list of classes to be handled by the RdfGenerator
 	 */
-	public static void init(Collection<Class<?>> theClasses) {
+	public static synchronized void init(Collection<Class<?>> theClasses) {
 		for (Class<?> aClass : theClasses) {
 			RdfsClass aAnnotation = aClass.getAnnotation(RdfsClass.class);
 
@@ -240,8 +240,7 @@ public class RdfGenerator {
 
 			try {
 				long istart = System.currentTimeMillis();
-				if (theClass.isInterface() || Modifier.isAbstract(theClass.getModifiers())) {
-					
+				if (theClass.isInterface() || Modifier.isAbstract(theClass.getModifiers())) {		
 					aObj = com.clarkparsia.empire.codegen.InstanceGenerator.generateInstanceClass(theClass).newInstance();
 					LOGGER.debug("CodeGenerated instance in : " + (System.currentTimeMillis() - istart) + "ms. ");
 				}
@@ -281,7 +280,7 @@ public class RdfGenerator {
 	 * @throws DataSourceException thrown if there is an error retrieving data from the database
 	 */
 	@SuppressWarnings("unchecked")
-	private static <T> T fromRdf(T theObj, DataSource theSource) throws InvalidRdfException, DataSourceException {
+	private synchronized static <T> T fromRdf(T theObj, DataSource theSource) throws InvalidRdfException, DataSourceException {
 		final SupportsRdfId aTmpSupportsRdfId = asSupportsRdfId(theObj);
 		final SupportsRdfId.RdfKey theKeyObj = aTmpSupportsRdfId.getRdfId();
 		
@@ -318,7 +317,15 @@ public class RdfGenerator {
 					URI aType = (URI) aGraph.getValue(aTmpRes, aProp);
 					if((TYPE_TO_CLASS.containsKey(aType)) && (!theObj.getClass().equals(TYPE_TO_CLASS.get(aType)))) {
 						try {
-							theObj = (T) (TYPE_TO_CLASS.get(aType).newInstance());
+							Class aClass = TYPE_TO_CLASS.get(aType);
+							
+							if (aClass.isInterface() || Modifier.isAbstract(aClass.getModifiers())) {		
+								theObj = (T) com.clarkparsia.empire.codegen.InstanceGenerator.generateInstanceClass(aClass).newInstance();
+							}
+							else {
+								theObj = (T) aClass.newInstance();
+							}
+							
 							asSupportsRdfId(theObj).setRdfId(theKeyObj);
 						}
 						catch (Exception e) {
@@ -368,7 +375,7 @@ public class RdfGenerator {
 									   getData());
 					}
 				}
-			});
+			});			
 
 			for (URI aProp : aProps) {
 				AccessibleObject aAccess = aAccessMap.get(aProp);
@@ -409,9 +416,9 @@ public class RdfGenerator {
 				boolean aOldAccess = aAccess.isAccessible();
 
 				try {
-					setAccessible(aAccess, true);
-					set(aAccess, theObj, aValue);
-				}
+					setAccessible(aAccess, true);					
+					set(aAccess, theObj, aValue);				
+				}				
 				catch (InvocationTargetException e) {
 					// oh crap
 					throw new InvalidRdfException(e);

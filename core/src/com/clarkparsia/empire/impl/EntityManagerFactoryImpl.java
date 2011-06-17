@@ -19,6 +19,8 @@ import com.clarkparsia.empire.ds.MutableDataSource;
 import com.clarkparsia.empire.ds.DataSource;
 import com.clarkparsia.empire.ds.DataSourceFactory;
 import com.clarkparsia.empire.ds.DataSourceException;
+import com.clarkparsia.empire.ds.SupportsTransactions;
+import com.clarkparsia.empire.ds.impl.TransactionalDataSource;
 
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityManager;
@@ -39,6 +41,8 @@ import java.net.ConnectException;
  */
 public class EntityManagerFactoryImpl implements EntityManagerFactory {
 
+	public static final String USE_EMPIRE_TRANSACTIONS = "use.empire.transactions";
+	
 	/**
 	 * Factory for creating the DataSources backed by EntityManagers from this factory.
 	 */
@@ -98,6 +102,10 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory {
 				throw new IllegalArgumentException("Cannot use Empire with a non-mutable Data source");
 			}
 
+			if (isUseEmpireTransactions() && !(aSource instanceof SupportsTransactions)) {
+				aSource = new TransactionalDataSource((MutableDataSource) aSource);
+			}
+			
 			aSource.connect();
 
 			return new EntityManagerImpl( (MutableDataSource) aSource);
@@ -108,6 +116,10 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory {
 		catch (DataSourceException e) {
 			throw new IllegalArgumentException("There was an error creating the data source for the new EntityManager", e);
 		}
+	}
+	
+	private boolean isUseEmpireTransactions() {
+		return mConfig.containsKey(USE_EMPIRE_TRANSACTIONS) && Boolean.parseBoolean(mConfig.get(USE_EMPIRE_TRANSACTIONS).toString());
 	}
 
 	/**

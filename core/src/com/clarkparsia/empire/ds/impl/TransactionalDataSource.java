@@ -16,16 +16,23 @@
 package com.clarkparsia.empire.ds.impl;
 
 import org.openrdf.model.Graph;
+import org.openrdf.model.Statement;
+
 import com.clarkparsia.empire.ds.DataSource;
 import com.clarkparsia.empire.ds.DataSourceException;
 import com.clarkparsia.empire.ds.QueryException;
 import com.clarkparsia.empire.ds.MutableDataSource;
 import com.clarkparsia.empire.ds.ResultSet;
+import com.clarkparsia.empire.ds.TripleSource;
 import com.clarkparsia.empire.QueryFactory;
 import com.clarkparsia.empire.ds.SupportsTransactions;
 import com.clarkparsia.openrdf.ExtGraph;
 
 import java.net.ConnectException;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.ListIterator;
 
 /**
  * <p><b>Very</b> simple transactional support to put on top of a database that does not already support it.
@@ -43,17 +50,16 @@ public class TransactionalDataSource implements DataSource, MutableDataSource, S
 	 * The DataSource the operations will be applied to
 	 */
 	private MutableDataSource mDataSource;
-
+	
 	/**
-	 * The set of triples that have been removed in the current transaction
+	 * If the underlying DataSource (mDataSource) is a TripleSource, this is
+	 * identical to mDataSource. Otherwise, this is a TripleSourceAdapter to mDataSource
 	 */
-	private ExtGraph mRemoveGraph;
+	private TripleSource mTripleSource;
 
-	/**
-	 * The set of triples that have been added in the current transaction
-	 */
-	private ExtGraph mAddGraph;
 
+	private List<TransactionOp> mTransactionOps;
+	
 	/**
 	 * Whether or not a transaction is currently active
 	 */
@@ -64,9 +70,15 @@ public class TransactionalDataSource implements DataSource, MutableDataSource, S
 	 */
 	public TransactionalDataSource(final MutableDataSource theDataSource) {
 		mDataSource = theDataSource;
+		
+		if (mDataSource instanceof TripleSource) {
+			mTripleSource = (TripleSource) mDataSource;
+		}
+		else {
+			mTripleSource = new TripleSourceAdapter(mDataSource);
+		}
 
-		mRemoveGraph = new ExtGraph();
-		mAddGraph = new ExtGraph();
+		mTransactionOps = new LinkedList<TransactionOp>();
 	}
 
 	/**
@@ -77,8 +89,7 @@ public class TransactionalDataSource implements DataSource, MutableDataSource, S
 
 		mIsInTransaction = true;
 
-		mRemoveGraph.clear();
-		mAddGraph.clear();
+		mTransactionOps.clear();
 	}
 
 	/**
@@ -89,8 +100,7 @@ public class TransactionalDataSource implements DataSource, MutableDataSource, S
 
 		mIsInTransaction = false;
 
-		mRemoveGraph.clear();
-		mAddGraph.clear();
+		mTransactionOps.clear();
 	}
 
 	/**
@@ -99,13 +109,18 @@ public class TransactionalDataSource implements DataSource, MutableDataSource, S
 	public void rollback() throws DataSourceException {
 		assertInTransaction();
 
-		try {
-			if (mRemoveGraph.size() > 0) {
-				mDataSource.add(mRemoveGraph);
-			}
-
-			if (mAddGraph.size() > 0) {
-				mDataSource.remove(mAddGraph);
+		try {			
+			// revert all operations starting from the last one and go backwards until the first one
+			for (ListIterator<TransactionOp> it = mTransactionOps.listIterator(mTransactionOps.size()); 
+				it.hasPrevious(); ) {
+				TransactionOp op = it.previous();
+				
+				if (op.isAdded()) {
+					mDataSource.remove(op.getData());
+				} 
+				else {
+					mDataSource.add(op.getData());
+				}
 			}
 		}
 		catch (DataSourceException e) {
@@ -114,8 +129,7 @@ public class TransactionalDataSource implements DataSource, MutableDataSource, S
 		finally {
 			mIsInTransaction = false;
 
-			mRemoveGraph.clear();
-			mAddGraph.clear();
+			mTransactionOps.clear();
 		}
 	}
 
@@ -123,7 +137,10 @@ public class TransactionalDataSource implements DataSource, MutableDataSource, S
 	 * @inheritDoc
 	 */
 	public void add(final Graph theGraph) throws DataSourceException {
-		mAddGraph.addAll(theGraph);
+		if (isInTransaction()) {
+			mTransactionOps.add(new TransactionOp(nonExistingTriples(theGraph), true));
+		}
+		
 		mDataSource.add(theGraph);
 	}
 
@@ -131,7 +148,10 @@ public class TransactionalDataSource implements DataSource, MutableDataSource, S
 	 * @inheritDoc
 	 */
 	public void remove(final Graph theGraph) throws DataSourceException {
-		mRemoveGraph.addAll(theGraph);
+		if (isInTransaction()) {
+			mTransactionOps.add(new TransactionOp(existingTriples(theGraph), false));
+		}
+		
 		mDataSource.remove(theGraph);
 	}
 
@@ -217,5 +237,111 @@ public class TransactionalDataSource implements DataSource, MutableDataSource, S
 		if (!isInTransaction()) {
 			throw new DataSourceException("Cannot complete action, not in a transaction");
 		}
+	}
+	
+	/**
+	 * Filters all triples from the specified graph that already exist in the underlying data source
+	 * 
+	 * @param theData the data to be filtered
+	 * @return a graph that contains only triples that do not exist in the data source
+	 * @throws DataSourceException if querying the data source causes an error
+	 */
+	private Graph nonExistingTriples(Graph theData) throws DataSourceException {
+		ExtGraph aResult = new ExtGraph();		
+		
+		// TODO: is there a more efficient way to check that than triple-by-triple? 
+		// (for remote data sources this will cause one request for triple ...)
+		for (Iterator<Statement> it = theData.iterator(); it.hasNext(); ) {
+			Statement statement = it.next();
+			
+			if (!existsInDataSource(statement)) {
+				aResult.add(statement);
+			}
+		}
+		
+		return aResult;
+	}
+	
+	/**
+	 * Filters all triples from the specified graph that do not exist in the underlying data source
+	 * 
+	 * @param theData the data to be filtered
+	 * @return a graph that contains only triples that already exist in the data source
+	 * @throws DataSourceException if querying the data source causes an error
+	 */
+	private Graph existingTriples(Graph theData) throws DataSourceException {
+		ExtGraph aResult = new ExtGraph();
+
+		// TODO: is there a more efficient way to check that than triple-by-triple? 
+		// (for remote data sources this will cause one request for triple ...)
+		for (Iterator<Statement> it = theData.iterator(); it.hasNext(); ) {
+			Statement statement = it.next();
+			
+			if (existsInDataSource(statement)) {
+				aResult.add(statement);
+			}
+		}
+		
+		return aResult;
+	}
+	
+	/**
+	 * Checks whether the given statement exists in the data source.
+	 * 
+	 * @param s the statement to be checked
+	 * @return true, if the statement exists, false otherwise
+	 * @throws DataSourceException
+	 */
+	private boolean existsInDataSource(Statement s) throws DataSourceException {	
+		return mTripleSource.getStatements(s.getSubject(), s.getPredicate(), s.getObject(), s.getContext()).iterator().hasNext();
+	}
+
+	/**
+	 * Holds information about an add/remove operation within transaction
+	 * 
+	 * @author Blazej Bulka <blazej@clarkparsia.com>
+	 */
+	private static class TransactionOp {
+		/**
+		 * The data that was actually added/removed.
+		 * 
+		 * By "actually added" means triples that did not exist in the triple store before and 
+		 * were added.
+		 * 
+		 * By "actually removed" means triples that existed in the triple store and were removed
+		 * 
+		 * The terms above are introduced because it is possible that the user attempts to add triples that were
+		 * already there before -- a rollback must not remove such triples. Similarly, a user can request removal
+		 * of triples that did not exist in the triple store -- a rollback must not add such triples.
+		 */
+		private Graph mData;
+		
+		/**
+		 * Information whether triples were added (true) or removed (false).
+		 */
+		private boolean mAdded;
+		
+		TransactionOp(Graph theData, boolean theAdded) {
+			this.mData = theData;
+			this.mAdded = theAdded;
+		}
+		
+		/**
+		 * Gets the data involved in the operation
+		 * 
+		 * @return graph containing the data that was actually added/deleted
+		 */
+		public Graph getData() {
+			return mData;
+		}
+		
+		/**
+		 * Gets the flag whether the data was added/deleted
+		 * 
+		 * @return true if the data was added, false if it was deleted
+		 */
+		public boolean isAdded() {
+			return mAdded;
+		}		
 	}
 }

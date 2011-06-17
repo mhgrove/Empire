@@ -114,7 +114,7 @@ public class TestJPA  {
 												 "from {result} <" + SpaceVocab.ontology().agency + "> {??}",
 												 "from {result} <" + SpaceVocab.ontology().agency + "> {??}, {result} <" + SpaceVocab.ontology().alternateName + "> {??altName}",
 												 "sovietSpacecraft" },
-
+												 
 				{ getLocalSesameTwoTestConfigMap(), "from {result} <urn:prop> {y}",
 				  						  		    "select distinct result from {uri} space:mass {result}",
 												    "from {uri} <" + SpaceVocab.ontology().mass + "> {result}",
@@ -122,6 +122,7 @@ public class TestJPA  {
 												    "from {result} <" + SpaceVocab.ontology().agency + "> {??}",
 												    "from {result} <" + SpaceVocab.ontology().agency + "> {??}, {result} <" + SpaceVocab.ontology().alternateName + "> {??altName}",
 												    "sovietSpacecraft" },
+											    
 
 // NOTE: 4store setup.
 //				{ getFourStoreTestConfigMap(), "where { ?result <urn:prop> ?y }",
@@ -138,7 +139,16 @@ public class TestJPA  {
 											   "where { ?result <" + SpaceVocab.ontology().agency + "> \"U.S.S.R\" }",
 											   "where { ?result <" + SpaceVocab.ontology().agency + "> ?? }",
 											   "where { ?result <" + SpaceVocab.ontology().agency + "> ??. ?result <" + SpaceVocab.ontology().alternateName + "> ??altName }",
-											   "sovietSpacecraftSPARQL" }
+											   "sovietSpacecraftSPARQL" },
+											   
+				{ getLocalJenaTestWithTxConfigMap(), "where { ?result <urn:prop> ?y }",
+					  							   "select distinct ?result where { ?uri space:mass ?result }",
+												   "where { ?uri <" + SpaceVocab.ontology().mass + "> ?result }",
+												   "where { ?result <" + SpaceVocab.ontology().agency + "> \"U.S.S.R\" }",
+												   "where { ?result <" + SpaceVocab.ontology().agency + "> ?? }",
+												   "where { ?result <" + SpaceVocab.ontology().agency + "> ??. ?result <" + SpaceVocab.ontology().alternateName + "> ??altName }",
+												   "sovietSpacecraftSPARQL" }
+											   											 
 		});
 	}
 
@@ -686,7 +696,7 @@ public class TestJPA  {
 
 		return aMap;
 	}
-
+	
 	private static Map<String, String> getLocalSesameTestConfigMap() {
 		Map<String, String> aMap = new HashMap<String, String>();
 
@@ -696,6 +706,7 @@ public class TestJPA  {
 
 		return aMap;
 	}
+	
 
 	private static Map<String, String> getLocalJenaTestConfigMap() {
 		Map<String, String> aMap = new HashMap<String, String>();
@@ -706,4 +717,15 @@ public class TestJPA  {
 
 		return aMap;
 	}
+	
+	private static Map<String, String> getLocalJenaTestWithTxConfigMap() {
+		Map<String, String> aMap = new HashMap<String, String>();
+
+		aMap.put(ConfigKeys.FACTORY, "jena-test");
+		aMap.put("use.empire.transactions", "true");
+		aMap.put(JenaConfig.FILES, DATA_FILE);
+
+		return aMap;
+	}
+
 }

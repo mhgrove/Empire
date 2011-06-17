@@ -18,8 +18,10 @@ package com.clarkparsia.empire.util;
 import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.InvalidRdfException;
 import com.clarkparsia.empire.annotation.RdfId;
+import com.clarkparsia.empire.annotation.RdfsClass;
 import com.clarkparsia.empire.EmpireOptions;
 import com.clarkparsia.empire.SupportsRdfId;
+import com.clarkparsia.utils.NamespaceUtils;
 import com.google.common.collect.Maps;
 
 import javax.persistence.FetchType;
@@ -935,6 +937,32 @@ public final class BeanReflectUtil {
 		}
 
 		return aClass;
+	}
+	 
+	/**
+	 * Checks whether both classes have RdfsClass annotation that refers to the same type.
+	 * 
+	 * @param clazz1 the first class to be compared
+	 * @param clazz2 the second class to be compared
+	 * @return true if and only if the both classes have RdfsClass annotation and both of the annotations refer
+	 * to the same type. 
+	 */
+	public static boolean sameRdfsClass(Class clazz1, Class clazz2) {
+		if (!BeanReflectUtil.hasAnnotation(clazz1, RdfsClass.class)) {
+			return false;
+		}
+		
+		if (!BeanReflectUtil.hasAnnotation(clazz2, RdfsClass.class)) {
+			return false;
+		}
+		
+		RdfsClass rdfsClass1 = BeanReflectUtil.getAnnotation(clazz1, RdfsClass.class);
+		RdfsClass rdfsClass2 = BeanReflectUtil.getAnnotation(clazz2, RdfsClass.class);
+		
+		String type1 = NamespaceUtils.uri(rdfsClass1.value());
+		String type2 = NamespaceUtils.uri(rdfsClass2.value());
+		
+		return type1.equals(type2);
 	}
 
 	private static class BeanReflectCacheEntry {

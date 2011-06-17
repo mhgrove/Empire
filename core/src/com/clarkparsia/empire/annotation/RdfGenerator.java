@@ -315,7 +315,9 @@ public class RdfGenerator {
 				if (RDF.TYPE.equals(aProp)) {
 					
 					URI aType = (URI) aGraph.getValue(aTmpRes, aProp);
-					if((TYPE_TO_CLASS.containsKey(aType)) && (!theObj.getClass().equals(TYPE_TO_CLASS.get(aType)))) {
+					if((TYPE_TO_CLASS.containsKey(aType)) 
+						&& (!theObj.getClass().equals(TYPE_TO_CLASS.get(aType))) 
+						&& (!BeanReflectUtil.sameRdfsClass(TYPE_TO_CLASS.get(aType), theObj.getClass()))) {
 						try {
 							Class aClass = TYPE_TO_CLASS.get(aType);
 							

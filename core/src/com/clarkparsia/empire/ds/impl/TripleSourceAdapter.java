@@ -80,4 +80,48 @@ public class TripleSourceAdapter extends DelegatingDataSource implements TripleS
 
 		return (Graph) aQuery.getSingleResult();
 	}
+	
+	/**
+	 * @inheritDoc
+	 */
+	public Iterable<Statement> getStatements(Resource theSubject, URI thePredicate, Value theObject, Resource theContext) throws DataSourceException {
+		if (theContext == null) {
+			// if context is null, this means any context should match -- we can forward request to getStatements() without context
+			return getStatements(theSubject, thePredicate, theObject);
+		}
+		// Subject and object restrictions are implemented as filters, because some implementations can have problems
+		// dealing with bnodes
+
+		String aFilter = "";
+		
+		if (theSubject != null && theObject != null) {
+			aFilter = SUBJECT_OBJECT_FILTER;
+		}
+		else if (theSubject != null) {
+			aFilter = SUBJECT_FILTER;
+		}
+		else if (theObject != null) {
+			aFilter = OBJECT_FILTER;
+		}
+
+		// query will work only if the context is set
+		Query aQuery = getQueryFactory().createQuery("construct {?s ??p ?o} where { graph ??g { ?s ??p ?o . " + aFilter + "} }");
+
+		if (theSubject != null) {
+			aQuery.setParameter("ss", theSubject);
+		}
+
+		if (thePredicate != null) {
+			aQuery.setParameter("p", thePredicate);
+		}
+
+		if (theObject != null) {
+			aQuery.setParameter("oo", theObject);
+		}
+		
+		aQuery.setParameter("g", theContext);
+
+		return (Graph) aQuery.getSingleResult();
+	}
+
 }

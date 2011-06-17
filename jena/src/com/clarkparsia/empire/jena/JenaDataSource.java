@@ -222,4 +222,9 @@ public class JenaDataSource extends AbstractDataSource implements MutableDataSou
 							 }
 						 });
 	}
+    
+    public Iterable<Statement> getStatements(Resource subject, org.openrdf.model.URI predicate, Value object, Resource theContext) throws DataSourceException {
+    	// Jena models do not support contexts -- so we just forward the request to the regular getStatements() method
+    	return getStatements(subject, predicate, object);
+    }
 }

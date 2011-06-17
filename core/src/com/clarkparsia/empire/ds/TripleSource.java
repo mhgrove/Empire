@@ -46,4 +46,17 @@ public interface TripleSource extends DataSource {
 	 *             thrown if there is an error while getting the statements
 	 */
 	public Iterable<Statement> getStatements(Resource theSubject, URI thePredicate, Value theObject) throws DataSourceException;
+	
+	/**
+	 * Returns all the statements with the given subject, predicate, object and context. Null parameters represent wildcards.
+	 * 
+	 * @param theSubject the subject to match, or null for a wildcard
+	 * @param thePredicate the predicate to match, or null for a wildcard
+	 * @param theObject the object to match, or null for a wildcard
+	 * @param theContext the context to match, or null for a wildcard
+	 * @return an Iterable set of matching statements
+	 * @throws DataSourceException
+	 * 				throws if there is an error while getting the statements
+	 */
+	public Iterable<Statement> getStatements(Resource theSubject, URI thePredicate, Value theObject, Resource theContext) throws DataSourceException;
 }

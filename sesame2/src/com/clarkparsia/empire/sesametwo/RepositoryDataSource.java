@@ -194,6 +194,8 @@ public class RepositoryDataSource extends AbstractDataSource implements MutableD
 			mConnection.close();
 
 			setConnected(false);
+			
+			mRepository.shutDown();
 		}
 		catch (RepositoryException e) {
 			LOGGER.error(e);
@@ -342,6 +344,24 @@ public class RepositoryDataSource extends AbstractDataSource implements MutableD
     		throws DataSourceException {
     	try {
 			return OpenRdfUtil.iterable(mConnection.getStatements(theSubject, thePredicate, theObject, true));
+		}
+		catch (RepositoryException e) {
+			throw new DataSourceException(e);
+		}
+    }
+    
+	/**
+	 * @inheritDoc
+	 */
+    public Iterable<Statement> getStatements(Resource theSubject, org.openrdf.model.URI thePredicate, Value theObject, Resource theContext) 
+    		throws DataSourceException {
+    	if (theContext == null) {
+    		// if context is null, this means any context should match -- we can forward request to getStatements() without context
+    		return getStatements(theSubject, thePredicate, theObject);
+    	}
+    	
+    	try {
+			return OpenRdfUtil.iterable(mConnection.getStatements(theSubject, thePredicate, theObject, true, theContext));
 		}
 		catch (RepositoryException e) {
 			throw new DataSourceException(e);

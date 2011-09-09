@@ -27,6 +27,7 @@ import com.clarkparsia.empire.impl.RdfQueryFactory;
 import com.clarkparsia.empire.impl.sparql.SPARQLDialect;
 
 import com.clarkparsia.empire.impl.serql.SerqlDialect;
+import com.clarkparsia.openrdf.ExtGraph;
 import com.clarkparsia.openrdf.OpenRdfUtil;
 import com.clarkparsia.openrdf.ExtRepository;
 import com.clarkparsia.openrdf.util.GraphBuildingRDFHandler;
@@ -35,6 +36,7 @@ import org.openrdf.model.Graph;
 import org.openrdf.model.Resource;
 import org.openrdf.model.Statement;
 import org.openrdf.model.Value;
+import org.openrdf.model.impl.GraphImpl;
 
 import org.openrdf.repository.Repository;
 import org.openrdf.repository.RepositoryConnection;
@@ -45,15 +47,20 @@ import org.openrdf.query.GraphQuery;
 import org.openrdf.query.QueryLanguage;
 import org.openrdf.query.TupleQueryResult;
 import org.openrdf.query.GraphQueryResult;
+import org.openrdf.rio.RDFHandler;
+import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFWriterRegistry;
 import org.openrdf.rio.RDFFormat;
 import org.openrdf.rio.RDFWriter;
+import org.openrdf.rio.helpers.RDFHandlerBase;
 
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
 import java.net.ConnectException;
 import java.net.URI;
+import java.util.LinkedList;
+import java.util.List;
 import java.io.FileOutputStream;
 
 
@@ -224,12 +231,12 @@ public class RepositoryDataSource extends AbstractDataSource implements MutableD
 	public Graph graphQuery(final String theQuery) throws QueryException {
 		assertConnected();
 
-		GraphBuildingRDFHandler aHandler = new GraphBuildingRDFHandler();
+		GraphQueryRDFHandler aHandler = new GraphQueryRDFHandler();
 
 		try {
 			GraphQuery aQuery = mConnection.prepareGraphQuery(mQueryLang, theQuery);
-			aQuery.evaluate(aHandler);
-			return aHandler.getGraph();
+			aQuery.evaluate(aHandler);			
+			return aHandler.getGraph();		
 		}
 		catch (Exception e) {
 			throw new QueryException(e);
@@ -366,5 +373,35 @@ public class RepositoryDataSource extends AbstractDataSource implements MutableD
 		catch (RepositoryException e) {
 			throw new DataSourceException(e);
 		}
+    }
+    
+    public static class GraphQueryRDFHandler extends RDFHandlerBase {
+    	/**
+    	 * The graph to collect statements in
+    	 */
+    	private Graph mGraph = new GraphImpl();
+
+    	/**
+    	 * @inheritDoc
+    	 */
+    	@Override
+    	public void handleStatement(final Statement theStatement) throws RDFHandlerException {
+    		mGraph.add(theStatement);
+    	}
+
+    	/**
+    	 * Return the graph built from events fired to this handler
+    	 * @return the graph
+    	 */
+    	public Graph getGraph() {    		
+    		return mGraph;
+    	}
+
+    	/**
+    	 * Clear the underlying graph of all collected statements
+    	 */
+    	public void clear() {
+    		mGraph.clear();
+    	}	
     }
 }

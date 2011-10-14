@@ -58,7 +58,7 @@ import com.clarkparsia.openrdf.query.util.DescribeRewriter;
 import com.clarkparsia.openrdf.query.sparql.SPARQLQueryRenderer;
 import com.clarkparsia.openrdf.query.SesameQueryUtils;
 
-import static com.clarkparsia.openrdf.OpenRdfUtil.toIterator;
+import static com.clarkparsia.openrdf.util.AdunaIterations.iterator;;
 
 /**
  * <p>Implementation of a DataSource which is backed by a 4Store instance.</p>
@@ -138,7 +138,7 @@ public class FourStoreDataSource extends AbstractDataSource implements MutableDa
 	public ResultSet selectQuery(final String theQuery) throws QueryException {
 		try {
 			final TupleQueryResult aResult = mStore.query(theQuery);
-            return new AbstractResultSet(toIterator(aResult)) {
+            return new AbstractResultSet(iterator(aResult)) {
                 public void close() {
                     try {
                         aResult.close();

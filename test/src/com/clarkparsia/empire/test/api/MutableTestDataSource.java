@@ -42,7 +42,7 @@ public class MutableTestDataSource extends TestDataSource implements MutableData
 	 */
 	public void remove(final Graph theGraph) throws DataSourceException {
 		try {
-			getRepository().removeGraph(theGraph);
+			getRepository().remove(theGraph);
 		}
 		catch (Exception e) {
 			throw new DataSourceException(e);

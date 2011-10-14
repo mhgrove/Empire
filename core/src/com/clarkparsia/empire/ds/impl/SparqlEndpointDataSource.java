@@ -17,7 +17,7 @@ import com.clarkparsia.utils.web.Response;
 import com.clarkparsia.utils.web.HttpResourceImpl;
 import com.clarkparsia.utils.io.Encoder;
 
-import com.clarkparsia.openrdf.query.results.SparqlXmlResultSetParser;
+import com.clarkparsia.openrdf.util.AdunaIterations;
 
 import com.clarkparsia.openrdf.OpenRdfIO;
 
@@ -32,7 +32,13 @@ import org.openrdf.model.Graph;
 import org.openrdf.rio.RDFFormat;
 import org.openrdf.rio.RDFParseException;
 
+import org.openrdf.query.TupleQueryResult;
+import org.openrdf.query.TupleQueryResultHandlerException;
+import org.openrdf.query.resultio.BooleanQueryResultFormat;
+import org.openrdf.query.resultio.QueryResultIO;
+import org.openrdf.query.resultio.QueryResultParseException;
 import org.openrdf.query.resultio.TupleQueryResultFormat;
+import org.openrdf.query.resultio.UnsupportedQueryResultFormatException;
 
 import org.xml.sax.XMLReader;
 import org.xml.sax.InputSource;
@@ -132,15 +138,16 @@ public class SparqlEndpointDataSource extends AbstractDataSource {
 	public ResultSet selectQuery(final String theQuery) throws QueryException {
 		assertConnected();
 
-		return new AbstractResultSet(executeSPARQLQuery(theQuery).bindingSet()) {
+		return new AbstractResultSet(AdunaIterations.iterator(executeSPARQLQuery(theQuery, TupleQueryResult.class))) {
 			public void close() {
 				// no-op
 			}
 		};
 	}
 
-	private SparqlXmlResultSetParser executeSPARQLQuery(String theQuery) throws QueryException {
+	private <T> T executeSPARQLQuery(String theQuery, Class<T> clazz) throws QueryException {
 		Response aResponse = null;
+	
 		try {
 			aResponse = createSPARQLQueryRequest(theQuery).execute();
 
@@ -149,9 +156,14 @@ public class SparqlEndpointDataSource extends AbstractDataSource {
 			}
 			else {
 				try {
-					return parseResults(aResponse);
+					if (Boolean.class.equals(clazz)) {
+						return (T) parseBooleanResult(aResponse);
+					}
+					else {
+						return (T) parseTupleResult(aResponse);
+					}
 				}
-				catch (SAXException e) {
+				catch (Exception e) {
 					throw new QueryException("Could not parse SPARQL-XML results", e);
 				}
 			}
@@ -212,22 +224,17 @@ public class SparqlEndpointDataSource extends AbstractDataSource {
 	public boolean ask(final String theQuery) throws QueryException {
 		assertConnected();
 
-		return executeSPARQLQuery(theQuery).booleanResult();
+		return executeSPARQLQuery(theQuery, Boolean.class);
 	}
 
-	private SparqlXmlResultSetParser parseResults(Response theResponse) throws SAXException, IOException {
-		SparqlXmlResultSetParser aHandler = new SparqlXmlResultSetParser();
-
-		XMLReader aParser = org.xml.sax.helpers.XMLReaderFactory.createXMLReader();
-
-		aParser.setContentHandler(aHandler);
-		aParser.setFeature("http://xml.org/sax/features/validation", false);
-
-		aParser.parse(new InputSource(theResponse.getContent()));
-
-		return aHandler;
+	private Boolean parseBooleanResult(Response theResponse) throws QueryResultParseException, UnsupportedQueryResultFormatException, IOException {
+		return QueryResultIO.parse(theResponse.getContent(), BooleanQueryResultFormat.SPARQL);
 	}
-
+	
+	private TupleQueryResult parseTupleResult(Response theResponse) throws QueryResultParseException, TupleQueryResultHandlerException, UnsupportedQueryResultFormatException, IOException {
+		return QueryResultIO.parse(theResponse.getContent(), TupleQueryResultFormat.SPARQL);
+	}
+	
 	/**
 	 * @inheritDoc
 	 */

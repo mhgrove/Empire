@@ -54,6 +54,7 @@ import static com.clarkparsia.utils.FunctionUtil.compose;
 import com.clarkparsia.openrdf.ExtRepository;
 import com.clarkparsia.openrdf.OpenRdfUtil;
 import com.clarkparsia.openrdf.SesameQuery;
+import com.clarkparsia.openrdf.util.AdunaIterations;
 
 import java.util.Collection;
 import java.util.Map;
@@ -76,7 +77,6 @@ import java.net.URL;
  * @version 0.6.2
  */
 public class BeanGenerator {
-
 	/**
 	 * The logger
 	 */
@@ -433,13 +433,13 @@ public class BeanGenerator {
 
 		aRepository.read(theOntology.openStream(), theFormat);
 
-		Collection<Resource> aClasses = transform(new MultiIterator<Statement>(OpenRdfUtil.toIterator(aRepository.getStatements(null, RDF.TYPE, RDFS.CLASS)),
-																			   OpenRdfUtil.toIterator(aRepository.getStatements(null, RDF.TYPE, OWL.CLASS))),
+		Collection<Resource> aClasses = transform(new MultiIterator<Statement>(AdunaIterations.iterator(aRepository.getStatements(null, RDF.TYPE, RDFS.CLASS)),
+																			   AdunaIterations.iterator(aRepository.getStatements(null, RDF.TYPE, OWL.CLASS))),
 												  new StatementToSubject());
 
 		aClasses = filter(aClasses, new Predicate<Resource>() { public boolean accept(Resource theRes) { return theRes instanceof URI; } });
 
-		Collection<Resource> aIndClasses = transform(OpenRdfUtil.toIterator(aRepository.getStatements(null, RDF.TYPE, null)),
+		Collection<Resource> aIndClasses = transform(AdunaIterations.iterator(aRepository.getStatements(null, RDF.TYPE, null)),
 													 compose(new StatementToObject(),
 															 new FunctionUtil.Cast<Value, Resource>(Resource.class)));
 
@@ -457,7 +457,7 @@ public class BeanGenerator {
 
 		for (Resource aClass : aClasses) {
 			if (aClass instanceof BNode) { continue; }
-			Collection<URI> aProps = new HashSet<URI>(transform(OpenRdfUtil.toIterator(aRepository.getStatements(null, RDFS.DOMAIN, aClass)),
+			Collection<URI> aProps = new HashSet<URI>(transform(AdunaIterations.iterator(aRepository.getStatements(null, RDFS.DOMAIN, aClass)),
 																compose(new StatementToSubject(),
 																		new FunctionUtil.Cast<Resource, URI>(URI.class))));
 

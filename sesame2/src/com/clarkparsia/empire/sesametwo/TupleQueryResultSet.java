@@ -17,7 +17,7 @@ package com.clarkparsia.empire.sesametwo;
 
 import com.clarkparsia.empire.ds.impl.AbstractResultSet;
 
-import static com.clarkparsia.openrdf.OpenRdfUtil.toIterator;
+import com.clarkparsia.openrdf.util.AdunaIterations;
 
 import org.openrdf.query.TupleQueryResult;
 
@@ -34,7 +34,7 @@ public class TupleQueryResultSet extends AbstractResultSet {
 	private TupleQueryResult mResults;
 
 	public TupleQueryResultSet(final TupleQueryResult theResults) {
-		super(toIterator(theResults));
+		super(AdunaIterations.iterator(theResults));
 
 		mResults = theResults;
 	}

@@ -1,3 +1,17 @@
+/*
+ * Copyright (c) 2009-2010 Clark & Parsia, LLC. <http://www.clarkparsia.com>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.clarkparsia.empire.test;
 
 import static org.junit.Assert.assertEquals;
@@ -11,7 +25,6 @@ import java.util.Map;
 
 import javax.persistence.EntityManager;
 
-import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -19,7 +32,6 @@ import org.openrdf.model.Statement;
 
 import com.clarkparsia.empire.Empire;
 import com.clarkparsia.empire.EmpireGenerated;
-import com.clarkparsia.empire.EmpireOptions;
 import com.clarkparsia.empire.jena.JenaEmpireModule;
 import com.clarkparsia.empire.sesametwo.OpenRdfEmpireModule;
 import com.clarkparsia.empire.test.typing.A;
@@ -27,30 +39,20 @@ import com.clarkparsia.empire.test.typing.AnotherB;
 import com.clarkparsia.empire.test.typing.B;
 import com.clarkparsia.empire.test.util.TestModule;
 import com.clarkparsia.empire.util.DefaultEmpireModule;
-import com.clarkparsia.empire.util.EmpireUtil;
 
 public class TestTyping {
 	public static final String DATA_FILE = "test/data/typing.ttl";
-	
-	private static boolean enforceEntityAnnotation;
-	
+		
     private static EntityManager mManager;
 	
 	@BeforeClass
 	public static void beforeClass () {
 		System.setProperty("empire.configuration.file", "test.empire.config.properties");
-		enforceEntityAnnotation = EmpireOptions.ENFORCE_ENTITY_ANNOTATION;
-		//EmpireOptions.ENFORCE_ENTITY_ANNOTATION = false;
 		
 		Empire.init(new DefaultEmpireModule(), new OpenRdfEmpireModule(),
 					new JenaEmpireModule(), new TestModule());
 	}
 	
-	@AfterClass
-	public static void afterClass() {
-		//EmpireOptions.ENFORCE_ENTITY_ANNOTATION = true;
-	}
-
 	@Before
 	public void before() {
 		Map<String, String> aMap = new HashMap<String, String>();

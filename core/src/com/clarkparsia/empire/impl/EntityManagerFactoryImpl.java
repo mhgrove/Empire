@@ -111,7 +111,7 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory {
 			return new EntityManagerImpl( (MutableDataSource) aSource);
 		}
 		catch (ConnectException e) {
-			throw new IllegalStateException("Could not connect to the data source");
+			throw new IllegalStateException("Could not connect to the data source", e);
 		}
 		catch (DataSourceException e) {
 			throw new IllegalArgumentException("There was an error creating the data source for the new EntityManager", e);

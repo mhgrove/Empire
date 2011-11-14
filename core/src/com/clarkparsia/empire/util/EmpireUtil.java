@@ -20,6 +20,7 @@ import com.clarkparsia.empire.annotation.NamedGraph;
 import com.clarkparsia.empire.annotation.SupportsRdfIdImpl;
 import com.clarkparsia.empire.annotation.RdfGenerator;
 import com.clarkparsia.empire.annotation.AnnotationChecker;
+import com.clarkparsia.empire.EmpireGenerated;
 import com.clarkparsia.empire.SupportsRdfId;
 import com.clarkparsia.empire.ds.DataSource;
 import com.clarkparsia.empire.Empire;
@@ -324,5 +325,4 @@ public final class EmpireUtil {
 			throw new IllegalArgumentException(theObj + " is not a valid primary key, it is not a URI.", e);
 		}
 	}
-
 }

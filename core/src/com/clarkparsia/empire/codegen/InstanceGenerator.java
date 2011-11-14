@@ -41,11 +41,15 @@ import java.lang.reflect.Type;
 
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
+import org.openrdf.model.Graph;
 
+import com.clarkparsia.empire.EmpireGenerated;
 import com.clarkparsia.empire.SupportsRdfId;
 import com.clarkparsia.empire.EmpireOptions;
 import com.clarkparsia.empire.util.BeanReflectUtil;
 import static com.clarkparsia.utils.collections.CollectionUtil.find;
+
+import com.clarkparsia.openrdf.ExtGraph;
 import com.clarkparsia.utils.Predicate;
 
 import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl;
@@ -83,6 +87,7 @@ public class InstanceGenerator {
 
 		CtClass aInterface = aPool.get(theInterface.getName());
 		CtClass aSupportsRdfIdInterface = aPool.get(SupportsRdfId.class.getName());
+		CtClass aEmpireGeneratedInterface = aPool.get(EmpireGenerated.class.getName());
 
 		if (!Arrays.asList(aInterface.getInterfaces()).contains(aSupportsRdfIdInterface)
 			&& !SupportsRdfId.class.isAssignableFrom(theInterface)) {
@@ -117,6 +122,7 @@ public class InstanceGenerator {
 		}
 
 		aClass.addInterface(aSupportsRdfIdInterface);
+		aClass.addInterface(aEmpireGeneratedInterface);
 
 		aClass.addConstructor(CtNewConstructor.defaultConstructor(aClass));
 
@@ -124,23 +130,47 @@ public class InstanceGenerator {
 		generateMethodsForSuperInterfaces(theInterface, aPool, aClass);
 
 		CtField aIdField = new CtField(aPool.get(SupportsRdfId.class.getName()), "supportsId", aClass);
-		aClass.addField(aIdField, CtField.Initializer.byExpr("new com.clarkparsia.empire.annotation.SupportsRdfIdImpl();"));
-
+		aClass.addField(aIdField, CtField.Initializer.byExpr("new com.clarkparsia.empire.annotation.SupportsRdfIdImpl();"));		
+		
 		if (!hasMethod(aClass, "getRdfId")) {
 			aClass.addMethod(CtNewMethod.make("public com.clarkparsia.empire.SupportsRdfId.RdfKey getRdfId() { return supportsId.getRdfId(); } ", aClass));
 		}
 
 		if (!hasMethod(aClass, "setRdfId")) {
 			aClass.addMethod(CtNewMethod.make("public void setRdfId(com.clarkparsia.empire.SupportsRdfId.RdfKey theURI) { supportsId.setRdfId(theURI); } ", aClass));
+		}		
+		
+		CtField aAllTriplesField = new CtField(aPool.get(Graph.class.getName()), "mAllTriples", aClass);
+		aClass.addField(aAllTriplesField);
+		
+		if (!hasMethod(aClass, "getAllTriples")) {
+			aClass.addMethod(CtNewMethod.make("public org.openrdf.model.Graph getAllTriples() { return mAllTriples; } ", aClass));
+		}
+		
+		if (!hasMethod(aClass, "setAllTriples")) {
+			aClass.addMethod(CtNewMethod.make("public void setAllTriples(org.openrdf.model.Graph theGraph) { mAllTriples = theGraph; } ", aClass));
 		}
 
-		// TODO: generate a more sophisticated equals method based on the fields in the bean
-		aClass.addMethod(CtNewMethod.make("public boolean equals(Object theObj) { " +
-										  "  if (theObj == this) return true;\n" +
-										  "  if (!(theObj instanceof com.clarkparsia.empire.SupportsRdfId)) return false;\n" +
-										  "  if (!(this.getClass().isAssignableFrom(theObj.getClass()))) return false;\n" +
-										  "  return getRdfId().equals( ((com.clarkparsia.empire.SupportsRdfId) theObj).getRdfId());" +
-										  "} ", aClass));
+		CtField aInstanceTriplesField = new CtField(aPool.get(Graph.class.getName()), "mInstanceTriples", aClass);
+		aClass.addField(aInstanceTriplesField);
+
+		
+		if (!hasMethod(aClass, "getInstanceTriples")) {
+			aClass.addMethod(CtNewMethod.make("public org.openrdf.model.Graph getInstanceTriples() { return mInstanceTriples; } ", aClass));
+		}
+
+		if (!hasMethod(aClass, "setInstanceTriples")) {
+			aClass.addMethod(CtNewMethod.make("public void setInstanceTriples(org.openrdf.model.Graph theGraph) { mInstanceTriples = theGraph; } ", aClass));
+		}		
+		
+		String equalsMethodBody = 
+		  "public boolean equals(Object theObj) {\n" +
+		  "  if (theObj == this) return true;\n" +
+		  "  if (!(theObj instanceof com.clarkparsia.empire.SupportsRdfId)) return false;\n" +
+		  "  return getRdfId().equals( ((com.clarkparsia.empire.SupportsRdfId) theObj).getRdfId());\n" +
+		  "}\n";
+		
+		aClass.addMethod(CtNewMethod.make(equalsMethodBody, aClass));
 
 		aClass.addMethod(CtNewMethod.make("public String toString() { return getRdfId() != null ? getRdfId().toString() : super.toString(); } ", aClass));
 		aClass.addMethod(CtNewMethod.make("public int hashCode() { return getRdfId() != null ? getRdfId().hashCode() : 0; } ", aClass));
@@ -160,7 +190,7 @@ public class InstanceGenerator {
 
 		return aResult;
 	}
-
+	
 	/**
 	 * For all the parent interfaces of a class, generate implementations of all their methods.  And for their parents, do the same, and the same for their parents, and so on...
 	 * @param theInterface the interface

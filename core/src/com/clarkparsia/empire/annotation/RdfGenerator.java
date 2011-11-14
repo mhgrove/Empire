@@ -52,6 +52,7 @@ import java.util.Set;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.ArrayList;
+import java.net.ConnectException;
 import java.net.URISyntaxException;
 
 import com.clarkparsia.utils.BasicUtils;
@@ -73,6 +74,7 @@ import com.clarkparsia.empire.ds.DataSourceException;
 import com.clarkparsia.empire.ds.QueryException;
 import com.clarkparsia.empire.ds.DataSourceUtil;
 import com.clarkparsia.empire.EmpireOptions;
+import com.clarkparsia.empire.EmpireGenerated;
 import com.clarkparsia.empire.SupportsRdfId;
 import com.clarkparsia.empire.Empire;
 import com.clarkparsia.empire.Dialect;
@@ -95,6 +97,8 @@ import com.clarkparsia.openrdf.util.ResourceBuilder;
 import com.clarkparsia.openrdf.util.GraphBuilder;
 import com.clarkparsia.openrdf.ExtGraph;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 import com.google.inject.ProvisionException;
 import com.google.inject.ConfigurationException;
 
@@ -150,7 +154,7 @@ public class RdfGenerator {
 	/**
 	 * Map from rdf:type URI's to the Java class which corresponds to that resource.
 	 */
-	private final static Map<URI, Class> TYPE_TO_CLASS = new HashMap<URI, Class>();
+	private final static Multimap<URI, Class> TYPE_TO_CLASS = HashMultimap.create();
 
 	/**
 	 * Map to keep a record of what instances are currently being created in order to prevent cycles.  Keys are the
@@ -266,10 +270,81 @@ public class RdfGenerator {
 		asSupportsRdfId(aObj).setRdfId(theId);
 		LOGGER.debug("Has rdfId : " + (System.currentTimeMillis()-start ) );
 		start = System.currentTimeMillis();
+		
+		Class<T> aNewClass = determineClass(theClass, aObj, theSource);
+		
+		if (!aNewClass.equals(aObj.getClass())) {
+			try {
+	            aObj = aNewClass.newInstance();
+            }
+            catch (InstantiationException e) {
+            	throw new InvalidRdfException("Cannot create instance of bean, should have a default constructor.", e);
+            }
+            catch (IllegalAccessException e) {
+            	throw new InvalidRdfException("Could not access default constructor for class: " + theClass, e);
+            }
+			catch (Exception e) {
+				throw new InvalidRdfException("Cannot create an instance of bean", e);
+			}
+
+			asSupportsRdfId(aObj).setRdfId(theId);
+		}
 
 		return fromRdf(aObj, theSource);
 	}
+	
+	@SuppressWarnings("unchecked")
+    private static <T> Class<T> determineClass(Class<T> theOrigClass, T theObj, DataSource theSource) throws InvalidRdfException, DataSourceException {
+		Class aResult = theOrigClass;
+		final SupportsRdfId aTmpSupportsRdfId = asSupportsRdfId(theObj);
+	
+		ExtGraph aGraph = new ExtGraph(DataSourceUtil.describe(theSource, theObj));
+		
+		// right now, our best match is the original class (we will refine later)
+		
+		final Resource aTmpRes = EmpireUtil.asResource(aTmpSupportsRdfId);		
+				
+		// iterate for all rdf:type triples in the data
+		// There may be multiple rdf:type triples, which can then translate onto multiple candidate Java classes
+		// some of the Java classes may belong to the same class hierarchy, whereas others can have no common
+		// super class (other than java.lang.Object)
+		for (Value aValue : aGraph.getValues(aTmpRes, RDF.TYPE)) {
+			if (!(aValue instanceof URI)) {
+				// there is no URI in the object position of rdf:type
+				// ignore that data
+				continue;
+			}
+			
+			URI aType = (URI) aValue;
+						
+			for (Class aCandidateClass : TYPE_TO_CLASS.get(aType)) {
+				if (aCandidateClass.equals(aResult)) {
+					// it is mapped to the same Java class, that we have; ignore
+					continue;
+				}
 
+				// at this point we found an rdf:type triple that resolves to a different Java class than we have
+				// we are only going to accept this candidate class if it is a subclass of the current Java class
+				// (doing otherwise, may cause class cast exceptions)
+
+				if (aResult.isAssignableFrom(aCandidateClass)) {
+					aResult = aCandidateClass;
+				}
+			}
+		}
+
+		try {
+			if (aResult.isInterface() || Modifier.isAbstract(aResult.getModifiers()) || !EmpireGenerated.class.isAssignableFrom(aResult)) {						
+				aResult = com.clarkparsia.empire.codegen.InstanceGenerator.generateInstanceClass(aResult);
+			}
+		}
+		catch (Exception e) {
+			/* Forget it */
+		}
+		
+		return aResult;
+	}
+	
 	/**
 	 * Populate the fields of the current instance from the RDF indiviual with the given URI
 	 * @param theObj the Java object to populate
@@ -304,41 +379,20 @@ public class RdfGenerator {
 
 			final Resource aTmpRes = EmpireUtil.asResource(aTmpSupportsRdfId);
 			Set<URI> aProps = new HashSet<URI>();
-
+			
 			Iterator<Statement> sIter = aGraph.match(aTmpRes, null, null);
 
 			while (sIter.hasNext()) {
-				aProps.add(sIter.next().getPredicate());
+				Statement aStmt = sIter.next();
+				aProps.add(aStmt.getPredicate());
 			}
 			
-			for (URI aProp : aProps) {
-				if (RDF.TYPE.equals(aProp)) {
-					
-					URI aType = (URI) aGraph.getValue(aTmpRes, aProp);
-					if((TYPE_TO_CLASS.containsKey(aType)) 
-						&& (!theObj.getClass().equals(TYPE_TO_CLASS.get(aType))) 
-						&& (!BeanReflectUtil.sameRdfsClass(TYPE_TO_CLASS.get(aType), theObj.getClass()))) {
-						try {
-							Class aClass = TYPE_TO_CLASS.get(aType);
-							
-							if (aClass.isInterface() || Modifier.isAbstract(aClass.getModifiers())) {		
-								theObj = (T) com.clarkparsia.empire.codegen.InstanceGenerator.generateInstanceClass(aClass).newInstance();
-							}
-							else {
-								theObj = (T) aClass.newInstance();
-							}
-							
-							asSupportsRdfId(theObj).setRdfId(theKeyObj);
-						}
-						catch (Exception e) {
-							/* Forget it */
-						}
-
-					}
-				}
-			}
 			
 			final SupportsRdfId aSupportsRdfId = asSupportsRdfId(theObj);
+			
+			final EmpireGenerated aEmpireGenerated = asEmpireGenerated(theObj);
+			
+			aEmpireGenerated.setAllTriples(aGraph);		
 			
 			OBJECT_M.put(theKeyObj, theObj);
 			final Resource aRes = EmpireUtil.asResource(aSupportsRdfId);
@@ -352,7 +406,6 @@ public class RdfGenerator {
 
 			CollectionUtil.each(aFields, new AbstractDataCommand<Field>() {
 				public void execute() {
-
 					if (getData().getAnnotation(RdfProperty.class) != null) {
 						aAccessMap.put(FACTORY.createURI(NamespaceUtils.uri(getData().getAnnotation(RdfProperty.class).value())),
 									   getData());
@@ -378,15 +431,25 @@ public class RdfGenerator {
 					}
 				}
 			});			
+			
+			Set<URI> aUsedProps = new HashSet<URI>();
 
 			for (URI aProp : aProps) {
 				AccessibleObject aAccess = aAccessMap.get(aProp);
 
 				if (aAccess == null && RDF.TYPE.equals(aProp)) {
+					// TODO: the following block should be entirely removed (leaving continue only)
+					// right now, leaving it until the code review: code review before removing the following block
+					
+					// my understanding is that the following block was only necessary when having a support for a single-typed objects,
+					// which is no longer the case 					
+					
 					// we can skip the rdf:type property.  it's basically assigned in the @RdfsClass annotation on the
 					// java class, so we can figure it out later if need be. TODO: of course, if something has multiple types
 					// that information is lost, which is not good.
 
+					
+					/*
 					URI aType = (URI) aGraph.getValue(aRes, aProp);
 					if (!TYPE_TO_CLASS.containsKey(aType) ||
 						!TYPE_TO_CLASS.get(aType).isAssignableFrom(theObj.getClass())) {
@@ -400,17 +463,17 @@ public class RdfGenerator {
 							// means that the class loaders don't match.  so probably not an error, so no warning.
 						}
 					}
+					*/
 
 					continue;
 				}
 				else if (aAccess == null) {
-					// TODO: this is a lossy transformation, there's rdf data which is not represented by a field on the java class
-					// so if we don't convert it into something on the java bean, they don't have a full representation of
-					// what was in the database AND if they save that back to the database, they will lose this information
-					// that is not good either.
+					// this must be data that is not covered by the bean (perhaps accessible by a different view/bean for a differnent type of an individual)					
 					continue;
 				}
 
+				aUsedProps.add(aProp);
+				
 				ToObjectFunction aFunc = new ToObjectFunction(theSource, aRes, aAccess, aProp);
 
 				Object aValue = aFunc.apply(aGraph.getValues(aRes, aProp));
@@ -448,6 +511,19 @@ public class RdfGenerator {
 					setAccessible(aAccess, aOldAccess);
 				}
 			}
+			
+			sIter = aGraph.match(aTmpRes, null, null);
+			ExtGraph aInstanceTriples = new ExtGraph();
+
+			while (sIter.hasNext()) {
+				Statement aStmt = sIter.next();
+				
+				if (aUsedProps.contains(aStmt.getPredicate())) {
+					aInstanceTriples.add(aStmt);
+				}								
+			}
+			
+			aEmpireGenerated.setInstanceTriples(aInstanceTriples);
 
 			return theObj;
 		}
@@ -491,6 +567,15 @@ public class RdfGenerator {
 		}
 		else {
 			return (SupportsRdfId) theObj;
+		}
+	}
+	
+	private static EmpireGenerated asEmpireGenerated(Object theObj) throws InvalidRdfException {
+		if (!(theObj instanceof EmpireGenerated)) {
+			throw new InvalidRdfException("Object of type '" + (theObj.getClass().getName()) + "' does not implements EmpireGenerated, anonymous instances are not supported.");
+		}
+		else {
+			return (EmpireGenerated) theObj;
 		}
 	}
 
@@ -973,10 +1058,12 @@ public class RdfGenerator {
 
 			// k, so now we know the type, if we can match the type to a class then we're in business
 			if (aType != null) {
-				Class aTypeClass = TYPE_TO_CLASS.get(aType);
-				if (aTypeClass != null && BeanReflectUtil.hasAnnotation(aTypeClass, RdfsClass.class)) {
-					// lets try this one
-					aClass = aTypeClass;
+				for (Class aTypeClass : TYPE_TO_CLASS.get(aType)) {
+					if (BeanReflectUtil.hasAnnotation(aTypeClass, RdfsClass.class)) {
+						// lets try this one
+						aClass = aTypeClass;
+						break;
+					}
 				}
 			}
 		}
@@ -1231,7 +1318,9 @@ public class RdfGenerator {
 			Object aObj = aFactory.createClass().newInstance();
 
 			((ProxyObject) aObj).setHandler(new ProxyHandler<T>(aProxy));
-
+			
+			//((com.clarkparsia.empire.annotation.RdfGenerator.ProxyHandler) ((javassist.util.proxy.ProxyObject) aObj).getHandler()).getProxy().getProxyClass();
+			
 			return (T) aObj;
 		}
 		else {
@@ -1243,8 +1332,7 @@ public class RdfGenerator {
 	 * Javassist {@link MethodHandler} implementation for method proxying.
 	 * @param <T> the proxy class type
 	 */
-	private static class ProxyHandler<T> implements MethodHandler {
-
+	public static class ProxyHandler<T> implements MethodHandler {
 		/**
 		 * The proxy object which wraps the instance being proxied.
 		 */
@@ -1258,6 +1346,10 @@ public class RdfGenerator {
 			mProxy = theProxy;
 		}
 
+		public Proxy<T> getProxy() {
+			return mProxy;
+		}
+		
 		/**
 		 * Delegates the methods to the Proxy
 		 * @inheritDoc

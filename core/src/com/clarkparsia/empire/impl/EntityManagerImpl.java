@@ -25,6 +25,7 @@ import com.clarkparsia.empire.ds.QueryException;
 import com.clarkparsia.empire.ds.impl.TransactionalDataSource;
 import com.clarkparsia.empire.Empire;
 import com.clarkparsia.empire.EmpireException;
+import com.clarkparsia.empire.EmpireGenerated;
 import com.clarkparsia.empire.EmpireOptions;
 
 import com.clarkparsia.empire.annotation.InvalidRdfException;
@@ -204,9 +205,14 @@ public final class EntityManagerImpl implements EntityManager {
 
         try {
             for (AccessibleObject aAccess : aAccessors) {
+            	System.out.println("Accessor " + aAccess);
                 Object aValue = safeGet(aAccess, aDbObj);
+                
+                System.out.println(aDbObj.getClass());
 
                 AccessibleObject aSetter = asSetter(aDbObj.getClass(), aAccess);
+                
+                System.out.println("setter is " + aSetter);
 
                 safeSet(aSetter, theObj, aValue);
             }
@@ -396,7 +402,14 @@ public final class EntityManagerImpl implements EntityManager {
 	public <T> T merge(final T theT) {
 		assertStateOk(theT);
 
-		Graph aExistingData = assertContainsAndDescribe(theT);
+		Graph aExistingData = null;
+		
+		if (theT instanceof EmpireGenerated) {
+			aExistingData = ((EmpireGenerated) theT).getInstanceTriples();
+		}
+		else {
+			aExistingData = assertContainsAndDescribe(theT);
+		}
 
 		try {
 			preUpdate(theT);
@@ -613,6 +626,7 @@ public final class EntityManagerImpl implements EntityManager {
 			}
 		}
 		catch (InvalidRdfException e) {
+			e.printStackTrace();
 			throw new IllegalArgumentException("Type is not valid, or object with key is not a valid Rdf Entity.", e);
 		}
 		catch (DataSourceException e) {

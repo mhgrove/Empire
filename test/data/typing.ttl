@@ -1,0 +1,31 @@
+@prefix : <urn:clarkparsia.com:empire:test:> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+
+
+:a1 rdf:type :A ;
+    :propA "A" ;
+    :hasA :a2, :b1, :b2, :b3, :b4 .
+
+:a2 rdf:type :A ;
+    :propA "A-a2".
+
+:b1 rdf:type :B ;
+    :propA "A" ;
+    :propB "B" .
+
+:b2 rdf:type :A ;
+    rdf:type :B ;
+    :propA "A" ;
+    :propB "B" .
+
+:b3 rdf:type :A ;
+    rdf:type :B ;
+    :propA "A-b3" ;
+    :propB "B-b3" .
+
+:b4 rdf:type :B ;
+    :propA "A-b4" ;
+    :propB "B-b4" .
+

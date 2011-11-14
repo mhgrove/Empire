@@ -60,7 +60,7 @@ public class Proxy<T> {
 		mURI = theKey;
 		mDataSource = theSource;
 	}
-
+	
 	/**
 	 * Return the value backing this proxy.  This will either be a cached copy of the already retrieved value, or
 	 * it will actually go and grab the object from the database.

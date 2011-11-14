@@ -580,12 +580,16 @@ public final class BeanReflectUtil {
         else {
             // try to find a setter method
             StringBuffer aName = new StringBuffer();
-
+                        
             if (theAccess instanceof Field) {
                 // this probably cannot happen, this would mean the accessor is a field, but not in the list of
                 // declared fields, which i dont think will ever occur.  so this is probably overkill.
+            	
+            	// Update: Yes, this can actually happen. Declared fields do not include inherited fields,
+            	// but they can still be accessor (even more, if the field was annotated in one class, and then Empire
+            	// generated a subclass implementation for that class ...)
                 aName.append(((Field)theAccess).getName());
-                aName.setCharAt(0, String.valueOf(aName.charAt(0)).toUpperCase().charAt(0));
+                aName.setCharAt(0, String.valueOf(aName.charAt(0)).toUpperCase().charAt(0));    
             }
             else if (theAccess instanceof Method) {
                 aName.append(((Method)theAccess).getName());
@@ -600,8 +604,8 @@ public final class BeanReflectUtil {
             }
 
             aName.insert(0, "set");
-
-            for (Method aMethod : theClass.getDeclaredMethods()) {
+                        
+            for (Method aMethod : theClass.getMethods()) {
                 if (aMethod.getName().equals(aName.toString())) {
                     return aMethod;
                 }

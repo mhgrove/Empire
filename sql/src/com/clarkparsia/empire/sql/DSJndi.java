@@ -1,5 +1,8 @@
 package com.clarkparsia.empire.sql;
 
+import java.sql.SQLFeatureNotSupportedException;
+import java.util.logging.Logger;
+
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
@@ -53,5 +56,15 @@ class DSJndi extends AbstractSqlDS {
 		}
 
 		setDataSource((DataSource) getInitialContext().lookup(getContextName()));
+	}
+
+	/**
+	 * Added due to DataSource evolution in Java7. Sorry, but I can't understand the beginning of that
+	 * @return
+	 * @throws SQLFeatureNotSupportedException
+	 * @see javax.sql.CommonDataSource#getParentLogger()
+	 */
+	public Logger getParentLogger() throws SQLFeatureNotSupportedException {
+		throw new SQLFeatureNotSupportedException(new UnsupportedOperationException("method "+DSJndi.class.getName()+"#getParentLogger has not yet been implemented AT ALL"));
 	}
 }

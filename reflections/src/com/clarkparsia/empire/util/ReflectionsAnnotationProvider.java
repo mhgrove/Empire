@@ -40,6 +40,7 @@ public final class ReflectionsAnnotationProvider implements EmpireAnnotationProv
 	private static Reflections REFLECTIONS;
 
 	static {
+		// Updated as used method is no more available in official release
 		REFLECTIONS = new Reflections(new ConfigurationBuilder().setUrls(ClasspathHelper.forJavaClassPath())
 				.setScanners(new FieldAnnotationsScanner(),
 							 new MethodAnnotationsScanner(),

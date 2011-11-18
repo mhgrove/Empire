@@ -1,0 +1,44 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>com.clarkparsia</groupId>
+		<artifactId>Empire-parent</artifactId>
+		<version>0.6.1</version>
+		<relativePath>..</relativePath>
+	</parent>
+	<artifactId>Empire-reflections</artifactId>
+	<packaging>jar</packaging>
+
+	<dependencies>
+		<dependency>
+			<groupId>com.clarkparsia</groupId>
+			<artifactId>Empire-core</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.reflections</groupId>
+			<artifactId>reflections</artifactId>
+			<version>0.9.5</version>
+		</dependency>
+		<dependency>
+			<groupId>dom4j</groupId>
+			<artifactId>dom4j</artifactId>
+			<version>1.6.1</version>
+		</dependency>
+		<!-- Consider abandoning (or exporting into its very own realm) EmpireAnnotationProcessorFactory, 
+			as this dependency is quite ugly. But let me explain it further. As com.sun.mirror.apt.AnnotationProcessorFactory 
+			and all the classes used in EmpireAnnotationProcessorFactory are internal 
+			sun classes, they are not officialy known. As a consequence, to access them, 
+			we must explicitely depend upon JDK. Notice that version used here is totally 
+			indicative, as it's a pure compile bug. As a consequence, instead of MY JDK 
+			version, I prefer to use project one (set in parent pom) -->
+		<dependency>
+			<groupId>com.sun</groupId>
+			<artifactId>tools</artifactId>
+			<version>${java.version}</version>
+			<scope>system</scope>
+			<systemPath>${java.home}/../lib/tools.jar</systemPath>
+		</dependency>
+	</dependencies>
+</project>

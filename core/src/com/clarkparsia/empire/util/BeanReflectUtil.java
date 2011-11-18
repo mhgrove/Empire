@@ -21,7 +21,8 @@ import com.clarkparsia.empire.annotation.RdfId;
 import com.clarkparsia.empire.annotation.RdfsClass;
 import com.clarkparsia.empire.EmpireOptions;
 import com.clarkparsia.empire.SupportsRdfId;
-import com.clarkparsia.utils.NamespaceUtils;
+import com.clarkparsia.common.util.PrefixMapping;
+
 import com.google.common.collect.Maps;
 
 import javax.persistence.FetchType;
@@ -963,8 +964,8 @@ public final class BeanReflectUtil {
 		RdfsClass rdfsClass1 = BeanReflectUtil.getAnnotation(clazz1, RdfsClass.class);
 		RdfsClass rdfsClass2 = BeanReflectUtil.getAnnotation(clazz2, RdfsClass.class);
 		
-		String type1 = NamespaceUtils.uri(rdfsClass1.value());
-		String type2 = NamespaceUtils.uri(rdfsClass2.value());
+		String type1 = PrefixMapping.GLOBAL.uri(rdfsClass1.value());
+		String type2 = PrefixMapping.GLOBAL.uri(rdfsClass2.value());
 		
 		return type1.equals(type2);
 	}

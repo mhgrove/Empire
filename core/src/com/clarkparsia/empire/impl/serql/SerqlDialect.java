@@ -18,7 +18,9 @@ package com.clarkparsia.empire.impl.serql;
 import com.clarkparsia.empire.Dialect;
 import com.clarkparsia.empire.impl.RdfQuery;
 import com.clarkparsia.openrdf.query.SesameQueryUtils;
-import com.clarkparsia.utils.NamespaceUtils;
+
+import com.clarkparsia.common.util.PrefixMapping;
+
 import org.openrdf.model.Value;
 import org.openrdf.query.parser.serql.SeRQLParserFactory;
 import org.openrdf.query.MalformedQueryException;
@@ -30,7 +32,7 @@ import org.openrdf.query.MalformedQueryException;
  * @since 0.1
  * @version 0.7
  */
-public class SerqlDialect implements Dialect {
+public final class SerqlDialect implements Dialect {
 	/**
 	 * The singleton instance
 	 */
@@ -113,7 +115,7 @@ public class SerqlDialect implements Dialect {
 	public void insertNamespaces(final StringBuffer theBuffer) {
 		StringBuffer aNS = new StringBuffer();
 		boolean aFirst = true;
-		for (String aPrefix : NamespaceUtils.prefixes()) {
+		for (String aPrefix : PrefixMapping.GLOBAL.getPrefixes()) {
 			if (aPrefix.trim().equals("")) {
 				continue;
 			}
@@ -126,7 +128,7 @@ public class SerqlDialect implements Dialect {
 				aNS.append(",\n");
 			}
 
-			aNS.append(aPrefix).append(" = <").append(NamespaceUtils.namespace(aPrefix)).append(">");
+			aNS.append(aPrefix).append(" = <").append(PrefixMapping.GLOBAL.getNamespace(aPrefix)).append(">");
 		}
 
 		theBuffer.append("\n").append(aNS);

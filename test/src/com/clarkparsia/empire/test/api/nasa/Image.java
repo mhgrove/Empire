@@ -22,14 +22,13 @@ import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.NamedGraph;
 
 import com.clarkparsia.empire.test.api.BaseTestClass;
-import com.clarkparsia.empire.SupportsRdfId;
 
 import javax.persistence.Entity;
 
 import java.net.URI;
 import java.util.List;
 
-import com.clarkparsia.utils.BasicUtils;
+import com.google.common.base.Objects;
 
 /**
  * <p></p>
@@ -94,7 +93,7 @@ public class Image extends BaseTestClass {
 		if (getThumbnail() != null ? !getThumbnail().equals(aImage.getThumbnail()) : aImage.getThumbnail() != null) {
 			return false;
 		}
-		if (!BasicUtils.equalsOrNull(getRdfId(), aImage.getRdfId())) {
+		if (!Objects.equal(getRdfId(), aImage.getRdfId())) {
 			return false;
 		}
 

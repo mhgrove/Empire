@@ -31,8 +31,8 @@ import java.net.URI;
 import java.util.List;
 import java.util.ArrayList;
 
-import com.clarkparsia.utils.BasicUtils;
-import com.clarkparsia.utils.collections.CollectionUtil;
+import com.google.common.base.Objects;
+import com.google.common.collect.Sets;
 
 /**
  * <p></p>
@@ -193,7 +193,7 @@ public class Spacecraft extends BaseTestClass {
 			return false;
 		}
 		if (!((getAlternateName() == null && that.getAlternateName() == null) ||
-			(getAlternateName() != null && that.getAlternateName() != null && CollectionUtil.contentsEqual(getAlternateName(),that.getAlternateName())))) {
+			(getAlternateName() != null && that.getAlternateName() != null && Sets.newHashSet(getAlternateName()).equals(Sets.newHashSet(that.getAlternateName()))))) {
 			return false;
 		}
 		if (getDescription() != null ? !getDescription().equals(that.getDescription()) : that.getDescription() != null) {
@@ -208,8 +208,8 @@ public class Spacecraft extends BaseTestClass {
 		if (getInternationalDesignator() != null ? !getInternationalDesignator().equals(that.getInternationalDesignator()) : that.getInternationalDesignator() != null) {
 			return false;
 		}
-		if (!BasicUtils.equalsOrNull(getLaunch() == null ? null : getLaunch().getRdfId(),
-									that.getLaunch() == null ? null : that.getLaunch().getRdfId())) {
+		if (!Objects.equal(getLaunch() == null ? null : getLaunch().getRdfId(),
+						   that.getLaunch() == null ? null : that.getLaunch().getRdfId())) {
 			return false;
 		}
 		if (getMass() != null ? !getMass().equals(that.getMass()) : that.getMass() != null) {
@@ -221,7 +221,7 @@ public class Spacecraft extends BaseTestClass {
 		if (getName() != null ? !getName().equals(that.getName()) : that.getName() != null) {
 			return false;
 		}
-		if (!BasicUtils.equalsOrNull(getRdfId(), that.getRdfId())) {
+		if (!Objects.equal(getRdfId(), that.getRdfId())) {
 			return false;
 		}
 

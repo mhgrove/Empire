@@ -15,11 +15,9 @@
 
 package com.clarkparsia.empire.util;
 
-import com.clarkparsia.utils.BasicUtils;
-import com.clarkparsia.empire.Empire;
 import com.google.inject.Inject;
-import com.google.inject.Guice;
 import com.google.inject.name.Named;
+import com.google.common.base.Splitter;
 
 import java.util.Collection;
 import java.util.Set;
@@ -48,7 +46,7 @@ import org.apache.log4j.LogManager;
  * @since 0.1
  * @version 0.7
  */
-public class PropertiesAnnotationProvider implements EmpireAnnotationProvider {
+public final class PropertiesAnnotationProvider implements EmpireAnnotationProvider {
 
 	/**
 	 * The logger
@@ -136,7 +134,7 @@ public class PropertiesAnnotationProvider implements EmpireAnnotationProvider {
 		String aVal = aProps.getProperty(theAnnotation.getName());
 
 		if (aVal != null) {
-			for (String aName : BasicUtils.split(aVal, ",")) {
+			for (String aName : Splitter.on(",").omitEmptyStrings().trimResults().split(aVal)) {
 				try {
 					Class aClass = BeanReflectUtil.loadClass(aName);
 

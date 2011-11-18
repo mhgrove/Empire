@@ -35,8 +35,8 @@ import com.clarkparsia.openrdf.query.sparql.SPARQLQueryRenderer;
 
 import com.clarkparsia.openrdf.query.serql.SeRQLQueryRenderer;
 
-import com.clarkparsia.utils.NamespaceUtils;
-import com.clarkparsia.utils.BasicUtils;
+import com.clarkparsia.common.util.PrefixMapping;
+import com.clarkparsia.common.net.NetUtils;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceException;
@@ -100,7 +100,7 @@ public final class EmpireUtil {
 		else {
 			String aValue = theSupport.getRdfId().toString();
 
-			if (BasicUtils.isURI(aValue)) {
+			if (NetUtils.isURI(aValue)) {
 				return ValueFactoryImpl.getInstance().createURI(aValue);
 			}
 			else {
@@ -192,7 +192,7 @@ public final class EmpireUtil {
 		else {
 			String aValue = theSupport.getRdfId().toString();
 
-			if (BasicUtils.isURI(aValue)) {
+			if (NetUtils.isURI(aValue)) {
 				return URI.create(aValue);
 			}
 		}
@@ -231,7 +231,7 @@ public final class EmpireUtil {
 		RdfGenerator.addNamespaces(theClass);
 
 		QueryBuilder<ParsedTupleQuery> aQuery = QueryBuilderFactory.select("result").distinct()
-				.group().atom("result", RDF.TYPE, ValueFactoryImpl.getInstance().createURI(NamespaceUtils.uri(aClass.value()))).closeGroup();
+				.group().atom("result", RDF.TYPE, ValueFactoryImpl.getInstance().createURI(PrefixMapping.GLOBAL.uri(aClass.value()))).closeGroup();
 		
 		LOGGER.debug("Created query : " + (System.currentTimeMillis() - start));
 		start = System.currentTimeMillis();
@@ -307,7 +307,7 @@ public final class EmpireUtil {
 				return new SupportsRdfId.BNodeKey( ((BNode) theObj).getID() );
 			}
 			else {
-				if (BasicUtils.isURI(theObj.toString())) {
+				if (NetUtils.isURI(theObj.toString())) {
 					return new SupportsRdfId.URIKey(new URI(theObj.toString()));
 				}
 				else {

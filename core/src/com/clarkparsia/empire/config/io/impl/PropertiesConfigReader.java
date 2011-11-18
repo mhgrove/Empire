@@ -15,14 +15,14 @@
 
 package com.clarkparsia.empire.config.io.impl;
 
-import com.clarkparsia.utils.EnhancedProperties;
-import com.clarkparsia.utils.Predicate;
-import static com.clarkparsia.utils.collections.CollectionUtil.filter;
 import com.clarkparsia.empire.config.EmpireConfiguration;
 import com.clarkparsia.empire.config.ConfigKeys;
 import com.clarkparsia.empire.config.io.ConfigReader;
 import com.clarkparsia.empire.util.EmpireAnnotationProvider;
 import com.clarkparsia.empire.util.BeanReflectUtil;
+import com.clarkparsia.common.util.EnhancedProperties;
+import com.google.common.collect.Collections2;
+import com.google.common.base.Predicate;
 
 import java.util.Properties;
 import java.util.Map;
@@ -82,7 +82,7 @@ public class PropertiesConfigReader implements ConfigReader, ConfigKeys {
 			String aPrefix = aIndex+".";
 			Map<String, String> aUnit = new HashMap<String, String>();
 			
-			for (Object aOrigKey : filter(aProps.keySet(), new PrefixPredicate(aPrefix))) {
+			for (Object aOrigKey : Collections2.filter(aProps.keySet(), new PrefixPredicate(aPrefix))) {
 				String aKey = aOrigKey.toString();
 
 				aKey = aKey.substring(aPrefix.length());
@@ -95,7 +95,7 @@ public class PropertiesConfigReader implements ConfigReader, ConfigKeys {
 			aIndex++;
 		}
 
-		for (Object aOrigKey : filter(aProps.keySet(), new UnitFilterPredicate())) {
+		for (Object aOrigKey : Collections2.filter(aProps.keySet(), new UnitFilterPredicate())) {
 			aGeneralConfig.put(aOrigKey.toString(), aProps.getProperty(aOrigKey.toString()));
 		}
 
@@ -123,7 +123,11 @@ public class PropertiesConfigReader implements ConfigReader, ConfigKeys {
 	 * Filter for returning only non-unit property keys
 	 */
 	private static class UnitFilterPredicate implements Predicate<Object> {
-		public boolean accept(final Object theValue) {
+
+		/**
+		 * @inheritDoc
+		 */
+		public boolean apply(final Object theValue) {
 			String aStr = theValue.toString();
 
 			// the standard format for unit properties in the file is <index>.<property_name>
@@ -161,7 +165,10 @@ public class PropertiesConfigReader implements ConfigReader, ConfigKeys {
 			mPrefix = thePrefix;
 		}
 
-		public boolean accept(final Object theValue) {
+		/**
+		 * @inheritDoc
+		 */
+		public boolean apply(final Object theValue) {
 			return theValue.toString().startsWith(mPrefix);
 		}
 	}

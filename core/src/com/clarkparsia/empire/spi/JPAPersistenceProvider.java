@@ -28,7 +28,7 @@ import java.util.Map;
  *
  * @author Michael Grove
  */
-public class JPAPersistenceProvider implements PersistenceProvider {
+public final class JPAPersistenceProvider implements PersistenceProvider {
 
 	/**
 	 * The actual persistence provider

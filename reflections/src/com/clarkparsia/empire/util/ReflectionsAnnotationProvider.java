@@ -36,11 +36,11 @@ import java.lang.annotation.Annotation;
  * @since 0.5.2
  * @see <a href="http://code.google.com/p/reflections/">Reflections API</a>
  */
-public class ReflectionsAnnotationProvider implements EmpireAnnotationProvider {
+public final class ReflectionsAnnotationProvider implements EmpireAnnotationProvider {
 	private static Reflections REFLECTIONS;
 
 	static {
-		REFLECTIONS = new Reflections(new ConfigurationBuilder().setUrls(ClasspathHelper.getUrlsForCurrentClasspath())
+		REFLECTIONS = new Reflections(new ConfigurationBuilder().setUrls(ClasspathHelper.forJavaClassPath())
 				.setScanners(new FieldAnnotationsScanner(),
 							 new MethodAnnotationsScanner(),
 							 new TypeAnnotationsScanner()));

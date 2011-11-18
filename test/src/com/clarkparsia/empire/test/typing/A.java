@@ -16,22 +16,15 @@
 package com.clarkparsia.empire.test.typing;
 
 import com.clarkparsia.empire.SupportsRdfId;
-import com.clarkparsia.empire.annotation.Namespaces;
+
 import com.clarkparsia.empire.annotation.RdfsClass;
 import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.NamedGraph;
-import com.clarkparsia.empire.test.api.BaseTestClass;
 
 import javax.persistence.Entity;
 import javax.persistence.MappedSuperclass;
-import javax.persistence.OneToOne;
-import javax.persistence.CascadeType;
 
 import java.util.List;
-import java.util.ArrayList;
-
-import com.clarkparsia.utils.BasicUtils;
-import com.clarkparsia.utils.collections.CollectionUtil;
 
 /**
  * <p></p>

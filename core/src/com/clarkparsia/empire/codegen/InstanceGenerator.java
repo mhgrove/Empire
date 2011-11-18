@@ -16,6 +16,7 @@
 package com.clarkparsia.empire.codegen;
 
 import com.google.common.collect.Sets;
+import com.google.common.base.Predicate;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtNewConstructor;
@@ -47,10 +48,7 @@ import com.clarkparsia.empire.EmpireGenerated;
 import com.clarkparsia.empire.SupportsRdfId;
 import com.clarkparsia.empire.EmpireOptions;
 import com.clarkparsia.empire.util.BeanReflectUtil;
-import static com.clarkparsia.utils.collections.CollectionUtil.find;
-
-import com.clarkparsia.openrdf.ExtGraph;
-import com.clarkparsia.utils.Predicate;
+import com.clarkparsia.common.collect.Iterables2;
 
 import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl;
 
@@ -61,10 +59,16 @@ import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl;
  * @since 0.5.1
  * @version 0.7
  */
-public class InstanceGenerator {
+public final class InstanceGenerator {
 	private static final Logger LOGGER = LogManager.getLogger(BeanGenerator.class);
 
 	private static final Collection<Method> processedMethods = Sets.newHashSet();
+
+	/**
+	 * No instances
+	 */
+	private InstanceGenerator() {
+	}
 
 	/**
 	 * <p>Given a bean-style interface, generate an instance of the interface by implementing getters and setters for each
@@ -483,7 +487,7 @@ public class InstanceGenerator {
 			// class changed to isAssignableFrom so we get the expected behavior.
 			FINDER.method = aMethod;
 
-			if (find(processedMethods, FINDER)) {
+			if (Iterables2.find(processedMethods, FINDER)) {
 				continue;
 			}
 
@@ -552,7 +556,7 @@ public class InstanceGenerator {
 	private static class FinderPredicate implements Predicate<Method> {
 		Method method;
 
-		public boolean accept(final Method theValue) {
+		public boolean apply(final Method theValue) {
 			return overrideEquals(theValue, method);
 		}
 	}

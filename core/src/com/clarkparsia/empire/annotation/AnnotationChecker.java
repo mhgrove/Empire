@@ -42,7 +42,14 @@ import java.util.HashSet;
  * @since 0.6.5
  * @version 0.7
  */
-public class AnnotationChecker {
+public final class AnnotationChecker {
+
+	/**
+	 * No instances
+	 */
+	private AnnotationChecker() {
+	}
+
 	/**
 	 * Return whether or not the class has the minimum set of annotations required for use by Empire and that all
 	 * other annotations, such as OneToMany, are used correctly.

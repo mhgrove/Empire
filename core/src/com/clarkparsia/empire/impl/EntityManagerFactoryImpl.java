@@ -38,8 +38,9 @@ import java.net.ConnectException;
  *
  * @author Michael Grove
  * @since 0.1
+ * @version 0.7
  */
-public class EntityManagerFactoryImpl implements EntityManagerFactory {
+public final class EntityManagerFactoryImpl implements EntityManagerFactory {
 
 	public static final String USE_EMPIRE_TRANSACTIONS = "use.empire.transactions";
 	

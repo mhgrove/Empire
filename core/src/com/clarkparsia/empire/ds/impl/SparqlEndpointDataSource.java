@@ -4,28 +4,25 @@ import com.clarkparsia.empire.ds.ResultSet;
 import com.clarkparsia.empire.ds.QueryException;
 
 import com.clarkparsia.empire.impl.RdfQueryFactory;
-import com.clarkparsia.empire.impl.RdfQuery;
 
 import com.clarkparsia.empire.impl.sparql.SPARQLDialect;
-
-import com.clarkparsia.utils.web.HttpResource;
-import com.clarkparsia.utils.web.ParameterList;
-import com.clarkparsia.utils.web.Request;
-import com.clarkparsia.utils.web.HttpHeaders;
-import com.clarkparsia.utils.web.MimeTypes;
-import com.clarkparsia.utils.web.Response;
-import com.clarkparsia.utils.web.HttpResourceImpl;
-import com.clarkparsia.utils.io.Encoder;
 
 import com.clarkparsia.openrdf.util.AdunaIterations;
 
 import com.clarkparsia.openrdf.OpenRdfIO;
 
+import com.clarkparsia.common.web.ParameterList;
+import com.clarkparsia.common.web.Request;
+import com.clarkparsia.common.web.HttpResourceImpl;
+import com.clarkparsia.common.web.HttpResource;
+import com.clarkparsia.common.web.HttpHeaders;
+import com.clarkparsia.common.web.MimeTypes;
+import com.clarkparsia.common.web.Response;
+
 import java.net.ConnectException;
 import java.net.URL;
-import java.io.ByteArrayInputStream;
+
 import java.io.IOException;
-import java.io.StringReader;
 
 import org.openrdf.model.Graph;
 
@@ -39,10 +36,6 @@ import org.openrdf.query.resultio.QueryResultIO;
 import org.openrdf.query.resultio.QueryResultParseException;
 import org.openrdf.query.resultio.TupleQueryResultFormat;
 import org.openrdf.query.resultio.UnsupportedQueryResultFormatException;
-
-import org.xml.sax.XMLReader;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
 
 /**
  * <p>Simple implementation of the DataSource interface for a generic read-only sparql endpoint.</p>

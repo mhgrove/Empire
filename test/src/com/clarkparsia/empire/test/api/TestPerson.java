@@ -22,13 +22,6 @@ import com.clarkparsia.empire.annotation.RdfId;
 import com.clarkparsia.empire.annotation.NamedGraph;
 
 import javax.persistence.Entity;
-import javax.persistence.PostLoad;
-import javax.persistence.PostUpdate;
-import javax.persistence.PreUpdate;
-import javax.persistence.PostRemove;
-import javax.persistence.PreRemove;
-import javax.persistence.PostPersist;
-import javax.persistence.PrePersist;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -36,7 +29,7 @@ import java.util.Date;
 
 import java.net.URI;
 
-import com.clarkparsia.utils.BasicUtils;
+import com.google.common.base.Objects;
 
 /**
  * <p>Class used for testing</p>
@@ -60,7 +53,7 @@ public class TestPerson extends BaseTestClass {
 	private String title;
 
 	@RdfId
-	@RdfProperty("mbox")
+	@RdfProperty("foaf:mbox")
 	private String mbox;
 
 	@RdfProperty("foaf:surname")
@@ -195,10 +188,10 @@ public class TestPerson extends BaseTestClass {
 
 		final TestPerson aPerson = (TestPerson) theObj;
 
-		if (!BasicUtils.equalsOrNull(isLikesVideoGames(), aPerson.isLikesVideoGames())) {
+		if (!Objects.equal(isLikesVideoGames(), aPerson.isLikesVideoGames())) {
 			return false;
 		}
-		if (!BasicUtils.equalsOrNull(aPerson.getWeight(), getWeight())) {
+		if (!Objects.equal(aPerson.getWeight(), getWeight())) {
 			return false;
 		}
 		if (getBirthday() != null ? !getBirthday().equals(aPerson.getBirthday()) : aPerson.getBirthday() != null) {

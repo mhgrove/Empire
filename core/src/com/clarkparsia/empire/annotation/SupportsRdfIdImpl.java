@@ -17,10 +17,9 @@ package com.clarkparsia.empire.annotation;
 
 import com.clarkparsia.empire.SupportsRdfId;
 import com.clarkparsia.empire.util.EmpireUtil;
+import com.google.common.base.Objects;
 
 import java.net.URI;
-
-import com.clarkparsia.utils.BasicUtils;
 
 /**
  * <p>Utility implementation of the {@link SupportsRdfId} interface.</p>
@@ -102,7 +101,7 @@ public final class SupportsRdfIdImpl implements SupportsRdfId {
 
 		final SupportsRdfIdImpl that = (SupportsRdfIdImpl) theObj;
 
-		return BasicUtils.equalsOrNull(mId, that.mId);
+		return Objects.equal(mId, that.mId);
 	}
 
 	/**

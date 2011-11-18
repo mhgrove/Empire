@@ -20,8 +20,9 @@ import com.clarkparsia.empire.annotation.RdfsClass;
 import com.clarkparsia.empire.annotation.NamedGraph;
 import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.test.api.BaseTestClass;
-import com.clarkparsia.utils.collections.CollectionUtil;
-import com.clarkparsia.utils.BasicUtils;
+
+import com.google.common.base.Objects;
+import com.google.common.collect.Sets;
 
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -123,13 +124,13 @@ public class LaunchUsingProxy extends BaseTestClass {
 			return false;
 		}
 		if (!((getLaunchvehicle() == null && aLaunch.getLaunchvehicle() == null) ||
-			(getLaunchvehicle() != null && aLaunch.getLaunchvehicle() != null && CollectionUtil.contentsEqual(getLaunchvehicle(), aLaunch.getLaunchvehicle())))) {
+			(getLaunchvehicle() != null && aLaunch.getLaunchvehicle() != null && Sets.newHashSet(getLaunchvehicle()).equals(Sets.newHashSet(aLaunch.getLaunchvehicle()))))) {
 			return false;
 		}
 		if (getSpacecraft() != null ? !getSpacecraft().equals(aLaunch.getSpacecraft()) : aLaunch.getSpacecraft() != null) {
 			return false;
 		}
-		if (!BasicUtils.equalsOrNull(getRdfId(), aLaunch.getRdfId())) {
+		if (!Objects.equal(getRdfId(), aLaunch.getRdfId())) {
 			return false;
 		}
 

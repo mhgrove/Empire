@@ -23,7 +23,7 @@ import com.clarkparsia.empire.test.api.BaseTestClass;
 
 import javax.persistence.Entity;
 
-import com.clarkparsia.utils.BasicUtils;
+import com.google.common.base.Objects;
 
 /**
  * <p></p>
@@ -63,7 +63,7 @@ public class Discipline extends BaseTestClass {
 		if (getLabel() != null ? !getLabel().equals(that.getLabel()) : that.getLabel() != null) {
 			return false;
 		}
-		if (!BasicUtils.equalsOrNull(getRdfId(), that.getRdfId())) {
+		if (!Objects.equal(getRdfId(), that.getRdfId())) {
 			return false;
 		}
 

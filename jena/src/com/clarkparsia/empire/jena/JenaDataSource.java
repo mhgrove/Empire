@@ -34,9 +34,9 @@ import com.hp.hpl.jena.query.Syntax;
 
 import com.clarkparsia.empire.jena.util.JenaSesameUtils;
 
-import static com.clarkparsia.utils.collections.CollectionUtil.transform;
-
-import com.clarkparsia.utils.Function;
+import com.google.common.collect.Iterators;
+import com.google.common.collect.Sets;
+import com.google.common.base.Function;
 
 import org.openrdf.model.Graph;
 import org.openrdf.model.Resource;
@@ -215,12 +215,12 @@ public class JenaDataSource extends AbstractDataSource implements MutableDataSou
 		final StmtIterator aStmts = mModel.listStatements(JenaSesameUtils.asJenaResource(subject), JenaSesameUtils
 		                .asJenaURI(predicate), JenaSesameUtils.asJenaNode(object));
 
-		return transform(aStmts,
-						 new Function<com.hp.hpl.jena.rdf.model.Statement, Statement>() {
-							 public Statement apply(com.hp.hpl.jena.rdf.model.Statement theStatement) {
-								 return JenaSesameUtils.asSesameStatement(theStatement);
-							 }
-						 });
+		return Sets.newHashSet(Iterators.transform(aStmts,
+												   new Function<com.hp.hpl.jena.rdf.model.Statement, Statement>() {
+													   public Statement apply(com.hp.hpl.jena.rdf.model.Statement theStatement) {
+														   return JenaSesameUtils.asSesameStatement(theStatement);
+													   }
+												   }));
 	}
     
     public Iterable<Statement> getStatements(Resource subject, org.openrdf.model.URI predicate, Value object, Resource theContext) throws DataSourceException {

@@ -23,7 +23,7 @@ import com.clarkparsia.empire.test.api.BaseTestClass;
 
 import javax.persistence.Entity;
 
-import com.clarkparsia.utils.BasicUtils;
+import com.google.common.base.Objects;
 
 import java.util.List;
 
@@ -97,7 +97,7 @@ public class LaunchSite extends BaseTestClass {
 		if (getPlace() != null ? !getPlace().equals(that.getPlace()) : that.getPlace() != null) {
 			return false;
 		}
-		if (!BasicUtils.equalsOrNull(getRdfId(), that.getRdfId())) {
+		if (!Objects.equal(getRdfId(), that.getRdfId())) {
 			return false;
 		}
 

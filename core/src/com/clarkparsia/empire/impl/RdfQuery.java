@@ -15,9 +15,6 @@
 
 package com.clarkparsia.empire.impl;
 
-import com.clarkparsia.utils.BasicUtils;
-import com.clarkparsia.utils.collections.CollectionUtil;
-
 import org.openrdf.model.Graph;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
@@ -41,6 +38,8 @@ import com.clarkparsia.empire.annotation.AnnotationChecker;
 import com.clarkparsia.empire.annotation.runtime.Proxy;
 import com.clarkparsia.empire.annotation.runtime.ProxyAwareList;
 import com.clarkparsia.openrdf.ExtBindingSet;
+import com.clarkparsia.common.base.Dates;
+import com.google.common.collect.Lists;
 
 import javax.persistence.FlushModeType;
 import javax.persistence.NoResultException;
@@ -65,7 +64,7 @@ import java.util.regex.Pattern;
  * @since 0.1
  * @version 0.7
  */
-public class RdfQuery implements Query {
+public final class RdfQuery implements Query {
 	/**
 	 * The logger
 	 */
@@ -372,7 +371,9 @@ public class RdfQuery implements Query {
                         // back as the result set, you *MUST* have a var in the projection called 'result' which is
                         // the URI of the things you want to get back; when you don't do this, we prefix your partial query
                         // with this string
-                        for (BindingSet aBS : CollectionUtil.iterable(aResults)) {
+                        while (aResults.hasNext()) {
+							BindingSet aBS = aResults.next();
+
                             ExtBindingSet aBinding = new ExtBindingSet(aBS);
 
                             Object aObj;
@@ -407,7 +408,7 @@ public class RdfQuery implements Query {
                         }
                     }
                     else {
-                        aList.addAll(CollectionUtil.list(aResults));
+                        aList.addAll(Lists.newArrayList(aResults));
                     }
                 }
                 finally {
@@ -580,10 +581,10 @@ public class RdfQuery implements Query {
 
 		switch (theTemporalType) {
 			case DATE:
-				aValue = ValueFactoryImpl.getInstance().createLiteral(BasicUtils.date(theDate.getTime()), XMLSchema.DATE);
+				aValue = ValueFactoryImpl.getInstance().createLiteral(Dates.date(theDate.getTime()), XMLSchema.DATE);
 				break;
 			case TIME:
-				aValue = ValueFactoryImpl.getInstance().createLiteral(BasicUtils.datetime(theDate.getTime()), XMLSchema.TIME);
+				aValue = ValueFactoryImpl.getInstance().createLiteral(Dates.datetime(theDate.getTime()), XMLSchema.TIME);
 				break;
 			case TIMESTAMP:
 				aValue = ValueFactoryImpl.getInstance().createLiteral("" + theDate.getTime().getTime(), XMLSchema.TIME);

@@ -30,7 +30,7 @@ import javax.persistence.RollbackException;
  * @version 0.1
  * @see EntityManagerImpl
  */
-public class DataSourceEntityTransaction implements EntityTransaction {
+public final class DataSourceEntityTransaction implements EntityTransaction {
 	/**
 	 * Whether or not the transaction is currently active
 	 */

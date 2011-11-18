@@ -27,7 +27,7 @@ import javax.persistence.Entity;
 import java.util.List;
 import java.util.ArrayList;
 
-import com.clarkparsia.utils.BasicUtils;
+import com.google.common.base.Objects;
 
 /**
  * <p></p>
@@ -81,7 +81,7 @@ public class FoafPerson extends BaseTestClass {
 		if (getPerformed() != null ? !getPerformed().equals(that.getPerformed()) : that.getPerformed() != null) {
 			return false;
 		}
-		if (!BasicUtils.equalsOrNull(getRdfId(), that.getRdfId())) {
+		if (!Objects.equal(getRdfId(), that.getRdfId())) {
 			return false;
 		}
 

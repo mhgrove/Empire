@@ -15,26 +15,28 @@
 
 package com.clarkparsia.empire.jena;
 
+import java.util.Iterator;
+
 import com.hp.hpl.jena.query.QuerySolution;
 import com.hp.hpl.jena.query.QueryExecution;
 import com.hp.hpl.jena.query.ResultSet;
 
 import com.clarkparsia.empire.jena.util.JenaSesameUtils;
 
-import com.clarkparsia.utils.Function;
-import com.clarkparsia.utils.collections.CollectionUtil;
-
 import org.openrdf.query.BindingSet;
 import org.openrdf.query.impl.MapBindingSet;
 
 
 import com.clarkparsia.empire.ds.impl.AbstractResultSet;
+import com.google.common.collect.Iterators;
+import com.google.common.base.Function;
 
 /**
  *<p>Implementation of an Empire ResultSet backed by a Jena ResultSet</p>
  *
  * @author Michael Grove
  * @since 0.1
+ * @version 0.7
  */
 class JenaResultSet extends AbstractResultSet {
 	/**
@@ -48,7 +50,7 @@ class JenaResultSet extends AbstractResultSet {
 	 * @param theResults the Jena result set to back this ResultSet instance
 	 */
 	public JenaResultSet(final QueryExecution theQueryExec, final ResultSet theResults) {
-		super(new CollectionUtil.TransformingIterator<QuerySolution, BindingSet>(theResults, new ToSesameBinding()));
+		super(Iterators.<QuerySolution, BindingSet>transform(theResults, new ToSesameBinding()));
 
 		mQueryExec = theQueryExec;
 	}
@@ -71,7 +73,10 @@ class JenaResultSet extends AbstractResultSet {
 		public BindingSet apply(QuerySolution theIn) {
 			MapBindingSet aMap = new MapBindingSet();
 
-			for (String aVar : CollectionUtil.iterable(theIn.varNames())) {
+			Iterator<String> aIter = theIn.varNames();
+
+			while (aIter.hasNext()) {
+				String aVar = aIter.next();
 				aMap.addBinding(aVar, JenaSesameUtils.asSesameValue(theIn.get(aVar)));
 			}
 

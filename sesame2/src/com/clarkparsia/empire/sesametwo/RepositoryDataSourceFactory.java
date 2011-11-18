@@ -20,13 +20,15 @@ import com.clarkparsia.empire.ds.DataSourceFactory;
 import com.clarkparsia.empire.ds.DataSource;
 import com.clarkparsia.empire.ds.DataSourceException;
 import com.clarkparsia.empire.ds.Alias;
-import com.clarkparsia.utils.BasicUtils;
+
+import com.clarkparsia.common.net.NetUtils;
 
 import java.util.Map;
 import java.io.File;
 import java.io.FileInputStream;
 
 import com.google.common.collect.Maps;
+import com.google.common.base.Splitter;
 import org.openrdf.sail.memory.MemoryStore;
 import org.openrdf.repository.sail.SailRepository;
 import org.openrdf.repository.Repository;
@@ -46,7 +48,7 @@ import org.openrdf.model.Statement;
  * @version 0.7
  */
 @Alias(RepositoryDataSourceFactory.ALIAS)
-public class RepositoryDataSourceFactory implements DataSourceFactory, RepositoryFactoryKeys {
+public final class RepositoryDataSourceFactory implements DataSourceFactory, RepositoryFactoryKeys {
 	/**
 	 * @inheritDoc
 	 */
@@ -99,12 +101,12 @@ public class RepositoryDataSourceFactory implements DataSourceFactory, Repositor
                         aConn = aRepository.getConnection();
                         aConn.setAutoCommit(false);
 
-                        for (String aFile : BasicUtils.split(aFiles.toString(), ",")) {
+                        for (String aFile : Splitter.on(',').omitEmptyStrings().trimResults().split(aFiles.toString())) {
                             RDFParser aParser = Rio.createParser(Rio.getParserFormatForFileName(aFile));
 
                             aParser.setRDFHandler(new SailBuilderRDFHandler(aConn));
 
-                            if (BasicUtils.isURL(aFile)) {
+                            if (NetUtils.isURL(aFile)) {
                                 aParser.parse(new java.net.URL(aFile).openStream(), "");
                             }
                             else {

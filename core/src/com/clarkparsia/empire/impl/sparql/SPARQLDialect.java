@@ -20,8 +20,7 @@ import com.clarkparsia.empire.Dialect;
 import com.clarkparsia.empire.impl.RdfQuery;
 
 import com.clarkparsia.openrdf.query.SesameQueryUtils;
-
-import com.clarkparsia.utils.NamespaceUtils;
+import com.clarkparsia.common.util.PrefixMapping;
 
 import org.openrdf.query.MalformedQueryException;
 
@@ -126,12 +125,12 @@ public class SPARQLDialect implements Dialect {
 	public void insertNamespaces(final StringBuffer theBuffer) {
 		StringBuffer aNS = new StringBuffer();
 
-		for (String aPrefix : NamespaceUtils.prefixes()) {
+		for (String aPrefix : PrefixMapping.GLOBAL.getPrefixes()) {
 			if (aPrefix.trim().equals("")) {
 				continue;
 			}
 
-			aNS.append("PREFIX ").append(aPrefix).append(": <").append(NamespaceUtils.namespace(aPrefix)).append(">\n");
+			aNS.append("PREFIX ").append(aPrefix).append(": <").append(PrefixMapping.GLOBAL.getNamespace(aPrefix)).append(">\n");
 		}
 
 		if (aNS.length() > 0) {

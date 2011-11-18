@@ -27,7 +27,7 @@ import javax.persistence.Entity;
 import java.util.List;
 import java.util.ArrayList;
 
-import com.clarkparsia.utils.BasicUtils;
+import com.google.common.base.Objects;
 
 /**
  * <p></p>
@@ -81,7 +81,7 @@ public class Mission extends BaseTestClass {
 		if (getTitle() != null ? !getTitle().equals(aMission.getTitle()) : aMission.getTitle() != null) {
 			return false;
 		}
-		if (!BasicUtils.equalsOrNull(getRdfId(), aMission.getRdfId())) {
+		if (!Objects.equal(getRdfId(), aMission.getRdfId())) {
 			return false;
 		}
 

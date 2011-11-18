@@ -37,7 +37,7 @@ import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.RdfGenerator;
 import com.clarkparsia.empire.annotation.InvalidRdfException;
 import com.clarkparsia.openrdf.ExtGraph;
-import com.clarkparsia.utils.NamespaceUtils;
+import com.clarkparsia.common.util.PrefixMapping;
 
 import javax.persistence.OneToOne;
 import javax.persistence.CascadeType;
@@ -296,7 +296,7 @@ public class TestMisc {
 
 		Graph g = RdfGenerator.asRdf(obj);
 
-		assertEquals(1, new ExtGraph(g).getValues(EmpireUtil.asResource(obj), ValueFactoryImpl.getInstance().createURI(NamespaceUtils.uri("test:foo"))).size());
+		assertEquals(1, new ExtGraph(g).getValues(EmpireUtil.asResource(obj), ValueFactoryImpl.getInstance().createURI(PrefixMapping.GLOBAL.uri("test:foo"))).size());
 	}
 
 	@MappedSuperclass

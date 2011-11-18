@@ -15,10 +15,6 @@
 
 package com.clarkparsia.empire.test;
 
-import com.clarkparsia.utils.collections.CollectionUtil;
-
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.BeforeClass;
 import org.junit.AfterClass;
@@ -38,6 +34,7 @@ import com.clarkparsia.empire.test.api.TestEntityListener;
 import com.clarkparsia.empire.test.api.nasa.FoafPerson;
 import com.clarkparsia.empire.test.api.nasa.SpaceVocab;
 import com.clarkparsia.empire.test.api.nasa.Spacecraft;
+import com.google.common.collect.Lists;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -209,7 +206,7 @@ public class TestJPA  {
 
 		// just a couple checks to see if this is the right space craft
 		assertEquals(aCraft.getAgency(), "U.S.S.R");
-		assertTrue(CollectionUtil.contentsEqual(aCraft.getAlternateName(), Collections.singletonList("00001")));
+		assertTrue(Lists.newArrayList(aCraft.getAlternateName()).equals(Lists.newArrayList(Collections.singletonList("00001"))));
 		assertEquals(aCraft.getHomepage(), URI.create("http://nssdc.gsfc.nasa.gov/database/MasterCatalog?sc=1957-001A"));
 
 		assertTrue(mManager.contains(aCraft));
@@ -506,7 +503,7 @@ public class TestJPA  {
         // both of these query objects should return the same result set
         List aResults = aNativeQuery.getResultList();
 
-        assertTrue(CollectionUtil.contentsEqual(aResults, aQuery.getResultList()));
+        assertTrue(Lists.newArrayList(aResults).equals(Lists.newArrayList(aQuery.getResultList())));
 
         aNativeQuery = mManager.createNativeQuery(aNativeQueryStr, String.class);
         aResults = aNativeQuery.getResultList();
@@ -523,7 +520,7 @@ public class TestJPA  {
         aResults = aNativeQuery.getResultList();
         List aResultsCopy = aNativeQuery.getResultList();
 
-        assertTrue(CollectionUtil.contentsEqual(aResults, aResultsCopy));
+        assertTrue(Lists.newArrayList(aResults).equals(Lists.newArrayList(aResultsCopy)));
 
         assertEquals(aQuery, aQuery);
         assertFalse(aQuery.equals(aNativeQuery));
@@ -538,10 +535,10 @@ public class TestJPA  {
 
         aResults = aQuery.getResultList();
 
-        assertTrue(CollectionUtil.contentsEqual(aResults, aNativeQuery.getResultList()));
+        assertTrue(Lists.newArrayList(aResults).equals(Lists.newArrayList(aNativeQuery.getResultList())));
 
 		// get an equivalent named query and make sure that the results are equal
-		assertTrue(CollectionUtil.contentsEqual(mManager.createNamedQuery(mNamedQueryName).getResultList(), aResults));
+		assertTrue(Lists.newArrayList(mManager.createNamedQuery(mNamedQueryName).getResultList()).equals(Lists.newArrayList(aResults)));
 
         try {
             aQuery.getSingleResult();

@@ -15,9 +15,6 @@
 
 package com.clarkparsia.empire.annotation;
 
-import com.clarkparsia.utils.AbstractDataCommand;
-import com.clarkparsia.utils.NamespaceUtils;
-
 import org.openrdf.model.BNode;
 import org.openrdf.model.Literal;
 import org.openrdf.model.Resource;
@@ -52,17 +49,8 @@ import java.util.Set;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.ArrayList;
-import java.net.ConnectException;
+
 import java.net.URISyntaxException;
-
-import com.clarkparsia.utils.BasicUtils;
-import com.clarkparsia.utils.Function;
-import com.clarkparsia.utils.Predicate;
-import com.clarkparsia.utils.io.Encoder;
-
-import com.clarkparsia.utils.collections.CollectionUtil;
-import static com.clarkparsia.utils.collections.CollectionUtil.filter;
-import static com.clarkparsia.utils.collections.CollectionUtil.find;
 
 import org.openrdf.model.impl.ValueFactoryImpl;
 
@@ -96,9 +84,18 @@ import static com.clarkparsia.empire.util.EmpireUtil.asPrimaryKey;
 import com.clarkparsia.openrdf.util.ResourceBuilder;
 import com.clarkparsia.openrdf.util.GraphBuilder;
 import com.clarkparsia.openrdf.ExtGraph;
+import com.clarkparsia.common.util.PrefixMapping;
+import com.clarkparsia.common.base.Strings2;
+import com.clarkparsia.common.base.Dates;
+import com.clarkparsia.common.net.NetUtils;
+import com.clarkparsia.common.collect.Iterables2;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.Lists;
+import com.google.common.base.Function;
+import com.google.common.base.Predicate;
 import com.google.inject.ProvisionException;
 import com.google.inject.ConfigurationException;
 
@@ -135,7 +132,7 @@ import javassist.util.proxy.MethodFilter;
  * @since 0.1
  * @version 0.7
  */
-public class RdfGenerator {
+public final class RdfGenerator {
 
 	/**
 	 * Global ValueFactory to use for converting Java values into sesame objects for serialization to RDF
@@ -176,7 +173,7 @@ public class RdfGenerator {
 			if (aAnnotation != null) {
 				addNamespaces(aClass);
 
-				TYPE_TO_CLASS.put(FACTORY.createURI(NamespaceUtils.uri(aAnnotation.value())), aClass);
+				TYPE_TO_CLASS.put(FACTORY.createURI(PrefixMapping.GLOBAL.uri(aAnnotation.value())), aClass);
 			}
 		}
 	}
@@ -404,11 +401,11 @@ public class RdfGenerator {
 
 			final Map<URI, AccessibleObject> aAccessMap = new HashMap<URI, AccessibleObject>();
 
-			CollectionUtil.each(aFields, new AbstractDataCommand<Field>() {
-				public void execute() {
-					if (getData().getAnnotation(RdfProperty.class) != null) {
-						aAccessMap.put(FACTORY.createURI(NamespaceUtils.uri(getData().getAnnotation(RdfProperty.class).value())),
-									   getData());
+			Iterables2.each(aFields, new Predicate<Field>() {
+				public boolean apply(final Field theField) {
+					if (theField.getAnnotation(RdfProperty.class) != null) {
+						aAccessMap.put(FACTORY.createURI(PrefixMapping.GLOBAL.uri(theField.getAnnotation(RdfProperty.class).value())),
+									   theField);
 					}
 					else {
 						String aBase = "urn:empire:clark-parsia:";
@@ -416,19 +413,23 @@ public class RdfGenerator {
 							aBase = ((URI)aRes).getNamespace();
 						}
 
-						aAccessMap.put(FACTORY.createURI(aBase + getData().getName()),
-									   getData());
+						aAccessMap.put(FACTORY.createURI(aBase + theField.getName()),
+									   theField);
 					}
+
+					return true;
 				}
 			});
 
-			CollectionUtil.each(aMethods, new AbstractDataCommand<Method>() {
-				public void execute() {
-					RdfProperty aAnnotation = BeanReflectUtil.getAnnotation(getData(), RdfProperty.class);
+			Iterables2.each(aMethods, new Predicate<Method>() {
+				public boolean apply(final Method theMethod) {
+					RdfProperty aAnnotation = BeanReflectUtil.getAnnotation(theMethod, RdfProperty.class);
 					if (aAnnotation != null) {
-						aAccessMap.put(FACTORY.createURI(NamespaceUtils.uri(aAnnotation.value())),
-									   getData());
+						aAccessMap.put(FACTORY.createURI(PrefixMapping.GLOBAL.uri(aAnnotation.value())),
+									   theMethod);
 					}
+
+					return true;
 				}
 			});			
 			
@@ -596,7 +597,7 @@ public class RdfGenerator {
 
 		Field aIdField = BeanReflectUtil.getIdField(theObj.getClass());
 
-		String aValue = hash(BasicUtils.getRandomString(10));
+		String aValue = hash(Strings2.getRandomString(10));
 		String aNS = RdfId.DEFAULT;
 
 		URI aURI = FACTORY.createURI(aNS + aValue);
@@ -616,9 +617,9 @@ public class RdfGenerator {
 
 				Object aValObj = aIdField.get(theObj);
 
-				aValue = Encoder.urlEncode(aValObj.toString());
+				aValue = Strings2.urlEncode(aValObj.toString());
 
-				if (aValObj instanceof java.net.URI || BasicUtils.isURI(aValObj.toString())) {
+				if (aValObj instanceof java.net.URI || NetUtils.isURI(aValObj.toString())) {
 					try {
 						aURI = FACTORY.createURI(aValObj.toString());
 					}
@@ -669,7 +670,7 @@ public class RdfGenerator {
 
 			// TODO: maybe have a local version of this, this will add a global namespace, and could potentially
 			// overwrite global things that use the same prefix but different uris, which would be bad
-			NamespaceUtils.addNamespace(aPrefix, aURI);
+			PrefixMapping.GLOBAL.addMapping(aPrefix, aURI);
 			aIndex += 2;
 		}
 	}
@@ -698,7 +699,7 @@ public class RdfGenerator {
 		aAccessors.addAll(getAnnotatedGetters(theObj.getClass(), true));
 
 		try {
-			ResourceBuilder aRes = aBuilder.instance(aBuilder.getValueFactory().createURI(NamespaceUtils.uri(aClass.value())),
+			ResourceBuilder aRes = aBuilder.instance(aBuilder.getValueFactory().createURI(PrefixMapping.GLOBAL.uri(aClass.value())),
 													 aSubj);
 
 			for (AccessibleObject aAccess : aAccessors) {
@@ -720,7 +721,7 @@ public class RdfGenerator {
 				}
 
 				URI aProperty = aPropertyAnnotation != null
-								? aBuilder.getValueFactory().createURI(NamespaceUtils.uri(aPropertyAnnotation.value()))
+								? aBuilder.getValueFactory().createURI(PrefixMapping.GLOBAL.uri(aPropertyAnnotation.value()))
 								: (aAccess instanceof Field ? aBuilder.getValueFactory().createURI(aBase + ((Field)aAccess).getName()) : null);
 
 				boolean aOldAccess = aAccess.isAccessible();
@@ -777,7 +778,7 @@ public class RdfGenerator {
 	 */
 	private static List<Value> asList(AccessibleObject theAccess, Collection<Object> theCollection) throws InvalidRdfException {
 		try {
-			return CollectionUtil.list(CollectionUtil.transform(theCollection, new AsValueFunction(theAccess)));
+			return Lists.newArrayList(Collections2.transform(theCollection, new AsValueFunction(theAccess)));
 		}
 		catch (RuntimeException e) {
 			e.printStackTrace();
@@ -791,7 +792,7 @@ public class RdfGenerator {
 	 * @return the hashed version of the object.
 	 */
 	private static String hash(Object theObj) {
-		return BasicUtils.hex(BasicUtils.md5(theObj.toString()));
+		return Strings2.hex(Strings2.md5(theObj.toString()));
 	}
 
 	/**
@@ -951,13 +952,13 @@ public class RdfGenerator {
 
 			Collection<Value> aList = new HashSet<Value>(theList);
 
-			if (!find(aList, CONTAINS_RESOURCES)) {
+			if (!Iterables2.find(aList, CONTAINS_RESOURCES)) {
 				if (!EmpireOptions.ENABLE_LANG_AWARE) {
-					Collection<Value> aLangFiltered = filter(aList, new Predicate<Value>() { public boolean accept(final Value theValue) { return ((Literal)theValue).getLanguage() == null; }});
+					Collection<Value> aLangFiltered = Collections2.filter(aList, new Predicate<Value>() { public boolean apply(final Value theValue) { return ((Literal)theValue).getLanguage() == null; }});
 
 					if (aLangFiltered.isEmpty()) {
 						LANG_FILTER.setLangCode(getLanguageForLocale());
-						aLangFiltered = filter(aList, LANG_FILTER);
+						aLangFiltered = Collections2.filter(aList, LANG_FILTER);
 					}
 
 					if (!aLangFiltered.isEmpty()) {
@@ -966,7 +967,7 @@ public class RdfGenerator {
 				}
 				else {
 					LANG_FILTER.setLangCode(mField.getAnnotation(RdfProperty.class).language());
-					aList = filter(aList, LANG_FILTER);
+					aList = Collections2.filter(aList, LANG_FILTER);
 				}
 			}
 
@@ -1134,7 +1135,7 @@ public class RdfGenerator {
 					}
 				}
 				else if (XMLSchema.DATE.equals(aDatatype) || XMLSchema.DATETIME.equals(aDatatype)) {
-					return BasicUtils.asDate(aLit.getLabel());
+					return Dates.asDate(aLit.getLabel());
 				}
 				else if (XMLSchema.TIME.equals(aDatatype)) {
 					return new Date(Long.parseLong(aLit.getLabel()));
@@ -1420,7 +1421,7 @@ if (theRes == null && theProperty == null) {
 				return FACTORY.createLiteral(Float.class.cast(theIn));
 			}
 			else if (Date.class.isInstance(theIn)) {
-				return FACTORY.createLiteral(BasicUtils.datetime(Date.class.cast(theIn)), XMLSchema.DATETIME);
+				return FACTORY.createLiteral(Dates.datetime(Date.class.cast(theIn)), XMLSchema.DATETIME);
 			}
 			else if (String.class.isInstance(theIn)) {
 				if (annotation != null && !annotation.language().equals("")) {
@@ -1468,7 +1469,7 @@ if (theRes == null && theProperty == null) {
 	}
 
 	private static class ContainsResourceValues implements Predicate<Value> {
-		public boolean accept(final Value theValue) {
+		public boolean apply(final Value theValue) {
 			return theValue instanceof Resource;
 		}
 	}
@@ -1484,7 +1485,7 @@ if (theRes == null && theProperty == null) {
 			mLangCode = theLangCode;
 		}
 
-		public boolean accept(final Value theValue) {
+		public boolean apply(final Value theValue) {
 			return theValue instanceof Literal && mLangCode.equals(((Literal)theValue).getLanguage());
 		}
 	}

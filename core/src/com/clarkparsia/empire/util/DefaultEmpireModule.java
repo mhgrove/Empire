@@ -55,7 +55,7 @@ import org.slf4j.LoggerFactory;
  * @since 0.6
  * @version 0.7
  */
-public  class DefaultEmpireModule extends AbstractModule implements EmpireModule {
+public final class DefaultEmpireModule extends AbstractModule implements EmpireModule {
 
 	/**
 	 * The logger

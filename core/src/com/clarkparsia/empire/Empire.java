@@ -22,15 +22,15 @@ import com.clarkparsia.empire.util.EmpireModule;
 import com.clarkparsia.empire.config.EmpireConfiguration;
 import com.clarkparsia.empire.annotation.RdfGenerator;
 import com.clarkparsia.empire.annotation.RdfsClass;
-import com.clarkparsia.utils.Predicate;
-import com.clarkparsia.utils.NamespaceUtils;
 
-import static com.clarkparsia.utils.collections.CollectionUtil.find;
+import com.clarkparsia.common.util.PrefixMapping;
 
 import com.google.inject.Injector;
 import com.google.inject.Guice;
 import com.google.inject.Module;
 import com.google.inject.Inject;
+import com.google.common.base.Predicate;
+import static com.google.common.collect.Iterables.find;
 
 
 import java.util.HashMap;
@@ -38,6 +38,7 @@ import java.util.Map;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Arrays;
+import java.util.NoSuchElementException;
 
 import org.openrdf.model.vocabulary.XMLSchema;
 
@@ -48,7 +49,7 @@ import org.openrdf.model.vocabulary.XMLSchema;
  * @since 0.1
  * @version 0.7
  */
-public class Empire {
+public final class Empire {
 
 	/**
 	 * "the" instance of Empire
@@ -78,10 +79,10 @@ public class Empire {
 
 	static {
 		// add default namespaces
-		NamespaceUtils.addNamespace("rdfs", "http://www.w3.org/2000/01/rdf-schema#");
-		NamespaceUtils.addNamespace("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#");
-		NamespaceUtils.addNamespace("owl", "http://www.w3.org/2002/07/owl#");
-		NamespaceUtils.addNamespace("xsd", XMLSchema.NAMESPACE);
+		PrefixMapping.GLOBAL.addMapping("rdfs", "http://www.w3.org/2000/01/rdf-schema#");
+		PrefixMapping.GLOBAL.addMapping("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#");
+		PrefixMapping.GLOBAL.addMapping("owl", "http://www.w3.org/2002/07/owl#");
+		PrefixMapping.GLOBAL.addMapping("xsd", XMLSchema.NAMESPACE);
 	}
 
 	/**
@@ -141,7 +142,7 @@ public class Empire {
 	public static void init(EmpireConfiguration theConfig, EmpireModule... theModules) {
 		Collection<EmpireModule> aModules = new HashSet<EmpireModule>(Arrays.asList(theModules));
 
-		if (aModules.isEmpty() || !find(aModules, new FindDefaultEmpireModulePredicate())) {
+		if (aModules.isEmpty() || !find2(aModules, new FindDefaultEmpireModulePredicate())) {
 			aModules.add(new DefaultEmpireModule(theConfig));
 		}
 
@@ -167,7 +168,7 @@ public class Empire {
 
 		Collection<EmpireModule> aModules = new HashSet<EmpireModule>(theModules);
 
-		if (aModules.isEmpty() || !find(aModules, new FindDefaultEmpireModulePredicate())) {
+		if (aModules.isEmpty() || !find2(aModules, new FindDefaultEmpireModulePredicate())) {
 			aModules.add(new DefaultEmpireModule());
 		}
 
@@ -178,6 +179,17 @@ public class Empire {
 		
 		injector = Guice.createInjector(mModules.values());
 	}
+
+	private static <T> boolean find2(final Iterable<T> theIterable, final Predicate<? super T> thePredicate) {
+        try {
+            return find(theIterable, thePredicate) != null;
+        }
+        catch (NoSuchElementException e) {
+            // find throws this exception when it can't find the element, which is not really helpful
+            // we just want the boolean of whether or not it was found.
+            return false;
+        }
+    }
 
 	/**
 	 * Create an instance of the given class in the current Empire context.  The provided class usually should
@@ -198,7 +210,7 @@ public class Empire {
 		/**
 		 * @inheritDoc
 		 */
-		public boolean accept(EmpireModule theModule) {
+		public boolean apply(EmpireModule theModule) {
 			return theModule instanceof DefaultEmpireModule;
 		}
 	}

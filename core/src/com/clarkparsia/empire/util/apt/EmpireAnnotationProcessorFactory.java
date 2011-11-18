@@ -28,10 +28,6 @@ import com.sun.mirror.declaration.ClassDeclaration;
 
 import com.sun.mirror.util.SimpleDeclarationVisitor;
 
-import com.clarkparsia.utils.collections.CollectionUtil;
-import com.clarkparsia.utils.AbstractDataCommand;
-import com.clarkparsia.utils.BasicUtils;
-
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -47,6 +43,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import com.clarkparsia.empire.annotation.RdfsClass;
+import com.clarkparsia.common.collect.Iterables2;
+import com.google.common.base.Joiner;
+import com.google.common.base.Predicate;
 
 import javax.persistence.NamedQuery;
 import javax.persistence.NamedQueries;
@@ -61,10 +60,10 @@ import javax.persistence.NamedNativeQuery;
  *
  * @author Michael Grove
  * @since 0.1
- * @version 0.6.5
+ * @version 0.7
  * @see <a href="http://java.sun.com/j2se/1.5.0/docs/guide/apt/GettingStarted.html">Sun APT Docs</a>
  */
-public class EmpireAnnotationProcessorFactory implements AnnotationProcessorFactory {
+public final class EmpireAnnotationProcessorFactory implements AnnotationProcessorFactory {
 
 	/**
 	 * A map of annotation class names to the fully qualified class names of classes which have the specific annotation.
@@ -130,7 +129,7 @@ public class EmpireAnnotationProcessorFactory implements AnnotationProcessorFact
 					Properties aProps = new Properties();
 
 					for (String aClass : mAnnotationClassMap.keySet()) {
-						aProps.setProperty(aClass, BasicUtils.join(",", mAnnotationClassMap.get(aClass)));
+						aProps.setProperty(aClass, Joiner.on(",").join(mAnnotationClassMap.get(aClass)));
 					}
 
 					// TODO: configure where this file is written (and what it's named) based on an APT option
@@ -173,8 +172,8 @@ public class EmpireAnnotationProcessorFactory implements AnnotationProcessorFact
 					aCollection = mAnnotationClassMap.get(aClass);
 				}
 
-				CollectionUtil.each(mEnv.getDeclarationsAnnotatedWith((AnnotationTypeDeclaration) mEnv.getTypeDeclaration(aClass)),
-									new Collector(aCollection));
+				Iterables2.each(mEnv.getDeclarationsAnnotatedWith((AnnotationTypeDeclaration) mEnv.getTypeDeclaration(aClass)),
+								new Collector(aCollection));
 
 				mAnnotationClassMap.put(aClass, aCollection);
 			}
@@ -184,7 +183,7 @@ public class EmpireAnnotationProcessorFactory implements AnnotationProcessorFact
 	/**
 	 * Executable for applying a Visitor to a Declaration in order to collect the class declaration information
 	 */
-	private class Collector extends AbstractDataCommand<Declaration> {
+	private class Collector implements Predicate<Declaration> {
 
 		/**
 		 * The visitor that will be applied
@@ -202,8 +201,9 @@ public class EmpireAnnotationProcessorFactory implements AnnotationProcessorFact
 		/**
 		 * @inheritDoc
 		 */
-		public void execute() {
-			getData().accept(mVisitor);
+		public boolean apply(Declaration theDeclaration) {
+			theDeclaration.accept(mVisitor);
+			return true;
 		}
 	}
 

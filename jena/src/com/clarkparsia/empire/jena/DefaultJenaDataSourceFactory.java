@@ -21,15 +21,13 @@ import com.clarkparsia.empire.ds.DataSource;
 import com.clarkparsia.empire.ds.DataSourceException;
 import com.clarkparsia.empire.config.EmpireConfiguration;
 
-import com.clarkparsia.utils.io.Encoder;
-
-import com.clarkparsia.utils.BasicUtils;
-
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.RDFReader;
 import com.hp.hpl.jena.shared.JenaException;
 import com.google.inject.name.Named;
 import com.google.inject.Inject;
+import com.google.common.base.Charsets;
+import com.google.common.base.Splitter;
 
 import java.util.Map;
 
@@ -55,7 +53,7 @@ import org.apache.log4j.Logger;
  * @version 0.7
  */
 @Alias("jena")
-class DefaultJenaDataSourceFactory extends JenaDataSourceFactory implements JenaConfig {
+final class DefaultJenaDataSourceFactory extends JenaDataSourceFactory implements JenaConfig {
 
 	/**
 	 * Application logger
@@ -137,16 +135,16 @@ class DefaultJenaDataSourceFactory extends JenaDataSourceFactory implements Jena
 				return (Reader) theObj;
 			}
 			else if (theObj instanceof InputStream) {
-				return new InputStreamReader( (InputStream) theObj, Encoder.UTF8);
+				return new InputStreamReader( (InputStream) theObj, Charsets.UTF_8);
 			}
 			else if (theObj instanceof File) {
-				return new InputStreamReader( new FileInputStream( (File) theObj), Encoder.UTF8);
+				return new InputStreamReader( new FileInputStream( (File) theObj), Charsets.UTF_8);
 			}
 			else if (theObj instanceof URI) {
-				return new InputStreamReader(((URI) theObj).toURL().openStream(), Encoder.UTF8);
+				return new InputStreamReader(((URI) theObj).toURL().openStream(), Charsets.UTF_8);
 			}
 			else if (theObj instanceof URL) {
-				return new InputStreamReader(((URL) theObj).openStream(), Encoder.UTF8);
+				return new InputStreamReader(((URL) theObj).openStream(), Charsets.UTF_8);
 			}
 			else {
 				throw new DataSourceException("Cannot read from the specified stream objects, it is not a Reader or an InputStream: " + theObj);
@@ -187,7 +185,7 @@ class DefaultJenaDataSourceFactory extends JenaDataSourceFactory implements Jena
 	 */
 	private void loadFiles(final Model theModel, final String theFiles, final String theBase) throws DataSourceException {
 
-		for (String aFile : BasicUtils.split(theFiles, ",")) {
+		for (String aFile : Splitter.on(",").omitEmptyStrings().trimResults().split(theFiles)) {
 			RDFReader aReader = theModel.getReader();
 			aReader.setProperty("WARN_REDEFINITION_OF_ID","EM_IGNORE");
 

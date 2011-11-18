@@ -19,8 +19,8 @@ import com.clarkparsia.empire.util.EmpireAnnotationProvider;
 import com.clarkparsia.empire.util.PropertiesAnnotationProvider;
 import com.clarkparsia.empire.EmpireOptions;
 
-import com.clarkparsia.utils.BasicUtils;
-import com.clarkparsia.utils.NamespaceUtils;
+import com.clarkparsia.common.util.PrefixMapping;
+import com.google.common.base.Splitter;
 
 import java.util.Map;
 import java.util.HashMap;
@@ -34,7 +34,7 @@ import java.lang.reflect.Field;
  * @since 0.6.2
  * @version 0.7
  */
-public class EmpireConfiguration {
+public final class EmpireConfiguration {
 	private Class<? extends EmpireAnnotationProvider> mAnnotationProvider = PropertiesAnnotationProvider.class;
 
 	private Map<String, String> mGeneralConfiguration = new HashMap<String, String>();
@@ -64,9 +64,9 @@ public class EmpireConfiguration {
 		// auto add any namespace declarations in the configuration file.
 		if (mGeneralConfiguration.containsKey("ns_list")) {
 			String aList = mGeneralConfiguration.get("ns_list");
-			for (String aKey : BasicUtils.split(aList, ",")) {
+			for (String aKey : Splitter.on(',').omitEmptyStrings().trimResults().split(aList)) {
 				if (mGeneralConfiguration.containsKey(aKey)) {
-					NamespaceUtils.addNamespace(aKey, mGeneralConfiguration.get(aKey));
+					PrefixMapping.GLOBAL.addMapping(aKey, mGeneralConfiguration.get(aKey));
 				}
 			}
 		}

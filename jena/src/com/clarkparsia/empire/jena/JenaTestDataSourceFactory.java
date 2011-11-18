@@ -21,8 +21,6 @@ import com.clarkparsia.empire.ds.DataSourceException;
 import com.clarkparsia.empire.ds.Alias;
 import com.clarkparsia.empire.config.EmpireConfiguration;
 
-import com.clarkparsia.utils.BasicUtils;
-
 import java.util.Map;
 import java.util.HashMap;
 
@@ -32,6 +30,7 @@ import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.RDFReader;
 import com.google.inject.name.Named;
 import com.google.inject.Inject;
+import com.google.common.base.Splitter;
 
 /**
  * <p>Implementation of the DataSourceFactory interface for creating in-memory Jena-backed data sources
@@ -78,7 +77,7 @@ class JenaTestDataSourceFactory extends JenaDataSourceFactory {
 		Model aModel = createModel(theMap);
 
 		if (theMap.containsKey("files")) {
-			for (String aFile : BasicUtils.split(theMap.get("files").toString(), ",")) {
+			for (String aFile : Splitter.on(",").omitEmptyStrings().trimResults().split(theMap.get("files").toString())) {
 				RDFReader aReader = aModel.getReader();
 				aReader.setProperty("WARN_REDEFINITION_OF_ID","EM_IGNORE");
 

@@ -83,10 +83,9 @@ import static com.clarkparsia.empire.util.BeanReflectUtil.getAnnotatedMethods;
 
 import com.clarkparsia.empire.util.EmpireUtil;
 import com.clarkparsia.empire.util.BeanReflectUtil;
-import com.clarkparsia.utils.Predicate;
-import com.clarkparsia.utils.AbstractDataCommand;
 
 import com.clarkparsia.openrdf.ExtGraph;
+import com.google.common.base.Predicate;
 
 /**
  * <p>Implementation of the JPA {@link EntityManager} interface to support the persistence model over
@@ -474,7 +473,7 @@ public final class EntityManagerImpl implements EntityManager {
 		aAccessors.addAll(getAnnotatedGetters(theT.getClass(), true));
 
 		for (AccessibleObject aObj : aAccessors) {
-			if (theCascadeTest.accept(aObj)) {
+			if (theCascadeTest.apply(aObj)) {
 				try {
 					Object aAccessorValue = BeanReflectUtil.safeGet(aObj, theT);
 
@@ -482,8 +481,7 @@ public final class EntityManagerImpl implements EntityManager {
 						continue;
 					}
 
-					theAction.setData(aAccessorValue);
-					theAction.execute();
+					theAction.apply(aAccessorValue);
 				}
 				catch (Exception e) {
 					throw new PersistenceException(e);
@@ -519,19 +517,19 @@ public final class EntityManagerImpl implements EntityManager {
 	}
 
 	private class IsMergeCascade extends CascadeTest {
-		public boolean accept(final AccessibleObject theValue) {
+		public boolean apply(final AccessibleObject theValue) {
 			return BeanReflectUtil.isMergeCascade(theValue);
 		}
 	}
 
 	private class IsRemoveCascade extends CascadeTest {
-		public boolean accept(final AccessibleObject theValue) {
+		public boolean apply(final AccessibleObject theValue) {
 			return BeanReflectUtil.isRemoveCascade(theValue);
 		}
 	}
 
 	private class IsPersistCascade extends CascadeTest {
-		public boolean accept(final AccessibleObject theValue) {
+		public boolean apply(final AccessibleObject theValue) {
 			return BeanReflectUtil.isPersistCascade(theValue);
 		}
 	}
@@ -539,20 +537,22 @@ public final class EntityManagerImpl implements EntityManager {
 	private abstract class CascadeTest implements Predicate<AccessibleObject> {
 	}
 
-	private abstract class CascadeAction extends AbstractDataCommand<Object> {
+	private abstract class CascadeAction implements Predicate<Object> {
 		public abstract void cascade(Object theObj);
 
-		public void execute() {
+		public final boolean apply(Object theObj) {
 			// is it an error if you specify a cascade type for something that cannot be
 			// cascaded?  such as strings, or a non Entity instance?
-			if (Collection.class.isAssignableFrom(getData().getClass())) {
-				for (Object aValue : (Collection) getData()) {
+			if (Collection.class.isAssignableFrom(theObj.getClass())) {
+				for (Object aValue : (Collection) theObj) {
 					cascade(aValue);
 				}
 			}
 			else {
-				cascade(getData());
+				cascade(theObj);
 			}
+
+			return true;
 		}
 	}
 

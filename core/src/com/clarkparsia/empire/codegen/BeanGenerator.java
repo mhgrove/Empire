@@ -36,25 +36,23 @@ import org.openrdf.query.TupleQueryResult;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
-import static com.clarkparsia.utils.collections.CollectionUtil.filter;
-import static com.clarkparsia.utils.collections.CollectionUtil.set;
-import static com.clarkparsia.utils.collections.CollectionUtil.transform;
-
-import com.clarkparsia.utils.collections.MultiIterator;
-
-import com.clarkparsia.utils.Predicate;
-import com.clarkparsia.utils.NamespaceUtils;
-import com.clarkparsia.utils.Function;
-import com.clarkparsia.utils.FunctionUtil;
-import com.clarkparsia.utils.BasicUtils;
-
-import com.clarkparsia.utils.io.IOUtil;
-
-import static com.clarkparsia.utils.FunctionUtil.compose;
 import com.clarkparsia.openrdf.ExtRepository;
 import com.clarkparsia.openrdf.OpenRdfUtil;
 import com.clarkparsia.openrdf.SesameQuery;
 import com.clarkparsia.openrdf.util.AdunaIterations;
+
+import com.clarkparsia.common.collect.MultiIterator;
+
+import com.clarkparsia.common.net.NetUtils;
+import com.clarkparsia.common.base.Functions2;
+import com.google.common.base.Predicate;
+import com.google.common.base.Charsets;
+import com.google.common.base.Function;
+import com.google.common.base.Functions;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.Sets;
+import com.google.common.collect.Iterators;
+import com.google.common.io.Files;
 
 import java.util.Collection;
 import java.util.Map;
@@ -74,9 +72,9 @@ import java.net.URL;
  *
  * @author Michael Grove
  * @since 0.5.1
- * @version 0.6.2
+ * @version 0.7
  */
-public class BeanGenerator {
+public final class BeanGenerator {
 	/**
 	 * The logger
 	 */
@@ -118,6 +116,12 @@ public class BeanGenerator {
 	private static final Map<String, Integer> NAMES_TO_COUNT = new HashMap<String, Integer>();
 
 	/**
+	 * NO instances
+	 */
+	private BeanGenerator() {
+	}
+
+	/**
 	 * Return the Java bean source code that represents the given RDF class
 	 * @param thePackageName the name of the package the source will be in
 	 * @param theGraph the repository containing information about the class
@@ -144,8 +148,8 @@ public class BeanGenerator {
 		aSrc.append("@RdfsClass(\"").append(theClass).append("\")\n");
 		aSrc.append("public interface ").append(className(theClass));
 
-		aSupers = filter(set(aSupers), new Predicate<Resource>() {
-			public boolean accept(final Resource theValue) {
+		aSupers = Collections2.filter(Sets.newHashSet(aSupers), new Predicate<Resource>() {
+			public boolean apply(final Resource theValue) {
 				return theValue != null &&
 					   !theValue.toString().startsWith(OWL.NAMESPACE)
 					   && !theValue.toString().startsWith(RDFS.NAMESPACE)
@@ -337,8 +341,8 @@ public class BeanGenerator {
 
 		try {
 			aResults = theGraph.selectQuery(SesameQuery.serql("select distinct s from {s} <"+theProp+"> {o}"));
-			for (BindingSet aBinding : OpenRdfUtil.iterable(aResults)) {
-				Collection aCollection = set(theGraph.getValues( (Resource) aBinding.getValue("s"), theProp));
+			for (BindingSet aBinding : AdunaIterations.iterable(aResults)) {
+				Collection aCollection = Sets.newHashSet(theGraph.getValues( (Resource) aBinding.getValue("s"), theProp));
 				if (aCollection.size() > 1) {
 					return true;
 				}
@@ -390,7 +394,7 @@ public class BeanGenerator {
 		String aLabel;
 
 		if (theClass instanceof URI) {
-			aLabel = NamespaceUtils.getLocalName(theClass.toString());
+			aLabel = ((URI) theClass).getLocalName();
 		}
 		else {
 			aLabel = theClass.stringValue();
@@ -433,20 +437,20 @@ public class BeanGenerator {
 
 		aRepository.read(theOntology.openStream(), theFormat);
 
-		Collection<Resource> aClasses = transform(new MultiIterator<Statement>(AdunaIterations.iterator(aRepository.getStatements(null, RDF.TYPE, RDFS.CLASS)),
-																			   AdunaIterations.iterator(aRepository.getStatements(null, RDF.TYPE, OWL.CLASS))),
-												  new StatementToSubject());
+		Collection<Resource> aClasses = Sets.newHashSet(Iterators.transform(new MultiIterator<Statement>(AdunaIterations.iterator(aRepository.getStatements(null, RDF.TYPE, RDFS.CLASS)),
+																										 AdunaIterations.iterator(aRepository.getStatements(null, RDF.TYPE, OWL.CLASS))),
+																			new StatementToSubject()));
 
-		aClasses = filter(aClasses, new Predicate<Resource>() { public boolean accept(Resource theRes) { return theRes instanceof URI; } });
+		aClasses = Collections2.filter(aClasses, new Predicate<Resource>() { public boolean apply(Resource theRes) { return theRes instanceof URI; } });
 
-		Collection<Resource> aIndClasses = transform(AdunaIterations.iterator(aRepository.getStatements(null, RDF.TYPE, null)),
-													 compose(new StatementToObject(),
-															 new FunctionUtil.Cast<Value, Resource>(Resource.class)));
+		Collection<Resource> aIndClasses = Sets.newHashSet(Iterators.transform(AdunaIterations.iterator(aRepository.getStatements(null, RDF.TYPE, null)),
+																			   Functions.compose(Functions2.<Value, Resource>cast(Resource.class),
+																								 new StatementToObject())));
 
 		aClasses.addAll(aIndClasses);
 
-		aClasses = filter(aClasses, new Predicate<Resource>() {
-			public boolean accept(final Resource theValue) {
+		aClasses = Collections2.filter(aClasses, new Predicate<Resource>() {
+			public boolean apply(final Resource theValue) {
 				return !theValue.stringValue().startsWith(RDFS.NAMESPACE)
 					   && !theValue.stringValue().startsWith(RDF.NAMESPACE)
 					   && !theValue.stringValue().startsWith(OWL.NAMESPACE);
@@ -457,9 +461,9 @@ public class BeanGenerator {
 
 		for (Resource aClass : aClasses) {
 			if (aClass instanceof BNode) { continue; }
-			Collection<URI> aProps = new HashSet<URI>(transform(AdunaIterations.iterator(aRepository.getStatements(null, RDFS.DOMAIN, aClass)),
-																compose(new StatementToSubject(),
-																		new FunctionUtil.Cast<Resource, URI>(URI.class))));
+			Collection<URI> aProps = Sets.newHashSet(Iterators.transform(AdunaIterations.iterator(aRepository.getStatements(null, RDFS.DOMAIN, aClass)),
+																		 Functions.compose(Functions2.<Resource, URI>cast(URI.class),
+																						   new StatementToSubject())));
 
 			// infer properties based on usage in actual instance data
 			for (BindingSet aBinding : OpenRdfUtil.iterable(aRepository.selectQuery(SesameQuery.serql("select distinct p from {s} rdf:type {<" + aClass + ">}, {s} p {o}")))) {
@@ -467,8 +471,8 @@ public class BeanGenerator {
 			}
 
 			// don't include rdf:type as a property
-			aProps = filter(aProps, new Predicate<URI>() {
-				public boolean accept(final URI theValue) {
+			aProps = Collections2.filter(aProps, new Predicate<URI>() {
+				public boolean apply(final URI theValue) {
 					return !RDF.TYPE.equals(theValue);
 				}
 			});
@@ -493,7 +497,7 @@ public class BeanGenerator {
 
 			System.out.println("Writing source to file: " + aFile.getName());
 
-			IOUtil.writeStringToFile(aSrc, aFile);
+			Files.write(aSrc, aFile, Charsets.UTF_8);
 		}
 	}
 
@@ -513,7 +517,7 @@ public class BeanGenerator {
 
 		URL aURL;
 
-		if (BasicUtils.isURL(args[1])) {
+		if (NetUtils.isURL(args[1])) {
 			aURL = new URL(args[1]);
 		}
 		else {

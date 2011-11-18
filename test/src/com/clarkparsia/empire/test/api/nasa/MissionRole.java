@@ -27,7 +27,7 @@ import javax.persistence.NamedQuery;
 
 import java.net.URI;
 
-import com.clarkparsia.utils.BasicUtils;
+import com.google.common.base.Objects;
 
 /**
  * <p></p>
@@ -112,7 +112,7 @@ public class MissionRole extends BaseTestClass {
 		if (getRole() != null ? !getRole().equals(that.getRole()) : that.getRole() != null) {
 			return false;
 		}
-		if (!BasicUtils.equalsOrNull(getRdfId(), that.getRdfId())) {
+		if (!Objects.equal(getRdfId(), that.getRdfId())) {
 			return false;
 		}
 

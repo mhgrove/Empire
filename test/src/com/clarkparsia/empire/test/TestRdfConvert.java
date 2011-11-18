@@ -53,13 +53,12 @@ import java.net.URI;
 import java.util.Date;
 import java.util.List;
 
-import com.clarkparsia.utils.NamespaceUtils;
-import com.clarkparsia.utils.BasicUtils;
-import com.clarkparsia.utils.collections.CollectionUtil;
-
 import com.clarkparsia.openrdf.vocabulary.FOAF;
 import com.clarkparsia.openrdf.vocabulary.DC;
 import com.clarkparsia.openrdf.ExtGraph;
+import com.clarkparsia.common.base.Dates;
+import com.clarkparsia.common.util.PrefixMapping;
+import com.google.common.collect.Lists;
 
 import javax.persistence.Entity;
 import javax.persistence.Transient;
@@ -129,7 +128,7 @@ public class TestRdfConvert {
 			RdfGenerator.asRdf(new UnbalancedNamespaces());
 
 			// the qname should not get expanded because the prefix was never asserted
-			assertEquals(NamespaceUtils.uri("notvalid:test"), "notvalid:test");
+			assertEquals(PrefixMapping.GLOBAL.uri("notvalid:test"), "notvalid:test");
 		}
 		catch (InvalidRdfException e) {
 			e.printStackTrace();
@@ -204,7 +203,7 @@ public class TestRdfConvert {
 			assertEquals(aGraph.getLiteral(aPersonURI, RDFS.LABEL).getLabel(),
 						 aPerson.getLabel());
 
-			List aKnows = CollectionUtil.list(aGraph.getValues(aPersonURI, FOAF.ontology().knows));
+			List aKnows = Lists.newArrayList(aGraph.getValues(aPersonURI, FOAF.ontology().knows));
 
 			assertEquals(aKnows.size(), 2);
 
@@ -229,7 +228,7 @@ public class TestRdfConvert {
 
 		TestPerson aBob = new TestPerson();
 
-		aBob.setBirthday(BasicUtils.asDate("1980-01-01"));
+		aBob.setBirthday(Dates.asDate("1980-01-01"));
 		aBob.setFirstName("Bob");
 		aBob.setLastName("Smith");
 		aBob.setLikesVideoGames(false);

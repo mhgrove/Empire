@@ -41,7 +41,7 @@ import java.util.concurrent.locks.Condition;
  * @since 0.6
  * @version 0.6.5
  */
-public class EmpirePersistenceProvider implements PersistenceProvider {
+public final class EmpirePersistenceProvider implements PersistenceProvider {
     // TODO: should we keep factories created so that to factories created w/ the same name are == ?
 
 	/**
@@ -66,21 +66,21 @@ public class EmpirePersistenceProvider implements PersistenceProvider {
         mContainerConfig = theContainerConfig;
 
         Runtime.getRuntime().addShutdownHook(new Thread() {
+			/**
+			 * @inheritDoc
+			 */
+			@Override
             public void run() {
                 close();
             }
         });
     }
 
+	/**
+	 * Close this provider
+	 */
     public void close() {
-        for (DataSourceFactory aFactory : mFactories) {
-//            try {
-//                aFactory.close();
-//            }
-//            catch (DataSourceException e) {
-//                // TODO: log me
-//            }
-        }
+		// no-op
     }
 
 	/**

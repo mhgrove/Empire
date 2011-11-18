@@ -22,16 +22,15 @@ import com.clarkparsia.empire.util.EmpireUtil;
 import com.clarkparsia.empire.impl.serql.SerqlDialect;
 import com.clarkparsia.empire.impl.sparql.ARQSPARQLDialect;
 import com.clarkparsia.openrdf.ExtGraph;
-import com.clarkparsia.openrdf.query.builder.QueryBuilderFactory;
-import com.clarkparsia.openrdf.query.serql.SeRQLQueryRenderer;
-import com.clarkparsia.openrdf.query.sparql.SPARQLQueryRenderer;
-import com.clarkparsia.utils.Function;
-import com.clarkparsia.utils.collections.CollectionUtil;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.Sets;
+import com.google.common.base.Function;
+
 import org.openrdf.model.Resource;
 import org.openrdf.model.Graph;
 import org.openrdf.model.Value;
 import org.openrdf.model.BNode;
-import org.openrdf.query.parser.ParsedTupleQuery;
+
 import org.openrdf.query.BindingSet;
 import org.apache.log4j.Logger;
 import org.apache.log4j.LogManager;
@@ -48,11 +47,17 @@ import java.util.Collection;
  * @version 0.7
  * @since 0.7
  */
-public class DataSourceUtil {
+public final class DataSourceUtil {
 	/**
 	 * The logger
 	 */
 	private static final Logger LOGGER = LogManager.getLogger(Empire.class.getName());
+
+	/**
+	 * No instances
+	 */
+	private DataSourceUtil() {
+	}
 
 	/**
 	 * <p>Returns the given {@link DataSource} as a {@link TripleSource}.  If the DataSource does not natively support
@@ -231,7 +236,7 @@ public class DataSourceUtil {
 				aResults = theSource.selectQuery(aSPARQLQuery);
 			}
 
-			return CollectionUtil.transform(CollectionUtil.set(aResults), new Function<BindingSet, Value>() {
+			return Collections2.transform(Sets.newHashSet(aResults), new Function<BindingSet, Value>() {
 					public Value apply(final BindingSet theIn) {
 						return theIn.getValue("obj");
 					}

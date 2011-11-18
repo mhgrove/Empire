@@ -28,7 +28,7 @@ import com.clarkparsia.empire.jena.JenaEmpireModule;
 
 import com.clarkparsia.empire.sesametwo.OpenRdfEmpireModule;
 import com.clarkparsia.empire.util.DefaultEmpireModule;
-import static com.clarkparsia.utils.collections.CollectionUtil.contentsEqual;
+import com.google.common.collect.Lists;
 
 import javax.persistence.EntityManager;
 
@@ -135,7 +135,7 @@ public class TestProxyFetchAndCascade {
 		}
 
 		// "normal" mapping should be equal to the proxied, targetEntity mapped version
-		assertTrue(contentsEqual(aLaunch.getSpacecraft(), aProxySupportingLaunch.getSpacecraft()));
+		assertTrue(Lists.newArrayList(aLaunch.getSpacecraft()).equals(Lists.newArrayList(aProxySupportingLaunch.getSpacecraft())));
 	}
 
 	@Test

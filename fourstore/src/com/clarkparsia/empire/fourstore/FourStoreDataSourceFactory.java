@@ -24,10 +24,9 @@ import java.util.Map;
 import java.net.URL;
 import java.net.MalformedURLException;
 
-import com.clarkparsia.utils.BasicUtils;
-
 import com.clarkparsia.fourstore.impl.StoreFactory;
 import com.clarkparsia.fourstore.api.Store;
+import com.clarkparsia.common.net.NetUtils;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
@@ -40,7 +39,7 @@ import org.apache.log4j.Logger;
  * @version 0.7
  */
 @Alias(FourStoreDataSourceFactory.ALIAS)
-public class FourStoreDataSourceFactory implements DataSourceFactory {
+public final class FourStoreDataSourceFactory implements DataSourceFactory {
 
 	/**
 	 * The global alias for this factory
@@ -66,7 +65,7 @@ public class FourStoreDataSourceFactory implements DataSourceFactory {
 	 * @inheritDoc
 	 */
 	public boolean canCreate(final Map<String, Object> theMap) {
-		return theMap.containsKey(KEY_URL) && BasicUtils.isURL(theMap.get(KEY_URL).toString());
+		return theMap.containsKey(KEY_URL) && NetUtils.isURL(theMap.get(KEY_URL).toString());
 	}
 
 	/**

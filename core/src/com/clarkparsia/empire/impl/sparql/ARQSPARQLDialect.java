@@ -29,7 +29,7 @@ import org.openrdf.model.BNode;
  * @since 0.6.3
  * @version 0.6.5
  */
-public class ARQSPARQLDialect extends SPARQLDialect {
+public final class ARQSPARQLDialect extends SPARQLDialect {
 	/**
 	 * the singleton instance
 	 */

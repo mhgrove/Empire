@@ -22,7 +22,8 @@ import com.clarkparsia.empire.ds.Alias;
 import com.clarkparsia.openrdf.ExtRepository;
 import com.clarkparsia.openrdf.OpenRdfUtil;
 import com.clarkparsia.openrdf.OpenRdfIO;
-import com.clarkparsia.utils.BasicUtils;
+
+import com.google.common.base.Splitter;
 
 import java.util.Map;
 import java.util.HashMap;
@@ -52,7 +53,7 @@ public class MutableTestDataSourceFactory implements DataSourceFactory {
 		ExtRepository aRepo = OpenRdfUtil.createInMemoryRepo();
 
 		if (theMap.containsKey("files")) {
-			for (String aFile : BasicUtils.split(theMap.get("files").toString(), ",")) {
+			for (String aFile : Splitter.on(",").omitEmptyStrings().trimResults().split(theMap.get("files").toString())) {
 				try {
 					OpenRdfIO.addData(aRepo, new File(aFile));
 				}

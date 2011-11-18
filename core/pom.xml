@@ -1,0 +1,174 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>com.clarkparsia</groupId>
+		<artifactId>Empire-parent</artifactId>
+		<version>0.6.1</version>
+		<relativePath>..</relativePath>
+	</parent>
+	<artifactId>Empire-core</artifactId>
+	<description>Core logic of Empire-RDF</description>
+	<packaging>jar</packaging>
+	<dependencies>
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>aopalliance</groupId>
+			<artifactId>aopalliance</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>javax.inject</groupId>
+			<artifactId>javax.inject</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.google.inject</groupId>
+			<artifactId>guice</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.google.inject.extensions</groupId>
+			<artifactId>guice-assistedinject</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.google.inject.extensions</groupId>
+			<artifactId>guice-jmx</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.google.inject.extensions</groupId>
+			<artifactId>guice-throwingproviders</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.google.inject.extensions</groupId>
+			<artifactId>guice-multibindings</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.javassist</groupId>
+			<artifactId>javassist</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.hibernate</groupId>
+			<artifactId>ejb3-persistence</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>commons-codec</groupId>
+			<artifactId>commons-codec</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>commons-httpclient</groupId>
+			<artifactId>commons-httpclient</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-jdk14</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>jcl-over-slf4j</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>log4j</groupId>
+			<artifactId>log4j</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.openrdf.sesame</groupId>
+			<artifactId>sesame-repository-api</artifactId>
+			<version>${sesame.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.openrdf.sesame</groupId>
+			<artifactId>sesame-queryresultio-api</artifactId>
+			<version>${sesame.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.openrdf.sesame</groupId>
+			<artifactId>sesame-queryparser-sparql</artifactId>
+			<version>${sesame.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.openrdf.sesame</groupId>
+			<artifactId>sesame-queryparser-serql</artifactId>
+			<version>${sesame.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>c3p0</groupId>
+			<artifactId>c3p0</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>commons-dbcp</groupId>
+			<artifactId>commons-dbcp</artifactId>
+		</dependency>
+		<!-- Now come the worst part : lcoal dependencies, as they're currently 
+			not available in any maven repository. Hey Mike ? Could consider a solution 
+			like this one ? http://cemerick.com/2010/08/24/hosting-maven-repos-on-github/
+			Anyway, according to this StackOverflow answer, best solution is to create a local file-backed repository : 
+			http://stackoverflow.com/questions/2229757/maven-add-a-dependency-to-a-jar-by-relative-path/2230464#2230464
+			This is the reason why file organization has been changed. According to me, this shouldn't break the ant build 
+			 -->
+		<dependency>
+			<groupId>com.clarkparsia</groupId>
+			<artifactId>cp-common-openrdf</artifactId>
+			<version>0.4</version>
+		</dependency>
+		<dependency>
+			<groupId>com.clarkparsia</groupId>
+			<artifactId>cp-common-utils</artifactId>
+			<version>1.1</version>
+		</dependency>
+		<!-- Consider abandoning (or exporting into its very own realm) EmpireAnnotationProcessorFactory, 
+			as this dependency is quite ugly. But let me explain it further. As com.sun.mirror.apt.AnnotationProcessorFactory 
+			and all the classes used in EmpireAnnotationProcessorFactory are internal 
+			sun classes, they are not officialy known. As a consequence, to access them, 
+			we must explicitely depend upon JDK. Notice that version used here is totally 
+			indicative, as it's a pure compile bug. As a consequence, instead of MY JDK 
+			version, I prefer to use project one (set in parent pom) -->
+		<dependency>
+			<groupId>com.sun</groupId>
+			<artifactId>tools</artifactId>
+			<version>${java.version}</version>
+			<scope>system</scope>
+			<systemPath>${java.home}/../lib/tools.jar</systemPath>
+		</dependency>
+	</dependencies>
+	<build>
+		<plugins>
+				<!-- Here we use maven-shade-plugin to include the cp-common-* jars (as 
+					they aren't classical maven dependencies). The day they'll begin good amven 
+					citizens, this inclusion will no more be necessary -->
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-shade-plugin</artifactId>
+					<executions>
+						<execution>
+							<id>create good maven citizen with those cp-common in</id>
+							<phase>package</phase>
+							<goals>
+								<goal>shade</goal>
+							</goals>
+							<configuration>
+								<artifactSet>
+									<includes>
+										<!-- All cp-common jars will be automatically merged, but not the 
+											other ones -->
+										<include>com.clarkparsia:cp-common-utils</include>
+										<include>com.clarkparsia:cp-common-openrdf</include>
+									</includes>
+								</artifactSet>
+							</configuration>
+						</execution>
+					</executions>
+				</plugin>
+		</plugins>
+	</build>
+	<repositories>
+		<repository>
+			<id>libs</id>
+			<url>file://${project.basedir}/lib</url>
+		</repository>
+	</repositories>
+</project>

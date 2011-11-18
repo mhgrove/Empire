@@ -15,7 +15,7 @@ Empire 0.7 (2011-11-18)
 	* MODIFIED: Laundry list of names checked for configuration files, settling on 'empire.configuration' with the Properties format as the default
 	* MODIFIED: Handler for graph queries was checking for duplicates in a less than ideal fashion, changed the handler code which increases the performance of graph queries.
 	* MODIFIED: Improved transation support for database which do not provide it natively.
-	* MODIFIED: Upgrade to TDB 0.8.7, Jena 2.6.4, CP OpenRdfUtil 0.4, CP Util 2.0, Guice 3, Guava r10
+	* MODIFIED: Upgrade to TDB 0.8.7, Jena 2.6.4, CP OpenRdfUtil 0.4, CP Util 2.0, Guice 3, Guava r10, Reflections 0.9.5, 4Store API 0.4, ARQ 2.8.8, SDB 1.3.4
 	* ADDED: Support for loading the configuration from the jar (issue #58)
 	* ADDED: Support for using Empire as the Java Agent and an AnnotationProvider implementation based on this (issue #46)
 	* ADDED: TripleSource interface for allowing triple-level access to a DataSource

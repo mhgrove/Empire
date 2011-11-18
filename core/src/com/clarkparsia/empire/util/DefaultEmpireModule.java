@@ -189,18 +189,20 @@ public  class DefaultEmpireModule extends AbstractModule implements EmpireModule
 			 bind(EmpireAnnotationProvider.class).to(InstrumentorAnnotationProvider.class);
 		 }
 		 else {
-			 bind(File.class)
-				 .annotatedWith(Names.named("annotation.index"))
-				 .toProvider(new Provider<File>() {
-					 public File get() {
-						 if (mConfig.getGlobalConfig().containsKey(ConfigKeys.ANNOTATION_INDEX)) {
-							 return new File(mConfig.get(ConfigKeys.ANNOTATION_INDEX));
-						 }
-						 else {
-							 return new File("empire.annotation.index");
-						 }
-					 }
+			 if (mConfig.getAnnotationProvider() != null && mConfig.getAnnotationProvider().equals(PropertiesAnnotationProvider.class)) {
+				 bind(File.class)
+				     .annotatedWith(Names.named("annotation.index"))
+				     .toProvider(new Provider<File>() {
+					     public File get() {
+						     if (mConfig.getGlobalConfig().containsKey(ConfigKeys.ANNOTATION_INDEX)) {
+							     return new File(mConfig.get(ConfigKeys.ANNOTATION_INDEX));
+						     }
+						     else {
+							     return new File("empire.annotation.index");
+						     }
+					     }
 				 });
+			 }
 
 			 bind(EmpireAnnotationProvider.class).to(mConfig.getAnnotationProvider());
 		 }

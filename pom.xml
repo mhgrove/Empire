@@ -176,39 +176,8 @@
 	</build>
 	<repositories>
 		<repository>
-			<id>central</id>
-			<name>Maven Repository Switchboard</name>
-			<url>http://repo1.maven.org/maven2</url>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-		</repository>
-		<repository>
-			<id>apache</id>
-			<url>http://repository.apache.org/</url>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-		</repository>
-		<repository>
 			<id>aduna</id>
-			<url>http://repository.aduna-software.org/maven2/</url>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-		</repository>
-		<repository>
-			<id>ontotext</id>
-			<url>http://maven.ontotext.com/content/repositories/public/</url>
+			<url>http://repo.aduna-software.org/maven2/releases/</url>
 			<snapshots>
 				<enabled>false</enabled>
 			</snapshots>

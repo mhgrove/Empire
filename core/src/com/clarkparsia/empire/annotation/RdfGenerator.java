@@ -336,7 +336,7 @@ public final class RdfGenerator {
 			}
 		}
 		catch (Exception e) {
-			/* Forget it */
+            throw new InvalidRdfException("Cannot generate a class for a bean", e);
 		}
 		
 		return aResult;
@@ -564,7 +564,7 @@ public final class RdfGenerator {
 	 */
 	private static SupportsRdfId asSupportsRdfId(Object theObj) throws InvalidRdfException {
 		if (!(theObj instanceof SupportsRdfId)) {
-			throw new InvalidRdfException("Object of type '" + (theObj.getClass().getName()) + "' does not implements SupportsRdfId, anonymous instances are not supported.");
+			throw new InvalidRdfException("Object of type '" + (theObj.getClass().getName()) + "' does not implements SupportsRdfId.");
 		}
 		else {
 			return (SupportsRdfId) theObj;
@@ -573,7 +573,7 @@ public final class RdfGenerator {
 	
 	private static EmpireGenerated asEmpireGenerated(Object theObj) throws InvalidRdfException {
 		if (!(theObj instanceof EmpireGenerated)) {
-			throw new InvalidRdfException("Object of type '" + (theObj.getClass().getName()) + "' does not implements EmpireGenerated, anonymous instances are not supported.");
+			throw new InvalidRdfException("Object of type '" + (theObj.getClass().getName()) + "' does not implements EmpireGenerated.");
 		}
 		else {
 			return (EmpireGenerated) theObj;

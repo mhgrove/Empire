@@ -204,15 +204,10 @@ public final class EntityManagerImpl implements EntityManager {
 
         try {
             for (AccessibleObject aAccess : aAccessors) {
-            	System.out.println("Accessor " + aAccess);
                 Object aValue = safeGet(aAccess, aDbObj);
                 
-                System.out.println(aDbObj.getClass());
-
                 AccessibleObject aSetter = asSetter(aDbObj.getClass(), aAccess);
                 
-                System.out.println("setter is " + aSetter);
-
                 safeSet(aSetter, theObj, aValue);
             }
         }
@@ -405,6 +400,10 @@ public final class EntityManagerImpl implements EntityManager {
 		
 		if (theT instanceof EmpireGenerated) {
 			aExistingData = ((EmpireGenerated) theT).getInstanceTriples();
+			
+			if (aExistingData == null) {
+				aExistingData = new ExtGraph();
+			}
 		}
 		else {
 			aExistingData = assertContainsAndDescribe(theT);

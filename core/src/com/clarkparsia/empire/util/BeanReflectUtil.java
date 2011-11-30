@@ -21,6 +21,7 @@ import com.clarkparsia.empire.annotation.RdfId;
 import com.clarkparsia.empire.annotation.RdfsClass;
 import com.clarkparsia.empire.EmpireOptions;
 import com.clarkparsia.empire.SupportsRdfId;
+import com.clarkparsia.empire.EmpireGenerated;
 import com.clarkparsia.common.util.PrefixMapping;
 
 import com.google.common.collect.Maps;
@@ -116,7 +117,7 @@ public final class BeanReflectUtil {
 			}
 		}
 
-		if (aIdField == null && theClass.getSuperclass() != null && hasAnnotation(theClass.getSuperclass(), MappedSuperclass.class)) {
+		if (aIdField == null && shouldInspectSuperClass(theClass)) {
 			aIdField = getIdField(theClass.getSuperclass());
 		}
 
@@ -146,7 +147,7 @@ public final class BeanReflectUtil {
 			aAnnotation = theClass.getAnnotation(theAnnotation);
 		}
 		else {
-			if (theClass.getSuperclass() != null && hasAnnotation(theClass.getSuperclass(), MappedSuperclass.class)) {
+			if (shouldInspectSuperClass(theClass)) {
 				aAnnotation = getAnnotation(theClass.getSuperclass(), theAnnotation);
 			}
 
@@ -166,6 +167,19 @@ public final class BeanReflectUtil {
 		return aAnnotation;
 	}
 
+	/**
+	 * Return whether or not it is ok to inspect the super class of the provided class for persistence information.  This can be done
+	 * if there is a super class, and if so, if that superclass is either annotated with the JPA annotation @MappedSuperclass OR the
+	 * *current* class is an instance of EmpireGenerated.  In the latter case, this means that the superclass is the actual persistent
+	 * object type as EmpireGenerated is just a stub created internally for some bookkeeping purposes.
+	 *
+	 * @param theClass 	the class
+	 * @return			true if its ok to inspect the superclass for persistence information, false otherwise
+	 */
+	private static boolean shouldInspectSuperClass(final Class theClass) {
+		return theClass.getSuperclass() != null
+			   && (hasAnnotation(theClass.getSuperclass(), MappedSuperclass.class) || EmpireGenerated.class.isAssignableFrom(theClass));
+	}
 
 	/**
 	 * Returns a Method on the object with the given annotation
@@ -182,7 +196,7 @@ public final class BeanReflectUtil {
 			}
 		}
 
-		if (theClass.getSuperclass() != null && hasAnnotation(theClass.getSuperclass(), MappedSuperclass.class)) {
+		if (shouldInspectSuperClass(theClass)) {
 			aMethods.addAll(getAnnotatedMethods(theClass.getSuperclass(), theAnnotation));
 		}
 
@@ -342,7 +356,7 @@ public final class BeanReflectUtil {
 			}
 		}
 
-		if (theClass.getSuperclass() != null && hasAnnotation(theClass.getSuperclass(), MappedSuperclass.class)) {
+		if (shouldInspectSuperClass(theClass)) {
 			aMethods.addAll(getAnnotatedSetters(theClass.getSuperclass(), theInfer));
 		}
 
@@ -440,7 +454,7 @@ public final class BeanReflectUtil {
 			}
 		}
 
-		if (theClass.getSuperclass() != null && hasAnnotation(theClass.getSuperclass(), MappedSuperclass.class)) {
+		if (shouldInspectSuperClass(theClass)) {
 			for (Method m : getAnnotatedGetters(theClass.getSuperclass(), theInfer)) {
 				if (!aMethods.containsKey(m.getName())) {
 					aMethods.put(m.getName(), m);
@@ -501,7 +515,7 @@ public final class BeanReflectUtil {
 			}
 		}
 
-		if (theClass.getSuperclass() != null && hasAnnotation(theClass.getSuperclass(), MappedSuperclass.class)) {
+		if (shouldInspectSuperClass(theClass)) {
 			aProps.addAll(getAnnotatedFields(theClass.getSuperclass()));
 		}
 
@@ -574,8 +588,17 @@ public final class BeanReflectUtil {
      * @return a setter object, or null if one is not found.
      */
     public static AccessibleObject asSetter(final Class<?> theClass, final AccessibleObject theAccess) {
+		// use the class provided ...
+		Class<?> aClass = theClass;
+
+		// unless its an instance of EmpireGenerated, in which case we want to directly inspect the superclass
+		// since that is the actual object and not our Empire stub
+		if (EmpireGenerated.class.isAssignableFrom(theClass)) {
+			aClass = theClass.getSuperclass();
+		}
+
         // field can be used for access just fine
-        if (theAccess instanceof Field && arrayContains(theClass.getDeclaredFields(), theAccess)) {
+        if (theAccess instanceof Field && arrayContains(aClass.getDeclaredFields(), theAccess)) {
             return theAccess;
         }
         else {
@@ -606,7 +629,7 @@ public final class BeanReflectUtil {
 
             aName.insert(0, "set");
                         
-            for (Method aMethod : theClass.getMethods()) {
+            for (Method aMethod : aClass.getMethods()) {
                 if (aMethod.getName().equals(aName.toString())) {
                     return aMethod;
                 }
@@ -619,7 +642,7 @@ public final class BeanReflectUtil {
             aName.setCharAt(0, String.valueOf(aName.charAt(0)).toLowerCase().charAt(0));
 
             try {
-                return theClass.getDeclaredField(aName.toString());
+                return aClass.getDeclaredField(aName.toString());
             }
             catch (NoSuchFieldException e) {
                 return null;

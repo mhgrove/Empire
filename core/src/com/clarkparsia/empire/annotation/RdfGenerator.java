@@ -1462,7 +1462,6 @@ if (theRes == null && theProperty == null) {
 					return this.apply(((ProxyHandler)BeanReflectUtil.safeGet(aProxy, theIn)).mProxy.value());
 				}
 				catch (Exception e) {
-					BeanReflectUtil.hasAnnotation(theIn.getClass(), RdfsClass.class);
 					throw new RuntimeException("Unknown type conversion: " + theIn.getClass() + " " + theIn + " " + mField);
 				}
 			}

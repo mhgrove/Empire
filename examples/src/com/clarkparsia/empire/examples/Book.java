@@ -123,7 +123,7 @@ public class Book implements SupportsRdfId {
 		if (this == theObj) {
 			return true;
 		}
-		if (theObj == null || getClass() != theObj.getClass()) {
+		if (theObj == null || !(theObj instanceof Book)) {
 			return false;
 		}
 

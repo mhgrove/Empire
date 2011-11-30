@@ -22,6 +22,7 @@ import com.clarkparsia.empire.annotation.SupportsRdfIdImpl;
 import com.clarkparsia.empire.SupportsRdfId;
 
 import javax.persistence.Entity;
+import javax.persistence.MappedSuperclass;
 
 import java.util.Date;
 import java.net.URI;
@@ -96,7 +97,7 @@ public class Manifestation implements SupportsRdfId {
 		if (this == o) {
 			return true;
 		}
-		if (o == null || getClass() != o.getClass()) {
+		if (o == null || !(o instanceof Manifestation)) {
 			return false;
 		}
 

@@ -1435,7 +1435,7 @@ if (theRes == null && theProperty == null) {
 				return FACTORY.createLiteral(Character.class.cast(theIn));
 			}
 			else if (java.net.URI.class.isInstance(theIn)) {
-				if (annotation.isXsdUri()) {
+				if (annotation != null && annotation.isXsdUri()) {
 					return FACTORY.createLiteral(theIn.toString(), XMLSchema.ANYURI);
 				}
 				else {

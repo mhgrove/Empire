@@ -16,6 +16,7 @@
 package com.clarkparsia.empire.test;
 
 import org.junit.Test;
+import org.junit.BeforeClass;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -46,6 +47,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.Entity;
 import javax.persistence.OneToMany;
 import javax.persistence.MappedSuperclass;
+import javax.persistence.Query;
 
 import java.net.URI;
 import java.net.URL;
@@ -60,6 +62,7 @@ import java.util.ArrayList;
  * @since 0.7
  */
 public class TestMisc {
+
 	@Test
 	public void testInstGen() throws Exception {
 		Class<TestInterface> aIntClass = InstanceGenerator.generateInstanceClass(TestInterface.class);
@@ -173,12 +176,26 @@ public class TestMisc {
 		public void setBar(String theStr);
 	}
 
+	/**
+	 * Test to verify that setting the parameter of a query w/ a java.net.URI works and does not result in an NPE
+	 */
+	@Test
+	public void testSettingQueryParameterAsURI() {
+		EntityManager aManager = Persistence.createEntityManagerFactory("test-data-source").createEntityManager();
+		
+
+		try {
+			Query aQuery = aManager.createQuery("select ?s where { ?s ??p ?o }");
+
+			aQuery.setParameter("p", URI.create("urn:p"));
+		}
+		finally {
+			aManager.close();
+		}
+	}
+
 	@Test
 	public void infiniteLoopsAreBadMmmK() {
-		System.setProperty("empire.configuration.file", "test.empire.config.properties");
-
-		Empire.init(new OpenRdfEmpireModule());
-		
 		EntityManager aMgr = Persistence.createEntityManagerFactory("test-data-source").createEntityManager();
 
 		One one = new One();
@@ -222,15 +239,6 @@ public class TestMisc {
 		one.list.add(new Elem("d"));
 
 		aMgr.persist(one);
-
-//		try {
-//			for (Statement s : ((JenaDataSource) aMgr.getDelegate()).getStatements(null, null, null)) {
-//				System.err.println(s);
-//			}
-//		}
-//		catch (DataSourceException e) {
-//			e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-//		}
 
 		System.err.println(aMgr.find(OneWithList.class, one.getRdfId()).list);
 	}

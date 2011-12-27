@@ -128,6 +128,9 @@ public final class InstanceGenerator {
 		aClass.addInterface(aSupportsRdfIdInterface);
 		aClass.addInterface(aEmpireGeneratedInterface);
 
+		CtField aInterfaceField = new CtField(aPool.get(Class.class.getName()), "mInterfaceClass", aClass);
+		aClass.addField(aInterfaceField, CtField.Initializer.byExpr(theInterface.getName() + ".class;"));
+		
 		CtField aAllTriplesField = new CtField(aPool.get(Graph.class.getName()), "mAllTriples", aClass);
 		aClass.addField(aAllTriplesField, CtField.Initializer.byExpr("new com.clarkparsia.openrdf.ExtGraph();"));
 		
@@ -170,7 +173,8 @@ public final class InstanceGenerator {
 		String equalsMethodBody = 
 		  "public boolean equals(Object theObj) {\n" +
 		  "  if (theObj == this) return true;\n" +
-		  "  if (!(theObj instanceof com.clarkparsia.empire.SupportsRdfId)) return false;\n" +
+		  "  if (!(theObj instanceof com.clarkparsia.empire.SupportsRdfId)) return false;\n" +		  		  
+		  "  if (!(mInterfaceClass.isAssignableFrom(theObj.getClass()))) return false;\n" +
 		  "  return getRdfId().equals( ((com.clarkparsia.empire.SupportsRdfId) theObj).getRdfId());\n" +
 		  "}\n";
 		

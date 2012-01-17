@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2010 Clark & Parsia, LLC. <http://www.clarkparsia.com>
+ * Copyright (c) 2009-2012 Clark & Parsia, LLC. <http://www.clarkparsia.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import com.clarkparsia.empire.sesametwo.OpenRdfEmpireModule;
 import com.clarkparsia.empire.jena.JenaEmpireModule;
 import com.clarkparsia.empire.util.DefaultEmpireModule;
 import com.clarkparsia.empire.test.util.TestModule;
+import com.clarkparsia.empire.test.codegen.CodegenTests;
 
 import org.junit.runners.Suite;
 
@@ -35,11 +36,12 @@ import org.junit.AfterClass;
  * <p>Empire test suite.</p>
  *
  * @author Michael Grove
- * @since 0.6.4
+ * @since 0.7
  */
 @RunWith(Suite.class)
 @Suite.SuiteClasses({TestRdfConvert.class, TestJPA.class, TestSPI.class, TestMisc.class,
-					 TestConfig.class, TestProxyFetchAndCascade.class, TestDS.class, TestTyping.class })
+					 TestConfig.class, TestProxyFetchAndCascade.class, TestDS.class, TestTyping.class,
+					 CodegenTests.class})
 public class EmpireTestSuite {
 
 	@BeforeClass

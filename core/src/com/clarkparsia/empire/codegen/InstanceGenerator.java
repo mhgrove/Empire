@@ -51,6 +51,7 @@ import com.clarkparsia.empire.util.BeanReflectUtil;
 import com.clarkparsia.common.collect.Iterables2;
 
 import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl;
+import sun.reflect.generics.reflectiveObjects.WildcardTypeImpl;
 
 /**
  * <p>Generate implementations of interfaces at runtime via bytecode manipulation.</p>
@@ -540,8 +541,32 @@ public final class InstanceGenerator {
 
 				if (generics != null && generics instanceof ParameterizedTypeImpl) {
 					for (Type t : ((ParameterizedTypeImpl)generics).getActualTypeArguments()) {
+						String aFlag = "";
+						String aName;
 
-						aNewField.getFieldInfo().addAttribute(new SignatureAttribute(aNewField.getFieldInfo().getConstPool(), "L"+aType.getName().replace('.','/')+ "<L" + ((Class)t).getName().replace('.','/') + ";>;")) ;
+						if (t instanceof WildcardTypeImpl) {
+							WildcardTypeImpl aWildcard = (WildcardTypeImpl) t;
+							// trying to suss out super v extends w/o resorting to string munging.
+							if (aWildcard.getLowerBounds().length == 0 && aWildcard.getUpperBounds().length > 0) {
+								// no lower bounds afaik indicates ? extends Foo
+								aFlag = "+";
+								aName = ((Class)aWildcard.getUpperBounds()[0]).getName();
+							}
+							else if (aWildcard.getLowerBounds().length > 0) {
+								// lower & upper bounds I believe indicates something of the form Foo super Bar
+								aFlag = "-";
+								aName = ((Class)aWildcard.getLowerBounds()[0]).getName();
+							}
+							else {
+								throw new CannotCompileException("Unknown or unsupported type signature found: " + t);
+							}
+						}
+						else {
+							aName = ((Class)t).getName();
+						}
+
+
+						aNewField.getFieldInfo().addAttribute(new SignatureAttribute(aNewField.getFieldInfo().getConstPool(), "L"+aType.getName().replace('.','/')+ "<"+aFlag+"L" + aName.replace('.','/') + ";>;")) ;
 					}
 				}
 

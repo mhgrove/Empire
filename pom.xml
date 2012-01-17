@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>Empire-parent</artifactId>
 	<groupId>com.clarkparsia</groupId>
-	<version>0.6.1</version>
+	<version>0.7</version>
 	<name>Parent pom for Empire</name>
 	<description>Groups common configuration and dependencies for all the empire artifacts</description>
 	<packaging>pom</packaging>

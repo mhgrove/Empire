@@ -625,7 +625,6 @@ public final class EntityManagerImpl implements EntityManager {
 			}
 		}
 		catch (InvalidRdfException e) {
-			e.printStackTrace();
 			throw new IllegalArgumentException("Type is not valid, or object with key is not a valid Rdf Entity.", e);
 		}
 		catch (DataSourceException e) {

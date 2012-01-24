@@ -1055,11 +1055,11 @@ public final class RdfGenerator {
 			// create an instance of that.  that will work, and pushes the likely failure back off to
 			// the assignment of the created instance
 
-			URI aType = DataSourceUtil.getType(theSource, theId);
+			Resource aType = DataSourceUtil.getType(theSource, theId);
 
 			// k, so now we know the type, if we can match the type to a class then we're in business
-			if (aType != null) {
-				for (Class aTypeClass : TYPE_TO_CLASS.get(aType)) {
+			if (aType != null && aType instanceof URI) {
+				for (Class aTypeClass : TYPE_TO_CLASS.get( (URI) aType)) {
 					if (BeanReflectUtil.hasAnnotation(aTypeClass, RdfsClass.class)) {
 						// lets try this one
 						aClass = aTypeClass;

@@ -194,7 +194,7 @@ public final class DataSourceUtil {
 	 * @param theConcept the concept whose type to lookup
 	 * @return the rdf:type of the concept, or null if there is an error or one cannot be found.
 	 */
-	public static org.openrdf.model.URI getType(DataSource theSource, Resource theConcept) {
+	public static org.openrdf.model.Resource getType(DataSource theSource, Resource theConcept) {
 		if (theSource == null) {
 			return null;
 		}

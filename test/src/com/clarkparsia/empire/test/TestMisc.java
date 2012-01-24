@@ -23,12 +23,15 @@ import static org.junit.Assert.fail;
 import org.openrdf.model.Resource;
 import org.openrdf.model.BNode;
 import org.openrdf.model.Graph;
+import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.impl.ValueFactoryImpl;
 import com.clarkparsia.empire.codegen.InstanceGenerator;
 import com.clarkparsia.empire.test.api.TestInterface;
 import com.clarkparsia.empire.test.api.BaseTestClass;
 import com.clarkparsia.empire.SupportsRdfId;
 import com.clarkparsia.empire.Empire;
+import com.clarkparsia.empire.ds.TripleSource;
+import com.clarkparsia.empire.ds.MutableDataSource;
 import com.clarkparsia.empire.jena.JenaEmpireModule;
 import com.clarkparsia.empire.sesametwo.OpenRdfEmpireModule;
 import com.clarkparsia.empire.util.EmpireUtil;
@@ -38,6 +41,7 @@ import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.RdfGenerator;
 import com.clarkparsia.empire.annotation.InvalidRdfException;
 import com.clarkparsia.openrdf.ExtGraph;
+import com.clarkparsia.openrdf.Graphs;
 import com.clarkparsia.common.util.PrefixMapping;
 
 import javax.persistence.OneToOne;
@@ -198,28 +202,71 @@ public class TestMisc {
 	public void infiniteLoopsAreBadMmmK() {
 		EntityManager aMgr = Persistence.createEntityManagerFactory("test-data-source").createEntityManager();
 
-		One one = new One();
-		Two two = new Two();
 
-		one.two = two;
-		two.one = one;
+		try {
+			One one = new One();
+			Two two = new Two();
 
-		aMgr.persist(one);
+			one.two = two;
+			two.one = one;
 
-		// i'm not testing correctness of the persistence here, the other test cases should catch that
+			aMgr.persist(one);
+
+			// i'm not testing correctness of the persistence here, the other test cases should catch that
+		}
+		finally {
+			aMgr.close();
+		}
+	}
+
+	/**
+	 * As reported on the mailing list "Problem with blank nodes" if you have a bnode as the target of an rdf:type triple, you end
+	 * up with a class cast exception.
+	 *
+	 * @throws Exception test error
+	 */
+	@Test
+	public void testBNodeTypeInProperty() throws Exception {
+		EntityManager aMgr = Persistence.createEntityManagerFactory("test-data-source").createEntityManager();
+
+		try {
+			SupportsRdfId.RdfKey aId = new SupportsRdfId.URIKey(URI.create("urn:one"));
+
+			One one = new One();
+			one.setRdfId(aId);
+
+			aMgr.persist(one);
+
+			MutableDataSource ts = (MutableDataSource) aMgr.getDelegate();
+			ts.add(Graphs.newGraph(ValueFactoryImpl.getInstance().createStatement(ValueFactoryImpl.getInstance().createURI("urn:two"),
+																				  RDF.TYPE,
+																				  ValueFactoryImpl.getInstance().createBNode()),
+								   ValueFactoryImpl.getInstance().createStatement(ValueFactoryImpl.getInstance().createURI("urn:one"),
+																				  ValueFactoryImpl.getInstance().createURI("http://empire.clarkparsia.com/hasMoreTwos"),
+																				  ValueFactoryImpl.getInstance().createURI("urn:two"))));
+
+			assertTrue(aMgr.find(One.class, aId) != null);
+		}
+		finally {
+			aMgr.close();
+		}
 	}
 
 	@Entity
 	@RdfsClass("http://empire.clarkparsia.com/one")
-	private class One extends BaseTestClass {
+	public static class One extends BaseTestClass {
 		@OneToOne(cascade={CascadeType.MERGE, CascadeType.PERSIST})
 		@RdfProperty("http://empire.clarkparsia.com/hasTwo")
 		Two two;
+
+		@OneToOne(cascade={CascadeType.MERGE, CascadeType.PERSIST})
+		@RdfProperty("http://empire.clarkparsia.com/hasMoreTwos")
+		Collection<BaseTestClass> listOfTwos;
 	}
 
 	@Entity
 	@RdfsClass("http://empire.clarkparsia.com/two")
-	private class Two extends BaseTestClass {
+	public static class Two extends BaseTestClass {
 		@OneToOne(cascade={CascadeType.MERGE, CascadeType.PERSIST})
 		@RdfProperty("http://empire.clarkparsia.com/hasOne")
 		One one;

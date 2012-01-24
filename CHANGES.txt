@@ -1,8 +1,17 @@
 Change Log
 ==========
 
+Empire 0.8 (TBD)
+=======================
+	* MODIFIED: Altered superclass checks to better accomodate auto-generated instances that use EmpireGenerated so users to have to resort to incorrectly using MappedSuperclass 
+	* FIXED: NPE in AsValue function when using a java.net.URI
+	* FIXED: Bug in equals method of generated instances
+	* FIXED: Bug with using wildcard types in interfaces that are used in the code generation. (issue #70)
+	* FIXED: Bug that resulted in class cast exceptions between BNode and URI when the value of a property was a BNode and did not map to a valid bean entity. (issue #71)
+
+
 Empire 0.7 (2011-11-18)
-=========================
+=======================
 	* MODIFIED: Repackaged all DataSource specific classes into the com.clarkparsia.empire.ds package. (issue #25)
 	* MODIFIED: Moved some DataSource specific functions from EmpireUtil to DataSourceUtil
 	* MODIFIED: Query results can returned proxied objects, allowing users to defer the loading of the results until they

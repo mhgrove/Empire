@@ -106,6 +106,8 @@ import javassist.util.proxy.ProxyFactory;
 import javassist.util.proxy.MethodHandler;
 import javassist.util.proxy.ProxyObject;
 import javassist.util.proxy.MethodFilter;
+import javassist.CannotCompileException;
+import sun.reflect.generics.reflectiveObjects.WildcardTypeImpl;
 
 /**
  * <p>Description: Utility for creating RDF from a compliant Java Bean, and for turning RDF (the results of a describe
@@ -781,7 +783,6 @@ public final class RdfGenerator {
 			return Lists.newArrayList(Collections2.transform(theCollection, new AsValueFunction(theAccess)));
 		}
 		catch (RuntimeException e) {
-			e.printStackTrace();
 			throw new InvalidRdfException(e.getMessage());
 		}
 	}
@@ -1011,7 +1012,7 @@ public final class RdfGenerator {
 				  : Locale.getDefault().toString());
 	}
 
-	private static Class refineClass(Object theAccessor, Class theClass, DataSource theSource, Resource theId) {
+	private static Class refineClass(final Object theAccessor, final Class theClass, final DataSource theSource, final Resource theId) {
 		Class aClass = theClass;
 
 		if (Collection.class.isAssignableFrom(aClass)) {
@@ -1030,7 +1031,41 @@ public final class RdfGenerator {
 			if (aTypes != null && aTypes.length >= 1) {
 				// first type argument to a collection is usually the one we care most about
 				if (aTypes[0] instanceof ParameterizedType && ((ParameterizedType)aTypes[0]).getActualTypeArguments().length > 0) {
-					aClass = (Class) ((ParameterizedType)aTypes[0]).getActualTypeArguments()[0];
+					Type aType = ((ParameterizedType)aTypes[0]).getActualTypeArguments()[0];
+
+					if (aType instanceof Class) {
+						aClass = (Class) aType;
+					}
+					else if (aType instanceof WildcardTypeImpl) {
+						WildcardTypeImpl aWildcard = (WildcardTypeImpl) aType;
+							// trying to suss out super v extends w/o resorting to string munging.
+							if (aWildcard.getLowerBounds().length == 0 && aWildcard.getUpperBounds().length > 0) {
+								// no lower bounds afaik indicates ? extends Foo
+								aClass = ((Class)aWildcard.getUpperBounds()[0]);
+							}
+							else if (aWildcard.getLowerBounds().length > 0) {
+								// lower & upper bounds I believe indicates something of the form Foo super Bar
+								aClass = ((Class)aWildcard.getLowerBounds()[0]);
+							}
+							else {
+								// shoot, we'll try the string hack that Adrian posted on the mailing list.
+								try {
+									aClass = Class.forName(aType.toString().split(" ")[2].substring(0, aTypes[0].toString().split(" ")[2].length()-1));
+								}
+								catch (Exception e) {
+									// everything has failed, let aClass be the default (theClass) and hope for the best
+								}
+							}
+					}
+					else {
+						// punt? wtf else could it be?
+						try {
+							aClass = Class.forName(aType.toString());
+						}
+						catch (ClassNotFoundException e) {
+							// oh well, we did the best we can
+						}
+					}
 				}
 				else if (aTypes[0] instanceof Class) {
 					aClass = (Class) aTypes[0];

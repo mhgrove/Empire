@@ -15,9 +15,19 @@
 
 package com.clarkparsia.empire.test.codegen;
 
+import java.net.URI;
+import java.util.Collections;
+
+import javax.persistence.EntityManager;
+import javax.persistence.Persistence;
+
 import com.clarkparsia.empire.codegen.InstanceGenerator;
+import com.clarkparsia.empire.SupportsRdfId;
+import com.clarkparsia.empire.Empire;
+import com.clarkparsia.empire.test.EmpireTestSuite;
 
 import org.junit.Test;
+import static org.junit.Assert.assertTrue;
 
 /**
  * <p>Code generation unit tests</p>
@@ -31,5 +41,27 @@ public class CodegenTests {
 	@Test
 	public void testCodeGenWithWildcards() throws Exception {
 		InstanceGenerator.generateInstanceClass(PersonWithWildcards.class);
+	}
+
+	@Test
+	public void testUseInterfaceWithWildcards() throws Exception {
+		EntityManager aManager = Persistence.createEntityManagerFactory("test-data-source").createEntityManager();
+
+		try {
+			PersonWithWildcards wc = InstanceGenerator.generateInstanceClass(PersonWithWildcards.class).newInstance();
+			PersonWithWildcards wc2 = InstanceGenerator.generateInstanceClass(PersonWithWildcards.class).newInstance();
+
+			wc.setRdfId(new SupportsRdfId.URIKey(URI.create("urn:wc")));
+			wc2.setRdfId(new SupportsRdfId.URIKey(URI.create("urn:wc2")));
+
+			wc.setHasContact(Collections.singletonList(wc2));
+			
+			aManager.persist(wc);
+
+			assertTrue(aManager.find(PersonWithWildcards.class, wc.getRdfId().value()) != null);
+		}
+		finally {
+			aManager.close();
+		}
 	}
 }

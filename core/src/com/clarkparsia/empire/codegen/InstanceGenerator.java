@@ -27,6 +27,7 @@ import javassist.Modifier;
 import javassist.CannotCompileException;
 import javassist.CtMethod;
 import javassist.CtPrimitiveType;
+import javassist.LoaderClassPath;
 import javassist.bytecode.ConstPool;
 import javassist.bytecode.AnnotationsAttribute;
 import javassist.bytecode.SignatureAttribute;
@@ -89,6 +90,8 @@ public final class InstanceGenerator {
 		// TODO: can we use some sort of template language for this?
 
 		ClassPool aPool = ClassPool.getDefault();
+
+		aPool.appendClassPath(new LoaderClassPath(theInterface.getClassLoader()));
 
 		CtClass aInterface = aPool.get(theInterface.getName());
 		CtClass aSupportsRdfIdInterface = aPool.get(SupportsRdfId.class.getName());

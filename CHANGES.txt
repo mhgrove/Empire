@@ -3,11 +3,13 @@ Change Log
 
 Empire 0.8 (TBD)
 =======================
-	* MODIFIED: Altered superclass checks to better accomodate auto-generated instances that use EmpireGenerated so users to have to resort to incorrectly using MappedSuperclass 
+	* MODIFIED: Altered superclass checks to better accommodate auto-generated instances that use EmpireGenerated so users to have to resort to incorrectly using MappedSuperclass
+	* MODIFIED: Removed a couple uses of describe and replaced them with direct lookups in the DataSource for the relevant information to help make going to/from RDF more efficient.
 	* FIXED: NPE in AsValue function when using a java.net.URI
 	* FIXED: Bug in equals method of generated instances
 	* FIXED: Bug with using wildcard types in interfaces that are used in the code generation. (issue #70)
 	* FIXED: Bug that resulted in class cast exceptions between BNode and URI when the value of a property was a BNode and did not map to a valid bean entity. (issue #71)
+	* FIXED: Appended loader path to Javassist ClassPool during instance generation so Empire works better in some servlet containers, notably Tomcat & Glassfish.
 
 
 Empire 0.7 (2011-11-18)

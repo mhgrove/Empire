@@ -30,6 +30,7 @@ import org.openrdf.model.Resource;
 import org.openrdf.model.Graph;
 import org.openrdf.model.Value;
 import org.openrdf.model.BNode;
+import org.openrdf.model.vocabulary.RDF;
 
 import org.openrdf.query.BindingSet;
 import org.apache.log4j.Logger;
@@ -44,8 +45,8 @@ import java.util.Collection;
  * @see DataSource
  * @see TripleSource
  *
- * @version 0.7
  * @since 0.7
+ * @version 0.7.1
  */
 public final class DataSourceUtil {
 	/**
@@ -200,7 +201,13 @@ public final class DataSourceUtil {
 		}
 
 		try {
-			return new ExtGraph(describe(theSource, theConcept.toString())).getType(theConcept);
+			final Collection<Value> aTypes = getValues(theSource, theConcept, RDF.TYPE);
+			if (aTypes.isEmpty()) {
+				return null;
+			}
+			else {
+				return (Resource) aTypes.iterator().next();
+			}
 		}
 		catch (DataSourceException e) {
 			LOGGER.error("There was an error while getting the type of a resource", e);

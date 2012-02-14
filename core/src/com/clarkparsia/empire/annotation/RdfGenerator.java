@@ -22,6 +22,7 @@ import org.openrdf.model.Value;
 import org.openrdf.model.URI;
 import org.openrdf.model.ValueFactory;
 import org.openrdf.model.Statement;
+import org.openrdf.model.Graph;
 
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.XMLSchema;
@@ -132,7 +133,7 @@ import sun.reflect.generics.reflectiveObjects.WildcardTypeImpl;
  *
  * @author Michael Grove
  * @since 0.1
- * @version 0.7
+ * @version 0.7.1
  */
 public final class RdfGenerator {
 
@@ -296,18 +297,19 @@ public final class RdfGenerator {
     private static <T> Class<T> determineClass(Class<T> theOrigClass, T theObj, DataSource theSource) throws InvalidRdfException, DataSourceException {
 		Class aResult = theOrigClass;
 		final SupportsRdfId aTmpSupportsRdfId = asSupportsRdfId(theObj);
-	
-		ExtGraph aGraph = new ExtGraph(DataSourceUtil.describe(theSource, theObj));
+	 
+//		ExtGraph aGraph = new ExtGraph(DataSourceUtil.describe(theSource, theObj));
+		final Collection<Value> aTypes = DataSourceUtil.getValues(theSource, EmpireUtil.asResource(EmpireUtil.asSupportsRdfId(theObj)), RDF.TYPE);
 		
 		// right now, our best match is the original class (we will refine later)
 		
-		final Resource aTmpRes = EmpireUtil.asResource(aTmpSupportsRdfId);		
+//		final Resource aTmpRes = EmpireUtil.asResource(aTmpSupportsRdfId);
 				
 		// iterate for all rdf:type triples in the data
 		// There may be multiple rdf:type triples, which can then translate onto multiple candidate Java classes
 		// some of the Java classes may belong to the same class hierarchy, whereas others can have no common
 		// super class (other than java.lang.Object)
-		for (Value aValue : aGraph.getValues(aTmpRes, RDF.TYPE)) {
+		for (Value aValue : aTypes) {
 			if (!(aValue instanceof URI)) {
 				// there is no URI in the object position of rdf:type
 				// ignore that data
@@ -1397,10 +1399,7 @@ public final class RdfGenerator {
 	
 	private static String getBNodeConstructQuery(DataSource theSource, Resource theRes, URI theProperty) {
 		Dialect aDialect = theSource.getQueryFactory().getDialect();
-System.err.println(theRes + " " + theProperty);
-if (theRes == null && theProperty == null) {
-	int f = 0;
-}
+
 		String aSerqlQuery = "construct * from {" + aDialect.asQueryString(theRes) + "} <" + theProperty.toString() + "> {o}, {o} po {oo}";
 
 		String aSparqlQuery = "CONSTRUCT  { " + aDialect.asQueryString(theRes) + " <"+theProperty.toString()+"> ?o . ?o ?po ?oo  } \n" +

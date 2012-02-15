@@ -202,6 +202,11 @@ public final class EntityManagerImpl implements EntityManager {
         aAccessors.addAll(getAnnotatedFields(aDbObj.getClass()));
         aAccessors.addAll(getAnnotatedGetters(aDbObj.getClass(), true));
 
+		if (theObj instanceof EmpireGenerated) {
+			((EmpireGenerated)theObj).setAllTriples(((EmpireGenerated)aDbObj).getAllTriples());
+			((EmpireGenerated)theObj).setInstanceTriples(((EmpireGenerated)aDbObj).getInstanceTriples());
+		}
+
         try {
             for (AccessibleObject aAccess : aAccessors) {
                 Object aValue = safeGet(aAccess, aDbObj);
@@ -400,12 +405,9 @@ public final class EntityManagerImpl implements EntityManager {
 		
 		if (theT instanceof EmpireGenerated) {
 			aExistingData = ((EmpireGenerated) theT).getInstanceTriples();
-			
-			if (aExistingData == null) {
-				aExistingData = new ExtGraph();
-			}
 		}
-		else {
+
+		if (aExistingData == null || aExistingData.isEmpty()) {
 			aExistingData = assertContainsAndDescribe(theT);
 		}
 

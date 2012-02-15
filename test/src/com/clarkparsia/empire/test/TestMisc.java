@@ -23,18 +23,24 @@ import static org.junit.Assert.fail;
 import org.openrdf.model.Resource;
 import org.openrdf.model.BNode;
 import org.openrdf.model.Graph;
+import org.openrdf.model.Statement;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.impl.ValueFactoryImpl;
+import org.openrdf.model.impl.GraphImpl;
+import org.openrdf.repository.RepositoryResult;
 import com.clarkparsia.empire.codegen.InstanceGenerator;
 import com.clarkparsia.empire.test.api.TestInterface;
 import com.clarkparsia.empire.test.api.BaseTestClass;
+import com.clarkparsia.empire.test.util.TestModule;
 import com.clarkparsia.empire.SupportsRdfId;
 import com.clarkparsia.empire.Empire;
 import com.clarkparsia.empire.ds.TripleSource;
 import com.clarkparsia.empire.ds.MutableDataSource;
 import com.clarkparsia.empire.jena.JenaEmpireModule;
 import com.clarkparsia.empire.sesametwo.OpenRdfEmpireModule;
+import com.clarkparsia.empire.sesametwo.RepositoryDataSourceFactory;
 import com.clarkparsia.empire.util.EmpireUtil;
+import com.clarkparsia.empire.util.DefaultEmpireModule;
 import com.clarkparsia.empire.annotation.SupportsRdfIdImpl;
 import com.clarkparsia.empire.annotation.RdfsClass;
 import com.clarkparsia.empire.annotation.RdfProperty;
@@ -42,7 +48,11 @@ import com.clarkparsia.empire.annotation.RdfGenerator;
 import com.clarkparsia.empire.annotation.InvalidRdfException;
 import com.clarkparsia.openrdf.ExtGraph;
 import com.clarkparsia.openrdf.Graphs;
+import com.clarkparsia.openrdf.OpenRdfUtil;
+import com.clarkparsia.openrdf.ExtRepository;
 import com.clarkparsia.common.util.PrefixMapping;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Lists;
 
 import javax.persistence.OneToOne;
 import javax.persistence.CascadeType;
@@ -57,6 +67,7 @@ import java.net.URI;
 import java.net.URL;
 import java.util.Collection;
 import java.util.ArrayList;
+import java.util.Map;
 
 /**
  * <p>Various miscellaneous tests for non-JPA parts of the Empire API.</p>
@@ -66,6 +77,13 @@ import java.util.ArrayList;
  * @since 0.7
  */
 public class TestMisc {
+	@BeforeClass
+	public static void beforeClass () {
+		System.setProperty("empire.configuration.file", "test.empire.config.properties");
+
+		Empire.init(new DefaultEmpireModule(), new OpenRdfEmpireModule(),
+					new JenaEmpireModule(), new TestModule());
+	}
 
 	@Test
 	public void testInstGen() throws Exception {
@@ -326,6 +344,164 @@ public class TestMisc {
 		IFoo aFoo = InstanceGenerator.generateInstanceClass(FooImpl.class).newInstance();
 
 		assertTrue(aFoo.isDereferenced());
+	}
+
+	/**
+	 * Test case for using generated instances and avoiding duplicates.  If you use a generated classes and persist it originally to an EM, then make changes on
+	 * the *same* object and merge those changes, EmpireGenerated is not correctly populated, so nothing is deleted and you end up with duplicated values.  So
+	 * now merge will do a describe on the instance if there is nothing known about it in EmpireGenerated to try and alleviate this case.  That's probably not
+	 * strictly correct as you might not want the results of the describe deleted as that could be out of date wrt to the original object, but there's not much
+	 * you can do.  Correct usage would be to refresh the object before doing anything more with it.
+	 *
+	 * @throws Exception test error
+	 */
+	@Test
+	public void testDuplicate() throws Exception {
+		ExtRepository aRepo = OpenRdfUtil.createInMemoryRepo();
+
+		Map aMap = Maps.newHashMap();
+		aMap.put(RepositoryDataSourceFactory.REPO_HANDLE, aRepo);
+		aMap.put("factory", "sesame");
+
+		EntityManager em = Persistence.createEntityManagerFactory("test", aMap).createEntityManager();
+
+		EntityTest aObj = InstanceGenerator.generateInstanceClass(EntityTest.class).newInstance();
+		aObj.setId("someid");
+		aObj.setLabel("some label");
+
+		em.persist(aObj);
+
+		aObj.setLabel("foo");
+
+		em.merge(aObj);
+
+		RepositoryResult<Statement> stmts = aRepo.getStatements();
+		ExtGraph aGraph = new ExtGraph();
+		while (stmts.hasNext()) {
+			aGraph.add(stmts.next());
+		}
+
+		assertEquals(3, aGraph.size());
+		assertEquals(1, Lists.newArrayList(aGraph.getStatements(null, ValueFactoryImpl.getInstance().createURI("urn:label"), null)).size());
+
+		em.remove(aObj);
+
+		ParentEntity pe = InstanceGenerator.generateInstanceClass(ParentEntity.class).newInstance();
+		pe.setEntity(aObj);
+
+		em.persist(pe);
+
+		stmts = aRepo.getStatements();
+		aGraph = new ExtGraph();
+		while (stmts.hasNext()) {
+			aGraph.add(stmts.next());
+		}
+
+		assertEquals(5, aGraph.size());
+		assertEquals(1, Lists.newArrayList(aGraph.getStatements(null, ValueFactoryImpl.getInstance().createURI("urn:label"), null)).size());
+
+		aObj.setLabel("foobarbaz");
+
+		em.merge(pe);
+
+		stmts = aRepo.getStatements();
+		aGraph = new ExtGraph();
+		while (stmts.hasNext()) {
+			aGraph.add(stmts.next());
+		}
+
+		assertEquals(5, aGraph.size());
+		assertEquals(1, Lists.newArrayList(aGraph.getStatements(null, ValueFactoryImpl.getInstance().createURI("urn:label"), null)).size());
+	}
+
+	/**
+	 * Tests the same basic thing as {@link #testDuplicate()} except we do refreshes after persists which should auto-update the information in the EmpireGenerated
+	 * stub internally and result in the correct behavior
+	 * @throws Exception test error
+	 */
+	@Test
+	public void testDuplicate2() throws Exception {
+		ExtRepository aRepo = OpenRdfUtil.createInMemoryRepo();
+
+		Map aMap = Maps.newHashMap();
+		aMap.put(RepositoryDataSourceFactory.REPO_HANDLE, aRepo);
+		aMap.put("factory", "sesame");
+
+		EntityManager em = Persistence.createEntityManagerFactory("test", aMap).createEntityManager();
+
+		EntityTest aObj = InstanceGenerator.generateInstanceClass(EntityTest.class).newInstance();
+		aObj.setId("someid");
+		aObj.setLabel("some label");
+
+		em.persist(aObj);
+
+		em.refresh(aObj);
+
+		aObj.setLabel("foo");
+
+		em.merge(aObj);
+
+		RepositoryResult<Statement> stmts = aRepo.getStatements();
+		ExtGraph aGraph = new ExtGraph();
+		while (stmts.hasNext()) {
+			aGraph.add(stmts.next());
+		}
+
+		assertEquals(3, aGraph.size());
+		assertEquals(1, Lists.newArrayList(aGraph.getStatements(null, ValueFactoryImpl.getInstance().createURI("urn:label"), null)).size());
+
+		em.remove(aObj);
+
+		ParentEntity pe = InstanceGenerator.generateInstanceClass(ParentEntity.class).newInstance();
+		pe.setEntity(aObj);
+
+		em.persist(pe);
+
+		em.refresh(pe);
+
+		stmts = aRepo.getStatements();
+		aGraph = new ExtGraph();
+		while (stmts.hasNext()) {
+			aGraph.add(stmts.next());
+		}
+
+		assertEquals(5, aGraph.size());
+		assertEquals(1, Lists.newArrayList(aGraph.getStatements(null, ValueFactoryImpl.getInstance().createURI("urn:label"), null)).size());
+
+		aObj.setLabel("foobarbaz");
+
+		em.merge(pe);
+
+		stmts = aRepo.getStatements();
+		aGraph = new ExtGraph();
+		while (stmts.hasNext()) {
+			aGraph.add(stmts.next());
+		}
+
+		assertEquals(5, aGraph.size());
+		assertEquals(1, Lists.newArrayList(aGraph.getStatements(null, ValueFactoryImpl.getInstance().createURI("urn:label"), null)).size());
+	}
+
+	@Entity
+	@RdfsClass("urn:EntityTest")
+	public interface EntityTest extends SupportsRdfId {
+		@RdfProperty("urn:id")
+		String getId();
+		void setId(String theId);
+
+		@RdfProperty("urn:label")
+		String getLabel();
+		void setLabel(String theLabel);
+	}
+
+	@Entity
+	@RdfsClass("urn:ParentEntity")
+	public interface ParentEntity extends SupportsRdfId {
+
+		@RdfProperty("urn:entity")
+		@OneToOne(cascade={CascadeType.PERSIST, CascadeType.MERGE})
+		EntityTest getEntity();
+		void setEntity(EntityTest theEntity);
 	}
 
 	public static abstract class FooImpl extends AbstractFoo implements IFoo {

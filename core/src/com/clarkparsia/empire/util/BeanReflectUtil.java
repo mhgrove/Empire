@@ -593,7 +593,7 @@ public final class BeanReflectUtil {
 
 		// unless its an instance of EmpireGenerated, in which case we want to directly inspect the superclass
 		// since that is the actual object and not our Empire stub
-		if (EmpireGenerated.class.isAssignableFrom(theClass)) {
+		if (EmpireGenerated.class.equals(theClass)) {
 			aClass = theClass.getSuperclass();
 		}
 

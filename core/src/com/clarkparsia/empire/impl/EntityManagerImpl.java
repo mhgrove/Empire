@@ -34,6 +34,7 @@ import com.clarkparsia.empire.annotation.RdfsClass;
 import com.clarkparsia.empire.annotation.AnnotationChecker;
 
 import org.openrdf.model.Graph;
+import org.openrdf.model.impl.GraphImpl;
 
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -408,7 +409,13 @@ public final class EntityManagerImpl implements EntityManager {
 		}
 
 		if (aExistingData == null || aExistingData.isEmpty()) {
-			aExistingData = assertContainsAndDescribe(theT);
+			try {
+				aExistingData = assertContainsAndDescribe(theT);
+			}
+			catch (IllegalArgumentException e) {
+				// it doesnt exist, so really, nothing to delete
+				aExistingData = new GraphImpl();
+			}
 		}
 
 		try {

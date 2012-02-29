@@ -15,6 +15,7 @@
 
 package com.clarkparsia.empire.util;
 
+import com.clarkparsia.common.collect.Iterables2;
 import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.InvalidRdfException;
 import com.clarkparsia.empire.annotation.RdfId;
@@ -24,7 +25,9 @@ import com.clarkparsia.empire.SupportsRdfId;
 import com.clarkparsia.empire.EmpireGenerated;
 import com.clarkparsia.common.util.PrefixMapping;
 
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 import javax.persistence.FetchType;
 import javax.persistence.OneToMany;
@@ -106,7 +109,7 @@ public final class BeanReflectUtil {
 	public static Field getIdField(Class theClass) throws InvalidRdfException {
 		Field aIdField = null;
 
-		for (Field aField : theClass.getDeclaredFields()) {
+		for (Field aField : getAllDeclaredFields(theClass)) {
 			if (aField.getAnnotation(RdfId.class) != null) {
 				if (aIdField != null) {
 					throw new InvalidRdfException("Cannot have multiple id properties");
@@ -499,7 +502,7 @@ public final class BeanReflectUtil {
 
 		Collection<Field> aProps = new HashSet<Field>();
 
-		for (Field aField : theClass.getDeclaredFields()) {
+		for (Field aField : getAllDeclaredFields(theClass)) {
 			if (aField.getAnnotation(Transient.class) != null
 				|| javassist.util.proxy.ProxyObject.class.isAssignableFrom(theClass)) {
 				continue;
@@ -598,7 +601,7 @@ public final class BeanReflectUtil {
 		}
 
         // field can be used for access just fine
-        if (theAccess instanceof Field && arrayContains(aClass.getDeclaredFields(), theAccess)) {
+        if (theAccess instanceof Field && getAllDeclaredFields(theClass).contains(theAccess)) {
             return theAccess;
         }
         else {
@@ -648,6 +651,17 @@ public final class BeanReflectUtil {
                 return null;
             }
         }
+    }
+
+    public static Set<Field> getAllDeclaredFields(final Class<?> theClass) {
+        Set<Field> aFields = Sets.newHashSet();
+        Class<?> aClass = theClass;
+        while (aClass != null) {
+            aFields.addAll(Sets.newHashSet(aClass.getDeclaredFields()));
+            aClass = aClass.getSuperclass();
+        }
+
+        return aFields;
     }
 
     /**

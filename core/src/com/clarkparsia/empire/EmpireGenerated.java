@@ -19,7 +19,7 @@ import org.openrdf.model.Graph;
 
 /**
  * Interface implemented by all generated beans that track which RDF statements were used to describe the particular instance
- * in RDF, and which were used to populate the fields of this bean. 
+ * in RDF, and which were used to populate the fields of this bean.  This is for Empire internal use only.
  * 
  * @author Blazej Bulka <blazej@clarkparsia.com>
  */

@@ -179,13 +179,15 @@ public final class InstanceGenerator {
 		  "  if (theObj == this) return true;\n" +
 		  "  if (!(theObj instanceof com.clarkparsia.empire.SupportsRdfId)) return false;\n" +		  		  
 		  "  if (!(mInterfaceClass.isAssignableFrom(theObj.getClass()))) return false;\n" +
-		  "  return getRdfId().equals( ((com.clarkparsia.empire.SupportsRdfId) theObj).getRdfId());\n" +
+		  "  return getRdfId().equals( ((com.clarkparsia.empire.SupportsRdfId) theObj).getRdfId()) && super.equals(theObj);\n" +
 		  "}\n";
 		
 		aClass.addMethod(CtNewMethod.make(equalsMethodBody, aClass));
 
-		aClass.addMethod(CtNewMethod.make("public String toString() { return getRdfId() != null ? getRdfId().toString() : super.toString(); } ", aClass));
-		aClass.addMethod(CtNewMethod.make("public int hashCode() { return getRdfId() != null ? getRdfId().hashCode() : 0; } ", aClass));
+		if (theInterface.isInterface()) {
+			aClass.addMethod(CtNewMethod.make("public String toString() { return getRdfId() != null ? getRdfId().toString() : super.toString(); } ", aClass));
+			aClass.addMethod(CtNewMethod.make("public int hashCode() { return getRdfId() != null ? getRdfId().hashCode() : 0; } ", aClass));
+		}
 
 		aClass.freeze();
 

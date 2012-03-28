@@ -30,6 +30,7 @@ import com.clarkparsia.empire.impl.serql.SerqlDialect;
 import com.clarkparsia.openrdf.ExtGraph;
 import com.clarkparsia.openrdf.OpenRdfUtil;
 import com.clarkparsia.openrdf.ExtRepository;
+import com.clarkparsia.openrdf.util.AdunaIterations;
 import com.clarkparsia.openrdf.util.GraphBuildingRDFHandler;
 
 import org.openrdf.model.Graph;
@@ -231,7 +232,7 @@ public class RepositoryDataSource extends AbstractDataSource implements MutableD
 	public Graph graphQuery(final String theQuery) throws QueryException {
 		assertConnected();
 
-		GraphQueryRDFHandler aHandler = new GraphQueryRDFHandler();
+		GraphBuildingRDFHandler aHandler = new GraphBuildingRDFHandler();
 
 		try {
 			GraphQuery aQuery = mConnection.prepareGraphQuery(mQueryLang, theQuery);
@@ -350,7 +351,7 @@ public class RepositoryDataSource extends AbstractDataSource implements MutableD
     public Iterable<Statement> getStatements(Resource theSubject, org.openrdf.model.URI thePredicate, Value theObject) 
     		throws DataSourceException {
     	try {
-			return OpenRdfUtil.iterable(mConnection.getStatements(theSubject, thePredicate, theObject, true));
+			return AdunaIterations.iterable(mConnection.getStatements(theSubject, thePredicate, theObject, true));
 		}
 		catch (RepositoryException e) {
 			throw new DataSourceException(e);
@@ -368,40 +369,10 @@ public class RepositoryDataSource extends AbstractDataSource implements MutableD
     	}
     	
     	try {
-			return OpenRdfUtil.iterable(mConnection.getStatements(theSubject, thePredicate, theObject, true, theContext));
+			return AdunaIterations.iterable(mConnection.getStatements(theSubject, thePredicate, theObject, true, theContext));
 		}
 		catch (RepositoryException e) {
 			throw new DataSourceException(e);
 		}
-    }
-    
-    public static class GraphQueryRDFHandler extends RDFHandlerBase {
-    	/**
-    	 * The graph to collect statements in
-    	 */
-    	private Graph mGraph = new GraphImpl();
-
-    	/**
-    	 * @inheritDoc
-    	 */
-    	@Override
-    	public void handleStatement(final Statement theStatement) throws RDFHandlerException {
-    		mGraph.add(theStatement);
-    	}
-
-    	/**
-    	 * Return the graph built from events fired to this handler
-    	 * @return the graph
-    	 */
-    	public Graph getGraph() {    		
-    		return mGraph;
-    	}
-
-    	/**
-    	 * Clear the underlying graph of all collected statements
-    	 */
-    	public void clear() {
-    		mGraph.clear();
-    	}	
     }
 }

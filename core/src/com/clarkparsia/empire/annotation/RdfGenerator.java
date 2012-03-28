@@ -923,8 +923,13 @@ public final class RdfGenerator {
 							if (aListValue == null) {
 								throw new RuntimeException("Error converting a list value.");
 							}
-
-							aValues.add(aListValue);
+							
+							if (aListValue instanceof Collection) {
+								aValues.addAll(((Collection) aListValue));
+							}
+							else {
+								aValues.add(aListValue);
+							}
 						}
 
 						return aValues;
@@ -1219,10 +1224,8 @@ public final class RdfGenerator {
 						if (aGraph.isList(aPossibleListHead)) {
 							List<Value> aList;
 
-							// getting the list is only safe the the query dialect supports stable bnode ids in the query language, which is just 4store and Jena
-							// sesame does not support this.  I know this is a shitty hack to detect this, but it works.  Future work will add this detection as an
-							// interface to the dialect or as some sort of proeprty of the dialect, like dialect.supports(StableBNodeIds)
-							if (aPropAnnotation != null && aPropAnnotation.isList() && mSource.getQueryFactory().getDialect() instanceof ARQSPARQLDialect) {
+							// getting the list is only safe the the query dialect supports stable bnode ids in the query language.
+							if (aPropAnnotation != null && aPropAnnotation.isList() && mSource.getQueryFactory().getDialect().supportsStableBnodeIds()) {
 								try {
 									aList = asList(mSource, aPossibleListHead);
 								}
@@ -1233,7 +1236,6 @@ public final class RdfGenerator {
 							else {
 								aList = new ArrayList<Value>(aGraph.getValues(mResource, mProperty));
 							}
-
 
 							//return new ToObjectFunction(mSource, null, (AccessibleObject) mAccessor, null).apply(aList);
 							Collection<Object> aValues = BeanReflectUtil.instantiateCollectionFromField(BeanReflectUtil.classFrom(aAccess));
@@ -1314,7 +1316,7 @@ public final class RdfGenerator {
 	}
 
 	private static List<Value> asList(DataSource theSource, Resource theRes) throws DataSourceException {
-        List<Value> aList = new ArrayList<Value>();
+        List<Value> aList = Lists.newArrayList();
 
         Resource aListRes = theRes;
 

@@ -27,7 +27,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -42,7 +41,6 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Query;
 
-import com.clarkparsia.empire.Empire;
 import com.clarkparsia.empire.EmpireGenerated;
 import com.clarkparsia.empire.EmpireOptions;
 import com.clarkparsia.empire.SupportsRdfId;
@@ -61,7 +59,6 @@ import com.clarkparsia.empire.ds.TripleSource;
 import com.clarkparsia.empire.impl.EntityManagerFactoryImpl;
 import com.clarkparsia.empire.test.api.BaseTestClass;
 
-import com.clarkparsia.empire.test.api.MutableTestDataSourceFactory;
 import com.clarkparsia.empire.test.api.TestEntityListener;
 import com.clarkparsia.empire.test.api.nasa.FoafPerson;
 import com.clarkparsia.empire.test.api.nasa.Launch;
@@ -79,7 +76,6 @@ import com.clarkparsia.openrdf.OpenRdfIO;
 
 import com.google.common.collect.Lists;
 
-import com.google.common.collect.Sets;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -111,7 +107,9 @@ import static org.junit.Assume.assumeTrue;
  */
 public abstract class EntityManagerTestSuite {
 
-	public static final String DATA_FILE = System.getProperty("test.data") != null ? System.getProperty("test.data") : "test/data/lite.nasa.nt";
+	public static final String DATA_DIR = System.getProperty("empire.test.data") != null ? System.getProperty("empire.test.data") : "test/data";
+	public static final String DATA_FILE = DATA_DIR + "/lite.nasa.nt";
+	public static final String TYPING_FILE = DATA_DIR + "/typing.ttl";
 
 	private static final String TEST_QUERY = "where { ?result <urn:prop> ?y }";
 	private static final String TEST_NATIVE_QUERY = "select distinct ?result where { ?uri space:mass ?result }";
@@ -667,7 +665,7 @@ public abstract class EntityManagerTestSuite {
 
 		assumeTrue(aManager.getDelegate() instanceof MutableDataSource);
 
-		insertData((MutableDataSource) aManager.getDelegate(), new File("test/data/typing.ttl"));
+		insertData((MutableDataSource) aManager.getDelegate(), new File(TYPING_FILE));
 
 		A a = aManager.find(A.class, URI.create("urn:clarkparsia.com:empire:test:a1"));
 
@@ -686,7 +684,7 @@ public abstract class EntityManagerTestSuite {
 
 		assumeTrue(aManager.getDelegate() instanceof MutableDataSource);
 
-		insertData((MutableDataSource) aManager.getDelegate(), new File("test/data/typing.ttl"));
+		insertData((MutableDataSource) aManager.getDelegate(), new File(TYPING_FILE));
 
 		A a = aManager.find(A.class, URI.create("urn:clarkparsia.com:empire:test:a1"));
 		EmpireGenerated empireGenerated = (EmpireGenerated) a;
@@ -708,7 +706,7 @@ public abstract class EntityManagerTestSuite {
 
 		assumeTrue(aManager.getDelegate() instanceof MutableDataSource);
 
-		insertData((MutableDataSource) aManager.getDelegate(), new File("test/data/typing.ttl"));
+		insertData((MutableDataSource) aManager.getDelegate(), new File(TYPING_FILE));
 
 		B b = aManager.find(B.class, URI.create("urn:clarkparsia.com:empire:test:b1"));
 
@@ -729,7 +727,7 @@ public abstract class EntityManagerTestSuite {
 
 		assumeTrue(aManager.getDelegate() instanceof MutableDataSource);
 
-		insertData((MutableDataSource) aManager.getDelegate(), new File("test/data/typing.ttl"));
+		insertData((MutableDataSource) aManager.getDelegate(), new File(TYPING_FILE));
 
 		B b = aManager.find(B.class, URI.create("urn:clarkparsia.com:empire:test:b1"));
 		EmpireGenerated empireGenerated = (EmpireGenerated) b;
@@ -751,7 +749,7 @@ public abstract class EntityManagerTestSuite {
 
 		assumeTrue(aManager.getDelegate() instanceof MutableDataSource);
 
-		insertData((MutableDataSource) aManager.getDelegate(), new File("test/data/typing.ttl"));
+		insertData((MutableDataSource) aManager.getDelegate(), new File(TYPING_FILE));
 
 		A a = aManager.find(A.class, URI.create("urn:clarkparsia.com:empire:test:b1"));
 
@@ -779,7 +777,7 @@ public abstract class EntityManagerTestSuite {
 
 		assumeTrue(aManager.getDelegate() instanceof MutableDataSource);
 
-		insertData((MutableDataSource) aManager.getDelegate(), new File("test/data/typing.ttl"));
+		insertData((MutableDataSource) aManager.getDelegate(), new File(TYPING_FILE));
 
 		A a = aManager.find(A.class, URI.create("urn:clarkparsia.com:empire:test:b1"));
 		EmpireGenerated empireGenerated = (EmpireGenerated) a;
@@ -808,7 +806,7 @@ public abstract class EntityManagerTestSuite {
 
 		assumeTrue(aManager.getDelegate() instanceof MutableDataSource);
 
-		insertData((MutableDataSource) aManager.getDelegate(), new File("test/data/typing.ttl"));
+		insertData((MutableDataSource) aManager.getDelegate(), new File(TYPING_FILE));
 
 		B b = aManager.find(B.class, URI.create("urn:clarkparsia.com:empire:test:b2"));
 
@@ -830,7 +828,7 @@ public abstract class EntityManagerTestSuite {
 
 		assumeTrue(aManager.getDelegate() instanceof MutableDataSource);
 
-		insertData((MutableDataSource) aManager.getDelegate(), new File("test/data/typing.ttl"));
+		insertData((MutableDataSource) aManager.getDelegate(), new File(TYPING_FILE));
 
 		A a = aManager.find(A.class, URI.create("urn:clarkparsia.com:empire:test:b2"));
 
@@ -858,7 +856,7 @@ public abstract class EntityManagerTestSuite {
 
 		assumeTrue(aManager.getDelegate() instanceof MutableDataSource);
 
-		insertData((MutableDataSource) aManager.getDelegate(), new File("test/data/typing.ttl"));
+		insertData((MutableDataSource) aManager.getDelegate(), new File(TYPING_FILE));
 
 		AnotherB b = aManager.find(AnotherB.class, URI.create("urn:clarkparsia.com:empire:test:b2"));
 
@@ -878,7 +876,7 @@ public abstract class EntityManagerTestSuite {
 
 		assumeTrue(aManager.getDelegate() instanceof MutableDataSource);
 
-		insertData((MutableDataSource) aManager.getDelegate(), new File("test/data/typing.ttl"));
+		insertData((MutableDataSource) aManager.getDelegate(), new File(TYPING_FILE));
 
 		AnotherB b = aManager.find(AnotherB.class, URI.create("urn:clarkparsia.com:empire:test:b2"));
 		EmpireGenerated empireGenerated = (EmpireGenerated) b;
@@ -900,7 +898,7 @@ public abstract class EntityManagerTestSuite {
 
 		assumeTrue(aManager.getDelegate() instanceof MutableDataSource);
 
-		insertData((MutableDataSource) aManager.getDelegate(), new File("test/data/typing.ttl"));
+		insertData((MutableDataSource) aManager.getDelegate(), new File(TYPING_FILE));
 
 		A a = aManager.find(A.class, URI.create("urn:clarkparsia.com:empire:test:a1"));
 

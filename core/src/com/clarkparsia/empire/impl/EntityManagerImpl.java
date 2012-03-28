@@ -139,7 +139,7 @@ public final class EntityManagerImpl implements EntityManager {
 	 * Create a new EntityManagerImpl
 	 * @param theSource the underlying RDF datasource used for persistence operations
 	 */
-	EntityManagerImpl(MutableDataSource theSource) {
+	public EntityManagerImpl(MutableDataSource theSource) {
 
 		// TODO: sparql for everything, just convert serql into sparql
 		// TODO: work like JPA/hibernate -- if something does not have a @Transient on it, convert it.  we'll just need to coin a URI in those cases

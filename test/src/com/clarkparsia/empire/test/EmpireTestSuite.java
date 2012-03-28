@@ -17,8 +17,10 @@ package com.clarkparsia.empire.test;
 
 import com.clarkparsia.empire.Empire;
 
+import com.clarkparsia.empire.jena.JenaEntityManagerTestSuite;
 import com.clarkparsia.empire.sesametwo.OpenRdfEmpireModule;
 import com.clarkparsia.empire.jena.JenaEmpireModule;
+import com.clarkparsia.empire.sesametwo.SesameEntityManagerTestSuite;
 import com.clarkparsia.empire.util.DefaultEmpireModule;
 import com.clarkparsia.empire.test.util.TestModule;
 import com.clarkparsia.empire.test.codegen.CodegenTests;
@@ -26,22 +28,20 @@ import com.clarkparsia.empire.test.codegen.CodegenTests;
 import org.junit.runners.Suite;
 
 import org.junit.runner.RunWith;
-import org.junit.runner.JUnitCore;
-import org.junit.runner.Result;
 
 import org.junit.BeforeClass;
-import org.junit.AfterClass;
 
 /**
  * <p>Empire test suite.</p>
  *
  * @author Michael Grove
  * @since 0.7
+ * @version 0.7.1
  */
 @RunWith(Suite.class)
-@Suite.SuiteClasses({TestRdfConvert.class, TestJPA.class, TestSPI.class, TestMisc.class,
-					 TestConfig.class, TestProxyFetchAndCascade.class, TestDS.class, TestTyping.class,
-					 CodegenTests.class})
+@Suite.SuiteClasses({TestRdfConvert.class, TestMisc.class,
+					 TestConfig.class, TestDS.class, CodegenTests.class,
+					 SesameEntityManagerTestSuite.class, JenaEntityManagerTestSuite.class})
 public class EmpireTestSuite {
 
 	@BeforeClass

@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  * http://www.apache.org/licenses/LICENSE-2.0
- *  
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -13,27 +13,27 @@
  * limitations under the License.
  */
 
-package com.clarkparsia.empire.test.util;
+package com.clarkparsia.empire.sesametwo;
 
-import com.clarkparsia.empire.ds.DataSource;
-import com.clarkparsia.empire.ds.DataSourceException;
-import com.clarkparsia.empire.test.api.MutableTestDataSourceFactory;
+import com.clarkparsia.empire.ds.DataSourceFactory;
 
-import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
+import com.clarkparsia.empire.sesametwo.RepositoryDataSourceFactory;
+import com.clarkparsia.empire.test.EntityManagerTestSuite;
 
 /**
- * <p>Utility methods for the test suite.</p>
+ * <p>Extend the core Empire test suite to test the Sesame Repository implementation of a DataSource</p>
  *
  * @author Michael Grove
+ * @version 0.7.1
+ * @since 0.7.1
  */
-public class TestUtil {
-	public static DataSource createTestSource() throws DataSourceException {
-		Map<String, Object> aMap = new HashMap<String, Object>();
-		aMap.put("factory", "test-source");
-		aMap.put("files", new File("test/data/lite.nasa.nt"));
+public class SesameEntityManagerTestSuite extends EntityManagerTestSuite {
 
-		return new MutableTestDataSourceFactory().create(aMap);
+	/**
+	 * @inheritDoc
+	 */
+	@Override
+	public DataSourceFactory createDataSourceFactory() {
+		return new RepositoryDataSourceFactory();
 	}
 }

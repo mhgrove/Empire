@@ -15,6 +15,7 @@
 
 package com.clarkparsia.empire.test;
 
+import com.clarkparsia.empire.test.api.MutableTestDataSourceFactory;
 import org.junit.Test;
 import org.junit.Ignore;
 import static org.junit.Assert.assertFalse;
@@ -29,6 +30,7 @@ import com.clarkparsia.empire.Empire;
 import com.clarkparsia.empire.sesametwo.OpenRdfEmpireModule;
 import com.clarkparsia.empire.util.DefaultEmpireModule;
 
+import java.io.File;
 import java.util.Map;
 import java.util.HashMap;
 
@@ -56,7 +58,7 @@ public class TestDS {
 
 		Map<String, Object> aMap = new HashMap<String, Object>();
 		aMap.put("factory", "sesame");
-		aMap.put("files", TestJPA.DATA_FILE);
+		aMap.put("files", new File("test/data/lite.nasa.nt"));
 
 		DataSource aSesameSource = Empire.get().persistenceProvider().createDataSource("test-sesame", aMap);
 

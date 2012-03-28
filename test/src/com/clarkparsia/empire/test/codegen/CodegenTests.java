@@ -19,6 +19,7 @@ import java.net.URI;
 import java.util.Collections;
 
 import javax.persistence.EntityManager;
+import javax.persistence.MappedSuperclass;
 import javax.persistence.Persistence;
 
 import com.clarkparsia.empire.codegen.InstanceGenerator;
@@ -26,8 +27,12 @@ import com.clarkparsia.empire.SupportsRdfId;
 import com.clarkparsia.empire.Empire;
 import com.clarkparsia.empire.test.EmpireTestSuite;
 
+import com.clarkparsia.empire.test.api.TestInterface;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * <p>Code generation unit tests</p>
@@ -62,6 +67,118 @@ public class CodegenTests {
 		}
 		finally {
 			aManager.close();
+		}
+	}
+
+
+	@Test
+	public void testInstGen() throws Exception {
+		Class<TestInterface> aIntClass = InstanceGenerator.generateInstanceClass(TestInterface.class);
+
+		TestInterface aInt = aIntClass.newInstance();
+
+		// this should successfully re-use the previously generated class file.  we want to make sure
+		// this can happen without error.
+		TestInterface aInt2 = InstanceGenerator.generateInstanceClass(TestInterface.class).newInstance();
+
+		URI aURI = URI.create("urn:uri");
+		Integer aNumber = 5;
+		String aStr = "some string value";
+		SupportsRdfId.RdfKey aKey = new SupportsRdfId.URIKey(URI.create("urn:id"));
+		SupportsRdfId.RdfKey aKey2 = new SupportsRdfId.URIKey(URI.create("urn:id2"));
+
+		aInt.setURI(aURI);
+		aInt.setInt(aNumber);
+		aInt.setString(aStr);
+		aInt.setRdfId(aKey);
+
+		aInt2.setRdfId(aKey2);
+
+		aInt.setObject(aInt2);
+
+		assertEquals(aInt, aInt);
+		assertEquals(aURI, aInt.getURI());
+		assertEquals(aStr, aInt.getString());
+		assertEquals(aNumber, aInt.getInt());
+		assertEquals(aKey, aInt.getRdfId());
+		assertEquals(aInt2, aInt.getObject());
+		assertEquals(aKey.toString(), aInt.toString());
+	}
+
+	@Test(expected=IllegalArgumentException.class)
+	public void testBadInstGen() throws Exception {
+		InstanceGenerator.generateInstanceClass(BadTestInterface.class);
+	}
+
+	@Test(expected=IllegalArgumentException.class)
+	public void testNoSupportsInstGen() throws Exception {
+		InstanceGenerator.generateInstanceClass(NoSupportsTestInterface.class);
+	}
+
+	@Test
+	public void testGenerateSuperInterfaces() {
+		try {
+			BaseInterface aBase = InstanceGenerator.generateInstanceClass(BaseInterface.class).newInstance();
+
+			aBase.setFoo("some value");
+			assertEquals("some value", aBase.getFoo());
+
+			ChildInterface aChild = InstanceGenerator.generateInstanceClass(ChildInterface.class).newInstance();
+
+			aChild.setBar(23);
+			assertEquals(23, aChild.getBar());
+
+			aChild.setFoo("some value");
+			assertEquals("some value", aChild.getFoo());
+		}
+		catch (Exception e) {
+			fail(e.getMessage());
+		}
+	}
+
+	@Test
+	public void testFunkyInstGenWithBoolean() throws Exception {
+		IFoo aFoo = InstanceGenerator.generateInstanceClass(FooImpl.class).newInstance();
+
+		assertTrue(aFoo.isDereferenced());
+	}
+
+	public interface NoSupportsTestInterface {
+		public String getBar();
+		public void setBar(String theStr);
+	}
+
+	public interface BadTestInterface extends SupportsRdfId {
+		public void foo();
+
+		public String getBar();
+		public void setBar(String theStr);
+	}
+
+	public interface BaseInterface extends SupportsRdfId {
+		public String getFoo();
+		public void setFoo(String theString);
+	}
+
+	public interface ChildInterface extends BaseInterface {
+		public long getBar();
+		public void setBar(long theString);
+	}
+
+	public static abstract class FooImpl extends AbstractFoo implements IFoo {
+	}
+
+	public static interface IFoo {
+		public boolean isDereferenced();
+	}
+
+	@MappedSuperclass
+	public static abstract class AbstractFoo implements SupportsRdfId {
+		/**
+		 * @inheritDoc
+		 */
+		public boolean isDereferenced() {
+			return true;
 		}
 	}
 }

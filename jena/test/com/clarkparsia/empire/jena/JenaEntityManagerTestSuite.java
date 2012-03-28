@@ -13,27 +13,23 @@
  * limitations under the License.
  */
 
-package com.clarkparsia.empire.test.util;
+package com.clarkparsia.empire.jena;
 
-import com.clarkparsia.empire.ds.DataSource;
-import com.clarkparsia.empire.ds.DataSourceException;
-import com.clarkparsia.empire.test.api.MutableTestDataSourceFactory;
-
-import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
+import com.clarkparsia.empire.config.EmpireConfiguration;
+import com.clarkparsia.empire.ds.DataSourceFactory;
+import com.clarkparsia.empire.test.EntityManagerTestSuite;
 
 /**
- * <p>Utility methods for the test suite.</p>
+ * <p>Jena based data source tests for backing an EntityManager in Empire</p>
  *
  * @author Michael Grove
+ * @version 0.7.1
+ * @since 0.7.1
  */
-public class TestUtil {
-	public static DataSource createTestSource() throws DataSourceException {
-		Map<String, Object> aMap = new HashMap<String, Object>();
-		aMap.put("factory", "test-source");
-		aMap.put("files", new File("test/data/lite.nasa.nt"));
+public class JenaEntityManagerTestSuite extends EntityManagerTestSuite {
 
-		return new MutableTestDataSourceFactory().create(aMap);
+	@Override
+	protected DataSourceFactory createDataSourceFactory() {
+		return new DefaultJenaDataSourceFactory(new EmpireConfiguration());
 	}
 }

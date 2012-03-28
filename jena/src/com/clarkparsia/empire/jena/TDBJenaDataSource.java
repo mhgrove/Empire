@@ -2,6 +2,7 @@ package com.clarkparsia.empire.jena;
 
 import com.clarkparsia.empire.ds.DataSourceException;
 
+import com.clarkparsia.empire.ds.SupportsTransactions;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.tdb.TDB;
 
@@ -15,7 +16,7 @@ import com.hp.hpl.jena.tdb.TDB;
  * @version 0.7
  * @since 0.7
  */
-class TDBJenaDataSource extends JenaDataSource {
+class TDBJenaDataSource extends JenaDataSource implements SupportsTransactions {
 
 	public TDBJenaDataSource(Model theModel) {
 		super(theModel);
@@ -24,7 +25,6 @@ class TDBJenaDataSource extends JenaDataSource {
 	/**
 	 * @inheritDoc
 	 */
-	@Override
 	public void begin() throws DataSourceException {
 		//no-op
 	}
@@ -32,7 +32,6 @@ class TDBJenaDataSource extends JenaDataSource {
 	/**
 	 * @inheritDoc
 	 */
-	@Override
 	public void commit() throws DataSourceException {
 		//sync to disk
 		TDB.sync(getModel());
@@ -41,7 +40,6 @@ class TDBJenaDataSource extends JenaDataSource {
 	/**
 	 * @inheritDoc
 	 */
-	@Override
 	public void rollback() throws DataSourceException {
 		//no-op
 	}

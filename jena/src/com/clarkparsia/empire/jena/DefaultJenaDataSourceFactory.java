@@ -110,9 +110,14 @@ final class DefaultJenaDataSourceFactory extends JenaDataSourceFactory implement
 				//aSource = new TransactionalDataSource(new JenaDataSource(aModel));
 			}
 			else {
-				// only TDB needs special treatment
-				aSource = new JenaDataSource(aModel);
-				
+				// only TDB needs special treatment, otherwise use the default implementations
+
+				if (aModel.supportsTransactions()) {
+					aSource = new JenaDataSourceSupportingTransactions(aModel);
+				}
+				else {
+					aSource = new JenaDataSource(aModel);
+				}
 			}
 		}
 		else {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2010 Clark & Parsia, LLC. <http://www.clarkparsia.com>
+ * Copyright (c) 2009-2012 Clark & Parsia, LLC. <http://www.clarkparsia.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,9 +49,9 @@ import org.openrdf.model.Value;
  * @author Michael Grove
  * @author uoccou
  * @since 0.1
- * @version 0.7
+ * @version 0.7.1
  */
-public class JenaDataSource extends AbstractDataSource implements MutableDataSource, TripleSource, SupportsTransactions {
+public class JenaDataSource extends AbstractDataSource implements MutableDataSource, TripleSource {
 
 	/**
 	 * The underlying Jena model
@@ -184,27 +184,6 @@ public class JenaDataSource extends AbstractDataSource implements MutableDataSou
 		if (mModel.isClosed()) {
 			throw new IllegalStateException("Model is closed, cannot perform operation");
 		}
-	}
-
-	/**
-	 * @inheritDoc
-	 */
-	public void begin() throws DataSourceException {
-		mModel.begin();
-	}
-
-	/**
-	 * @inheritDoc
-	 */
-	public void commit() throws DataSourceException {		
-		mModel.commit();
-	}
-
-	/**
-	 * @inheritDoc
-	 */
-	public void rollback() throws DataSourceException {
-		mModel.abort();
 	}
 
 	/**

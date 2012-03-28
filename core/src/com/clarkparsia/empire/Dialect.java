@@ -23,7 +23,7 @@ import org.openrdf.model.Value;
  *
  * @author Michael Grove
  * @since 0.1
- * @version 0.6.5
+ * @version 0.7.1
  *
  * @see com.clarkparsia.empire.impl.RdfQuery
  * @see QueryFactory
@@ -72,4 +72,13 @@ public interface Dialect {
 	 * @return the var name in the correct syntax for the dialect
 	 */
 	public String asVar(String theVar);
+
+	/**
+	 * Return whether or not the dialect of this language supports stable bnode id's, that is, it supports some way to specify *this* bnode
+	 * and query for the bnode w/ that specific id rather than having them treated as variables.  When this is supported, {@link #asQueryString(org.openrdf.model.Value)}
+	 * should serialize bnodes appropriately.
+	 * 
+	 * @return true if stable ids are supported, false otherwise.
+	 */
+	public boolean supportsStableBnodeIds();
 }

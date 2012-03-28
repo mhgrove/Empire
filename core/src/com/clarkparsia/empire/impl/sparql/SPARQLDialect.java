@@ -34,7 +34,7 @@ import org.openrdf.model.Value;
  * @author Michael Grove
  *
  * @since 0.1
- * @version 0.7
+ * @version 0.7.1
  */
 public class SPARQLDialect implements Dialect {
 	/**
@@ -58,6 +58,13 @@ public class SPARQLDialect implements Dialect {
 		}
 
 		return INSTANCE;
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public boolean supportsStableBnodeIds() {
+		return false;
 	}
 
 	/**

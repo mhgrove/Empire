@@ -30,7 +30,7 @@ import org.openrdf.query.MalformedQueryException;
  *
  * @author Michael Grove
  * @since 0.1
- * @version 0.7
+ * @version 0.7.1
  */
 public final class SerqlDialect implements Dialect {
 	/**
@@ -54,6 +54,13 @@ public final class SerqlDialect implements Dialect {
 		}
 
 		return INSTANCE;
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public boolean supportsStableBnodeIds() {
+		return false;
 	}
 
 	/**

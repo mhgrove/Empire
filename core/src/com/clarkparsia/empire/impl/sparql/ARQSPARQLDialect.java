@@ -27,7 +27,7 @@ import org.openrdf.model.BNode;
  *
  * @author Michael Grove
  * @since 0.6.3
- * @version 0.6.5
+ * @version 0.7.1
  */
 public final class ARQSPARQLDialect extends SPARQLDialect {
 	/**
@@ -67,5 +67,12 @@ public final class ARQSPARQLDialect extends SPARQLDialect {
 		else {
 			return SesameQueryUtils.getSPARQLQueryString(theValue);
 		}
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public boolean supportsStableBnodeIds() {
+		return true;
 	}
 }

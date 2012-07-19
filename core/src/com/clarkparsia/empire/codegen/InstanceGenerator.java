@@ -522,9 +522,7 @@ public final class InstanceGenerator {
 				}
 			}
 
-			String aProp = aMethod.getName().substring(aMethod.getName().startsWith("is") ? 2 : 3);
 
-			aProp = String.valueOf(aProp.charAt(0)).toLowerCase() + aProp.substring(1);
 
 				Class aType = null;
 				Type generics = null;
@@ -542,6 +540,9 @@ public final class InstanceGenerator {
 				}
 
 			if (aType != null) {
+                String aProp = aMethod.getName().substring(aMethod.getName().startsWith("is") ? 2 : 3);
+                aProp = String.valueOf(aProp.charAt(0)).toLowerCase() + aProp.substring(1);
+
 				CtField aNewField = new CtField(thePool.get(aType.getName()), aProp, theClass);
 
 				if (generics != null && generics instanceof ParameterizedTypeImpl) {

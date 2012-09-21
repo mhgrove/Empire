@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2010 Clark & Parsia, LLC. <http://www.clarkparsia.com>
+ * Copyright (c) 2009-2012 Clark & Parsia, LLC. <http://www.clarkparsia.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ import com.clarkparsia.empire.annotation.RdfGenerator;
 import com.clarkparsia.empire.annotation.AnnotationChecker;
 import com.clarkparsia.empire.annotation.runtime.Proxy;
 import com.clarkparsia.empire.annotation.runtime.ProxyAwareList;
-import com.clarkparsia.openrdf.ExtBindingSet;
+
 import com.clarkparsia.common.base.Dates;
 import com.google.common.collect.Lists;
 
@@ -60,8 +60,8 @@ import java.util.regex.Pattern;
 /**
  * <p>Implementation of the JPA {@link Query} interface for RDF based query languages.</p>
  *
- * @author Michael Grove
- * @since 0.1
+ * @author	Michael Grove
+ * @since 	0.1
  * @version 0.7
  */
 public final class RdfQuery implements Query {
@@ -374,25 +374,23 @@ public final class RdfQuery implements Query {
                         while (aResults.hasNext()) {
 							BindingSet aBS = aResults.next();
 
-                            ExtBindingSet aBinding = new ExtBindingSet(aBS);
-
                             Object aObj;
 
                             String aVarName = getProjectionVarName();
 
-                            if (aBinding.getValue(aVarName) instanceof URI && AnnotationChecker.isValid(getBeanClass())) {
+                            if (aBS.getValue(aVarName) instanceof URI && AnnotationChecker.isValid(getBeanClass())) {
                                 if (EmpireOptions.ENABLE_QUERY_RESULT_PROXY) {
-                                    aObj = new Proxy(getBeanClass(), asPrimaryKey(aBinding.getValue(aVarName)), getSource());
+                                    aObj = new Proxy(getBeanClass(), asPrimaryKey(aBS.getValue(aVarName)), getSource());
                                 }
                                 else {
                                     aObj = RdfGenerator.fromRdf(getBeanClass(),
-                                                                asPrimaryKey(aBinding.getValue(aVarName)),
+                                                                asPrimaryKey(aBS.getValue(aVarName)),
                                                                 getSource());
                                 }
                             }
                             else {
                                 aObj = new RdfGenerator.ValueToObject(getSource(), null,
-                                                                      getBeanClass(), null).apply(aBinding.getValue(aVarName));
+                                                                      getBeanClass(), null).apply(aBS.getValue(aVarName));
                             }
 
                             // if the object could not be created, or it was and its not the bean class type, or not a proxy

@@ -9,7 +9,7 @@
 	<property environment="env"/>
 
 	<property name="project.name" value="empire"/>
-	<property name="project.version" value="0.7.1"/>
+	<property name="project.version" value="0.7.2"/>
 
 	<property name="core.dir" location="core"/>
 	<property name="jena.dir" location="jena"/>
@@ -31,7 +31,7 @@
 	<property name="jena.lib.dir" location="${jena.dir}/lib"/>
 	<property name="sql.lib.dir" location="${sql.dir}/lib"/>
 	<property name="fourstore.lib.dir" location="${fourstore.dir}/lib"/>
-	<property name="test.lib.dir" location="${jena.dir}/lib"/>
+	<property name="test.lib.dir" location="${test.dir}/lib"/>
 
 	<property name="build.dir" location="build"/>
 	<property name="core.build.dir" location="${build.dir}/core"/>
@@ -64,6 +64,7 @@
 
 		<fileset dir="${jena.lib.dir}">
 			<include name="**/*.jar"/>
+			<exclude name="**/*slf4j*1.5.8*.jar"/>
 			<exclude name="**/${project.name}*.jar"/>
 		</fileset>
 
@@ -191,6 +192,7 @@
 
 			<fileset dir="${jena.lib.dir}">
 				<include name="**/*.jar"/>
+				<exclude name="**/*slf4j*1.5.8*.jar"/>
 				<include name="**/*.txt"/>
 			</fileset>
 
@@ -320,6 +322,7 @@
 
 			<fileset dir="${jena.lib.dir}">
 				<include name="**/*.jar"/>
+				<exclude name="**/*slf4j*1.5.8*.jar"/>
 				<include name="**/*.txt"/>
 			</fileset>
 
@@ -331,7 +334,7 @@
 	</target>
 
 	<target name="dist-sesame" depends="dist-core"
-			description="Create the dist for using Empire with Sesame 2.3.x">
+			description="Create the dist for using Empire with Sesame 2.6.9">
 		<jar jarfile="${dist.lib.dir}/${project.name}-sesame.jar" basedir="${sesame.build.dir}"/>
 	</target>
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2011 Clark & Parsia, LLC. <http://www.clarkparsia.com>
+ * Copyright (c) 2009-2012 Clark & Parsia, LLC. <http://www.clarkparsia.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,6 +33,10 @@ import com.clarkparsia.empire.annotation.RdfGenerator;
 import com.clarkparsia.empire.annotation.RdfsClass;
 import com.clarkparsia.empire.annotation.AnnotationChecker;
 
+import com.clarkparsia.openrdf.Graphs;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import org.openrdf.model.Graph;
 import org.openrdf.model.impl.GraphImpl;
 
@@ -69,7 +73,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Collections;
 import java.util.WeakHashMap;
-import java.util.HashMap;
 import java.util.Set;
 
 import java.net.URI;
@@ -85,16 +88,16 @@ import static com.clarkparsia.empire.util.BeanReflectUtil.getAnnotatedMethods;
 import com.clarkparsia.empire.util.EmpireUtil;
 import com.clarkparsia.empire.util.BeanReflectUtil;
 
-import com.clarkparsia.openrdf.ExtGraph;
 import com.google.common.base.Predicate;
 
 /**
  * <p>Implementation of the JPA {@link EntityManager} interface to support the persistence model over
  * an RDF database.</p>
  *
- * @author Michael Grove
- * @since 0.1
- * @version 0.7
+ * @author	Michael Grove
+ * @since	0.1
+ * @version	0.7
+ *
  * @see EntityManager
  * @see com.clarkparsia.empire.ds.DataSource
  */
@@ -675,11 +678,11 @@ public final class EntityManagerImpl implements EntityManager {
 	 * @return The graph describing the resource
 	 * @throws IllegalArgumentException thrown if the object does not exist in the database
 	 */
-	private ExtGraph assertContainsAndDescribe(Object theObj) {
+	private Graph assertContainsAndDescribe(Object theObj) {
 		assertStateOk(theObj);
 
 		try {
-			ExtGraph aGraph = DataSourceUtil.describe(getDataSource(), theObj);
+			Graph aGraph = DataSourceUtil.describe(getDataSource(), theObj);
 
 			if (aGraph.isEmpty()) {
 				throw new IllegalArgumentException("Entity does not exist: " + theObj);
@@ -729,17 +732,12 @@ public final class EntityManagerImpl implements EntityManager {
 	 * @param theObj the object to validate
 	 * @throws IllegalArgumentException thrown if the object is not a valid Rdf entity.
 	 */
-	private void assertSupported(Object theObj) {
-		if (theObj == null) {
-			throw new IllegalArgumentException("null objects are not supported");
-		}
+	private void assertSupported(final Object theObj) {
+		Preconditions.checkArgument(theObj != null, "null objects are not supported");
+		Preconditions.checkArgument(theObj instanceof SupportsRdfId, "Persistent RDF objects must implement the SupportsRdfId interface.");
 
 		assertEntity(theObj);
 		assertRdfClass(theObj);
-
-		if (!(theObj instanceof SupportsRdfId)) {
-			throw new IllegalArgumentException("Persistent RDF objects must implement the SupportsRdfId interface.");
-		}
 
 		try {
 			AnnotationChecker.assertValid(theObj.getClass());
@@ -755,7 +753,7 @@ public final class EntityManagerImpl implements EntityManager {
 	 * @throws IllegalArgumentException if the instances does not have the Entity Annotation
 	 * @see Entity
 	 */
-	private void assertEntity(Object theObj) {
+	private void assertEntity(final Object theObj) {
 		if (EmpireOptions.ENFORCE_ENTITY_ANNOTATION) {
 			assertHasAnnotation(theObj, Entity.class);
 		}
@@ -767,7 +765,7 @@ public final class EntityManagerImpl implements EntityManager {
 	 * @throws IllegalArgumentException if the instances does not have the RdfClass annotation
 	 * @see com.clarkparsia.empire.annotation.RdfsClass
 	 */
-	private void assertRdfClass(Object theObj) {
+	private void assertRdfClass(final Object theObj) {
 		assertHasAnnotation(theObj, RdfsClass.class);
 	}
 
@@ -777,7 +775,7 @@ public final class EntityManagerImpl implements EntityManager {
 	 * @param theAnnotation the annotation the instance is required to have
 	 * @throws IllegalArgumentException thrown if the instance does not have the required annotation
 	 */
-	private void assertHasAnnotation(Object theObj, Class<? extends Annotation> theAnnotation) {
+	private void assertHasAnnotation(final Object theObj, final Class<? extends Annotation> theAnnotation) {
 		if (!hasAnnotation(theObj.getClass(), theAnnotation)) {
 			throw new IllegalArgumentException("Object (" + theObj.getClass() + ") is not an " + theAnnotation.getSimpleName());
 		}
@@ -821,7 +819,7 @@ public final class EntityManagerImpl implements EntityManager {
 	 * Fire the PostPersist lifecycle event for the Entity
 	 * @param theObj the Entity to fire the event for
 	 */
-	private void postPersist(Object theObj) {
+	private void postPersist(final Object theObj) {
 		handleLifecycleCallback(theObj, PostPersist.class);
 	}
 
@@ -829,7 +827,7 @@ public final class EntityManagerImpl implements EntityManager {
 	 * Fire the PostRemove lifecycle event for the Entity
 	 * @param theObj the Entity to fire the event for
 	 */
-	private void postRemove(Object theObj) {
+	private void postRemove(final Object theObj) {
 		handleLifecycleCallback(theObj, PostRemove.class);
 	}
 
@@ -837,7 +835,7 @@ public final class EntityManagerImpl implements EntityManager {
 	 * Fire the PostLoad lifecycle event for the Entity
 	 * @param theObj the Entity to fire the event for
 	 */
-	private void postLoad(Object theObj) {
+	private void postLoad(final Object theObj) {
 		handleLifecycleCallback(theObj, PostLoad.class);
 	}
 
@@ -845,7 +843,7 @@ public final class EntityManagerImpl implements EntityManager {
 	 * Fire the PreRemove lifecycle event for the Entity
 	 * @param theObj the Entity to fire the event for
 	 */
-	private void preRemove(Object theObj) {
+	private void preRemove(final Object theObj) {
 		handleLifecycleCallback(theObj, PreRemove.class);
 	}
 
@@ -853,7 +851,7 @@ public final class EntityManagerImpl implements EntityManager {
 	 * Fire the PreUpdate lifecycle event for the Entity
 	 * @param theObj the Entity to fire the event for
 	 */
-	private void preUpdate(Object theObj) {
+	private void preUpdate(final Object theObj) {
 		handleLifecycleCallback(theObj, PreUpdate.class);
 	}
 
@@ -861,7 +859,7 @@ public final class EntityManagerImpl implements EntityManager {
 	 * Fire the PostUpdate lifecycle event for the Entity
 	 * @param theObj the Entity to fire the event for
 	 */
-	private void postUpdate(Object theObj) {
+	private void postUpdate(final Object theObj) {
 		handleLifecycleCallback(theObj, PostUpdate.class);
 	}
 
@@ -869,7 +867,7 @@ public final class EntityManagerImpl implements EntityManager {
 	 * Fire the PrePersist lifecycle event for the Entity
 	 * @param theObj the entity to fire the event for
 	 */
-	private void prePersist(Object theObj) {
+	private void prePersist(final Object theObj) {
 		handleLifecycleCallback(theObj, PrePersist.class);
 	}
 
@@ -878,7 +876,7 @@ public final class EntityManagerImpl implements EntityManager {
 	 * @param theObj the object involved in the event
 	 * @param theLifecycleAnnotation the annotation denoting the event, such as {@link PrePersist}, {@link PostLoad}, etc.
 	 */
-	private void handleLifecycleCallback(Object theObj, Class<? extends Annotation> theLifecycleAnnotation) {
+	private void handleLifecycleCallback(final Object theObj, final Class<? extends Annotation> theLifecycleAnnotation) {
 		if (theObj == null) {
 			return;
 		}
@@ -918,7 +916,7 @@ public final class EntityManagerImpl implements EntityManager {
 	 * @param theObj the object to get EntityLIsteners for
 	 * @return the list of EntityListeners for the object, or null if they do not exist
 	 */
-	private Collection<Object> getEntityListeners(Object theObj) {
+	private Collection<Object> getEntityListeners(final Object theObj) {
 		Collection<Object> aListeners = mManagedEntityListeners.get(theObj);
 
 		if (aListeners == null) {
@@ -961,15 +959,15 @@ public final class EntityManagerImpl implements EntityManager {
 		private final Map<java.net.URI, Graph> mAdd;
 		private final Map<java.net.URI, Graph> mRemove;
 
-		private final Set<Object> mVerifyAdd = new HashSet<Object>();
-		private final Set<Object> mVerifyRemove = new HashSet<Object>();
+		private final Set<Object> mVerifyAdd = Sets.newHashSet();
+		private final Set<Object> mVerifyRemove = Sets.newHashSet();
 
 		/**
 		 * Create a new DataSourceOperation
 		 */
 		DataSourceOperation() {
-			mAdd = new HashMap<java.net.URI, Graph>();
-			mRemove = new HashMap<java.net.URI, Graph>();
+			mAdd = Maps.newHashMap();
+			mRemove = Maps.newHashMap();
 		}
 
 		/**
@@ -1007,7 +1005,7 @@ public final class EntityManagerImpl implements EntityManager {
 		 * is executed.
 		 * @param theObj the object that should be revmoed from the database when the operation is executed
 		 */
-		public void verifyRemove(Object theObj) {
+		public void verifyRemove(final Object theObj) {
 			mVerifyRemove.add(theObj);
 		}
 
@@ -1016,7 +1014,7 @@ public final class EntityManagerImpl implements EntityManager {
 		 * is executed.
 		 * @param theObj the object that should be added to the database when the operation is executed
 		 */
-		public void verifyAdd(Object theObj) {
+		public void verifyAdd(final Object theObj) {
 			mVerifyAdd.add(theObj);
 		}
 
@@ -1042,7 +1040,7 @@ public final class EntityManagerImpl implements EntityManager {
 		 * Add this graph to the set of data to be added when this operation is executed
 		 * @param theGraph the graph to be added
 		 */
-		public void add(Graph theGraph) {
+		public void add(final Graph theGraph) {
 			add(null, theGraph);
 		}
 
@@ -1051,11 +1049,11 @@ public final class EntityManagerImpl implements EntityManager {
 		 * @param theGraphURI the named graph the data should be added to
 		 * @param theGraph the data to add
 		 */
-		public void add(java.net.URI theGraphURI, Graph theGraph) {
+		public void add(final java.net.URI theGraphURI, final Graph theGraph) {
 			Graph aGraph = mAdd.get(theGraphURI);
 
 			if (aGraph == null) {
-				aGraph = new ExtGraph();
+				aGraph = Graphs.newGraph();
 			}
 
 			aGraph.addAll(theGraph);
@@ -1067,7 +1065,7 @@ public final class EntityManagerImpl implements EntityManager {
 		 * Add this graph to the set of data to be removed when this operation is executed
 		 * @param theGraph the graph to be removed
 		 */
-		public void remove(Graph theGraph) {
+		public void remove(final Graph theGraph) {
 			remove(null, theGraph);
 		}
 
@@ -1076,11 +1074,11 @@ public final class EntityManagerImpl implements EntityManager {
 		 * @param theGraphURI the named graph the data should be removed from
 		 * @param theGraph the data to remove
 		 */
-		public void remove(java.net.URI theGraphURI, Graph theGraph) {
+		public void remove(final java.net.URI theGraphURI, final Graph theGraph) {
 			Graph aGraph = mRemove.get(theGraphURI);
 
 			if (aGraph == null) {
-				aGraph = new ExtGraph();
+				aGraph = Graphs.newGraph();
 			}
 
 			aGraph.addAll(theGraph);

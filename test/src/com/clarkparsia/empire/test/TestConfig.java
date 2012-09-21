@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2010 Clark & Parsia, LLC. <http://www.clarkparsia.com>
+ * Copyright (c) 2009-2012 Clark & Parsia, LLC. <http://www.clarkparsia.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,9 +43,9 @@ import com.clarkparsia.empire.util.PropertiesAnnotationProvider;
 /**
  * <p>Test class for configuration related items</p>
  *
- * @author Michael Grove
- * @since 0.6.4
- * @version 0.6.4
+ * @author	Michael Grove
+ * @since	0.6.4
+ * @version	0.6.4
  */
 @RunWith(Parameterized.class)
 public class TestConfig {

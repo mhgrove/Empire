@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>com.clarkparsia</groupId>
 		<artifactId>Empire-parent</artifactId>
-		<version>0.7</version>
+		<version>0.7.2</version>
 		<relativePath>..</relativePath>
 	</parent>
 	<artifactId>Empire-test</artifactId>

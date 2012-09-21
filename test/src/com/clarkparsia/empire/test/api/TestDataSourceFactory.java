@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2010 Clark & Parsia, LLC. <http://www.clarkparsia.com>
+ * Copyright (c) 2009-2012 Clark & Parsia, LLC. <http://www.clarkparsia.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import java.util.Map;
 import java.io.File;
 
 import com.clarkparsia.openrdf.ExtGraph;
+import com.clarkparsia.openrdf.Graphs;
 
 /**
  * <p>DataSourceFactory implementation to create a DataSource used for testing</p>
@@ -45,7 +46,7 @@ public class TestDataSourceFactory implements DataSourceFactory {
 	 * @inheritDoc
 	 */
 	public DataSource create(final Map<String, Object> theMap) throws DataSourceException {
-		ExtGraph aGraph = new ExtGraph();
+		ExtGraph aGraph = Graphs.extend(Graphs.newGraph());
 
 		if (theMap.containsKey("files")) {
 			for (String aFile : theMap.get("files").toString().split(",")) {

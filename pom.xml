@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>Empire-parent</artifactId>
 	<groupId>com.clarkparsia</groupId>
-	<version>0.7</version>
+	<version>0.7.2</version>
 	<name>Parent pom for Empire</name>
 	<description>Groups common configuration and dependencies for all the empire artifacts</description>
 	<packaging>pom</packaging>
@@ -20,16 +20,16 @@
 		<!-- used version of Java -->
 		<java.version>1.5</java.version>
 		<!-- used version of slf4j -->
-		<slf4j.version>1.5.8</slf4j.version>
+		<slf4j.version>1.6.1</slf4j.version>
 		<!-- Now I guess you know what it means -->
-		<sesame.version>2.3.1</sesame.version>
+		<sesame.version>2.6.9</sesame.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
 				<groupId>com.google.guava</groupId>
 				<artifactId>guava</artifactId>
-				<version>11.0</version>
+				<version>12.0</version>
 			</dependency>
 			<dependency>
 				<groupId>aopalliance</groupId>
@@ -79,7 +79,7 @@
 			<dependency>
 				<groupId>commons-codec</groupId>
 				<artifactId>commons-codec</artifactId>
-				<version>1.3</version>
+				<version>1.4</version>
 			</dependency>
 			<dependency>
 				<groupId>commons-httpclient</groupId>

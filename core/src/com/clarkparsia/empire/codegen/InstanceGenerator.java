@@ -15,6 +15,7 @@
 
 package com.clarkparsia.empire.codegen;
 
+import com.clarkparsia.openrdf.Graphs;
 import com.google.common.collect.Sets;
 import com.google.common.base.Predicate;
 import javassist.ClassPool;
@@ -136,10 +137,10 @@ public final class InstanceGenerator {
 		aClass.addField(aInterfaceField, CtField.Initializer.byExpr(theInterface.getName() + ".class;"));
 		
 		CtField aAllTriplesField = new CtField(aPool.get(Graph.class.getName()), "mAllTriples", aClass);
-		aClass.addField(aAllTriplesField, CtField.Initializer.byExpr("new com.clarkparsia.openrdf.ExtGraph();"));
+		aClass.addField(aAllTriplesField, CtField.Initializer.byExpr("new com.clarkparsia.openrdf.SetGraph();"));
 		
 		CtField aInstanceTriplesField = new CtField(aPool.get(Graph.class.getName()), "mInstanceTriples", aClass);
-		aClass.addField(aInstanceTriplesField, CtField.Initializer.byExpr("new com.clarkparsia.openrdf.ExtGraph();"));
+		aClass.addField(aInstanceTriplesField, CtField.Initializer.byExpr("new com.clarkparsia.openrdf.SetGraph();"));
 		
 		aClass.addConstructor(CtNewConstructor.defaultConstructor(aClass));
 		
@@ -191,7 +192,14 @@ public final class InstanceGenerator {
 
 		aClass.freeze();
 
-		Class<T> aResult = (Class<T>) aClass.toClass();
+		Class<T> aResult = null;
+		try {
+			aResult = (Class<T>) aClass.toClass();
+		}
+		catch (CannotCompileException e) {
+			e.printStackTrace();
+			throw e;
+		}
 
 		try {
 			// make sure this is a valid class, that is, we can create instances of it!
@@ -613,8 +621,9 @@ public final class InstanceGenerator {
 			Class[] params2 = other.getParameterTypes();
 			if (params1.length == params2.length) {
 				for (int i = 0; i < params1.length; i++) {
-					if (params1[i] != params2[i])
+					if (params1[i] != params2[i]) {
 						return false;
+					}
 				}
 			}
 			

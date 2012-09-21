@@ -16,18 +16,16 @@
 package com.clarkparsia.empire.test.api;
 
 import org.openrdf.model.Graph;
-import org.openrdf.model.Value;
+
 
 import org.openrdf.model.impl.GraphImpl;
-import org.openrdf.model.impl.ValueFactoryImpl;
+
 import org.openrdf.query.MalformedQueryException;
 import org.openrdf.query.QueryEvaluationException;
-import org.openrdf.query.parser.ParsedQuery;
-import org.openrdf.query.parser.serql.SeRQLParser;
-import org.openrdf.query.parser.sparql.SPARQLParser;
+import org.openrdf.query.QueryLanguage;
 
 import com.clarkparsia.empire.ds.DataSource;
-import com.clarkparsia.empire.ds.DataSourceException;
+
 import com.clarkparsia.empire.ds.QueryException;
 import com.clarkparsia.empire.ds.ResultSet;
 import com.clarkparsia.empire.ds.impl.AbstractDataSource;
@@ -39,18 +37,12 @@ import com.clarkparsia.empire.impl.serql.SerqlDialect;
 
 import com.clarkparsia.openrdf.ExtRepository;
 import com.clarkparsia.openrdf.OpenRdfUtil;
-import com.clarkparsia.openrdf.SesameQuery;
-import com.clarkparsia.openrdf.ExtGraph;
-import com.clarkparsia.openrdf.query.util.AskVisitor;
-import com.clarkparsia.openrdf.query.util.DescribeVisitor;
-import com.clarkparsia.openrdf.query.sparql.SPARQLQueryRenderer;
-import com.clarkparsia.openrdf.query.serql.SeRQLQueryRenderer;
 
 import java.net.URI;
 import java.net.ConnectException;
 
 /**
- * <p>mplementation of the data source interface backed by an in-memory Sesame instance for testing purposes.</p>
+ * <p>Implementation of the data source interface backed by an in-memory Sesame instance for testing purposes.</p>
  *
  * @author Michael Grove
  */
@@ -100,7 +92,7 @@ public class TestDataSource extends AbstractDataSource implements DataSource {
 	 */
 	public ResultSet selectQuery(final String theQuery) throws QueryException {
 		try {
-			return new TupleQueryResultSet(mRepo.selectQuery(SesameQuery.serql(theQuery)));
+			return new TupleQueryResultSet(mRepo.selectQuery(QueryLanguage.SERQL, theQuery));
 		}
 		catch (MalformedQueryException e) {
 			throw new QueryException("Unsupported or invalid SeRQL query.", e);
@@ -118,7 +110,7 @@ public class TestDataSource extends AbstractDataSource implements DataSource {
 	 */
 	public Graph graphQuery(final String theQuery) throws QueryException {
 		try {
-			return mRepo.constructQuery(SesameQuery.serql(theQuery));
+			return mRepo.constructQuery(QueryLanguage.SERQL, theQuery);
 		}
 		catch (MalformedQueryException e) {
 			throw new QueryException("Unsupported or invalid SeRQL query.", e);

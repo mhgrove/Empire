@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2011 Clark & Parsia, LLC. <http://www.clarkparsia.com>
+ * Copyright (c) 2009-2012 Clark & Parsia, LLC. <http://www.clarkparsia.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
 
 package com.clarkparsia.empire.annotation;
 
+import com.clarkparsia.openrdf.Graphs;
+import com.google.common.base.Optional;
 import org.openrdf.model.BNode;
 import org.openrdf.model.Literal;
 import org.openrdf.model.Resource;
@@ -24,6 +26,7 @@ import org.openrdf.model.ValueFactory;
 import org.openrdf.model.Statement;
 import org.openrdf.model.Graph;
 
+import org.openrdf.model.util.GraphUtil;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.XMLSchema;
 import org.openrdf.model.vocabulary.RDFS;
@@ -70,7 +73,6 @@ import com.clarkparsia.empire.Dialect;
 import com.clarkparsia.empire.annotation.runtime.Proxy;
 
 import com.clarkparsia.empire.impl.serql.SerqlDialect;
-import com.clarkparsia.empire.impl.sparql.ARQSPARQLDialect;
 
 import static com.clarkparsia.empire.util.BeanReflectUtil.set;
 import static com.clarkparsia.empire.util.BeanReflectUtil.setAccessible;
@@ -107,7 +109,7 @@ import javassist.util.proxy.ProxyFactory;
 import javassist.util.proxy.MethodHandler;
 import javassist.util.proxy.ProxyObject;
 import javassist.util.proxy.MethodFilter;
-import javassist.CannotCompileException;
+
 import sun.reflect.generics.reflectiveObjects.WildcardTypeImpl;
 
 /**
@@ -131,9 +133,9 @@ import sun.reflect.generics.reflectiveObjects.WildcardTypeImpl;
  * Compliant classes must be annotated with the {@link Entity} JPA annotation, the {@link RdfsClass} annotation,
  * and must implement the {@link SupportsRdfId} interface.</p>
  *
- * @author Michael Grove
- * @since 0.1
- * @version 0.7.1
+ * @author	Michael Grove
+ * @since	0.1
+ * @version 0.7.2
  */
 public final class RdfGenerator {
 
@@ -372,7 +374,7 @@ public final class RdfGenerator {
 
 			OBJECT_M.put(theKeyObj, theObj);
 
-			ExtGraph aGraph = new ExtGraph(DataSourceUtil.describe(theSource, theObj));
+			Graph aGraph = DataSourceUtil.describe(theSource, theObj);
 
 			if (aGraph.size() == 0) {
 				return theObj;
@@ -481,7 +483,7 @@ public final class RdfGenerator {
 				
 				ToObjectFunction aFunc = new ToObjectFunction(theSource, aRes, aAccess, aProp);
 
-				Object aValue = aFunc.apply(aGraph.getValues(aRes, aProp));
+				Object aValue = aFunc.apply(GraphUtil.getObjects(aGraph, aRes, aProp));
 
 				boolean aOldAccess = aAccess.isAccessible();
 
@@ -518,7 +520,7 @@ public final class RdfGenerator {
 			}
 			
 			sIter = aGraph.match(aTmpRes, null, null);
-			ExtGraph aInstanceTriples = new ExtGraph();
+			Graph aInstanceTriples = Graphs.newGraph();
 
 			while (sIter.hasNext()) {
 				Statement aStmt = sIter.next();
@@ -685,7 +687,7 @@ public final class RdfGenerator {
 	 * @return the object represented as RDF triples
 	 * @throws InvalidRdfException thrown if the object cannot be transformed into RDF.
 	 */
-	public static ExtGraph asRdf(Object theObj) throws InvalidRdfException {
+	public static Graph asRdf(Object theObj) throws InvalidRdfException {
 		if (theObj == null) {
 			return null;
 		}
@@ -1218,23 +1220,24 @@ public final class RdfGenerator {
 					try {
 						String aQuery = getBNodeConstructQuery(mSource, mResource, mProperty);
 						
-						ExtGraph aGraph = new ExtGraph(mSource.graphQuery(aQuery));
-						Resource aPossibleListHead = (Resource) aGraph.getValue(mResource, mProperty);
+						Graph aGraph = mSource.graphQuery(aQuery);
+
+						Optional<Resource> aPossibleListHead = Graphs.getResource(aGraph, mResource, mProperty);
 						
-						if (aGraph.isList(aPossibleListHead)) {
+						if (aPossibleListHead.isPresent() && Graphs.isList(aGraph, aPossibleListHead.get())) {
 							List<Value> aList;
 
 							// getting the list is only safe the the query dialect supports stable bnode ids in the query language.
 							if (aPropAnnotation != null && aPropAnnotation.isList() && mSource.getQueryFactory().getDialect().supportsStableBnodeIds()) {
 								try {
-									aList = asList(mSource, aPossibleListHead);
+									aList = asList(mSource, aPossibleListHead.get());
 								}
 								catch (DataSourceException e) {
 									throw new RuntimeException(e);
 								}
 							}
 							else {
-								aList = new ArrayList<Value>(aGraph.getValues(mResource, mProperty));
+								aList = new ArrayList<Value>(GraphUtil.getObjects(aGraph, mResource, mProperty));
 							}
 
 							//return new ToObjectFunction(mSource, null, (AccessibleObject) mAccessor, null).apply(aList);

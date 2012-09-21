@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2010 Clark & Parsia, LLC. <http://www.clarkparsia.com>
+ * Copyright (c) 2009-2012 Clark & Parsia, LLC. <http://www.clarkparsia.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import org.openrdf.model.Resource;
 import org.openrdf.model.BNode;
 import org.openrdf.model.Graph;
 import org.openrdf.model.Statement;
+import org.openrdf.model.util.GraphUtil;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.impl.ValueFactoryImpl;
 import org.openrdf.model.impl.GraphImpl;
@@ -76,9 +77,9 @@ import java.util.Map;
 /**
  * <p>Various miscellaneous tests for non-JPA parts of the Empire API.</p>
  *
- * @author Michael Grove
- * @version 0.6.4
- * @since 0.7
+ * @author	Michael Grove
+ * @since	0.6.4
+ * @version 0.7
  */
 public class TestMisc {
 	// TODO: could use some more SPI tests
@@ -141,7 +142,9 @@ public class TestMisc {
 
 		Graph g = RdfGenerator.asRdf(obj);
 
-		assertEquals(1, new ExtGraph(g).getValues(EmpireUtil.asResource(obj), ValueFactoryImpl.getInstance().createURI(PrefixMapping.GLOBAL.uri("test:foo"))).size());
+		int aResult = GraphUtil.getObjects(g, EmpireUtil.asResource(obj), ValueFactoryImpl.getInstance().createURI(PrefixMapping.GLOBAL.uri("test:foo"))).size();
+
+		assertEquals(1, aResult);
 	}
 
 	@MappedSuperclass

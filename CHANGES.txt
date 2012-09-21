@@ -5,6 +5,7 @@ Empire 0.8 (TBD)
 =======================
 	* MODIFIED: Altered superclass checks to better accommodate auto-generated instances that use EmpireGenerated so users to have to resort to incorrectly using MappedSuperclass
 	* MODIFIED: Removed a couple uses of describe and replaced them with direct lookups in the DataSource for the relevant information to help make going to/from RDF more efficient.
+	* MODIFIED: Upgraded to latest Sesame, 2.6.9 (#issue 76) -- additionally upgraded to Guava 12, CP Utils 2.3 & CP OpenRdf Utils 0.8
 	* FIXED: Bug when the refreshing and/or re-use of the same bean which is persisted originally, EmpireGenerated information was not correctly updated. (issue #73)
 	* FIXED: NPE in AsValue function when using a java.net.URI
 	* FIXED: Bug in equals method of generated instances

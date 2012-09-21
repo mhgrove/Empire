@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2010 Clark & Parsia, LLC. <http://www.clarkparsia.com>
+ * Copyright (c) 2009-2012 Clark & Parsia, LLC. <http://www.clarkparsia.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
 
 package com.clarkparsia.empire.test;
 
+import com.clarkparsia.openrdf.Graphs;
+import com.google.common.collect.Sets;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -29,6 +31,7 @@ import org.openrdf.model.impl.ValueFactoryImpl;
 
 import org.openrdf.model.Graph;
 
+import org.openrdf.model.util.GraphUtil;
 import org.openrdf.model.vocabulary.RDFS;
 
 import com.clarkparsia.empire.EmpireOptions;
@@ -137,7 +140,7 @@ public class TestRdfConvert {
 	}
 
 	@Test
-	public void testConvert() {
+	public void testConvert() throws Exception {
 		TestPerson aJoe = new TestPerson();
 		aJoe.setMBox("mailto:joe@example.org");
 		aJoe.setFirstName("Joe");
@@ -151,17 +154,17 @@ public class TestRdfConvert {
 		aPerson.setMBox("mailto:bob@example.org");
 
 		try {
-			ExtGraph aGraph = RdfGenerator.asRdf(aPerson);
+			ExtGraph aGraph = Graphs.extend(RdfGenerator.asRdf(aPerson));
 
 			org.openrdf.model.URI aPersonURI = aGraph.getValueFactory().createURI(aPerson.getRdfId().toString());
 
 			assertEquals(aGraph.size(), 2);
 
 			// the statements should assert that the person is of type foaf:TestPerson
-			assertEquals(aGraph.getType(aPersonURI), FOAF.ontology().Person);
+			assertTrue(Sets.newHashSet(aGraph.getTypes(aPersonURI)).contains(FOAF.ontology().Person));
 
 			// and that the mbox is correct
-			assertEquals(aGraph.getLiteral(aPersonURI, FOAF.ontology().mbox).getLabel(), aPerson.getMBox());
+			assertEquals(Graphs.getLiteral(aGraph, aPersonURI, FOAF.ontology().mbox).get().getLabel(), aPerson.getMBox());
 
 			// now lets try with some more properties
 
@@ -177,33 +180,33 @@ public class TestRdfConvert {
 
 			aPerson.setWeblogURI(URI.create("http://example.org"));
 
-			aGraph = RdfGenerator.asRdf(aPerson);
+			aGraph = Graphs.extend(RdfGenerator.asRdf(aPerson));
 
-			assertEquals((Float) Float.parseFloat(aGraph.getLiteral(aPersonURI, TestVocab.ontology().weight).getLabel()),
+			assertEquals((Float) Float.parseFloat(aGraph.getLiteral(aPersonURI, TestVocab.ontology().weight).get().getLabel()),
 						 aPerson.getWeight());
 
 			// this tests if "inferring" from an annotated getter works
-			assertEquals(Boolean.valueOf(aGraph.getLiteral(aPersonURI, TestVocab.ontology().likesVideoGames).getLabel()),
+			assertEquals(Boolean.valueOf(aGraph.getLiteral(aPersonURI, TestVocab.ontology().likesVideoGames).get().getLabel()),
 						 aPerson.isLikesVideoGames());
 
 			// and this tests if 'inferring" from an annotated setter works
 			// also checking that it properly used the other namespace
-			assertEquals(aGraph.getLiteral(aPersonURI, DC.ontology().title).getLabel(),
+			assertEquals(aGraph.getLiteral(aPersonURI, DC.ontology().title).get().getLabel(),
 						 aPerson.getTitle());
 
-			assertEquals(URI.create(aGraph.getValue(aPersonURI, DC.ontology().publisher).stringValue()),
+			assertEquals(URI.create(GraphUtil.getUniqueObject(aGraph, aPersonURI, DC.ontology().publisher).stringValue()),
 						 aPerson.getWeblogURI());
 
-			assertEquals(aGraph.getLiteral(aPersonURI, FOAF.ontology().firstName).getLabel(),
+			assertEquals(aGraph.getLiteral(aPersonURI, FOAF.ontology().firstName).get().getLabel(),
 						 aPerson.getFirstName());
 
-			assertEquals(aGraph.getLiteral(aPersonURI, FOAF.ontology().surname).getLabel(),
+			assertEquals(aGraph.getLiteral(aPersonURI, FOAF.ontology().surname).get().getLabel(),
 						 aPerson.getLastName());
 
-			assertEquals(aGraph.getLiteral(aPersonURI, RDFS.LABEL).getLabel(),
+			assertEquals(aGraph.getLiteral(aPersonURI, RDFS.LABEL).get().getLabel(),
 						 aPerson.getLabel());
 
-			List aKnows = Lists.newArrayList(aGraph.getValues(aPersonURI, FOAF.ontology().knows));
+			List aKnows = Lists.newArrayList(GraphUtil.getObjects(aGraph, aPersonURI, FOAF.ontology().knows));
 
 			assertEquals(aKnows.size(), 2);
 
@@ -319,7 +322,7 @@ public class TestRdfConvert {
 		aObj.baz = "baz";
 
 		try {
-			ExtGraph aGraph = RdfGenerator.asRdf(aObj);
+			ExtGraph aGraph = Graphs.extend(RdfGenerator.asRdf(aObj));
 
 			// we should have the normal field
 			assertTrue(aGraph.contains(null, ValueFactoryImpl.getInstance().createURI("urn:foo"), null));

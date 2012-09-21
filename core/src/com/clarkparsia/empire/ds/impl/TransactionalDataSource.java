@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2010 Clark & Parsia, LLC. <http://www.clarkparsia.com>
+ * Copyright (c) 2009-2012 Clark & Parsia, LLC. <http://www.clarkparsia.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
 
 package com.clarkparsia.empire.ds.impl;
 
+import com.clarkparsia.openrdf.Graphs;
 import org.openrdf.model.Graph;
 import org.openrdf.model.Statement;
 
@@ -40,8 +41,8 @@ import java.util.ListIterator;
  * try and undo the edits.  If the rollback fails, it very well could have failed for part of the rollback
  * and you are left with an inconsistent database.  For real transactional support, use a database that supports it.</p>
  *
- * @author Michael Grove
- * @since 0.1
+ * @author	Michael Grove
+ * @since	0.1
  * @version 0.7
  */
 public class TransactionalDataSource implements DataSource, MutableDataSource, SupportsTransactions {
@@ -247,7 +248,7 @@ public class TransactionalDataSource implements DataSource, MutableDataSource, S
 	 * @throws DataSourceException if querying the data source causes an error
 	 */
 	private Graph nonExistingTriples(Graph theData) throws DataSourceException {
-		ExtGraph aResult = new ExtGraph();		
+		Graph aResult = Graphs.newGraph();
 		
 		// TODO: is there a more efficient way to check that than triple-by-triple? 
 		// (for remote data sources this will cause one request for triple ...)
@@ -270,7 +271,7 @@ public class TransactionalDataSource implements DataSource, MutableDataSource, S
 	 * @throws DataSourceException if querying the data source causes an error
 	 */
 	private Graph existingTriples(Graph theData) throws DataSourceException {
-		ExtGraph aResult = new ExtGraph();
+		Graph aResult = Graphs.newGraph();
 
 		// TODO: is there a more efficient way to check that than triple-by-triple? 
 		// (for remote data sources this will cause one request for triple ...)

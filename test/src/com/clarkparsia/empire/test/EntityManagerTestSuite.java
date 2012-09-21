@@ -102,8 +102,8 @@ import static org.junit.Assume.assumeTrue;
  * their {@link DataSource} implementation to test it with Empire.</p>
  * 
  * @author Michael Grove
+ * @since	0.7.1
  * @version 0.7.1
- * @since 0.7.1
  */
 public abstract class EntityManagerTestSuite {
 
@@ -287,7 +287,7 @@ public abstract class EntityManagerTestSuite {
 		ExtGraph aGraph = Graphs.newGraph(aSource.getStatements(null, null, null));
 
 		assertEquals(3, aGraph.size());
-		assertEquals(1, Lists.newArrayList(aGraph.getStatements(null, ValueFactoryImpl.getInstance().createURI("urn:label"), null)).size());
+		assertEquals(1, Lists.newArrayList(aGraph.match(null, ValueFactoryImpl.getInstance().createURI("urn:label"), null)).size());
 
 		em.remove(aObj);
 
@@ -299,7 +299,7 @@ public abstract class EntityManagerTestSuite {
 		aGraph = Graphs.newGraph(aSource.getStatements(null, null, null));
 
 		assertEquals(5, aGraph.size());
-		assertEquals(1, Lists.newArrayList(aGraph.getStatements(null, ValueFactoryImpl.getInstance().createURI("urn:label"), null)).size());
+		assertEquals(1, Lists.newArrayList(aGraph.match(null, ValueFactoryImpl.getInstance().createURI("urn:label"), null)).size());
 
 		aObj.setLabel("foobarbaz");
 
@@ -308,7 +308,7 @@ public abstract class EntityManagerTestSuite {
 		aGraph = Graphs.newGraph(aSource.getStatements(null, null, null));
 
 		assertEquals(5, aGraph.size());
-		assertEquals(1, Lists.newArrayList(aGraph.getStatements(null, ValueFactoryImpl.getInstance().createURI("urn:label"), null)).size());
+		assertEquals(1, Lists.newArrayList(aGraph.match(null, ValueFactoryImpl.getInstance().createURI("urn:label"), null)).size());
 	}
 
 
@@ -340,7 +340,7 @@ public abstract class EntityManagerTestSuite {
 		ExtGraph aGraph = Graphs.newGraph(aSource.getStatements(null, null, null));
 
 		assertEquals(3, aGraph.size());
-		assertEquals(1, Lists.newArrayList(aGraph.getStatements(null, ValueFactoryImpl.getInstance().createURI("urn:label"), null)).size());
+		assertEquals(1, Lists.newArrayList(aGraph.match(null, ValueFactoryImpl.getInstance().createURI("urn:label"), null)).size());
 
 		em.remove(aObj);
 
@@ -354,7 +354,7 @@ public abstract class EntityManagerTestSuite {
 		aGraph = Graphs.newGraph(aSource.getStatements(null, null, null));
 
 		assertEquals(5, aGraph.size());
-		assertEquals(1, Lists.newArrayList(aGraph.getStatements(null, ValueFactoryImpl.getInstance().createURI("urn:label"), null)).size());
+		assertEquals(1, Lists.newArrayList(aGraph.match(null, ValueFactoryImpl.getInstance().createURI("urn:label"), null)).size());
 
 		aObj.setLabel("foobarbaz");
 
@@ -363,7 +363,7 @@ public abstract class EntityManagerTestSuite {
 		aGraph = Graphs.newGraph(aSource.getStatements(null, null, null));
 
 		assertEquals(5, aGraph.size());
-		assertEquals(1, Lists.newArrayList(aGraph.getStatements(null, ValueFactoryImpl.getInstance().createURI("urn:label"), null)).size());
+		assertEquals(1, Lists.newArrayList(aGraph.match(null, ValueFactoryImpl.getInstance().createURI("urn:label"), null)).size());
 	}
 
 	/**

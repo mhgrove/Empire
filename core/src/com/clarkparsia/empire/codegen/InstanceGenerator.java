@@ -197,7 +197,6 @@ public final class InstanceGenerator {
 			aResult = (Class<T>) aClass.toClass();
 		}
 		catch (CannotCompileException e) {
-			e.printStackTrace();
 			throw e;
 		}
 

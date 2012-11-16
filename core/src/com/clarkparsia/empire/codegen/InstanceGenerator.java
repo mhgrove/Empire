@@ -485,7 +485,7 @@ public final class InstanceGenerator {
 	}
 
 	/**
-	 * Get the bean proeprties from the given class
+	 * Get the bean properties from the given class
 	 * @param thePool the class pool to use when creating new fields
 	 * @param theClass the class the new fields will belong to
 	 * @param theInterface the original bean class
@@ -522,7 +522,7 @@ public final class InstanceGenerator {
 				&& !aMethod.getName().startsWith("set")) {
 
 				if (EmpireOptions.STRICT_MODE) {
-					throw new IllegalArgumentException("Non-bean style methods found, implementations for them cannot not be generated");
+					throw new IllegalArgumentException("Non-bean style methods found '" + aMethod + "', implementations for them cannot not be generated");
 				}
 				else {
 					LOGGER.warn("Non-bean style methods found, implementations for them cannot not be generated : " + aMethod.getName() );

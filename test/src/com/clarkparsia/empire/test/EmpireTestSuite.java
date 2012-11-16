@@ -21,6 +21,7 @@ import com.clarkparsia.empire.jena.JenaEntityManagerTestSuite;
 import com.clarkparsia.empire.sesametwo.OpenRdfEmpireModule;
 import com.clarkparsia.empire.jena.JenaEmpireModule;
 import com.clarkparsia.empire.sesametwo.SesameEntityManagerTestSuite;
+import com.clarkparsia.empire.test.lazyload.TestLazyCollectionLoad;
 import com.clarkparsia.empire.util.DefaultEmpireModule;
 import com.clarkparsia.empire.test.util.TestModule;
 import com.clarkparsia.empire.test.codegen.CodegenTests;
@@ -41,7 +42,8 @@ import org.junit.BeforeClass;
 @RunWith(Suite.class)
 @Suite.SuiteClasses({TestRdfConvert.class, TestMisc.class,
 					 TestConfig.class, TestDS.class, CodegenTests.class,
-					 SesameEntityManagerTestSuite.class, JenaEntityManagerTestSuite.class})
+					 SesameEntityManagerTestSuite.class, JenaEntityManagerTestSuite.class,
+					 TestLazyCollectionLoad.class})
 public class EmpireTestSuite {
 
 	@BeforeClass

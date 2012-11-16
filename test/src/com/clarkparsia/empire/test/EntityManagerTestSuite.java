@@ -83,6 +83,7 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import org.openrdf.model.Graph;
 import org.openrdf.model.Statement;
 import org.openrdf.model.impl.ValueFactoryImpl;
 import org.openrdf.model.vocabulary.RDF;
@@ -284,7 +285,7 @@ public abstract class EntityManagerTestSuite {
 
 		em.merge(aObj);
 
-		ExtGraph aGraph = Graphs.newGraph(aSource.getStatements(null, null, null));
+		Graph aGraph = Graphs.newGraph(aSource.getStatements(null, null, null));
 
 		assertEquals(3, aGraph.size());
 		assertEquals(1, Lists.newArrayList(aGraph.match(null, ValueFactoryImpl.getInstance().createURI("urn:label"), null)).size());
@@ -337,7 +338,7 @@ public abstract class EntityManagerTestSuite {
 
 		em.merge(aObj);
 
-		ExtGraph aGraph = Graphs.newGraph(aSource.getStatements(null, null, null));
+		Graph aGraph = Graphs.newGraph(aSource.getStatements(null, null, null));
 
 		assertEquals(3, aGraph.size());
 		assertEquals(1, Lists.newArrayList(aGraph.match(null, ValueFactoryImpl.getInstance().createURI("urn:label"), null)).size());

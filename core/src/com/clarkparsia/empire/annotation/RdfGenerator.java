@@ -17,6 +17,7 @@ package com.clarkparsia.empire.annotation;
 
 import com.clarkparsia.openrdf.Graphs;
 import com.google.common.base.Optional;
+import com.google.common.collect.ObjectArrays;
 import org.openrdf.model.BNode;
 import org.openrdf.model.Literal;
 import org.openrdf.model.Resource;
@@ -687,22 +688,43 @@ public final class RdfGenerator {
 	 * @return the object represented as RDF triples
 	 * @throws InvalidRdfException thrown if the object cannot be transformed into RDF.
 	 */
-	public static Graph asRdf(Object theObj) throws InvalidRdfException {
+	public static Graph asRdf(final Object theObj) throws InvalidRdfException {
 		if (theObj == null) {
 			return null;
 		}
 
-		RdfsClass aClass = asValidRdfClass(theObj);
+		Object aObj = theObj;
 
-		Resource aSubj = id(theObj);
+		if (aObj instanceof ProxyHandler) {
+			aObj = ((ProxyHandler)aObj).mProxy.value();
+		}
+		else {
+			try {
+				if (aObj.getClass().getDeclaredField("handler") != null) {
+					Field aProxy =  aObj.getClass().getDeclaredField("handler");
+					aObj = ((ProxyHandler)BeanReflectUtil.safeGet(aProxy, aObj)).mProxy.value();
+				}
+			}
+			catch (InvocationTargetException e) {
+				// this is probably an error, we know its a proxy object, but can't get the proxied object
+				throw new InvalidRdfException("Could not access proxy object", e);
+			}
+			catch (NoSuchFieldException e) {
+				// this is probably ok.
+			}
+		}
 
-		addNamespaces(theObj.getClass());
+		RdfsClass aClass = asValidRdfClass(aObj);
+
+		Resource aSubj = id(aObj);
+
+		addNamespaces(aObj.getClass());
 
 		GraphBuilder aBuilder = new GraphBuilder();
 
 		Collection<AccessibleObject> aAccessors = new HashSet<AccessibleObject>();
-		aAccessors.addAll(getAnnotatedFields(theObj.getClass()));
-		aAccessors.addAll(getAnnotatedGetters(theObj.getClass(), true));
+		aAccessors.addAll(getAnnotatedFields(aObj.getClass()));
+		aAccessors.addAll(getAnnotatedGetters(aObj.getClass(), true));
 
 		try {
 			ResourceBuilder aRes = aBuilder.instance(aBuilder.getValueFactory().createURI(PrefixMapping.GLOBAL.uri(aClass.value())),
@@ -733,7 +755,7 @@ public final class RdfGenerator {
 				boolean aOldAccess = aAccess.isAccessible();
 				setAccessible(aAccess, true);
 
-				Object aValue = get(aAccess, theObj);
+				Object aValue = get(aAccess, aObj);
 
 				setAccessible(aAccess, aOldAccess);
 
@@ -742,7 +764,7 @@ public final class RdfGenerator {
 				}
 				else if (Collection.class.isAssignableFrom(aValue.getClass())) {
 					@SuppressWarnings("unchecked")
-					List<Value> aValueList = asList(aAccess, (Collection<Object>) Collection.class.cast(aValue));
+					List<Value> aValueList = asList(aAccess, (Collection<?>) Collection.class.cast(aValue));
 
 					if (aValueList.isEmpty()) {
 						continue;
@@ -782,7 +804,7 @@ public final class RdfGenerator {
 	 * @return the collection as a list of RDF values
 	 * @throws InvalidRdfException thrown if any of the values cannot be transformed
 	 */
-	private static List<Value> asList(AccessibleObject theAccess, Collection<Object> theCollection) throws InvalidRdfException {
+	private static List<Value> asList(AccessibleObject theAccess, Collection<?> theCollection) throws InvalidRdfException {
 		try {
 			return Lists.newArrayList(Collections2.transform(theCollection, new AsValueFunction(theAccess)));
 		}
@@ -1355,12 +1377,19 @@ public final class RdfGenerator {
 			Proxy<T> aProxy = new Proxy<T>(theClass, asPrimaryKey(theKey), theSource);
 
 			ProxyFactory aFactory = new ProxyFactory();
-			aFactory.setSuperclass(theClass);
-			aFactory.setFilter(METHOD_FILTER);
-			
-			Object aObj = aFactory.createClass().newInstance();
+			aFactory.setInterfaces(ObjectArrays.concat(theClass.getInterfaces(), EmpireGenerated.class));
+			if (!theClass.isInterface()) {
+				aFactory.setSuperclass(theClass);
+			}
 
-			((ProxyObject) aObj).setHandler(new ProxyHandler<T>(aProxy));
+			aFactory.setFilter(METHOD_FILTER);
+			final ProxyHandler<T> aHandler = new ProxyHandler<T>(aProxy);
+
+			aFactory.setHandler(aHandler);
+
+			Object aObj = aFactory.createClass(METHOD_FILTER).newInstance();
+
+			((ProxyObject) aObj).setHandler(aHandler);
 			
 			//((com.clarkparsia.empire.annotation.RdfGenerator.ProxyHandler) ((javassist.util.proxy.ProxyObject) aObj).getHandler()).getProxy().getProxyClass();
 			
@@ -1398,6 +1427,7 @@ public final class RdfGenerator {
 		 * @inheritDoc
 		 */
 		public Object invoke(final Object theThis, final Method theMethod, final Method theProxyMethod, final Object[] theArgs) throws Throwable {
+
 			return theMethod.invoke(mProxy.value(), theArgs);
 		}
 	}

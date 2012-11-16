@@ -13,7 +13,6 @@
 
 	<property name="core.dir" location="core"/>
 	<property name="jena.dir" location="jena"/>
-	<property name="fourstore.dir" location="fourstore"/>
 	<property name="sesame.dir" location="sesame2"/>
 	<property name="test.dir" location="test"/>
 	<property name="sql.dir" location="sql"/>
@@ -21,7 +20,6 @@
 	<property name="core.src.dir" location="${core.dir}/src"/>
 	<property name="jena.src.dir" location="${jena.dir}/src"/>
 	<property name="jena.test.src.dir" location="${jena.dir}/test"/>
-	<property name="fourstore.src.dir" location="${fourstore.dir}/src"/>
 	<property name="sesame.src.dir" location="${sesame.dir}/src"/>
 	<property name="sesame.test.src.dir" location="${sesame.dir}/test"/>
 	<property name="test.src.dir" location="${test.dir}/src"/>
@@ -30,13 +28,11 @@
 	<property name="core.lib.dir" location="${core.dir}/lib"/>
 	<property name="jena.lib.dir" location="${jena.dir}/lib"/>
 	<property name="sql.lib.dir" location="${sql.dir}/lib"/>
-	<property name="fourstore.lib.dir" location="${fourstore.dir}/lib"/>
 	<property name="test.lib.dir" location="${test.dir}/lib"/>
 
 	<property name="build.dir" location="build"/>
 	<property name="core.build.dir" location="${build.dir}/core"/>
 	<property name="jena.build.dir" location="${build.dir}/jena"/>
-	<property name="fourstore.build.dir" location="${build.dir}/fourstore"/>
 	<property name="sesame.build.dir" location="${build.dir}/sesame"/>
 	<property name="test.build.dir" location="${build.dir}/test"/>
 
@@ -53,7 +49,6 @@
 	<path id="project.class.path">
 		<pathelement location="${core.build.dir}"/>
 		<pathelement location="${jena.build.dir}"/>
-		<pathelement location="${fourstore.build.dir}"/>
 		<pathelement location="${sesame.build.dir}"/>
 		<pathelement location="${test.build.dir}"/>
 
@@ -65,11 +60,6 @@
 		<fileset dir="${jena.lib.dir}">
 			<include name="**/*.jar"/>
 			<exclude name="**/*slf4j*1.5.8*.jar"/>
-			<exclude name="**/${project.name}*.jar"/>
-		</fileset>
-
-		<fileset dir="${fourstore.lib.dir}">
-			<include name="**/*.jar"/>
 			<exclude name="**/${project.name}*.jar"/>
 		</fileset>
 
@@ -98,7 +88,7 @@
 		<mkdir dir="${dist.docs.dir}"/>
 	</target>
 
-	<target name="compile" depends="init, compile-core, compile-sesame, compile-fourstore, compile-jena, compile-test" description="Compile source files">
+	<target name="compile" depends="init, compile-core, compile-sesame, compile-jena, compile-test" description="Compile source files">
 	</target>
 
 	<target name="compile-core" depends="init">
@@ -118,15 +108,6 @@
 
 		<javac debug="${javac.debug}" source="1.5" target="1.5" destdir="${jena.build.dir}">
 			<src path="${jena.src.dir}"/>
-			<classpath refid="project.class.path"/>
-		</javac>
-	</target>
-
-	<target name="compile-fourstore" depends="init, compile-core">
-		<mkdir dir="${fourstore.build.dir}"/>
-
-		<javac debug="${javac.debug}" source="1.5" target="1.5" destdir="${fourstore.build.dir}">
-			<src path="${fourstore.src.dir}"/>
 			<classpath refid="project.class.path"/>
 		</javac>
 	</target>
@@ -160,7 +141,6 @@
 		<jar jarfile="${dist.src.dir}/${project.name}-core-src.jar" basedir="${core.src.dir}"/>
 		<jar jarfile="${dist.src.dir}/${project.name}-jena-src.jar" basedir="${jena.src.dir}"/>
 		<jar jarfile="${dist.src.dir}/${project.name}-sesame-src.jar" basedir="${sesame.src.dir}"/>
-		<jar jarfile="${dist.src.dir}/${project.name}-fourstore-src.jar" basedir="${fourstore.src.dir}"/>
 		<jar jarfile="${dist.src.dir}/${project.name}-test-src.jar" basedir="${test.src.dir}"/>
 
 		<copy todir="${core.build.dir}">
@@ -181,7 +161,6 @@
 		
 		<jar jarfile="${dist.lib.dir}/${project.name}-jena.jar" basedir="${jena.build.dir}"/>
 		<jar jarfile="${dist.lib.dir}/${project.name}-sesame.jar" basedir="${sesame.build.dir}"/>
-		<jar jarfile="${dist.lib.dir}/${project.name}-fourstore.jar" basedir="${fourstore.build.dir}"/>
 		<jar jarfile="${dist.lib.dir}/${project.name}-test.jar" basedir="${test.build.dir}"/>
 
 		<copy todir="${dist.lib.dir}">
@@ -193,11 +172,6 @@
 			<fileset dir="${jena.lib.dir}">
 				<include name="**/*.jar"/>
 				<exclude name="**/*slf4j*1.5.8*.jar"/>
-				<include name="**/*.txt"/>
-			</fileset>
-
-			<fileset dir="${fourstore.lib.dir}">
-				<include name="**/*.jar"/>
 				<include name="**/*.txt"/>
 			</fileset>
 
@@ -267,9 +241,6 @@
 			<fileset dir="${sesame.src.dir}" defaultexcludes="yes">
 				<include name="**/*.java"/>
 			</fileset>
-			<fileset dir="${fourstore.src.dir}" defaultexcludes="yes">
-				<include name="**/*.java"/>
-			</fileset>
 		</javadoc>
 	</target>
 
@@ -293,20 +264,6 @@
 
 		<copy todir="${dist.lib.dir}">
 			<fileset dir="${core.lib.dir}">
-				<include name="**/*.jar"/>
-				<include name="**/*.txt"/>
-			</fileset>
-		</copy>
-	</target>
-
-	<target name="dist-fourstore" depends="dist-core"
-			description="Create the dist for using Empire with 4Store">
-
-		<jar jarfile="${dist.lib.dir}/${project.name}-fourstore.jar" basedir="${fourstore.build.dir}"/>
-
-		<copy todir="${dist.lib.dir}">
-
-			<fileset dir="${fourstore.lib.dir}">
 				<include name="**/*.jar"/>
 				<include name="**/*.txt"/>
 			</fileset>

@@ -9,7 +9,6 @@
 	<packaging>pom</packaging>
 	<modules>
 		<module>core</module>
-		<module>fourstore</module>
 		<module>jena</module>
 		<module>reflections</module>
 		<module>sesame2</module>

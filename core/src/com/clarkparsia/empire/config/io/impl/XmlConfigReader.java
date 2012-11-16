@@ -28,6 +28,8 @@ import java.io.InputStreamReader;
 import java.util.Map;
 import java.util.HashMap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Node;
@@ -35,24 +37,21 @@ import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-import org.apache.log4j.Logger;
-import org.apache.log4j.LogManager;
-
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 /**
  * <p>ConfigReader implementation for reading configuration information from simple XML files.</p>
  *
- * @author Michael Grove
- * @since 0.6.4
+ * @author 	Michael Grove
+ * @since 	0.6.4
  * @version 0.6.5
  */
 public class XmlConfigReader implements ConfigReader {
 	/**
 	 * The logger
 	 */
-	private static final Logger LOGGER = LogManager.getLogger(ConfigReader.class.getName());
+	private static final Logger LOGGER = LoggerFactory.getLogger(ConfigReader.class.getName());
 
 	private static final String NODE_ANNOTATION_PROVIDER = "annotationProvider";
 	private static final String NODE_UNIT = "unit";
@@ -90,10 +89,10 @@ public class XmlConfigReader implements ConfigReader {
 						aProvider = (Class<EmpireAnnotationProvider>) BeanReflectUtil.loadClass(aValue);
 					}
 					catch (ClassNotFoundException e) {
-						LOGGER.warn("Annotation provider implementation '" + aValue + "' cannot be found, please check your classpath.");
+						LOGGER.warn("Annotation provider implementation '{}' cannot be found, please check your classpath.", aValue);
 					}
 					catch (ClassCastException e) {
-						LOGGER.warn("Specified annotation provider implementation '" + aValue + "' is not a valid EmpireAnnotationProvider.");
+						LOGGER.warn("Specified annotation provider implementation '{}' is not a valid EmpireAnnotationProvider.", aValue);
 					}
 				}
 				else if (aChild.getNodeName().equals(NODE_UNIT)) {

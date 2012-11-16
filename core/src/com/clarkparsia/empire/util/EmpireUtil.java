@@ -49,9 +49,8 @@ import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.impl.ValueFactoryImpl;
 
 import org.openrdf.query.parser.ParsedTupleQuery;
-
-import org.apache.log4j.Logger;
-import org.apache.log4j.LogManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.net.URL;
@@ -72,7 +71,7 @@ public final class EmpireUtil {
 	/**
 	 * The logger
 	 */
-	private static final Logger LOGGER = LogManager.getLogger(Empire.class.getName());
+	private static final Logger LOGGER = LoggerFactory.getLogger(Empire.class.getName());
 
 	/**
 	 * Hide the constructor, you can't create instances of this class
@@ -210,19 +209,28 @@ public final class EmpireUtil {
 	public static <T> List<T> all(EntityManager theManager, Class<T> theClass) {
 		List<T> aList = new ArrayList<T>();
 
-		LOGGER.debug("Starting read all");
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("Starting read all");
+		}
+
 		long start = System.currentTimeMillis();
 		
 		if (!AnnotationChecker.isValid(theClass) || !(theManager.getDelegate() instanceof DataSource)) {
 			return aList;
 		}
 
-		LOGGER.debug("Class valid check : " + (System.currentTimeMillis() - start));
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("Class valid check {} ms ", (System.currentTimeMillis() - start));
+		}
+
 		start = System.currentTimeMillis();
 		
 		RdfsClass aClass = theClass.getAnnotation(RdfsClass.class);
 
-		LOGGER.debug("Got annotation : " + (System.currentTimeMillis() - start));
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("Got annotation in {} ms ", (System.currentTimeMillis() - start));
+		}
+
 		start = System.currentTimeMillis();
 		
 		// this init should be handled by the static block in RdfGenerator, but if there is no annotation index,
@@ -232,8 +240,11 @@ public final class EmpireUtil {
 
 		QueryBuilder<ParsedTupleQuery> aQuery = QueryBuilderFactory.select("result").distinct()
 				.group().atom("result", RDF.TYPE, ValueFactoryImpl.getInstance().createURI(PrefixMapping.GLOBAL.uri(aClass.value()))).closeGroup();
-		
-		LOGGER.debug("Created query : " + (System.currentTimeMillis() - start));
+
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("Created query in {} ms ", (System.currentTimeMillis() - start));
+		}
+
 		start = System.currentTimeMillis();
 		
 		String aQueryStr = null;
@@ -241,7 +252,6 @@ public final class EmpireUtil {
 		try {
 			DataSource aSource = (DataSource) theManager.getDelegate();
 
-			LOGGER.debug("Got source : " + (System.currentTimeMillis() - start));
 			start = System.currentTimeMillis();
 			
 			if (aSource.getQueryFactory().getDialect() instanceof SPARQLDialect) {
@@ -251,18 +261,26 @@ public final class EmpireUtil {
 				aQueryStr = new SeRQLQueryRenderer().render(aQuery.query());
 			}
 
-			LOGGER.debug("Got query string : " + (System.currentTimeMillis() - start));
+			if (LOGGER.isDebugEnabled()) {
+				LOGGER.debug("Got query string in {} ms ", (System.currentTimeMillis() - start));
+			}
+
 			start = System.currentTimeMillis();
 		}
 		catch (Exception e) {
 			throw new PersistenceException(e);
 		}
 		
-		if (LOGGER.isDebugEnabled()) LOGGER.debug("EntityManager open : " + theManager.isOpen());
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("EntityManager open : " + theManager.isOpen());
+		}
 		
 		List aResults = theManager.createNativeQuery(aQueryStr, theClass).getResultList();
 
-		LOGGER.debug("Created native query : " + (System.currentTimeMillis() - start));
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("Created native query in {} ms",  (System.currentTimeMillis() - start));
+		}
+
 		start = System.currentTimeMillis();
 		
 		for (Object aObj : aResults) {
@@ -273,7 +291,10 @@ public final class EmpireUtil {
 				throw new PersistenceException(e);
 			}
 
-			LOGGER.debug("Added result item : " + (System.currentTimeMillis() - start));
+			if (LOGGER.isDebugEnabled()) {
+				LOGGER.debug("Added result item in {} ms ", (System.currentTimeMillis() - start));
+			}
+
 			start = System.currentTimeMillis();
 		}
 

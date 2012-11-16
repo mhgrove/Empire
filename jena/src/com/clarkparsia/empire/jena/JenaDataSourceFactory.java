@@ -23,9 +23,6 @@ import java.util.Map;
 import javax.sql.DataSource;
 import javax.naming.NamingException;
 
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
-
 import com.clarkparsia.empire.ds.DataSourceFactory;
 
 import com.clarkparsia.empire.sql.DSSettings;
@@ -49,15 +46,17 @@ import com.hp.hpl.jena.tdb.TDBFactory;
 
 import com.google.inject.name.Named;
 import com.google.inject.Inject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
  * <p>Abstract base class for creating Jena-backed data sources.  Provides a single method for creating an appropriate
  * type of Jena model based on some configuration parameters.</p>
  *
- * @author Michael Grove
- * @author uoccou
- * @since 0.6.3
+ * @author 	Michael Grove
+ * @author 	uoccou
+ * @since 	0.6.3
  * @version 0.7
  */
 abstract class JenaDataSourceFactory implements DataSourceFactory, JenaConfig {
@@ -65,7 +64,7 @@ abstract class JenaDataSourceFactory implements DataSourceFactory, JenaConfig {
 	/**
 	 * The application logger
 	 */
-	private final Logger LOGGER = LogManager.getLogger(this.getClass());
+	private final Logger LOGGER = LoggerFactory.getLogger(this.getClass());
 
 	// @uoccou : simple caches to avoid having to recreate models on each call
 	private Cache<String, Model> tdbModelCache = new DefaultCache<String, Model>();
@@ -110,7 +109,9 @@ abstract class JenaDataSourceFactory implements DataSourceFactory, JenaConfig {
 			aModel = ModelFactory.createDefaultModel();
 		}
 
-		LOGGER.debug("Created Jena model : " + (System.currentTimeMillis() - start));
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("Created Jena model in {} ms ", (System.currentTimeMillis() - start));
+		}
 
 		return aModel;
 	}

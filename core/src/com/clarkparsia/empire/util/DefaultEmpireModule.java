@@ -52,8 +52,8 @@ import org.slf4j.LoggerFactory;
 /**
  * <p>Standard Guice module for Empire</p>
  *
- * @author Michael Grove
- * @since 0.6
+ * @author 	Michael Grove
+ * @since 	0.6
  * @version 0.7
  */
 public final class DefaultEmpireModule extends AbstractModule implements EmpireModule {

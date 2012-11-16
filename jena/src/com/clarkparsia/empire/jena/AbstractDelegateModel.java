@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2009-2012 Clark & Parsia, LLC. <http://www.clarkparsia.com>
+ * Copyright (c) 2010, Ultan O'Carroll
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.clarkparsia.empire.jena;
 
 import java.io.InputStream;
@@ -8,9 +24,6 @@ import java.util.Calendar;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.hp.hpl.jena.datatypes.RDFDatatype;
 import com.hp.hpl.jena.graph.Graph;
@@ -44,13 +57,15 @@ import com.hp.hpl.jena.shared.Command;
 import com.hp.hpl.jena.shared.Lock;
 import com.hp.hpl.jena.shared.PrefixMapping;
 import com.hp.hpl.jena.shared.ReificationStyle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Simple delegate for Jena model so that we can control jdbc and model commits in SDB.
  * 
- * @author uoccou
- * @see SDBModelWithStore
- * @since 0.7
+ * @author 	uoccou
+ * @see 	SDBModelWithStore
+ * @since 	0.7
  * @version 0.7
  */
 class AbstractDelegateModel implements Model {

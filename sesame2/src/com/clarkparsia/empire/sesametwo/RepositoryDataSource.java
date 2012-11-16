@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2010 Clark & Parsia, LLC. <http://www.clarkparsia.com>
+ * Copyright (c) 2009-2012 Clark & Parsia, LLC. <http://www.clarkparsia.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,9 +27,7 @@ import com.clarkparsia.empire.impl.RdfQueryFactory;
 import com.clarkparsia.empire.impl.sparql.SPARQLDialect;
 
 import com.clarkparsia.empire.impl.serql.SerqlDialect;
-import com.clarkparsia.openrdf.ExtGraph;
-import com.clarkparsia.openrdf.OpenRdfUtil;
-import com.clarkparsia.openrdf.ExtRepository;
+
 import com.clarkparsia.openrdf.util.AdunaIterations;
 import com.clarkparsia.openrdf.util.GraphBuildingRDFHandler;
 
@@ -37,40 +35,28 @@ import org.openrdf.model.Graph;
 import org.openrdf.model.Resource;
 import org.openrdf.model.Statement;
 import org.openrdf.model.Value;
-import org.openrdf.model.impl.GraphImpl;
 
 import org.openrdf.repository.Repository;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
-import org.openrdf.repository.http.HTTPRepository;
 
 import org.openrdf.query.GraphQuery;
 import org.openrdf.query.QueryLanguage;
 import org.openrdf.query.TupleQueryResult;
-import org.openrdf.query.GraphQueryResult;
-import org.openrdf.rio.RDFHandler;
-import org.openrdf.rio.RDFHandlerException;
-import org.openrdf.rio.RDFWriterRegistry;
-import org.openrdf.rio.RDFFormat;
-import org.openrdf.rio.RDFWriter;
-import org.openrdf.rio.helpers.RDFHandlerBase;
 
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.ConnectException;
 import java.net.URI;
-import java.util.LinkedList;
-import java.util.List;
-import java.io.FileOutputStream;
 
 
 /**
  * <p>Implementation of the DataSource interface(s) backed by a Sesame 2 repository.  This can be used as a base class
  * for any back-end which supports the Sesame 2 SAIL api, such as BigData, OWLIM, Neo4j, and others.</p>
  *
- * @author Michael Grove
- * @since 0.6
+ * @author 	Michael Grove
+ * @since 	0.6
  * @version 0.7
  */
 public class RepositoryDataSource extends AbstractDataSource implements MutableDataSource, TripleSource, SupportsNamedGraphs {
@@ -78,7 +64,7 @@ public class RepositoryDataSource extends AbstractDataSource implements MutableD
 	/**
 	 * The logger
 	 */
-	private static final Logger LOGGER = LogManager.getLogger(RepositoryDataSource.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(RepositoryDataSource.class);
 
 	/**
 	 * The underlying Sesame repository
@@ -168,7 +154,7 @@ public class RepositoryDataSource extends AbstractDataSource implements MutableD
 			return mConnection != null && mConnection.isOpen() && super.isConnected();
 		}
 		catch (RepositoryException e) {
-			LOGGER.error(e);
+			LOGGER.error("There was an error while connecting", e);
 
 			return false;
 		}
@@ -206,7 +192,7 @@ public class RepositoryDataSource extends AbstractDataSource implements MutableD
 			mRepository.shutDown();
 		}
 		catch (RepositoryException e) {
-			LOGGER.error(e);
+			LOGGER.error("There was an error while disconnecting", e);
 		}
 	}
 

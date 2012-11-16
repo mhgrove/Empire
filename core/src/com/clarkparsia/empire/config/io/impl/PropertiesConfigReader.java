@@ -23,6 +23,8 @@ import com.clarkparsia.empire.util.BeanReflectUtil;
 import com.clarkparsia.common.util.EnhancedProperties;
 import com.google.common.collect.Collections2;
 import com.google.common.base.Predicate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Properties;
 import java.util.Map;
@@ -31,9 +33,6 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.InputStreamReader;
 import java.io.InputStream;
-
-import org.apache.log4j.Logger;
-import org.apache.log4j.LogManager;
 
 /**
  * <p>Implementation of a {@link ConfigReader} for reading an Empire configuration from a standard properties file.</p>
@@ -48,7 +47,7 @@ public class PropertiesConfigReader implements ConfigReader, ConfigKeys {
 	/**
 	 * The logger
 	 */
-	private static final Logger LOGGER = LogManager.getLogger(ConfigReader.class.getName());
+	private static final Logger LOGGER = LoggerFactory.getLogger(ConfigReader.class.getName());
 
 	public static final String KEY_NAME = ConfigKeys.NAME;
 	public static final String KEY_ANNOTATION_PROVIDER = "annotation.provider";
@@ -109,10 +108,10 @@ public class PropertiesConfigReader implements ConfigReader, ConfigKeys {
 				aConfig.setAnnotationProvider(aClass);
 			}
 			catch (ClassNotFoundException e) {
-				LOGGER.warn("Annotation provider implementation '" + aGeneralConfig.get(KEY_ANNOTATION_PROVIDER) + "' cannot be found, please check your classpath.");
+				LOGGER.warn("Annotation provider implementation '{}' cannot be found, please check your classpath.", aGeneralConfig.get(KEY_ANNOTATION_PROVIDER));
 			}
 			catch (ClassCastException e) {
-				LOGGER.warn("Specified annotation provider implementation '" + aGeneralConfig.get(KEY_ANNOTATION_PROVIDER) + "' is not a valid EmpireAnnotationProvider.");
+				LOGGER.warn("Specified annotation provider implementation '{}' is not a valid EmpireAnnotationProvider.", aGeneralConfig.get(KEY_ANNOTATION_PROVIDER));
 			}
 		}
 

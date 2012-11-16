@@ -59,9 +59,6 @@ import java.net.URISyntaxException;
 
 import org.openrdf.model.impl.ValueFactoryImpl;
 
-import org.apache.log4j.Logger;
-import org.apache.log4j.LogManager;
-
 import com.clarkparsia.empire.ds.DataSource;
 import com.clarkparsia.empire.ds.DataSourceException;
 import com.clarkparsia.empire.ds.QueryException;
@@ -111,6 +108,8 @@ import javassist.util.proxy.MethodHandler;
 import javassist.util.proxy.ProxyObject;
 import javassist.util.proxy.MethodFilter;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import sun.reflect.generics.reflectiveObjects.WildcardTypeImpl;
 
 /**
@@ -136,7 +135,7 @@ import sun.reflect.generics.reflectiveObjects.WildcardTypeImpl;
  *
  * @author	Michael Grove
  * @since	0.1
- * @version 0.7.2
+ * @version 0.7.3
  */
 public final class RdfGenerator {
 
@@ -152,7 +151,7 @@ public final class RdfGenerator {
 	/**
 	 * The logger
 	 */
-	private static final Logger LOGGER = LogManager.getLogger(RdfGenerator.class.getName());
+	private static final Logger LOGGER = LoggerFactory.getLogger(RdfGenerator.class.getName());
 
 	/**
 	 * Map from rdf:type URI's to the Java class which corresponds to that resource.
@@ -238,7 +237,11 @@ public final class RdfGenerator {
 		catch (ProvisionException ex) {
 			aObj = null;
 		}
-		LOGGER.debug("Tried to get instance of class : " + (System.currentTimeMillis()-start ) );
+
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("Tried to get instance of class in {} ms ", (System.currentTimeMillis()-start ));
+		}
+
 		start = System.currentTimeMillis();
 
 		if (aObj == null) {
@@ -249,11 +252,17 @@ public final class RdfGenerator {
 				long istart = System.currentTimeMillis();
 				if (theClass.isInterface() || Modifier.isAbstract(theClass.getModifiers())) {		
 					aObj = com.clarkparsia.empire.codegen.InstanceGenerator.generateInstanceClass(theClass).newInstance();
-					LOGGER.debug("CodeGenerated instance in : " + (System.currentTimeMillis() - istart) + "ms. ");
+
+					if (LOGGER.isDebugEnabled()) {
+						LOGGER.debug("CodeGenerated instance in {} ms. ", (System.currentTimeMillis() - istart));
+					}
 				}
 				else {
 					aObj = theClass.newInstance();
-					LOGGER.debug("CodeGenerated instance in : " + (System.currentTimeMillis() - istart) + "ms. ");
+
+					if (LOGGER.isDebugEnabled()) {
+						LOGGER.debug("CodeGenerated instance in {} ms. ", (System.currentTimeMillis() - istart));
+					}
 				}
 			}
 			catch (InstantiationException e) {
@@ -265,13 +274,20 @@ public final class RdfGenerator {
 			catch (Exception e) {
 				throw new InvalidRdfException("Cannot create an instance of bean", e);
 			}
-			LOGGER.debug("Got reflect instance of class : " + (System.currentTimeMillis()-start ) );
-			start = System.currentTimeMillis();
 
+			if (LOGGER.isDebugEnabled()) {
+				LOGGER.debug("Got reflect instance of class {} ms ",  (System.currentTimeMillis()-start ) );
+			}
+
+			start = System.currentTimeMillis();
 		}
 
 		asSupportsRdfId(aObj).setRdfId(theId);
-		LOGGER.debug("Has rdfId : " + (System.currentTimeMillis()-start ) );
+
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("Has rdfId {} ms", (System.currentTimeMillis()-start ));
+		}
+
 		start = System.currentTimeMillis();
 		
 		Class<T> aNewClass = determineClass(theClass, aObj, theSource);
@@ -362,8 +378,10 @@ public final class RdfGenerator {
 	private synchronized static <T> T fromRdf(T theObj, DataSource theSource) throws InvalidRdfException, DataSourceException {
 		final SupportsRdfId aTmpSupportsRdfId = asSupportsRdfId(theObj);
 		final SupportsRdfId.RdfKey theKeyObj = aTmpSupportsRdfId.getRdfId();
-		
-		LOGGER.debug("Got obj : " + theObj );
+
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("Converting {} to RDF.", theObj);
+		}
 		
 		if (OBJECT_M.containsKey(theKeyObj)) {
 			// TODO: this is probably a safe cast, i dont see how something w/ the same URI, which should be the same
@@ -505,7 +523,8 @@ public final class RdfGenerator {
 					// if something is specified to be an int in the java class, but it typed as a float (though down conversion
 					// in that case might work) the set call will fail.
 					// TODO: shouldnt this be an error?
-					LOGGER.warn("Probable type mismatch: " + aValue + " " + aAccess);
+
+					LOGGER.warn("Probable type mismatch: {} {}", aValue, aAccess);
 				}
 				catch (RuntimeException e) {
 					// TODO: i dont like keying on a RuntimeException here to get the error condition, but since the
@@ -731,7 +750,10 @@ public final class RdfGenerator {
 													 aSubj);
 
 			for (AccessibleObject aAccess : aAccessors) {
-				LOGGER.debug("Getting rdf for : " + aAccess.toString() );
+				if (LOGGER.isDebugEnabled()) {
+					LOGGER.debug("Getting rdf for : {}", aAccess);
+				}
+
 				AsValueFunction aFunc = new AsValueFunction(aAccess);
 
 				if (aAccess.isAnnotationPresent(Transient.class)
@@ -1196,7 +1218,7 @@ public final class RdfGenerator {
 						return new java.net.URI(aLit.getLabel());
 					}
 					catch (URISyntaxException e) {
-						LOGGER.warn("URI syntax exception converting literal value which is not a valid URI: " + aLit.getLabel());
+						LOGGER.warn("URI syntax exception converting literal value which is not a valid URI {} ", aLit.getLabel());
 						return null;
 					}
 				}
@@ -1323,7 +1345,7 @@ public final class RdfGenerator {
 						throw new RuntimeException(e);
 					}
 					else {
-						LOGGER.warn("Problem applying value : " + e.toString() + ", " + e.getCause() );
+						LOGGER.warn("Problem applying value {}, {} ", e.toString(), e.getCause());
 						return null;
 					}
 				}
@@ -1333,7 +1355,7 @@ public final class RdfGenerator {
 					throw new RuntimeException("Unexpected Value type");
 				}
 				else {
-					LOGGER.warn("Problem applying value : Unexpected Value type" );
+					LOGGER.warn("Problem applying value : Unexpected Value type");
 					return null;
 				}
 			}

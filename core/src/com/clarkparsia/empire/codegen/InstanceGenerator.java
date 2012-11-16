@@ -15,7 +15,6 @@
 
 package com.clarkparsia.empire.codegen;
 
-import com.clarkparsia.openrdf.Graphs;
 import com.google.common.collect.Sets;
 import com.google.common.base.Predicate;
 import javassist.ClassPool;
@@ -42,8 +41,6 @@ import java.util.Collection;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
 import org.openrdf.model.Graph;
 
 import com.clarkparsia.empire.EmpireGenerated;
@@ -52,18 +49,20 @@ import com.clarkparsia.empire.EmpireOptions;
 import com.clarkparsia.empire.util.BeanReflectUtil;
 import com.clarkparsia.common.collect.Iterables2;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl;
 import sun.reflect.generics.reflectiveObjects.WildcardTypeImpl;
 
 /**
  * <p>Generate implementations of interfaces at runtime via bytecode manipulation.</p>
  *
- * @author Michael Grove
- * @since 0.5.1
- * @version 0.7
+ * @author	Michael Grove
+ * @since	0.5.1
+ * @version 0.7.3
  */
 public final class InstanceGenerator {
-	private static final Logger LOGGER = LogManager.getLogger(BeanGenerator.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(BeanGenerator.class);
 
 	private static final Collection<Method> processedMethods = Sets.newHashSet();
 
@@ -525,30 +524,28 @@ public final class InstanceGenerator {
 					throw new IllegalArgumentException("Non-bean style methods found '" + aMethod + "', implementations for them cannot not be generated");
 				}
 				else {
-					LOGGER.warn("Non-bean style methods found, implementations for them cannot not be generated : " + aMethod.getName() );
+					LOGGER.warn("Non-bean style methods found, implementations for them cannot not be generated : {}", aMethod.getName());
 				}
 			}
 
+			Class aType = null;
+			Type generics = null;
 
+			if (aMethod.getName().startsWith("get") || aMethod.getName().startsWith("is") || aMethod.getName().startsWith("has")) {
+				aType = aMethod.getReturnType();
+				generics = aMethod.getGenericReturnType();
+			}
+			else if (aMethod.getName().startsWith("set") && aMethod.getParameterTypes().length > 0) {
+				aType = aMethod.getParameterTypes()[0];
 
-				Class aType = null;
-				Type generics = null;
-
-				if (aMethod.getName().startsWith("get") || aMethod.getName().startsWith("is") || aMethod.getName().startsWith("has")) {
-					aType = aMethod.getReturnType();
-					generics = aMethod.getGenericReturnType();
+				if (aMethod.getGenericParameterTypes() != null && aMethod.getGenericParameterTypes().length > 0) {
+					generics = aMethod.getGenericParameterTypes()[0];
 				}
-				else if (aMethod.getName().startsWith("set") && aMethod.getParameterTypes().length > 0) {
-					aType = aMethod.getParameterTypes()[0];
-
-					if (aMethod.getGenericParameterTypes() != null && aMethod.getGenericParameterTypes().length > 0) {
-						generics = aMethod.getGenericParameterTypes()[0];
-					}
-				}
+			}
 
 			if (aType != null) {
-                String aProp = aMethod.getName().substring(aMethod.getName().startsWith("is") ? 2 : 3);
-                aProp = String.valueOf(aProp.charAt(0)).toLowerCase() + aProp.substring(1);
+				String aProp = aMethod.getName().substring(aMethod.getName().startsWith("is") ? 2 : 3);
+				aProp = String.valueOf(aProp.charAt(0)).toLowerCase() + aProp.substring(1);
 
 				CtField aNewField = new CtField(thePool.get(aType.getName()), aProp, theClass);
 

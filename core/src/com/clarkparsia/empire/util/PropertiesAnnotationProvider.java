@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2010 Clark & Parsia, LLC. <http://www.clarkparsia.com>
+ * Copyright (c) 2009-2012 Clark & Parsia, LLC. <http://www.clarkparsia.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,8 +32,8 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.FileNotFoundException;
 
-import org.apache.log4j.Logger;
-import org.apache.log4j.LogManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>Implementation of the EmpireAnnotationProvider interface which reads a property file from disk and
@@ -51,7 +51,7 @@ public final class PropertiesAnnotationProvider implements EmpireAnnotationProvi
 	/**
 	 * The logger
 	 */
-	private static final Logger LOGGER = LogManager.getLogger(PropertiesAnnotationProvider.class.getName());
+	private static final Logger LOGGER = LoggerFactory.getLogger(PropertiesAnnotationProvider.class.getName());
 
 	/**
 	 * The file to read the Annotations index from

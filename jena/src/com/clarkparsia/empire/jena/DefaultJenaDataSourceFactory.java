@@ -41,8 +41,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
 
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>Default implementation for creating DataSources backed by Jena models</p>
@@ -58,7 +58,7 @@ final class DefaultJenaDataSourceFactory extends JenaDataSourceFactory implement
 	/**
 	 * Application logger
 	 */
-	private final Logger LOGGER = LogManager.getLogger(this.getClass());
+	private final Logger LOGGER = LoggerFactory.getLogger(this.getClass());
 
 	/**
 	 * Create a new DefaultJenaDataSourceFactory
@@ -87,7 +87,9 @@ final class DefaultJenaDataSourceFactory extends JenaDataSourceFactory implement
 		
 		if (aModel != null) {
 
-			LOGGER.debug("Got a model - creating DataSource ");
+			if (LOGGER.isDebugEnabled()) {
+				LOGGER.debug("Got a model - creating DataSource ");
+			}
 			
 			if (theMap.containsKey(STREAM) && theMap.containsKey(FORMAT)) {
 				load(aModel, asReader(theMap.get(STREAM)),

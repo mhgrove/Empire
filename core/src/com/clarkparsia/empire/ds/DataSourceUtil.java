@@ -34,8 +34,9 @@ import org.openrdf.model.BNode;
 import org.openrdf.model.vocabulary.RDF;
 
 import org.openrdf.query.BindingSet;
-import org.apache.log4j.Logger;
-import org.apache.log4j.LogManager;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 
@@ -54,7 +55,7 @@ public final class DataSourceUtil {
 	/**
 	 * The logger
 	 */
-	private static final Logger LOGGER = LogManager.getLogger(Empire.class.getName());
+	private static final Logger LOGGER = LoggerFactory.getLogger(Empire.class.getName());
 
 	/**
 	 * No instances

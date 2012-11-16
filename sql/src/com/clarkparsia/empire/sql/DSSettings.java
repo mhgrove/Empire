@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2010 Clark & Parsia, LLC. <http://www.clarkparsia.com>
+ * Copyright (c) 2009-2012 Clark & Parsia, LLC. <http://www.clarkparsia.com>
  * Copyright (c) 2010, Ultan O'Carroll
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,8 +16,8 @@
 
 package com.clarkparsia.empire.sql;
 
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
 import javax.naming.NamingException;
@@ -38,13 +38,13 @@ import javax.naming.NamingException;
  * </ul>
  * http://purl.org/skytwenty/regperson.owl#Location/http://purl.org/skytwenty/regperson.owl#Location/http%3A%2F%2Fpurl.org%2Fskytwenty%2Fregperson.owl%23OpenIDRegisteredPerson%2Fhttp%253A%252F%252Fwww.google.com%252Fprofiles%252FTreasureCorpIsland%252F_ANY_Midp21+Device_84766997133853%2F
  *
- * @author uoccou
- * @author Michael Grove
- * @since 0.7
+ * @author 	uoccou
+ * @author 	Michael Grove
+ * @since 	0.7
  * @version 0.7
  */
 public class DSSettings {
-	protected final Logger _logger = LogManager.getLogger(this.getClass());
+	protected final Logger _logger = LoggerFactory.getLogger(this.getClass());
 
 	private String url = "jdbc:mysql://localhost:3306/";
 	private String db = "abcdef";

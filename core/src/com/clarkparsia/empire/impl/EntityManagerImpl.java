@@ -40,9 +40,6 @@ import com.google.common.collect.Sets;
 import org.openrdf.model.Graph;
 import org.openrdf.model.impl.GraphImpl;
 
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
-
 import javax.persistence.EntityExistsException;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
@@ -89,6 +86,8 @@ import com.clarkparsia.empire.util.EmpireUtil;
 import com.clarkparsia.empire.util.BeanReflectUtil;
 
 import com.google.common.base.Predicate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>Implementation of the JPA {@link EntityManager} interface to support the persistence model over
@@ -105,7 +104,7 @@ public final class EntityManagerImpl implements EntityManager {
 	/**
 	 * The logger
 	 */
-	private static final Logger LOGGER = LogManager.getLogger(EntityManagerImpl.class.getName());
+	private static final Logger LOGGER = LoggerFactory.getLogger(EntityManagerImpl.class.getName());
 
 	/**
 	 * Whether or not this EntityManagerImpl is open

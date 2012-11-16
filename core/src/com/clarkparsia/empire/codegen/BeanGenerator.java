@@ -34,9 +34,6 @@ import org.openrdf.rio.RDFFormat;
 import org.openrdf.query.BindingSet;
 import org.openrdf.query.TupleQueryResult;
 
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
-
 import com.clarkparsia.openrdf.ExtRepository;
 
 import com.clarkparsia.openrdf.util.AdunaIterations;
@@ -53,6 +50,8 @@ import com.google.common.collect.Collections2;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Iterators;
 import com.google.common.io.Files;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.Map;
@@ -72,13 +71,13 @@ import java.net.URL;
  *
  * @author	Michael Grove
  * @since	0.5.1
- * @version	0.7
+ * @version	0.7.3
  */
 public final class BeanGenerator {
 	/**
 	 * The logger
 	 */
-	private static final Logger LOGGER = LogManager.getLogger(BeanGenerator.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(BeanGenerator.class);
 
 	/**
 	 * String URI constant for the owl:Thing conccept

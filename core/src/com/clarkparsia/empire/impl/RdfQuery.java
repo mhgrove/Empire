@@ -21,8 +21,6 @@ import org.openrdf.model.Value;
 import org.openrdf.model.vocabulary.XMLSchema;
 import org.openrdf.model.impl.ValueFactoryImpl;
 import org.openrdf.query.BindingSet;
-import org.apache.log4j.Logger;
-import org.apache.log4j.LogManager;
 
 import com.clarkparsia.empire.ds.DataSource;
 import com.clarkparsia.empire.ds.ResultSet;
@@ -40,6 +38,8 @@ import com.clarkparsia.empire.annotation.runtime.ProxyAwareList;
 
 import com.clarkparsia.common.base.Dates;
 import com.google.common.collect.Lists;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.persistence.FlushModeType;
 import javax.persistence.NoResultException;
@@ -68,7 +68,7 @@ public final class RdfQuery implements Query {
 	/**
 	 * The logger
 	 */
-	private static final Logger LOGGER = LogManager.getLogger(RdfQuery.class.getName());
+	private static final Logger LOGGER = LoggerFactory.getLogger(RdfQuery.class.getName());
 
 	/**
 	 * Variable parameter token in queries

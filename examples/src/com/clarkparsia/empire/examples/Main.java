@@ -47,7 +47,12 @@ public class Main {
 											.createEntityManager();
 
 		// this retrieves a particular book from the database
-		Book aBook = aManager.find(Book.class, URI.create("urn:x-domain:oreilly.com:product:9780596514129.IP"));
+		IBook aBook = aManager.find(IBook.class, URI.create("urn:x-domain:oreilly.com:product:9780596514129.IP"));
+        aBook = aManager.find(IBook.class, URI.create("urn:x-domain:oreilly.com:product:9780596514129.IP"));
+        aBook = aManager.find(IBook.class, URI.create("urn:x-domain:oreilly.com:product:9780596514129.IP"));
+        aBook = aManager.find(IBook.class, URI.create("urn:x-domain:oreilly.com:product:9780596514129.IP"));
+        aBook = aManager.find(IBook.class, URI.create("urn:x-domain:oreilly.com:product:9780596514129.IP"));
+        aBook = aManager.find(IBook.class, URI.create("urn:x-domain:oreilly.com:product:9780596514129.IP"));
 
 		// prints: Switching to the Mac: The Missing Manual, Leopard Edition
 		System.err.println(aBook.getTitle());

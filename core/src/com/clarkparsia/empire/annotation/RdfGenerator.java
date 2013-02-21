@@ -1047,7 +1047,7 @@ public final class RdfGenerator {
 				// language tags, so we need to check again.
 				return BeanReflectUtil.instantiateCollectionFromField(BeanReflectUtil.classFrom(mField));
 			}
-			else if (aList.size() == 1) {
+			else if ((aList.size() == 1) || (! EmpireOptions.STRICT_MODE)) {
 				// collection of one element, just convert the single element and send that back
 				return valueToObject.apply(aList.iterator().next());
 			}

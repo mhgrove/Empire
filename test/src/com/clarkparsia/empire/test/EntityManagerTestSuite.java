@@ -220,12 +220,20 @@ public abstract class EntityManagerTestSuite {
 			aMgr.persist(one);
 
 			MutableDataSource ts = (MutableDataSource) aMgr.getDelegate();
+            if (ts instanceof SupportsTransactions) {
+                ((SupportsTransactions) ts).begin();
+            }
+
 			ts.add(Graphs.newGraph(ValueFactoryImpl.getInstance().createStatement(ValueFactoryImpl.getInstance().createURI("urn:two"),
 																				  RDF.TYPE,
 																				  ValueFactoryImpl.getInstance().createBNode()),
 								   ValueFactoryImpl.getInstance().createStatement(ValueFactoryImpl.getInstance().createURI("urn:one"),
 																				  ValueFactoryImpl.getInstance().createURI("http://empire.clarkparsia.com/hasMoreTwos"),
 																				  ValueFactoryImpl.getInstance().createURI("urn:two"))));
+
+            if (ts instanceof SupportsTransactions) {
+                ((SupportsTransactions) ts).commit();
+            }
 
 			assertTrue(aMgr.find(One.class, aId) != null);
 		}

@@ -978,26 +978,41 @@ public final class EntityManagerImpl implements EntityManager {
 		public void execute() throws DataSourceException {
 			// TODO: should this be in its own transaction?  or join the current one?
 
-			for (URI aGraphURI : mRemove.keySet()) {
-				if (doesSupportNamedGraphs() && aGraphURI != null) {
-					asSupportsNamedGraphs().remove(aGraphURI, mRemove.get(aGraphURI));
-				}
-				else {
-					getDataSource().remove(mRemove.get(aGraphURI));
-				}
-			}
+            if (getDataSource() instanceof SupportsTransactions) {
+                ((SupportsTransactions)getDataSource()).begin();
+            }
 
-			for (URI aGraphURI : mAdd.keySet()) {
-				if (doesSupportNamedGraphs() && aGraphURI != null) {
-					asSupportsNamedGraphs().add(aGraphURI, mAdd.get(aGraphURI));
-				}
-				else {
-					getDataSource().add(mAdd.get(aGraphURI));
-				}
-			}
+            try {
+                for (URI aGraphURI : mRemove.keySet()) {
+                    if (doesSupportNamedGraphs() && aGraphURI != null) {
+                        asSupportsNamedGraphs().remove(aGraphURI, mRemove.get(aGraphURI));
+                    }
+                    else {
+                        getDataSource().remove(mRemove.get(aGraphURI));
+                    }
+                }
 
-			verify();
-		}
+                for (URI aGraphURI : mAdd.keySet()) {
+                    if (doesSupportNamedGraphs() && aGraphURI != null) {
+                        asSupportsNamedGraphs().add(aGraphURI, mAdd.get(aGraphURI));
+                    }
+                    else {
+                        getDataSource().add(mAdd.get(aGraphURI));
+                    }
+                }
+
+                if (getDataSource() instanceof SupportsTransactions) {
+                    ((SupportsTransactions)getDataSource()).commit();
+                }
+
+                verify();
+            }
+            catch (DataSourceException e) {
+                if (getDataSource() instanceof SupportsTransactions) {
+                    ((SupportsTransactions)getDataSource()).rollback();
+                }
+            }
+        }
 
 		/**
 		 * Add the specified object to the list of objects that should be removed from the database when this operation

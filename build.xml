@@ -8,8 +8,7 @@
 	<!-- Enviroment -->
 	<property environment="env"/>
 
-	<property name="project.name" value="empire"/>
-	<property name="project.version" value="0.7.3"/>
+	<property file="project.properties"/>
 
 	<property name="core.dir" location="core"/>
 	<property name="jena.dir" location="jena"/>
@@ -36,7 +35,7 @@
 	<property name="sesame.build.dir" location="${build.dir}/sesame"/>
 	<property name="test.build.dir" location="${build.dir}/test"/>
 
-	<property name="dist.dir" location="dist"/>
+	<property name="dist.dir" location="${dist}"/>
 	<property name="dist.src.dir" location="${dist.dir}/src"/>
 	<property name="dist.docs.dir" location="${dist.dir}/docs"/>
 	<property name="dist.lib.dir" location="${dist.dir}/lib"/>
@@ -138,10 +137,10 @@
 	<target name="dist" depends="build" description="Build a complete distribution">
 		<mkdir dir="${dist.src.dir}"/>
 
-		<jar jarfile="${dist.src.dir}/${project.name}-core-src.jar" basedir="${core.src.dir}"/>
-		<jar jarfile="${dist.src.dir}/${project.name}-jena-src.jar" basedir="${jena.src.dir}"/>
-		<jar jarfile="${dist.src.dir}/${project.name}-sesame-src.jar" basedir="${sesame.src.dir}"/>
-		<jar jarfile="${dist.src.dir}/${project.name}-test-src.jar" basedir="${test.src.dir}"/>
+		<jar jarfile="${dist.src.dir}/${project.name}-core-src-${project.version}.jar" basedir="${core.src.dir}"/>
+		<jar jarfile="${dist.src.dir}/${project.name}-jena-src-${project.version}.jar" basedir="${jena.src.dir}"/>
+		<jar jarfile="${dist.src.dir}/${project.name}-sesame-src-${project.version}.jar" basedir="${sesame.src.dir}"/>
+		<jar jarfile="${dist.src.dir}/${project.name}-test-src-${project.version}.jar" basedir="${test.src.dir}"/>
 
 		<copy todir="${core.build.dir}">
 			<fileset dir="${core.dir}/resources">
@@ -153,15 +152,15 @@
 			</fileset>
 		</copy>
 
-		<jar jarfile="${dist.lib.dir}/${project.name}-core.jar" basedir="${core.build.dir}">
+		<jar jarfile="${dist.lib.dir}/${project.name}-core-${project.version}.jar" basedir="${core.build.dir}">
 			<manifest>
 				<attribute name="Premain-Class" value="${premainclass}"/>
 			</manifest>
 		</jar>
 		
-		<jar jarfile="${dist.lib.dir}/${project.name}-jena.jar" basedir="${jena.build.dir}"/>
-		<jar jarfile="${dist.lib.dir}/${project.name}-sesame.jar" basedir="${sesame.build.dir}"/>
-		<jar jarfile="${dist.lib.dir}/${project.name}-test.jar" basedir="${test.build.dir}"/>
+		<jar jarfile="${dist.lib.dir}/${project.name}-jena-${project.version}.jar" basedir="${jena.build.dir}"/>
+		<jar jarfile="${dist.lib.dir}/${project.name}-sesame-${project.version}.jar" basedir="${sesame.build.dir}"/>
+		<jar jarfile="${dist.lib.dir}/${project.name}-test-${project.version}.jar" basedir="${test.build.dir}"/>
 
 		<copy todir="${dist.lib.dir}">
 			<fileset dir="${core.lib.dir}">

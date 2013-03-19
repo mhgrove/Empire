@@ -174,6 +174,10 @@ public final class InstanceGenerator {
 			aClass.addMethod(CtNewMethod.make("public void setInstanceTriples(org.openrdf.model.Graph theGraph) { mInstanceTriples = theGraph; } ", aClass));
 		}		
 		
+		if (!hasMethod(aClass, "getInterfaceClass")) {
+			aClass.addMethod(CtNewMethod.make("public java.lang.Class getInterfaceClass() { return mInterfaceClass; }" , aClass ));
+		}
+		
 		String equalsMethodBody = 
 		  "public boolean equals(Object theObj) {\n" +
 		  "  if (theObj == this) return true;\n" +

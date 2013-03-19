@@ -35,12 +35,18 @@ public interface EmpireGenerated {
 	public void setAllTriples(Graph aGraph);
 	
 	/**
-	 * Gets the graph containing all the RDF statements for that instance (regardless whether they were used
-	 * to populate the fields of this bean).
+	 * Gets the graph containing the RDF statements for that instance that were used to populate this bean.
 	 * 
 	 * @return the graph
 	 */
 	public Graph getInstanceTriples();
 	
 	public void setInstanceTriples(Graph aGraph);
+	
+	/**
+	 * Returns the original class/interface that was extended by Empire
+	 * 
+	 * @return the Java Class object
+	 */
+	public Class getInterfaceClass();
 }

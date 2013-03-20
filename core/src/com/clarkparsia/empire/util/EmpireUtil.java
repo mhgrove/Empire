@@ -28,13 +28,6 @@ import com.clarkparsia.empire.Empire;
 import com.clarkparsia.empire.impl.serql.SerqlDialect;
 import com.clarkparsia.empire.impl.sparql.SPARQLDialect;
 
-import com.clarkparsia.openrdf.query.builder.QueryBuilder;
-import com.clarkparsia.openrdf.query.builder.QueryBuilderFactory;
-
-import com.clarkparsia.openrdf.query.sparql.SPARQLQueryRenderer;
-
-import com.clarkparsia.openrdf.query.serql.SeRQLQueryRenderer;
-
 import com.clarkparsia.common.util.PrefixMapping;
 import com.clarkparsia.common.net.NetUtils;
 
@@ -49,6 +42,10 @@ import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.impl.ValueFactoryImpl;
 
 import org.openrdf.query.parser.ParsedTupleQuery;
+import org.openrdf.queryrender.builder.QueryBuilder;
+import org.openrdf.queryrender.builder.QueryBuilderFactory;
+import org.openrdf.queryrender.serql.SeRQLQueryRenderer;
+import org.openrdf.queryrender.sparql.SPARQLQueryRenderer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

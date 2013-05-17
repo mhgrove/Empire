@@ -465,7 +465,7 @@ public final class BeanGenerator {
 																						   new StatementToSubject())));
 
 			// infer properties based on usage in actual instance data
-			for (BindingSet aBinding : AdunaIterations.iterable(aRepository.selectQuery(QueryLanguage.SPARQL, "select distinct ?p where { ?s rdf:type <" + aClass + ">}. ?s ?p ?o }"))) {
+			for (BindingSet aBinding : AdunaIterations.iterable(aRepository.selectQuery(QueryLanguage.SPARQL, "select distinct ?p where { ?s rdf:type <" + aClass + ">. ?s ?p ?o }"))) {
 				aProps.add( (URI) aBinding.getValue("p"));
 			}
 

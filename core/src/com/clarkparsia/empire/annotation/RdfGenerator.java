@@ -1494,22 +1494,22 @@ public final class RdfGenerator {
                 return FACTORY.createLiteral(theIn.toString());
             }
 			else if (Boolean.class.isInstance(theIn)) {
-				return FACTORY.createLiteral(Boolean.class.cast(theIn));
+				return FACTORY.createLiteral(Boolean.class.cast(theIn).booleanValue());
 			}
 			else if (Integer.class.isInstance(theIn)) {
-				return FACTORY.createLiteral(Integer.class.cast(theIn));
+				return FACTORY.createLiteral(Integer.class.cast(theIn).intValue());
 			}
 			else if (Long.class.isInstance(theIn)) {
-				return FACTORY.createLiteral(Long.class.cast(theIn));
+				return FACTORY.createLiteral(Long.class.cast(theIn).longValue());
 			}
 			else if (Short.class.isInstance(theIn)) {
-				return FACTORY.createLiteral(Short.class.cast(theIn));
+				return FACTORY.createLiteral(Short.class.cast(theIn).shortValue());
 			}
 			else if (Double.class.isInstance(theIn)) {
-				return FACTORY.createLiteral(Double.class.cast(theIn));
+				return FACTORY.createLiteral(Double.class.cast(theIn).doubleValue());
 			}
 			else if (Float.class.isInstance(theIn)) {
-				return FACTORY.createLiteral(Float.class.cast(theIn));
+				return FACTORY.createLiteral(Float.class.cast(theIn).floatValue());
 			}
 			else if (Date.class.isInstance(theIn)) {
 				return FACTORY.createLiteral(Dates.datetime(Date.class.cast(theIn)), XMLSchema.DATETIME);

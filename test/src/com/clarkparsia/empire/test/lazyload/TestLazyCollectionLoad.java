@@ -15,17 +15,23 @@
 
 package com.clarkparsia.empire.test.lazyload;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
+import java.util.List;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 
 import com.clarkparsia.empire.Empire;
+import com.clarkparsia.empire.annotation.RdfGenerator;
 import com.clarkparsia.empire.sesametwo.OpenRdfEmpireModule;
 
 import com.clarkparsia.empire.test.lazyload.Event.Status;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -39,6 +45,8 @@ public class TestLazyCollectionLoad {
 	public static void beforeClass() {
 		System.setProperty("empire.configuration.file", "test.empire.config.properties");
 		Empire.init(new OpenRdfEmpireModule());
+
+        RdfGenerator.init(Sets.<Class<?>>newHashSet(BusinessObjectImpl.class, EventImpl.class));
 	}
 
 	/**
@@ -80,8 +88,15 @@ public class TestLazyCollectionLoad {
 		assertEquals(id, aBusinessObject.getUri());
 		assertEquals(3, aBusinessObject.getEvents().size());
 
-		aIter = aBusinessObject.getEvents().iterator();
-		assertEvent1(aIter.next());
+		List<Event> aEvents = Lists.newArrayList(aBusinessObject.getEvents());
+        Collections.sort(aEvents, new Comparator<Event>() {
+            public int compare(final Event theEvent, final Event theEvent2) {
+                return theEvent.getParameters().compareTo(theEvent2.getParameters());
+            }
+        });
+        aIter = aEvents.iterator();
+
+        assertEvent1(aIter.next());
 		assertEvent2(aIter.next());
 		assertEvent3(aIter.next());
 
@@ -91,7 +106,14 @@ public class TestLazyCollectionLoad {
 		assertEquals(id, aBusinessObject.getUri());
 		assertEquals(3, aBusinessObject.getEvents().size());
 
-		aIter = aBusinessObject.getEvents().iterator();
+        aEvents = Lists.newArrayList(aBusinessObject.getEvents());
+        Collections.sort(aEvents, new Comparator<Event>() {
+            public int compare(final Event theEvent, final Event theEvent2) {
+                return theEvent.getParameters().compareTo(theEvent2.getParameters());
+            }
+        });
+        aIter = aEvents.iterator();
+
 		assertEvent1(aIter.next());
 		assertEvent2(aIter.next());
 		assertEvent3(aIter.next());
@@ -113,19 +135,19 @@ public class TestLazyCollectionLoad {
 	}
 
 	private static BusinessObject newBusiness(String uri, EntityManager m) {
-        BusinessObject b = new BusinessObject(uri);
+        BusinessObject b = new BusinessObjectImpl(uri);
 
 		b.setTitle(TITLE);
-        b.add(new Event(b.getUri(), "Event #1", Status.Complete, null));
+        b.add(new EventImpl(b.getUri(), "Event #1", Status.Complete, null));
         m.persist(b);
         m.flush();
         return b;
     }
 
     private static BusinessObject addEvent(String uri, String title, EntityManager m) {
-        BusinessObject b = m.find(BusinessObject.class, uri);
+        BusinessObject b = m.find(BusinessObjectImpl.class, uri);
         if (title != null) {
-            Event e = new Event(uri, title, Status.Complete, null);
+            Event e = new EventImpl(uri, title, Status.Complete, null);
             m.persist(e);
             b.add(e);
             b = m.merge(b);

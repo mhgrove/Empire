@@ -17,6 +17,7 @@ Empire 0.8 (TBD)
 	* FIXED: Bug with using wildcard types in interfaces that are used in the code generation. (issue #70)
 	* FIXED: Bug that resulted in class cast exceptions between BNode and URI when the value of a property was a BNode and did not map to a valid bean entity. (issue #71)
 	* FIXED: Appended loader path to Javassist ClassPool during instance generation so Empire works better in some servlet containers, notably Tomcat & Glassfish.
+	* FIXED: Corrected handling of multiply typed individuals when lazy loading classes into a collection (issue #87)
 
 Empire 0.7 (2011-11-18)
 =======================

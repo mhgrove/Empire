@@ -15,6 +15,7 @@
 
 package com.clarkparsia.empire.ds;
 
+import com.clarkparsia.common.base.Functions2;
 import com.clarkparsia.empire.ds.impl.TripleSourceAdapter;
 import com.clarkparsia.empire.Dialect;
 import com.clarkparsia.empire.Empire;
@@ -24,6 +25,7 @@ import com.clarkparsia.empire.impl.sparql.ARQSPARQLDialect;
 
 import com.clarkparsia.openrdf.Graphs;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.common.base.Function;
 
@@ -39,6 +41,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
+import java.util.Collections;
 
 /**
  * <p>Collection of utility methods for working with Empire DataSources</p>
@@ -199,23 +202,33 @@ public final class DataSourceUtil {
 	 * @return the rdf:type of the concept, or null if there is an error or one cannot be found.
 	 */
 	public static org.openrdf.model.Resource getType(DataSource theSource, Resource theConcept) {
+        Iterable<org.openrdf.model.Resource> aTypes = getTypes(theSource, theConcept);
+        if (aTypes == null || Iterables.isEmpty(aTypes)) {
+            return null;
+        }
+        else {
+            return Iterables.getFirst(aTypes, null);
+        }
+    }
+
+    public static Iterable<org.openrdf.model.Resource> getTypes(final DataSource theSource, final Resource theConcept) {
 		if (theSource == null) {
-			return null;
+			return Collections.emptySet();
 		}
 
 		try {
 			final Collection<Value> aTypes = getValues(theSource, theConcept, RDF.TYPE);
 			if (aTypes.isEmpty()) {
-				return null;
+				return Collections.emptySet();
 			}
 			else {
-				return (Resource) aTypes.iterator().next();
+				return Iterables.transform(aTypes, Functions2.cast(Resource.class));
 			}
 		}
 		catch (DataSourceException e) {
 			LOGGER.error("There was an error while getting the type of a resource", e);
 
-			return null;
+			return Collections.emptySet();
 		}
 	}
 

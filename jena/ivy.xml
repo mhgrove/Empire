@@ -1,5 +1,5 @@
 <ivy-module version="2.2">
-	<info organisation="com.complexible.empire" module="jena">
+	<info organisation="com.clarkparsia.empire" module="jena">
 		<license name="APL 2.0" url="http://www.apache.org/licenses/LICENSE-2.0.html"/>
 		<ivyauthor name="Michael Grove"/>
 		<description homepage="https://github.com/mhgrove/empire">Empire: JPA for the Semantic Web.  Jena bindings</description>

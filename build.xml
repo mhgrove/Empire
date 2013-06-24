@@ -5,7 +5,7 @@
 		Complexible: Empire
 	</description>
 
-	<property file="project.properties"/>.
+	<property file="project.properties"/>
 
 	<!-- Global Properties -->
 	<property name="build" location="build" />

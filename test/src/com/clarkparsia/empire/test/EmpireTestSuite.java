@@ -15,17 +15,18 @@
 
 package com.clarkparsia.empire.test;
 
+import java.io.File;
+
 import com.clarkparsia.empire.Empire;
 
 import com.clarkparsia.empire.jena.JenaEntityManagerTestSuite;
-import com.clarkparsia.empire.sesametwo.OpenRdfEmpireModule;
+import com.clarkparsia.empire.sesame.OpenRdfEmpireModule;
 import com.clarkparsia.empire.jena.JenaEmpireModule;
-import com.clarkparsia.empire.sesametwo.SesameEntityManagerTestSuite;
-import com.clarkparsia.empire.test.lazyload.TestLazyCollectionLoad;
+import com.clarkparsia.empire.sesame.SesameEntityManagerTestSuite;
 import com.clarkparsia.empire.util.DefaultEmpireModule;
-import com.clarkparsia.empire.test.util.TestModule;
-import com.clarkparsia.empire.test.codegen.CodegenTests;
+import com.clarkparsia.empire.util.TestModule;
 
+import com.clarkparsia.empire.util.TestUtil;
 import org.junit.runners.Suite;
 
 import org.junit.runner.RunWith;
@@ -40,23 +41,14 @@ import org.junit.BeforeClass;
  * @version 0.7.1
  */
 @RunWith(Suite.class)
-@Suite.SuiteClasses({TestLazyCollectionLoad.class, TestRdfConvert.class, TestMisc.class,
-					 TestConfig.class, TestDS.class, CodegenTests.class,
-					 SesameEntityManagerTestSuite.class, JenaEntityManagerTestSuite.class})
+@Suite.SuiteClasses({SesameEntityManagerTestSuite.class, JenaEntityManagerTestSuite.class})
 public class EmpireTestSuite {
 
 	@BeforeClass
 	public static void beforeClass () {
-		System.setProperty("empire.configuration.file", "test.empire.config.properties");
+        System.setProperty("empire.configuration.file", new File(TestUtil.getProjectHome(), "test/test.empire.config.properties").getAbsolutePath());
 		
 		Empire.init(new DefaultEmpireModule(), new OpenRdfEmpireModule(),
 					new JenaEmpireModule(), new TestModule());
-
-		// TODO: tests for TripleSource stuff
-		// TODO: tests for persistence injectors
-		// TODO: tests for transactions
-		// TODO: more failure tests -- badly annotated beans, misconfigured datasources, etc.
-		// TODO: delegating data source tests
-		// TODO: named query tests
 	}
 }

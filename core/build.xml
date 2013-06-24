@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+
+<project name="Empire.Core" default="dist" basedir="." xmlns:ivy="antlib:org.apache.ivy.ant">
+	<description>
+		Empire: Core
+	</description>
+
+	<property file="../project.properties"/>
+
+	<property name="ivy.settings.location" location="../settings/ivysettings.xml"/>
+
+	<property name="project.location" location=".."/>
+
+	<property name="module.name" value="empire-core"/>
+	<property name="module.version" value="${core.version}"/>
+
+	<property name="test.mainclass" value="com.clarkparsia.empire.TestEmpireCore"/>
+
+	<import file="../master.build.xml"/>
+</project>

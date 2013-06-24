@@ -1,12 +1,14 @@
 Change Log
 ==========
 
-Empire 0.8 (TBD)
+Empire 1.0 (TBD)
 =======================
+    * ADDED:    Ivy build out
 	* MODIFIED: Altered superclass checks to better accommodate auto-generated instances that use EmpireGenerated so users to have to resort to incorrectly using MappedSuperclass
 	* MODIFIED: Removed a couple uses of describe and replaced them with direct lookups in the DataSource for the relevant information to help make going to/from RDF more efficient.
-	* MODIFIED: Deprecated 4Store integration. (issue #84)
-	* MODIFIED: Upgraded to latest Sesame, 2.7.0 (issue #76) -- additionally upgraded to Guava 12, CP Utils 2.4.1 & CP OpenRdf Utils 1.0
+	* MODIFIED: Dropped 4Store integration. (issue #84)
+	* MODIFIED: Deprecated SDB integration
+	* MODIFIED: Upgraded to latest Sesame, 2.7.0 (issue #76) -- additionally upgraded to Guava 14, CP Utils 3.0 & CP OpenRdf Utils 1.1
 	* MODIFIED: Upgraded to latest Jena, 2.10.1 (as well as TDB & SDB).  (issue #82)
 	* MODIFIED: Upgraded to SLF4J for logging and placed core logging calls in isXXX checks to avoid as much logging overhead as possible.  (issue #83)
 	* MODIFIED: Support mapping multiple triples to single value in non-strict mode (issue #85)
@@ -18,6 +20,7 @@ Empire 0.8 (TBD)
 	* FIXED: Bug that resulted in class cast exceptions between BNode and URI when the value of a property was a BNode and did not map to a valid bean entity. (issue #71)
 	* FIXED: Appended loader path to Javassist ClassPool during instance generation so Empire works better in some servlet containers, notably Tomcat & Glassfish.
 	* FIXED: Corrected handling of multiply typed individuals when lazy loading classes into a collection (issue #87)
+	* FIXED: Test code circular dependency (issue #80)
 
 Empire 0.7 (2011-11-18)
 =======================

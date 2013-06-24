@@ -1,0 +1,36 @@
+<ivy-module version="2.2">
+	<info organisation="com.complexible.empire" module="jena">
+		<license name="APL 2.0" url="http://www.apache.org/licenses/LICENSE-2.0.html"/>
+		<ivyauthor name="Michael Grove"/>
+		<description homepage="https://github.com/mhgrove/empire">Empire: JPA for the Semantic Web.  Jena bindings</description>
+	</info>
+
+	<configurations>
+		<conf name="compile" description="Everything required to run the core module"/>
+		<conf name="test" extends="compile" description="Everything need to run the module and its test suite"/>
+
+		<conf name="default" description="Everything required to run the module"/>
+	</configurations>
+
+	<publications>
+		<artifact name="empire-jena" type="jar" ext="jar" conf="default"/>
+	</publications>
+
+	<dependencies>
+		<dependency org="com.clarkparsia.empire" name="core" rev="0.8" conf="default"/>
+		<dependency org="com.clarkparsia.empire" name="core" rev="0.8" conf="test->test"/>
+		<dependency org="junit" name="junit" rev="4.8.2" conf="test->default"/>
+
+		<dependency org="org.apache.jena" name="jena-core" rev="2.10.0" conf="default">
+			<exclude org="org.slf4j"/>
+		</dependency>
+
+		<dependency org="org.apache.jena" name="jena-tdb" rev="0.10.1" conf="default">
+			<exclude org="org.slf4j"/>
+		</dependency>
+
+		<dependency org="org.apache.jena" name="jena-arq" rev="2.10.0" conf="default">
+			<exclude org="org.slf4j"/>
+		</dependency>
+	</dependencies>
+</ivy-module>

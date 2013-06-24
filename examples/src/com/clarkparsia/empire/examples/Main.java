@@ -17,7 +17,7 @@ package com.clarkparsia.empire.examples;
 
 import com.clarkparsia.empire.Empire;
 import com.clarkparsia.empire.impl.RdfQuery;
-import com.clarkparsia.empire.sesametwo.OpenRdfEmpireModule;
+import com.clarkparsia.empire.sesame.OpenRdfEmpireModule;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Persistence;

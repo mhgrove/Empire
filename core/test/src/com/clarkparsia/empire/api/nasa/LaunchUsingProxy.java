@@ -1,0 +1,144 @@
+/*
+ * Copyright (c) 2009-2010 Clark & Parsia, LLC. <http://www.clarkparsia.com>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.clarkparsia.empire.api.nasa;
+
+import com.clarkparsia.empire.annotation.Namespaces;
+import com.clarkparsia.empire.annotation.RdfsClass;
+import com.clarkparsia.empire.annotation.NamedGraph;
+import com.clarkparsia.empire.annotation.RdfProperty;
+import com.clarkparsia.empire.api.BaseTestClass;
+
+import com.google.common.base.Objects;
+import com.google.common.collect.Sets;
+
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.CascadeType;
+import javax.persistence.OneToOne;
+
+import java.util.List;
+import java.util.ArrayList;
+
+/**
+ * <p></p>
+ *
+ * @author Michael Grove
+ */
+@Namespaces({"space", "http://purl.org/net/schemas/space/"})
+@Entity
+@RdfsClass("space:Launch")
+@NamedGraph(type = NamedGraph.NamedGraphType.Instance)
+
+public class LaunchUsingProxy extends BaseTestClass {
+	
+	@RdfProperty("space:spacecraft")
+	@OneToMany(targetEntity=Spacecraft.class, fetch=FetchType.LAZY,
+			   cascade={CascadeType.REMOVE})
+	private List spacecraft = new ArrayList<Spacecraft>();
+
+	@RdfProperty("space:launched")
+	private String launched;
+
+	@RdfProperty("space:launchvehicle")
+	private List<String> launchvehicle;
+
+	@RdfProperty("space:launchsite")
+	@ManyToOne(fetch=FetchType.LAZY,
+			   cascade={CascadeType.ALL})
+	private LaunchSite launchSite;
+
+	@RdfProperty("space:spacecraftOther")
+	@OneToOne(cascade={CascadeType.PERSIST, CascadeType.MERGE})
+	private Spacecraft otherSpacecraft;
+
+	public Spacecraft getOtherSpacecraft() {
+		return otherSpacecraft;
+	}
+
+	public void setOtherSpacecraft(final Spacecraft theOtherSpacecraft) {
+		otherSpacecraft = theOtherSpacecraft;
+	}
+
+	public List getSpacecraft() {
+		return spacecraft;
+	}
+
+	public void setSpacecraft(final List<Spacecraft> theSpacecraft) {
+		spacecraft = theSpacecraft;
+	}
+
+	public String getLaunched() {
+		return launched;
+	}
+
+	public void setLaunched(final String theLaunched) {
+		launched = theLaunched;
+	}
+
+	public List<String> getLaunchvehicle() {
+		return launchvehicle;
+	}
+
+	public void setLaunchvehicle(final List<String> theLaunchvehicle) {
+		launchvehicle = theLaunchvehicle;
+	}
+
+	public LaunchSite getLaunchSite() {
+		return launchSite;
+	}
+
+	public void setLaunchSite(final LaunchSite theLaunchSite) {
+		launchSite = theLaunchSite;
+	}
+
+	@Override
+	public boolean equals(final Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (!(o instanceof Launch)) {
+			return false;
+		}
+
+		final Launch aLaunch = (Launch) o;
+
+		if (getLaunchSite() != null ? !getLaunchSite().equals(aLaunch.getLaunchSite()) : aLaunch.getLaunchSite() != null) {
+			return false;
+		}
+		if (getLaunched() != null ? !getLaunched().equals(aLaunch.getLaunched()) : aLaunch.getLaunched() != null) {
+			return false;
+		}
+		if (!((getLaunchvehicle() == null && aLaunch.getLaunchvehicle() == null) ||
+			(getLaunchvehicle() != null && aLaunch.getLaunchvehicle() != null && Sets.newHashSet(getLaunchvehicle()).equals(Sets.newHashSet(aLaunch.getLaunchvehicle()))))) {
+			return false;
+		}
+		if (getSpacecraft() != null ? !getSpacecraft().equals(aLaunch.getSpacecraft()) : aLaunch.getSpacecraft() != null) {
+			return false;
+		}
+		if (!Objects.equal(getRdfId(), aLaunch.getRdfId())) {
+			return false;
+		}
+
+		return true;
+	}
+
+	@Override
+	public int hashCode() {
+		return getRdfId() == null ? super.hashCode() : getRdfId().hashCode();
+	}
+}

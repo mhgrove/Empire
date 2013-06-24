@@ -22,7 +22,6 @@ import com.clarkparsia.empire.annotation.SupportsRdfIdImpl;
 import com.clarkparsia.empire.SupportsRdfId;
 
 import javax.persistence.Entity;
-import javax.persistence.MappedSuperclass;
 
 import java.util.Date;
 import java.net.URI;

@@ -1,4 +1,6 @@
+lib
 build
 dist
 out
 settings
+!settings/lib

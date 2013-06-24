@@ -1,0 +1,157 @@
+<?xml version="1.0"?>
+
+<project name="Empire.Master" xmlns:ivy="antlib:org.apache.ivy.ant">
+	<description>
+		Empire Master build file
+	</description>
+
+	<property file="project.properties"/>
+
+	<property name="ivy.settings.location" location="settings/ivysettings.xml"/>
+
+	<property name="project.location" location="."/>
+
+	<property name="lib" location="lib"/>
+
+	<property name="dist" location="dist"/>
+
+	<property name="build" location="build"/>
+	<property name="build.main" value="${build}/main"/>
+	<property name="build.test" value="${build}/test"/>
+
+	<property name="src" location="main/src"/>
+	<property name="test" location="test/src"/>
+
+	<property name="doc.dir" location="${dist}/docs"/>
+	<property name="javadoc.dir" location="${doc.dir}/javadoc"/>
+
+	<property name="module.version" value="2.0"/>
+
+	<import file="ivy.build.xml"/>
+
+	<target name="clean" description="Clean up build files">
+		<delete dir="/settings/lib"/>
+		<delete dir="${build}" />
+		<delete dir="${dist}" />
+	</target>
+
+	<target name="init">
+		<condition property="hasTests">
+			<available file="${test}" type="dir"/>
+		</condition>
+
+		<condition property="hasMeta">
+			<available file="${src}/META-INF" type="dir"/>
+		</condition>
+
+		<condition property="runTests">
+			<and>
+				<isset property="test.mainclass"/>
+			</and>
+		</condition>
+	</target>
+
+	<target name="compile" depends="init, resolve">
+		<mkdir dir="${build.main}"/>
+
+		<echo>Compiling ${src} to ${build.main} ...</echo>
+
+		<javac source="1.6" target="1.6" destdir="${build.main}" debug="yes" deprecation="no">
+			<classpath>
+				<path refid="classpath"/>
+			</classpath>
+			<src>
+				<pathelement path="${src}"/>
+			</src>
+		</javac>
+
+		<copy todir="${build.main}">
+			<fileset dir="${src}">
+				<exclude name="**/*.java" />
+			</fileset>
+		</copy>
+
+		<antcall target="compileTest" inheritRefs="true"/>
+	</target>
+
+	<target name="copyMeta" if="hasMeta">
+		<copy todir="${build.main}/META-INF">
+			<fileset dir="${src}/META-INF"/>
+		</copy>
+	</target>
+
+	<target name="compileTest" if="hasTests">
+		<mkdir dir="${build.test}"/>
+
+		<echo>Compiling ${test} to ${build.test} ...</echo>
+
+		<javac source="1.6" target="1.6" destdir="${build.test}" debug="yes" deprecation="no">
+			<classpath>
+				<path refid="classpath"/>
+				<path path="${build.main}"/>
+			</classpath>
+			<src>
+				<pathelement path="${test}"/>
+			</src>
+		</javac>
+	</target>
+
+	<target name="test" depends="dist" if="runTests">
+		<mkdir dir="dist/test-reports"/>
+
+		<junit fork="yes" printsummary="yes" haltonfailure="yes" failureproperty="junit.failure">
+			<jvmarg value="-Xmx1g"/>
+			<jvmarg value="-XX:MaxPermSize=128m"/>
+			<jvmarg value="-enableassertions"/>
+			<jvmarg value="-Dempire.test.data=${project.location}/test/data"/>
+			<jvmarg value="-Dtest.home=${project.location}"/>
+
+			<test name="${test.mainclass}" />
+
+			<formatter type="xml" />
+			<formatter type="brief" usefile="false"/>
+
+			<classpath>
+				<path refid="classpath"/>
+				<pathelement path="${build.main}"/>
+				<pathelement path="${build.test}"/>
+			</classpath>
+		</junit>
+
+		<junitreport todir="dist/test-reports">
+			<fileset dir="dist/test-reports">
+				<include name="TEST-*.xml" />
+				<include name="report.xml" />
+			</fileset>
+			<report todir="dist/test-reports" />
+		</junitreport>
+
+		<delete>
+			<fileset dir=".">
+				<include name="TEST-*.xml" />
+				<include name="report.xml" />
+			</fileset>
+		</delete>
+	</target>
+
+	<target name="dist" depends="compile">
+		<jar jarfile="${dist}/${module.name}-${module.version}.jar"
+			 basedir="${build.main}">
+		</jar>
+
+		<antcall target="jarTests" inheritRefs="true"/>
+	</target>
+
+	<target name="jarTests" if="hasTests">
+		<jar jarfile="${dist}/${module.name}-test-${module.version}.jar"
+			 basedir="${build.test}">
+		</jar>
+	</target>
+
+	<target name="publish" depends="test">
+		<ivy:publish resolver="local.repo" pubrevision="${module.version}" overwrite="true">
+			<artifacts pattern="dist/[artifact]-[revision].[ext]" />
+		</ivy:publish>
+	</target>
+</project>
+

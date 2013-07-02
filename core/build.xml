@@ -11,7 +11,7 @@
 
 	<property name="project.location" location=".."/>
 
-	<property name="module.name" value="empire-core"/>
+	<property name="module.name" value="empire"/>
 	<property name="module.version" value="${core.version}"/>
 
 	<property name="test.mainclass" value="com.clarkparsia.empire.TestEmpireCore"/>

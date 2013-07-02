@@ -1,5 +1,5 @@
 <ivy-module version="2.2" xmlns:cp="http//clarkparsia.com/ivy">
-	<info organisation="com.clarkparsia.empire" module="core">
+	<info organisation="com.clarkparsia.empire" module="empire">
 	    <license name="APL 2.0" url="http://www.apache.org/licenses/LICENSE-2.0.html"/>
 	    <ivyauthor name="Michael Grove"/>
 	    <description homepage="https://github.com/mhgrove/Empire">Empire: JPA for the Semantic Web.</description>
@@ -11,8 +11,8 @@
 	</configurations>    
 	
 	<publications>
-	    <artifact name="empire-core" type="jar" ext="jar" conf="default"/>
-	    <artifact name="empire-core-test" type="jar" ext="jar" conf="test"/>
+	    <artifact name="empire" type="jar" ext="jar" conf="default"/>
+	    <artifact name="empire-test" type="jar" ext="jar" conf="test"/>
 	</publications>
 	
 	<dependencies>

@@ -16,8 +16,7 @@
 	</publications>
 
 	<dependencies>
-		<dependency org="com.clarkparsia.empire" name="core" rev="0.8" conf="default"/>
-		<dependency org="com.clarkparsia.empire" name="core" rev="0.8" conf="test->test"/>
+		<dependency org="com.clarkparsia.empire" name="empire" rev="0.8" conf="default; test"/>
 
 		<dependency org="com.google.guava" name="guava" rev="14.0.1" conf="default">
 			<exclude org="com.google.code.findbugs"/>

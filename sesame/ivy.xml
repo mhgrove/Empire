@@ -22,7 +22,7 @@
 			<exclude org="com.google.code.findbugs"/>
 		</dependency>
 
-		<dependency org="org.openrdf.sesame" name="sesame" rev="2.7.0" conf="default">
+		<dependency org="org.openrdf.sesame" name="sesame" rev="2.7.3" conf="default">
 			<exclude org="org.slf4j"/>
 		</dependency>
 

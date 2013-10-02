@@ -31,10 +31,11 @@ import org.junit.BeforeClass;
  */
 public class JenaEntityManagerTestSuite extends EntityManagerTestSuite {
 
-    @BeforeClass
-    public static void beforeClass () {
-        System.setProperty("empire.configuration.file", new File(TestUtil.getProjectHome(), "test/test.empire.config.properties").getAbsolutePath());
-    }
+	@BeforeClass
+	public static void beforeClass() {
+		System.setProperty("empire.configuration.file", new File(TestUtil.getProjectHome(), "core/test/test.empire.config.properties").getAbsolutePath());
+		EntityManagerTestSuite.beforeClass();
+	}
 
 	@Override
 	protected DataSourceFactory createDataSourceFactory() {

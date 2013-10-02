@@ -33,8 +33,9 @@ import org.junit.BeforeClass;
 public class SesameEntityManagerTestSuite extends EntityManagerTestSuite {
 
     @BeforeClass
-    public static void beforeClass () {
-        System.setProperty("empire.configuration.file", new File(TestUtil.getProjectHome(), "test/test.empire.config.properties").getAbsolutePath());
+    public static void beforeClass() {
+        System.setProperty("empire.configuration.file", new File(TestUtil.getProjectHome(), "core/test/test.empire.config.properties").getAbsolutePath());
+	    EntityManagerTestSuite.beforeClass();
     }
 
 	/**

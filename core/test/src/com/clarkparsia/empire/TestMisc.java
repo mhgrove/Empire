@@ -58,7 +58,7 @@ public class TestMisc {
 
     @BeforeClass
     public static void beforeClass() {
-        System.setProperty("empire.configuration.file", new File(TestUtil.getProjectHome(), "test/test.empire.config.properties").getAbsolutePath());
+        System.setProperty("empire.configuration.file", new File(TestUtil.getProjectHome(), "core/test/test.empire.config.properties").getAbsolutePath());
         Empire.init(new TestModule());
     }
 

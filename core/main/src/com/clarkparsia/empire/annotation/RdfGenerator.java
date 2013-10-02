@@ -1410,14 +1410,10 @@ public final class RdfGenerator {
 			aFactory.setFilter(METHOD_FILTER);
 			final ProxyHandler<T> aHandler = new ProxyHandler<T>(aProxy);
 
-			aFactory.setHandler(aHandler);
-
 			Object aObj = aFactory.createClass(METHOD_FILTER).newInstance();
 
 			((ProxyObject) aObj).setHandler(aHandler);
-			
-			//((com.clarkparsia.empire.annotation.RdfGenerator.ProxyHandler) ((javassist.util.proxy.ProxyObject) aObj).getHandler()).getProxy().getProxyClass();
-			
+
 			return (T) aObj;
 		}
 		else {

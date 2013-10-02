@@ -1,7 +1,11 @@
 Change Log
 ==========
 
-Empire 1.0 (TBD)
+Empire 0.9 (TBD)
+=======================
+	* FIXED:    Resolved perm-gen leak (issue #86)
+
+Empire 0.8 (2013-09-30)
 =======================
     * ADDED:    Ivy build out
 	* MODIFIED: Altered superclass checks to better accommodate auto-generated instances that use EmpireGenerated so users to have to resort to incorrectly using MappedSuperclass

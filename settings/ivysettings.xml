@@ -1,0 +1,37 @@
+<ivysettings>
+	<properties file="${ivy.settings.dir}/ivysettings.properties" />
+
+	<caches resolutionCacheDir="${ivy.settings.dir}/ivy-cache">
+		<cache name="local_cache" basedir="${ivy.settings.dir}/ivy-cache"/>
+	</caches>
+
+	<settings defaultResolver="def_resolver"/>
+
+	<resolvers>
+		<chain name="def_resolver" returnFirst="true" cache="local_cache">
+
+			<filesystem local="true" name="local.repo" m2compatible="true" cache="local_cache">
+				<ivy pattern="${ivy.settings.dir}/repo/[organisation]/[module]/[revision]/ivy.xml"/>
+				<artifact pattern="${ivy.settings.dir}/repo/[organisation]/[module]/[revision]/[artifact]-[revision].[ext]"/>
+				<artifact pattern="${ivy.settings.dir}/repo/[organisation]/[module]/[revision]/[artifact].[ext]"/>
+			</filesystem>
+
+			<filesystem local="true" name="lib.repo" m2compatible="true" cache="local_cache">
+				<ivy pattern="${ivy.settings.dir}/lib/[organisation]/[module]/[revision]/ivy.xml"/>
+				<artifact pattern="${ivy.settings.dir}/lib/[organisation]/[module]/[revision]/[artifact]-[revision].[ext]"/>
+			</filesystem>
+
+			<ibiblio name="ibiblio" m2compatible="true"/>
+
+			<url name="com.springsource.repository.bundles.release">
+				<ivy pattern="http://repository.springsource.com/ivy/bundles/release/[organisation]/[module]/[revision]/[artifact]-[revision].[ext]" />
+				<artifact pattern="http://repository.springsource.com/ivy/bundles/release/[organisation]/[module]/[revision]/[artifact]-[revision].[ext]" />
+			</url>
+
+			<url name="com.springsource.repository.bundles.external">
+				<ivy pattern="http://repository.springsource.com/ivy/bundles/external/[organisation]/[module]/[revision]/[artifact]-[revision].[ext]" />
+				<artifact pattern="http://repository.springsource.com/ivy/bundles/external/[organisation]/[module]/[revision]/[artifact]-[revision].[ext]" />
+			</url>
+		</chain>
+	</resolvers>
+</ivysettings>

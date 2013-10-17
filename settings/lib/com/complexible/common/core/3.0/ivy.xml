@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ivy-module version="2.2">
+	<info organisation="com.complexible.common" module="core" revision="3.0" status="integration" publication="20130620153150">
+		<license name="APL 2.0" url="http://www.apache.org/licenses/LICENSE-2.0.html"/>
+		<ivyauthor name="Michael Grove"/>
+		<description homepage="https://github.com/mhgrove/cp-common-utils">Core utility classes for various common tasks.  In many cases classes extend or supplement
+			functionality provided by Guava, but also includes a number of general purpose utility classes.</description>
+	</info>
+
+	<configurations>
+		<conf name="compile" description="Everything required to run the core module"/>
+		<conf name="test" extends="compile" description="Everything need to run the module and its test suite"/>
+
+		<conf name="default" description="Everything required to run the module"/>
+	</configurations>
+
+	<publications>
+		<artifact name="cp-common-utils" type="jar" ext="jar" conf="default"/>
+	</publications>
+
+	<dependencies>
+		<dependency org="org.slf4j" name="slf4j-api" rev="1.7.5" conf="default;compile->default"/>
+		<dependency org="org.slf4j" name="slf4j-jdk14" rev="1.7.5" conf="default;compile->default"/>
+
+		<dependency org="com.google.guava" name="guava" rev="14.0.1" conf="default;compile->default">
+			<exclude org="com.google.code.findbugs"/>
+		</dependency>
+
+		<dependency org="junit" name="junit" rev="4.8.2" conf="test->default"/>
+	</dependencies>
+</ivy-module>

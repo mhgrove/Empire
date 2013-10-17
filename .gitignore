@@ -1,6 +1,9 @@
-lib
+.DS_Store
+core/lib
+jena/lib
+sesame/lib
 build
 dist
 out
-settings
-!settings/lib
+settings/ivy-cache
+settings/repo

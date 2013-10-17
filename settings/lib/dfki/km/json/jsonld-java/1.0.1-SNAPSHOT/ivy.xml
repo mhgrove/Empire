@@ -1,0 +1,17 @@
+<ivy-module version="2.2">
+	<info organisation="dfki.km.json" module="jsonld-java" revision="1.0.1-SNAPSHOT">
+	    <description>built on 2012-06-15 from https://github.com/tristan/jsonld-java</description>
+	</info>
+	
+	<publications>
+	    <artifact name="jsonld-java" type="jar" ext="jar"/>
+	    <artifact name="jsonld-java-sesame" type="jar" ext="jar"/>
+	</publications>
+	
+	<dependencies>
+	    <dependency org="com.fasterxml.jackson.core" name="jackson-core" rev="2.1.4"/>
+	    <dependency org="com.fasterxml.jackson.core" name="jackson-databind" rev="2.1.4"/>
+	    
+	    <dependency org="org.openrdf.sesame" name="sesame" rev="2.7.3" />
+	</dependencies>
+</ivy-module>

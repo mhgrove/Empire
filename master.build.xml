@@ -103,7 +103,7 @@
 			<jvmarg value="-Xmx1g"/>
 			<jvmarg value="-XX:MaxPermSize=128m"/>
 			<jvmarg value="-enableassertions"/>
-			<jvmarg value="-Dempire.test.data=${project.location}/test/data"/>
+			<jvmarg value="-Dempire.test.data=${project.location}/core/test/data"/>
 			<jvmarg value="-Dtest.home=${project.location}"/>
 
 			<test name="${test.mainclass}" />

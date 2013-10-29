@@ -19,14 +19,14 @@
 	    <dependency org="org.javassist" name="javassist" rev="3.17.1-GA" conf="default"/>
 	    <dependency org="org.ow2.spec.ee" name="ow2-jpa-1.0-spec" rev="1.0.12" conf="default"/>
 	    
-	    <dependency org="com.complexible.common" name="core" rev="3.0" conf="default"/>
-		<dependency org="com.complexible.common" name="openrdf" rev="1.1" conf="default"/>
+	    <dependency org="com.complexible.common" name="core" rev="3.1" conf="default"/>
+		<dependency org="com.complexible.common" name="openrdf" rev="1.2" conf="default"/>
 		
-		<dependency org="com.google.guava" name="guava" rev="14.0.1" conf="default">
+		<dependency org="com.google.guava" name="guava" rev="15.0" conf="default">
 			<exclude org="com.google.code.findbugs"/>
 		</dependency>
 		
-		<dependency org="org.openrdf.sesame" name="sesame" rev="2.7.3" conf="default">
+		<dependency org="org.openrdf.sesame" name="sesame" rev="2.7.7" conf="default">
 			<exclude org="org.slf4j"/>
 		</dependency>
 		

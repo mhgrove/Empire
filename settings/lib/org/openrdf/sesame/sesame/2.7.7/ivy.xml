@@ -1,5 +1,5 @@
 <ivy-module version="2.2">
-    <info organisation="org.openrdf.sesame" module="sesame" revision="2.7.3"/>
+    <info organisation="org.openrdf.sesame" module="sesame" revision="2.7.7"/>
     
 	<publications>
 	    <artifact name="openrdf-sesame" type="jar" ext="jar"/>
@@ -12,7 +12,7 @@
         <dependency org="com.fasterxml.jackson.core" name="jackson-core" rev="2.2.1"/>
         
         <dependency org="commons-codec" name="commons-codec" rev="1.4"/>
-        <dependency org="commons-io" name="commons-io" rev="2.4"/>
+        <dependency org="commons-io" name="commons-io" rev="2.0.1"/>
         <dependency org="commons-httpclient" name="commons-httpclient" rev="3.1" conf="default->master"/>
     </dependencies>
 </ivy-module>

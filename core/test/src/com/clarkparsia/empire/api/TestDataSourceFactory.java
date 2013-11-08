@@ -24,8 +24,8 @@ import java.util.Map;
 
 import java.io.File;
 
-import com.complexible.common.openrdf.ExtGraph;
-import com.complexible.common.openrdf.Graphs;
+import com.complexible.common.openrdf.model.ExtGraph;
+import com.complexible.common.openrdf.model.Graphs;
 
 /**
  * <p>DataSourceFactory implementation to create a DataSource used for testing</p>

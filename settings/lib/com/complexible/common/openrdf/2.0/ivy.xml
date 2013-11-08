@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ivy-module version="2.2" xmlns:cp="http//clarkparsia.com/ivy">
-	<info organisation="com.complexible.common" module="openrdf" revision="1.2" status="integration" publication="20131028140728">
+	<info organisation="com.complexible.common" module="openrdf" revision="2.0" status="integration" publication="20131108083716">
 	    <license name="APL 2.0" url="http://www.apache.org/licenses/LICENSE-2.0.html"/>
 	    <ivyauthor name="Michael Grove"/>
 	    <description homepage="https://github.com/mhgrove/cp-openrdf-utils">This is a small library of some basic utility classes for working with the OpenRdf Sesame API.</description>

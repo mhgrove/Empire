@@ -136,10 +136,10 @@ public final class InstanceGenerator {
 		aClass.addField(aInterfaceField, CtField.Initializer.byExpr(theInterface.getName() + ".class;"));
 		
 		CtField aAllTriplesField = new CtField(aPool.get(Graph.class.getName()), "mAllTriples", aClass);
-		aClass.addField(aAllTriplesField, CtField.Initializer.byExpr("new com.complexible.common.openrdf.SetGraph();"));
+		aClass.addField(aAllTriplesField, CtField.Initializer.byExpr("new com.complexible.common.openrdf.model.SetGraph();"));
 		
 		CtField aInstanceTriplesField = new CtField(aPool.get(Graph.class.getName()), "mInstanceTriples", aClass);
-		aClass.addField(aInstanceTriplesField, CtField.Initializer.byExpr("new com.complexible.common.openrdf.SetGraph();"));
+		aClass.addField(aInstanceTriplesField, CtField.Initializer.byExpr("new com.complexible.common.openrdf.model.SetGraph();"));
 		
 		aClass.addConstructor(CtNewConstructor.defaultConstructor(aClass));
 		

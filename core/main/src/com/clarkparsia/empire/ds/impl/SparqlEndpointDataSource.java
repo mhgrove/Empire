@@ -7,9 +7,8 @@ import com.clarkparsia.empire.impl.RdfQueryFactory;
 
 import com.clarkparsia.empire.impl.sparql.SPARQLDialect;
 
+import com.complexible.common.openrdf.model.GraphIO;
 import com.complexible.common.openrdf.util.AdunaIterations;
-
-import com.complexible.common.openrdf.OpenRdfIO;
 
 import com.complexible.common.web.ParameterList;
 import com.complexible.common.web.Request;
@@ -269,7 +268,7 @@ public class SparqlEndpointDataSource extends AbstractDataSource {
 			}
 			else {
 				try {
-					return OpenRdfIO.readGraph(aResponse.getContent(), RDFFormat.TURTLE);
+					return GraphIO.readGraph(aResponse.getContent(), RDFFormat.TURTLE);
 				}
 				catch (RDFParseException e) {
 					throw new QueryException("Error while parsing rdf/xml-formatted query results", e);

@@ -68,8 +68,8 @@ import com.clarkparsia.empire.typing.AnotherB;
 import com.clarkparsia.empire.typing.B;
 
 import com.clarkparsia.empire.util.TestUtil;
-import com.complexible.common.openrdf.Graphs;
-import com.complexible.common.openrdf.OpenRdfIO;
+import com.complexible.common.openrdf.model.GraphIO;
+import com.complexible.common.openrdf.model.Graphs;
 
 import com.google.common.collect.Lists;
 
@@ -1482,7 +1482,7 @@ public abstract class EntityManagerTestSuite {
 			((SupportsTransactions)theSource).begin();
 		}
 
-		theSource.add(OpenRdfIO.readGraph(theFile));
+		theSource.add(GraphIO.readGraph(theFile));
 
 		if (theSource instanceof SupportsTransactions) {
 			((SupportsTransactions)theSource).commit();

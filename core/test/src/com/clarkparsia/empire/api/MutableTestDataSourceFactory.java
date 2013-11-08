@@ -19,11 +19,10 @@ import com.clarkparsia.empire.ds.DataSourceFactory;
 import com.clarkparsia.empire.ds.DataSource;
 import com.clarkparsia.empire.ds.DataSourceException;
 import com.clarkparsia.empire.ds.Alias;
-import com.complexible.common.openrdf.ExtRepository;
-import com.complexible.common.openrdf.OpenRdfUtil;
-import com.complexible.common.openrdf.OpenRdfIO;
 
+import com.complexible.common.openrdf.repository.Repositories;
 import com.google.common.base.Splitter;
+import org.openrdf.repository.Repository;
 
 import java.util.Map;
 import java.util.HashMap;
@@ -52,12 +51,12 @@ public final class MutableTestDataSourceFactory implements DataSourceFactory {
 			return mSourceCache.get(theMap.get("files"));
 		}
 
-		ExtRepository aRepo = OpenRdfUtil.createInMemoryRepo();
+		Repository aRepo = Repositories.createInMemoryRepo();
 
 		if (theMap.containsKey("files")) {
 			for (String aFile : Splitter.on(",").omitEmptyStrings().trimResults().split(theMap.get("files").toString())) {
 				try {
-					OpenRdfIO.addData(aRepo, new File(aFile));
+					Repositories.add(aRepo, new File(aFile));
 				}
 				catch (Exception e) {
 					throw new DataSourceException("Error reading file: " + aFile, e);

@@ -33,7 +33,7 @@ import com.clarkparsia.empire.annotation.RdfGenerator;
 import com.clarkparsia.empire.annotation.RdfsClass;
 import com.clarkparsia.empire.annotation.AnnotationChecker;
 
-import com.complexible.common.openrdf.Graphs;
+import com.complexible.common.openrdf.model.Graphs;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;

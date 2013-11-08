@@ -16,7 +16,8 @@
 package com.clarkparsia.empire.api;
 
 import com.clarkparsia.empire.ds.impl.AbstractResultSet;
-import com.complexible.common.openrdf.Graphs;
+import com.complexible.common.openrdf.model.Graphs;
+import com.complexible.common.openrdf.repository.Repositories;
 import com.complexible.common.openrdf.util.AdunaIterations;
 import org.openrdf.model.Graph;
 
@@ -34,9 +35,8 @@ import com.clarkparsia.empire.impl.RdfQueryFactory;
 
 import com.clarkparsia.empire.impl.serql.SerqlDialect;
 
-import com.complexible.common.openrdf.ExtRepository;
-import com.complexible.common.openrdf.OpenRdfUtil;
 import org.openrdf.query.TupleQueryResult;
+import org.openrdf.repository.Repository;
 
 import java.net.ConnectException;
 
@@ -46,22 +46,22 @@ import java.net.ConnectException;
  * @author Michael Grove
  */
 public class TestDataSource extends AbstractDataSource implements DataSource {
-	private ExtRepository mRepo;
+	private final Repository mRepo;
 
 	public TestDataSource() {
 		this(Graphs.newGraph());
 	}
 
-	public TestDataSource(ExtRepository theRepository) {
+	public TestDataSource(final Repository theRepository) {
 		mRepo = theRepository;
 		setQueryFactory(new RdfQueryFactory(this, SerqlDialect.instance()));
 	}
 
 	public TestDataSource(Graph theGraph) {
-		mRepo = OpenRdfUtil.createInMemoryRepo();
+		mRepo = Repositories.createInMemoryRepo();
 
 		try {
-			mRepo.add(theGraph);
+			Repositories.add(mRepo, theGraph);
 		}
 		catch (Exception e) {
 			throw new RuntimeException(e);
@@ -70,7 +70,7 @@ public class TestDataSource extends AbstractDataSource implements DataSource {
         setQueryFactory(new RdfQueryFactory(this, SerqlDialect.instance()));
 	}
 
-	protected ExtRepository getRepository() {
+	protected Repository getRepository() {
 		return mRepo;
 	}
 
@@ -91,7 +91,7 @@ public class TestDataSource extends AbstractDataSource implements DataSource {
 	 */
 	public ResultSet selectQuery(final String theQuery) throws QueryException {
 		try {
-            final TupleQueryResult aTupleQueryResult = mRepo.selectQuery(QueryLanguage.SERQL, theQuery);
+            final TupleQueryResult aTupleQueryResult = Repositories.selectQuery(mRepo, QueryLanguage.SERQL, theQuery);
             return new AbstractResultSet(AdunaIterations.iterator(aTupleQueryResult)) {
                 @Override
                 public void close() {
@@ -115,7 +115,7 @@ public class TestDataSource extends AbstractDataSource implements DataSource {
 	 */
 	public Graph graphQuery(final String theQuery) throws QueryException {
 		try {
-			return mRepo.constructQuery(QueryLanguage.SERQL, theQuery);
+			return Graphs.newGraph(Repositories.constructQuery(mRepo, QueryLanguage.SERQL, theQuery));
 		}
 		catch (MalformedQueryException e) {
 			throw new QueryException("Unsupported or invalid SeRQL query.", e);

@@ -15,7 +15,7 @@
 
 package com.clarkparsia.empire;
 
-import com.complexible.common.openrdf.Graphs;
+import com.complexible.common.openrdf.model.Graphs;
 import com.google.common.collect.Sets;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -55,7 +55,7 @@ import java.util.List;
 
 import com.complexible.common.openrdf.vocabulary.FOAF;
 import com.complexible.common.openrdf.vocabulary.DC;
-import com.complexible.common.openrdf.ExtGraph;
+import com.complexible.common.openrdf.model.ExtGraph;
 import com.complexible.common.base.Dates;
 import com.complexible.common.util.PrefixMapping;
 import com.google.common.collect.Lists;

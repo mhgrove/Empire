@@ -15,7 +15,7 @@
 
 package com.clarkparsia.empire.ds.impl;
 
-import com.complexible.common.openrdf.Graphs;
+import com.complexible.common.openrdf.model.Graphs;
 import org.openrdf.model.Graph;
 import org.openrdf.model.Statement;
 

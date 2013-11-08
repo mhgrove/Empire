@@ -23,7 +23,7 @@ import com.clarkparsia.empire.util.EmpireUtil;
 import com.clarkparsia.empire.impl.serql.SerqlDialect;
 import com.clarkparsia.empire.impl.sparql.ARQSPARQLDialect;
 
-import com.complexible.common.openrdf.Graphs;
+import com.complexible.common.openrdf.model.Graphs;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;

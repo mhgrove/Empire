@@ -15,6 +15,11 @@
 
 package com.clarkparsia.empire.codegen;
 
+import com.complexible.common.collect.Iterables2;
+import com.complexible.common.collect.Iterators2;
+import com.complexible.common.openrdf.model.Statements;
+import com.complexible.common.openrdf.repository.Repositories;
+import com.google.common.collect.Iterables;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Statement;
@@ -29,12 +34,11 @@ import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.impl.ValueFactoryImpl;
 
 import org.openrdf.query.QueryLanguage;
+import org.openrdf.repository.Repository;
 import org.openrdf.rio.RDFFormat;
 
 import org.openrdf.query.BindingSet;
 import org.openrdf.query.TupleQueryResult;
-
-import com.complexible.common.openrdf.ExtRepository;
 
 import com.complexible.common.openrdf.util.AdunaIterations;
 
@@ -129,7 +133,7 @@ public final class BeanGenerator {
 	 * @return a string of the source code of the equivalent Java bean
 	 * @throws Exception if there is an error while converting
 	 */
-	private static String toSource(String thePackageName, ExtRepository theGraph, Resource theClass, Map<Resource, Collection<URI>> theMap) throws Exception {
+	private static String toSource(final String thePackageName, final Repository theGraph, final Resource theClass, final Map<Resource, Collection<URI>> theMap) throws Exception {
 		StringBuffer aSrc = new StringBuffer();
 
 		aSrc.append("package ").append(thePackageName).append(";\n\n");
@@ -141,7 +145,8 @@ public final class BeanGenerator {
 
 		// TODO: more imports? less?
 
-		Iterable<Resource> aSupers = theGraph.getSuperclasses(theClass);
+		Iterable<Resource> aSupers = Iterables2.present(Iterables.transform(AdunaIterations.iterable(Repositories.getStatements(theGraph, theClass, RDFS.SUBCLASSOF, null)),
+		                                                                    Statements.objectAsResource()));
 
 		aSrc.append("@Entity\n");
 		aSrc.append("@RdfsClass(\"").append(theClass).append("\")\n");
@@ -195,15 +200,16 @@ public final class BeanGenerator {
 
 	/**
 	 * Return the type of the function (getter & setter), i.e. the bean property type, for the given rdf:Property
-	 * @param theGraph the graph of the ontology/data
+	 * @param theRepo the graph of the ontology/data
 	 * @param theProp the property
 	 * @return the String representation of the property type
 	 * @throws Exception if there is an error querying the data
 	 */
-	private static String functionType(final ExtRepository theGraph, final URI theProp) throws Exception {
+	private static String functionType(final Repository theRepo, final URI theProp) throws Exception {
 		String aType;
 
-		Resource aRangeRes = (Resource) theGraph.getValue(theProp, RDFS.RANGE);
+		Resource aRangeRes = Statements.objectAsResource().apply(AdunaIterations.singleResult(Repositories.getStatements(theRepo, theProp, RDFS.RANGE, null)).orNull()).orNull();
+
 		if (aRangeRes instanceof BNode) {
 			// we can't handle bnodes very well, so we're just going to assume Object
 			return "Object";
@@ -214,7 +220,7 @@ public final class BeanGenerator {
 		if (aRange == null) {
 			// no explicit range, try to infer it...
 			try {
-				TupleQueryResult aResults = theGraph.selectQuery(QueryLanguage.SPARQL, "select distinct r from {s} <"+theProp+"> {o}, {o} rdf:type {r}");
+				TupleQueryResult aResults = Repositories.selectQuery(theRepo, QueryLanguage.SERQL, "select distinct r from {s} <"+theProp+"> {o}, {o} rdf:type {r}");
 
 				if (aResults.hasNext()) {
 					URI aTempRange = (URI) aResults.next().getValue("r");
@@ -232,7 +238,7 @@ public final class BeanGenerator {
 				if (aRange == null) {
 					// could not get it from type usage, so maybe its a literal and we can guess it from datatype
 
-					aResults = theGraph.selectQuery(QueryLanguage.SPARQL, "select distinct datatype(o) as dt from {s} <"+theProp+"> {o} where isLiteral(o)");
+					aResults = Repositories.selectQuery(theRepo, QueryLanguage.SERQL, "select distinct datatype(o) as dt from {s} <"+theProp+"> {o} where isLiteral(o)");
 
 					if (aResults.hasNext()) {
 						URI aTempRange = null;
@@ -300,7 +306,7 @@ public final class BeanGenerator {
 			aType = className(aRange);
 		}
 
-		if (isCollection(theGraph, theProp)) {
+		if (isCollection(theRepo, theProp)) {
 			aType = "Collection<? extends " + aType + ">";
 		}
 
@@ -310,12 +316,12 @@ public final class BeanGenerator {
 	/**
 	 * Determine whether or not the property's range is a collection.  This will inspect both the ontology, for cardinality
 	 * restrictions, and when that is not available, it will use the actual structure of the data.
-	 * @param theGraph the graph of the ontology/data
+	 * @param theRepo the graph of the ontology/data
 	 * @param theProp the property
 	 * @return true if the property has a collection as it's value, false if it's just a single valued property
 	 * @throws Exception if there is an error querying the data
 	 */
-	private static boolean isCollection(final ExtRepository theGraph, final URI theProp) throws Exception {
+	private static boolean isCollection(final Repository theRepo, final URI theProp) throws Exception {
 		// TODO: this is not fool proof.
 
 		String aCardQuery = "select distinct ?card where {\n" +
@@ -324,7 +330,7 @@ public final class BeanGenerator {
 					   "?s ?cardProp ?card.\n" +
 					   "FILTER (?cardProp = owl:cardinality || ?cardProp = owl:minCardinality || ?cardProp = owl:maxCardinality)\n" +
 					   "}";
-			TupleQueryResult aResults = theGraph.selectQuery(QueryLanguage.SPARQL ,aCardQuery);
+			TupleQueryResult aResults = Repositories.selectQuery(theRepo, QueryLanguage.SPARQL ,aCardQuery);
 		if (aResults.hasNext()) {
 			Literal aCard = (Literal) aResults.next().getValue("card") ;
 
@@ -339,9 +345,11 @@ public final class BeanGenerator {
 		aResults.close();
 
 		try {
-			aResults = theGraph.selectQuery(QueryLanguage.SPARQL, "select distinct ?s where  { ?s <"+theProp+"> ?o}");
+			aResults = Repositories.selectQuery(theRepo, QueryLanguage.SPARQL, "select distinct ?s where  { ?s <"+theProp+"> ?o}");
 			for (BindingSet aBinding : AdunaIterations.iterable(aResults)) {
-				Collection aCollection = Sets.newHashSet(theGraph.getValues( (Resource) aBinding.getValue("s"), theProp));
+
+				Collection aCollection = Sets.newHashSet(Iterators2.present(Iterators.transform(AdunaIterations.iterator(Repositories.getStatements(theRepo, (Resource) aBinding.getValue("s"), theProp, null)),
+				                                                                                Statements.objectOptional())));
 				if (aCollection.size() > 1) {
 					return true;
 				}
@@ -430,21 +438,19 @@ public final class BeanGenerator {
 	public static void generateSourceFiles(String thePackageName, URL theOntology, RDFFormat theFormat, File theDirToSave) throws Exception {
 		NAMES_TO_COUNT.clear();
 
-		ExtRepository aRepository = new ExtRepository();
-		
-		aRepository.initialize();
+		Repository aRepository = Repositories.createInMemoryRepo();
 
-		aRepository.read(theOntology.openStream(), theFormat);
+		Repositories.add(aRepository, theOntology.openStream(), theFormat);
 
-		Collection<Resource> aClasses = Sets.newHashSet(Iterators.transform(new MultiIterator<Statement>(AdunaIterations.iterator(aRepository.getStatements(null, RDF.TYPE, RDFS.CLASS)),
-																										 AdunaIterations.iterator(aRepository.getStatements(null, RDF.TYPE, OWL.CLASS))),
+		Collection<Resource> aClasses = Sets.newHashSet(Iterators.transform(new MultiIterator<Statement>(AdunaIterations.iterator(Repositories.getStatements(aRepository, null, RDF.TYPE, RDFS.CLASS)),
+																										 AdunaIterations.iterator(Repositories.getStatements(aRepository, null, RDF.TYPE, OWL.CLASS))),
 																			new StatementToSubject()));
 
 		aClasses = Collections2.filter(aClasses, new Predicate<Resource>() { public boolean apply(Resource theRes) { return theRes instanceof URI; } });
 
-		Collection<Resource> aIndClasses = Sets.newHashSet(Iterators.transform(AdunaIterations.iterator(aRepository.getStatements(null, RDF.TYPE, null)),
-																			   Functions.compose(Functions2.<Value, Resource>cast(Resource.class),
-																								 new StatementToObject())));
+		Collection<Resource> aIndClasses = Sets.newHashSet(Iterators.transform(AdunaIterations.iterator(Repositories.getStatements(aRepository, null, RDF.TYPE, null)),
+		                                                                       Functions.compose(Functions2.<Value, Resource>cast(Resource.class),
+		                                                                                         new StatementToObject())));
 
 		aClasses.addAll(aIndClasses);
 
@@ -460,12 +466,12 @@ public final class BeanGenerator {
 
 		for (Resource aClass : aClasses) {
 			if (aClass instanceof BNode) { continue; }
-			Collection<URI> aProps = Sets.newHashSet(Iterators.transform(AdunaIterations.iterator(aRepository.getStatements(null, RDFS.DOMAIN, aClass)),
-																		 Functions.compose(Functions2.<Resource, URI>cast(URI.class),
-																						   new StatementToSubject())));
+			Collection<URI> aProps = Sets.newHashSet(Iterators.transform(AdunaIterations.iterator(Repositories.getStatements(aRepository, null, RDFS.DOMAIN, aClass)),
+			                                                             Functions.compose(Functions2.<Resource, URI>cast(URI.class),
+			                                                                               new StatementToSubject())));
 
 			// infer properties based on usage in actual instance data
-			for (BindingSet aBinding : AdunaIterations.iterable(aRepository.selectQuery(QueryLanguage.SPARQL, "select distinct ?p where { ?s rdf:type <" + aClass + ">. ?s ?p ?o }"))) {
+			for (BindingSet aBinding : AdunaIterations.iterable(Repositories.selectQuery(aRepository, QueryLanguage.SPARQL, "select distinct ?p where { ?s rdf:type <" + aClass + ">. ?s ?p ?o }"))) {
 				aProps.add( (URI) aBinding.getValue("p"));
 			}
 

@@ -15,7 +15,7 @@
 
 package com.clarkparsia.empire.annotation;
 
-import com.complexible.common.openrdf.Graphs;
+import com.complexible.common.openrdf.model.Graphs;
 import com.google.common.base.Optional;
 import com.google.common.collect.ObjectArrays;
 import org.openrdf.model.BNode;
@@ -84,7 +84,6 @@ import com.clarkparsia.empire.util.EmpireUtil;
 import static com.clarkparsia.empire.util.EmpireUtil.asPrimaryKey;
 import com.complexible.common.openrdf.util.ResourceBuilder;
 import com.complexible.common.openrdf.util.GraphBuilder;
-import com.complexible.common.openrdf.ExtGraph;
 import com.complexible.common.util.PrefixMapping;
 import com.complexible.common.base.Strings2;
 import com.complexible.common.base.Dates;

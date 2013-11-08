@@ -4,7 +4,7 @@ Change Log
 Empire 0.9 (TBD)
 =======================
 	* FIXED:    Resolved perm-gen leak (issue #86)
-	* MODIFIED: Upgraded to Sesame 2.7.7, Guava 15, CP Utils 3.1 & CP OpenRDF Utils 1.2
+	* MODIFIED: Upgraded to Sesame 2.7.7, Guava 15, CP Utils 3.1.1 & CP OpenRDF Utils 2.0
 
 Empire 0.8 (2013-09-30)
 =======================

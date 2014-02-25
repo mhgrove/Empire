@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ivy-module version="2.2" xmlns:cp="http//clarkparsia.com/ivy">
+	<info organisation="com.complexible.common" module="openrdf" revision="2.0.2" status="integration" publication="20140122154427">
+	    <license name="APL 2.0" url="http://www.apache.org/licenses/LICENSE-2.0.html"/>
+	    <ivyauthor name="Michael Grove"/>
+	    <description homepage="https://github.com/mhgrove/cp-openrdf-utils">This is a small library of some basic utility classes for working with the OpenRdf Sesame API.</description>
+	</info>
+
+	<configurations>
+	    <conf name="compile" description="Everything required to compile the module"/>
+	    <conf name="default" description="Everything required to run the module"/>
+	    <conf name="test" extends="default" description="Everything needed to run the module and its test suite"/>
+	</configurations>
+
+	<publications>
+	    <artifact name="cp-common-openrdf" type="jar" ext="jar"/>
+	</publications>
+
+	<dependencies>
+	    <dependency org="com.google.guava" name="guava" rev="15.0" conf="compile,default,test->default"/>
+
+	    <dependency org="dfki.km.json" name="jsonld-java" rev="1.0.1-SNAPSHOT" conf="compile,default,test->default"/>
+
+	    <dependency org="org.openrdf.sesame" name="sesame" rev="2.7.10" conf="compile,default,test->default"/>
+
+	    <dependency org="junit" name="junit" rev="4.8.2" conf="test->default"/>
+	</dependencies>
+</ivy-module>

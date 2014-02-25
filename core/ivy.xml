@@ -21,13 +21,13 @@
 	    <dependency org="org.ow2.spec.ee" name="ow2-jpa-1.0-spec" rev="1.0.12" conf="compile,default,test->default"/>
 	    
 	    <dependency org="com.complexible.common" name="core" rev="3.1.1"/>
-		<dependency org="com.complexible.common" name="openrdf" rev="2.0"/>
+		<dependency org="com.complexible.common" name="openrdf" rev="2.0.2"/>
 		
 		<dependency org="com.google.guava" name="guava" rev="15.0" conf="compile,default,test->default">
 			<exclude org="com.google.code.findbugs"/>
 		</dependency>
 		
-		<dependency org="org.openrdf.sesame" name="sesame" rev="2.7.7" conf="compile,default,test->default">
+		<dependency org="org.openrdf.sesame" name="sesame" rev="2.7.10" conf="compile,default,test->default">
 			<exclude org="org.slf4j"/>
 		</dependency>
 		

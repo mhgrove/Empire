@@ -17,4 +17,19 @@
 	<property name="test.mainclass" value="com.clarkparsia.empire.sesame.SesameTestSuite"/>
 
 	<import file="../master.build.xml"/>
+
+
+	<target name="makepom" description="Generate Maven POM.xml" >
+		<ivy:info file="ivy.xml"/>
+		<ivy:makepom ivyfile="ivy.xml"
+		             pomfile="pom.xml"
+		             artifactPackaging="jar"
+		             templatefile="pom.template">
+			<mapping conf="compile" scope="compile"/>
+			<mapping conf="default" scope="runtime"/>
+			<mapping conf="test" scope="test"/>
+			<dependency group="com.clarkparsia.empire" artifact="empire" version="${project.version}" scope="test" classifier="tests" />
+		</ivy:makepom>
+	</target>
+
 </project>

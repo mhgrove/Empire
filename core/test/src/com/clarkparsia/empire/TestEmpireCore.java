@@ -42,8 +42,7 @@ public class TestEmpireCore {
 
     @BeforeClass
     public static void beforeClass () {
-        System.setProperty("empire.configuration.file", new File(TestUtil.getProjectHome(), "test/test.empire.config.properties").getAbsolutePath());
-
+        TestUtil.setConfigSystemProperty( "test.empire.config.properties" );
         Empire.init(new DefaultEmpireModule(), new TestModule());
 
         // TODO: tests for TripleSource stuff

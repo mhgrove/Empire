@@ -163,7 +163,7 @@ class AbstractDelegateModel implements Model {
 	 * @inheritDoc
 	 */
 	public Model add(StmtIterator iter) {
-		return mModel.add(iter);
+		return mModel.add( iter );
 	}
 
 	/**
@@ -219,28 +219,28 @@ class AbstractDelegateModel implements Model {
 	 * @inheritDoc
 	 */
 	public Model addLiteral(Resource s, Property p, Object o) {
-		return mModel.addLiteral(s, p, o);
+		return mModel.addLiteral( s, p, o );
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public RDFNode asRDFNode(Node n) {
-		return mModel.asRDFNode(n);
+		return mModel.asRDFNode( n );
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Resource wrapAsResource(final Node theNode) {
-		return mModel.wrapAsResource(theNode);
+		return mModel.wrapAsResource( theNode );
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Statement asStatement(Triple t) {
-		return mModel.asStatement(t);
+		return mModel.asStatement( t );
 	}
 
 	/**
@@ -296,7 +296,7 @@ class AbstractDelegateModel implements Model {
 	 * @inheritDoc
 	 */
 	public boolean contains(Statement s) {
-		return mModel.contains(s);
+		return mModel.contains( s );
 	}
 
 	/**
@@ -310,7 +310,7 @@ class AbstractDelegateModel implements Model {
 	 * @inheritDoc
 	 */
 	public boolean containsAll(StmtIterator iter) {
-		return mModel.containsAll(iter);
+		return mModel.containsAll( iter );
 	}
 
 	/**
@@ -324,7 +324,7 @@ class AbstractDelegateModel implements Model {
 	 * @inheritDoc
 	 */
 	public boolean containsAny(StmtIterator iter) {
-		return mModel.containsAny(iter);
+		return mModel.containsAny( iter );
 	}
 
 	/**
@@ -373,14 +373,14 @@ class AbstractDelegateModel implements Model {
 	 * @inheritDoc
 	 */
 	public boolean containsLiteral(Resource s, Property p, Object o) {
-		return mModel.containsLiteral(s, p, o);
+		return mModel.containsLiteral( s, p, o );
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public boolean containsResource(RDFNode r) {
-		return mModel.containsResource(r);
+		return mModel.containsResource( r );
 	}
 
 	/**
@@ -394,7 +394,7 @@ class AbstractDelegateModel implements Model {
 	 * @inheritDoc
 	 */
 	public Alt createAlt(String uri) {
-		return mModel.createAlt(uri);
+		return mModel.createAlt( uri );
 	}
 
 	/**
@@ -408,7 +408,7 @@ class AbstractDelegateModel implements Model {
 	 * @inheritDoc
 	 */
 	public Bag createBag(String uri) {
-		return mModel.createBag(uri);
+		return mModel.createBag( uri );
 	}
 
 	/**
@@ -429,7 +429,7 @@ class AbstractDelegateModel implements Model {
 	 * @inheritDoc
 	 */
 	public RDFList createList(RDFNode[] members) {
-		return mModel.createList(members);
+		return mModel.createList( members );
 	}
 
 	/**
@@ -450,7 +450,7 @@ class AbstractDelegateModel implements Model {
 	 * @inheritDoc
 	 */
 	public Literal createLiteral(String v) {
-		return mModel.createLiteral(v);
+		return mModel.createLiteral( v );
 	}
 
 	/**
@@ -499,7 +499,7 @@ class AbstractDelegateModel implements Model {
 	 * @inheritDoc
 	 */
 	public Statement createLiteralStatement(Resource s, Property p, Object o) {
-		return mModel.createLiteralStatement(s, p, o);
+		return mModel.createLiteralStatement( s, p, o );
 	}
 
 	/**
@@ -513,7 +513,7 @@ class AbstractDelegateModel implements Model {
 	 * @inheritDoc
 	 */
 	public Property createProperty(String uri) {
-		return mModel.createProperty(uri);
+		return mModel.createProperty( uri );
 	}
 
 	/**
@@ -527,7 +527,7 @@ class AbstractDelegateModel implements Model {
 	 * @inheritDoc
 	 */
 	public ReifiedStatement createReifiedStatement(String uri, Statement s) {
-		return mModel.createReifiedStatement(uri, s);
+		return mModel.createReifiedStatement( uri, s );
 	}
 
 	/**
@@ -576,7 +576,7 @@ class AbstractDelegateModel implements Model {
 	 * @inheritDoc
 	 */
 	public Resource createResource(String uri) {
-		return mModel.createResource(uri);
+		return mModel.createResource( uri );
 	}
 
 	/**
@@ -590,7 +590,7 @@ class AbstractDelegateModel implements Model {
 	 * @inheritDoc
 	 */
 	public Seq createSeq(String uri) {
-		return mModel.createSeq(uri);
+		return mModel.createSeq( uri );
 	}
 
 	/**
@@ -627,7 +627,7 @@ class AbstractDelegateModel implements Model {
 	 * @inheritDoc
 	 */
 	public Statement createStatement(Resource s, Property p, String o) {
-		return mModel.createStatement(s, p, o);
+		return mModel.createStatement( s, p, o );
 	}
 
 	/**
@@ -718,7 +718,7 @@ class AbstractDelegateModel implements Model {
 	 * @inheritDoc
 	 */
 	public Literal createTypedLiteral(String v) {
-		return mModel.createTypedLiteral(v);
+		return mModel.createTypedLiteral( v );
 	}
 
 	/**
@@ -740,21 +740,21 @@ class AbstractDelegateModel implements Model {
 	 */
 	@Override
 	public boolean equals(Object m) {
-		return mModel.equals(m);
+		return mModel.equals( m );
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Object executeInTransaction(Command cmd) {
-		return mModel.executeInTransaction(cmd);
+		return mModel.executeInTransaction( cmd );
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public String expandPrefix(String prefixed) {
-		return mModel.expandPrefix(prefixed);
+		return mModel.expandPrefix( prefixed );
 	}
 
 	/**
@@ -768,14 +768,14 @@ class AbstractDelegateModel implements Model {
 	 * @inheritDoc
 	 */
 	public Alt getAlt(String uri) {
-		return mModel.getAlt(uri);
+		return mModel.getAlt( uri );
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Resource getAnyReifiedStatement(Statement s) {
-		return mModel.getAnyReifiedStatement(s);
+		return mModel.getAnyReifiedStatement( s );
 	}
 
 	/**
@@ -789,7 +789,7 @@ class AbstractDelegateModel implements Model {
 	 * @inheritDoc
 	 */
 	public Bag getBag(String uri) {
-		return mModel.getBag(uri);
+		return mModel.getBag( uri );
 	}
 
 	/**
@@ -817,14 +817,14 @@ class AbstractDelegateModel implements Model {
 	 * @inheritDoc
 	 */
 	public String getNsPrefixURI(String prefix) {
-		return mModel.getNsPrefixURI(prefix);
+		return mModel.getNsPrefixURI( prefix );
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public String getNsURIPrefix(String uri) {
-		return mModel.getNsURIPrefix(uri);
+		return mModel.getNsURIPrefix( uri );
 	}
 
 	/**
@@ -845,14 +845,14 @@ class AbstractDelegateModel implements Model {
 	 * @inheritDoc
 	 */
 	public Property getProperty(String uri) {
-		return mModel.getProperty(uri);
+		return mModel.getProperty( uri );
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public RDFNode getRDFNode(Node n) {
-		return mModel.getRDFNode(n);
+		return mModel.getRDFNode( n );
 	}
 
 	/**
@@ -866,7 +866,7 @@ class AbstractDelegateModel implements Model {
 	 * @inheritDoc
 	 */
 	public RDFReader getReader(String lang) {
-		return mModel.getReader(lang);
+		return mModel.getReader( lang );
 	}
 
 	/**
@@ -880,7 +880,7 @@ class AbstractDelegateModel implements Model {
 	 * @inheritDoc
 	 */
 	public Statement getRequiredProperty(Resource s, Property p) {
-		return mModel.getRequiredProperty(s, p);
+		return mModel.getRequiredProperty( s, p );
 	}
 
 	/**
@@ -894,7 +894,7 @@ class AbstractDelegateModel implements Model {
 	 * @inheritDoc
 	 */
 	public Resource getResource(String uri) {
-		return mModel.getResource(uri);
+		return mModel.getResource( uri );
 	}
 
 	/**
@@ -908,7 +908,7 @@ class AbstractDelegateModel implements Model {
 	 * @inheritDoc
 	 */
 	public Seq getSeq(String uri) {
-		return mModel.getSeq(uri);
+		return mModel.getSeq( uri );
 	}
 
 	/**
@@ -922,7 +922,7 @@ class AbstractDelegateModel implements Model {
 	 * @inheritDoc
 	 */
 	public RDFWriter getWriter(String lang) {
-		return mModel.getWriter(lang);
+		return mModel.getWriter( lang );
 	}
 
 	/**
@@ -936,7 +936,7 @@ class AbstractDelegateModel implements Model {
 	 * @inheritDoc
 	 */
 	public Model intersection(Model model) {
-		return mModel.intersection(model);
+		return mModel.intersection( model );
 	}
 
 	/**
@@ -957,7 +957,7 @@ class AbstractDelegateModel implements Model {
 	 * @inheritDoc
 	 */
 	public boolean isIsomorphicWith(Model g) {
-		return mModel.isIsomorphicWith(g);
+		return mModel.isIsomorphicWith( g );
 	}
 
 	/**
@@ -1010,7 +1010,7 @@ class AbstractDelegateModel implements Model {
 	 * @inheritDoc
 	 */
 	public StmtIterator listLiteralStatements(Resource subject, Property predicate, long object) {
-		return mModel.listLiteralStatements(subject, predicate, object);
+		return mModel.listLiteralStatements( subject, predicate, object );
 	}
 
 	/**
@@ -1038,7 +1038,7 @@ class AbstractDelegateModel implements Model {
 	 * @inheritDoc
 	 */
 	public NodeIterator listObjectsOfProperty(Resource s, Property p) {
-		return mModel.listObjectsOfProperty(s, p);
+		return mModel.listObjectsOfProperty( s, p );
 	}
 
 	/**
@@ -1052,7 +1052,7 @@ class AbstractDelegateModel implements Model {
 	 * @inheritDoc
 	 */
 	public RSIterator listReifiedStatements(Statement st) {
-		return mModel.listReifiedStatements(st);
+		return mModel.listReifiedStatements( st );
 	}
 
 	/**
@@ -1108,7 +1108,7 @@ class AbstractDelegateModel implements Model {
 	 * @inheritDoc
 	 */
 	public ResIterator listResourcesWithProperty(Property p) {
-		return mModel.listResourcesWithProperty(p);
+		return mModel.listResourcesWithProperty( p );
 	}
 
 	/**
@@ -1144,7 +1144,7 @@ class AbstractDelegateModel implements Model {
 	 * @inheritDoc
 	 */
 	public StmtIterator listStatements(Selector s) {
-		return mModel.listStatements(s);
+		return mModel.listStatements( s );
 	}
 
 	/**
@@ -1179,7 +1179,7 @@ class AbstractDelegateModel implements Model {
 	 * @inheritDoc
 	 */
 	public ResIterator listSubjectsWithProperty(Property p) {
-		return mModel.listSubjectsWithProperty(p);
+		return mModel.listSubjectsWithProperty( p );
 	}
 
 	/**
@@ -1193,29 +1193,30 @@ class AbstractDelegateModel implements Model {
 	 * @inheritDoc
 	 */
 	public Model notifyEvent(Object e) {
-		return mModel.notifyEvent(e);
+		return mModel.notifyEvent( e );
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public String qnameFor(String uri) {
-		return mModel.qnameFor(uri);
+		return mModel.qnameFor( uri );
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public Model query(Selector s) {
-		return mModel.query(s);
+		return mModel.query( s );
 	}
 
-	/**
-	 * @inheritDoc
-	 */
+	/*
+	 * @inritDoc
+	 // sotty : apparently not defined in Jena 2.10.0, which is imported by empire-jena.	 
 	public QueryHandler queryHandler() {
 		return mModel.queryHandler();
 	}
+	*/
 
 	/**
 	 * @inheritDoc

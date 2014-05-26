@@ -45,7 +45,7 @@ public class TestLazyCollectionLoad {
 
 	@BeforeClass
 	public static void beforeClass() {
-        System.setProperty("empire.configuration.file", new File(TestUtil.getProjectHome(), "core/test/test.empire.config.properties").getAbsolutePath());
+        TestUtil.setConfigSystemProperty( "test.empire.config.properties" );
 		Empire.init(new TestModule());
 
         RdfGenerator.init(Sets.<Class<?>>newHashSet(BusinessObjectImpl.class, EventImpl.class));

@@ -17,4 +17,16 @@
 	<property name="test.mainclass" value="com.clarkparsia.empire.TestEmpireCore"/>
 
 	<import file="../master.build.xml"/>
+
+	<target name="makepom" description="Generate Maven POM.xml" >
+		<ivy:info file="ivy.xml"/>
+		<ivy:makepom ivyfile="ivy.xml"
+		             pomfile="pom.xml"
+		             artifactPackaging="jar"
+		             templatefile="pom.template">
+			<mapping conf="compile" scope="compile"/>
+			<mapping conf="default" scope="runtime"/>
+			<mapping conf="test" scope="test"/>
+		</ivy:makepom>
+	</target>
 </project>

@@ -16,6 +16,7 @@
 package com.clarkparsia.empire.sesame;
 
 import java.io.File;
+import java.net.URL;
 
 import com.clarkparsia.empire.Empire;
 import com.clarkparsia.empire.util.DefaultEmpireModule;
@@ -38,8 +39,7 @@ public class SesameTestSuite {
 
     @BeforeClass
     public static void beforeClass () {
-	    System.setProperty("empire.configuration.file", new File(TestUtil.getProjectHome(), "core/test/test.empire.config.properties").getAbsolutePath());
-
+        TestUtil.setConfigSystemProperty( "test.empire.config.properties" );
         Empire.init(new DefaultEmpireModule(), new OpenRdfEmpireModule());
     }
 }

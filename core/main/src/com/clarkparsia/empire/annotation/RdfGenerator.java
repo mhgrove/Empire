@@ -1517,7 +1517,7 @@ public final class RdfGenerator {
 					return FACTORY.createLiteral(String.class.cast(theIn), annotation.language());
 				}
 				else {
-					return FACTORY.createLiteral(String.class.cast(theIn));
+					return FACTORY.createLiteral(String.class.cast(theIn), XMLSchema.STRING);
 				}
 			}
 			else if (Character.class.isInstance(theIn)) {

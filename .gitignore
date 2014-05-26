@@ -7,3 +7,6 @@ dist
 out
 settings/ivy-cache
 settings/repo
+*.iml
+.idea
+target

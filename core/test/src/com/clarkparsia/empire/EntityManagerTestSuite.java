@@ -105,7 +105,7 @@ import static org.junit.Assume.assumeTrue;
  */
 public abstract class EntityManagerTestSuite {
 
-	public static final String DATA_DIR = System.getProperty("empire.test.data") != null ? System.getProperty("empire.test.data") : new File(TestUtil.getProjectHome(), "core/test/data").getAbsolutePath();
+	public static final String DATA_DIR = System.getProperty("empire.test.data") != null ? System.getProperty("empire.test.data") : TestUtil.getTestDataDirPath("data" );
 	public static final String DATA_FILE = DATA_DIR + "/lite.nasa.nt";
 	public static final String TYPING_FILE = DATA_DIR + "/typing.ttl";
 

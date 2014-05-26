@@ -19,8 +19,10 @@ import com.clarkparsia.empire.ds.DataSource;
 import com.clarkparsia.empire.ds.DataSourceException;
 import com.clarkparsia.empire.api.MutableTestDataSourceFactory;
 import com.google.common.base.Strings;
+import junit.framework.Test;
 
 import java.io.File;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -30,10 +32,11 @@ import java.util.Map;
  * @author Michael Grove
  */
 public class TestUtil {
-	public static DataSource createTestSource() throws DataSourceException {
+
+    public static DataSource createTestSource() throws DataSourceException {
 		Map<String, Object> aMap = new HashMap<String, Object>();
 		aMap.put("factory", "test-source");
-		aMap.put("files", new File(TestUtil.getProjectHome(), "core/test/data/lite.nasa.nt"));
+		aMap.put("files", lookupFile( "data/lite.nasa.nt" ).getAbsolutePath() );
 
 		return new MutableTestDataSourceFactory().create(aMap);
 	}
@@ -41,10 +44,57 @@ public class TestUtil {
     public static File getProjectHome() {
         String home = System.getProperty("test.home", "");
         if (Strings.isNullOrEmpty(home)) {
-            return new File(System.getProperty("user.dir"));
+            home = System.getProperty("user.dir");
+            return new File( home );
         }
         else {
             return new File(home);
         }
+    }
+
+    public static void setConfigSystemProperty( String configSystemProperty ) {
+        String path = null;
+        File f = lookupFile( configSystemProperty );
+        if ( f != null && f.exists() ) {
+            path = f.getAbsolutePath();
+        }
+        if ( path != null ) {
+            System.setProperty( "empire.configuration.file", path );
+        } else {
+            System.setProperty( "empire.configuration.file", configSystemProperty );
+        }
+    }
+
+
+
+    public static String getTestDataDirPath( String dataDir ) {
+        File d = lookupFile( dataDir );
+        if ( d != null ) {
+            return d.getAbsolutePath();
+        } else {
+            return dataDir;
+        }
+    }
+
+    protected static File lookupFile( String base ) {
+        //TODO a more robust implementation shuold not use Files, but more generalized Streams that can be looked up using CL.getResource()
+        File f;
+        f = new File( TestUtil.getProjectHome(), base );
+        if ( f.exists() ) {
+            return f;
+        }
+        f = new File( TestUtil.getProjectHome(), "test/" + base );
+        if ( f.exists() ) {
+            return f;
+        }
+        f = new File( TestUtil.getProjectHome(), "core/test/" + base );
+        if ( f.exists() ) {
+            return f;
+        }
+        f = new File( TestUtil.getProjectHome(), "../core/test/" + base );
+        if ( f.exists() ) {
+            return f;
+        }
+        return null;
     }
 }

@@ -17,13 +17,13 @@
 	</publications>
 
 	<dependencies defaultconf="compile;default;test">
-		<dependency org="com.clarkparsia.empire" name="empire" rev="0.8.4" conf="compile;test"/>
+		<dependency org="com.clarkparsia.empire" name="empire" rev="0.8.5" conf="compile;test"/>
 
-		<dependency org="com.google.guava" name="guava" rev="15.0" conf="compile,default,test->default">
+		<dependency org="com.google.guava" name="guava" rev="17.0" conf="compile,default,test->default">
 			<exclude org="com.google.code.findbugs"/>
 		</dependency>
 
-		<dependency org="org.openrdf.sesame" name="sesame-runtime" rev="2.7.10" conf="compile,default,test->default">
+		<dependency org="org.openrdf.sesame" name="sesame-runtime" rev="2.7.11" conf="compile,default,test->default">
 			<exclude org="org.slf4j"/>
 		</dependency>
 

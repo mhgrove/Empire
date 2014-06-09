@@ -20,6 +20,7 @@ import com.google.common.collect.Sets;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
@@ -50,6 +51,9 @@ import com.clarkparsia.empire.api.TestDataSource;
 import com.clarkparsia.empire.api.TestVocab;
 
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
@@ -310,6 +314,31 @@ public class TestRdfConvert {
 		assertFalse(aImpl.equals(new SupportsRdfIdImpl(URI.create("urn:new:id"))));
 	}
 
+    @Test
+    public void testThawByInterfacesAndCustomClasses() {
+        MyInterfaceImpl aImpl = new MyInterfaceImpl();
+        MyRootClass root = new MyRootClass();
+        root.addFoo( aImpl );
+
+        try {
+            Collection<Class<?>> klasses = new ArrayList<Class<?>>(  );
+            klasses.add( MyInterfaceImpl.class );
+            klasses.add( MyRootClass.class );
+            RdfGenerator.init( klasses );
+
+            Graph aGraph = RdfGenerator.asRdf( root );
+
+            Graph aSourceGraph = new GraphImpl();
+            aSourceGraph.addAll(aGraph);
+
+            MyRootClass aRoot = RdfGenerator.fromRdf(MyRootClass.class, "urn:id:00", new TestDataSource(aSourceGraph));
+            assertSame( aRoot.getFoo().get( 0 ).getClass(), aImpl.getClass() );
+        } catch ( Exception e ) {
+            e.printStackTrace();
+            fail( e.getMessage() );
+        }
+    }
+
 	@Test
 	public void testTransience() {
 		TransientTest aObj = new TransientTest();
@@ -397,4 +426,96 @@ public class TestRdfConvert {
 		@RdfProperty("urn:baz")
 		private String baz;
 	}
+
+
+
+    public abstract static class EmpireImpl implements SupportsRdfId, EmpireGenerated {
+        private RdfKey key;
+        private Graph allTriples;
+        private Graph instanceTriples;
+
+        public EmpireImpl( URIKey uriKey ) {
+            this.key = uriKey;
+        }
+
+        @Override
+        public RdfKey getRdfId() {
+            return key;
+        }
+
+        @Override
+        public void setRdfId( RdfKey theId ) {
+            this.key = theId;
+        }
+
+        @Override
+        public Graph getAllTriples() {
+            return allTriples;
+        }
+
+        @Override
+        public void setAllTriples( Graph aGraph ) {
+            this.allTriples = aGraph;
+        }
+
+        @Override
+        public Graph getInstanceTriples() {
+            return instanceTriples;
+        }
+
+        @Override
+        public void setInstanceTriples( Graph aGraph ) {
+            this.instanceTriples = aGraph;
+        }
+
+    }
+
+    @RdfsClass("urn:MyInterface")
+    @Entity
+    public static interface MyInterface extends SupportsRdfId {
+    }
+
+    @RdfsClass("urn:MyInterface")
+    @Entity
+    public static class MyInterfaceImpl extends EmpireImpl implements MyInterface, EmpireGenerated {
+
+        public MyInterfaceImpl() {
+            super( new URIKey( URI.create( "urn:sub:01" ) ) );
+        }
+
+        @Override
+        public Class getInterfaceClass() {
+            return MyInterface.class;
+        }
+    }
+
+    @RdfsClass("urn:MyClassOfSort")
+    @Entity
+    public static class MyRootClass extends EmpireImpl implements SupportsRdfId, EmpireGenerated {
+
+        List<MyInterface> foo;
+
+        public MyRootClass() {
+            super( new URIKey( URI.create( "urn:id:00" ) ) );
+            foo = new ArrayList<MyInterface>(  );
+        }
+
+        @RdfProperty("urn:foo")
+        public List<MyInterface> getFoo() {
+            return foo;
+        }
+
+        public void setFoo( List<MyInterface> foo ) {
+            this.foo = foo;
+        }
+
+        @Override
+        public Class getInterfaceClass() {
+            return EmpireGenerated.class;
+        }
+
+        public void addFoo( MyInterface aImpl ) {
+            this.foo.add( aImpl );
+        }
+    }
 }

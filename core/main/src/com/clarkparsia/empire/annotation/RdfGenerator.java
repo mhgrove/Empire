@@ -165,6 +165,11 @@ public final class RdfGenerator {
 
 	private final static Set<Class<?>> REGISTERED_FOR_NS = new HashSet<Class<?>>();
 
+    /**
+     * Cache the AccessibleObjects to avoid repeated inspections
+     */
+    private final static Map<Class<?>,Map<URI,AccessibleObject>> ACCESSORS_BY_CLASS = new HashMap<Class<?>, Map<URI, AccessibleObject>>();
+
 	/**
 	 * Initialize some parameters in the RdfGenerator.  This caches namespace and type mapping information locally
 	 * which will be used in subsequent rdf generation requests.
@@ -249,7 +254,7 @@ public final class RdfGenerator {
 
 			try {
 				long istart = System.currentTimeMillis();
-				if (theClass.isInterface() || Modifier.isAbstract(theClass.getModifiers())) {		
+				if (theClass.isInterface() || Modifier.isAbstract(theClass.getModifiers())) {
 					aObj = com.clarkparsia.empire.codegen.InstanceGenerator.generateInstanceClass(theClass).newInstance();
 
 					if (LOGGER.isDebugEnabled()) {
@@ -363,7 +368,7 @@ public final class RdfGenerator {
 		
 		return aResult;
 	}
-	
+
 	/**
 	 * Populate the fields of the current instance from the RDF indiviual with the given URI
 	 * @param theObj the Java object to populate
@@ -417,50 +422,18 @@ public final class RdfGenerator {
 			
 			OBJECT_M.put(theKeyObj, theObj);
 			final Resource aRes = EmpireUtil.asResource(aSupportsRdfId);
-			
-			Collection<Field> aFields = getAnnotatedFields(theObj.getClass());
-			Collection<Method> aMethods = getAnnotatedSetters(theObj.getClass(), true);
 
 			addNamespaces(theObj.getClass());
 
-			final Map<URI, AccessibleObject> aAccessMap = new HashMap<URI, AccessibleObject>();
+			Map<URI, AccessibleObject> theCachedMap = ACCESSORS_BY_CLASS.get(theObj.getClass());
 
-			Iterables2.each(aFields, new Predicate<Field>() {
-				public boolean apply(final Field theField) {
-					if (theField.getAnnotation(RdfProperty.class) != null) {
-						aAccessMap.put(FACTORY.createURI(PrefixMapping.GLOBAL.uri(theField.getAnnotation(RdfProperty.class).value())),
-									   theField);
-					}
-					else {
-						String aBase = "urn:empire:clark-parsia:";
-						if (aRes instanceof URI) {
-							aBase = ((URI)aRes).getNamespace();
-						}
-
-						aAccessMap.put(FACTORY.createURI(aBase + theField.getName()),
-									   theField);
-					}
-
-					return true;
-				}
-			});
-
-			Iterables2.each(aMethods, new Predicate<Method>() {
-				public boolean apply(final Method theMethod) {
-					RdfProperty aAnnotation = BeanReflectUtil.getAnnotation(theMethod, RdfProperty.class);
-					if (aAnnotation != null) {
-						aAccessMap.put(FACTORY.createURI(PrefixMapping.GLOBAL.uri(aAnnotation.value())),
-									   theMethod);
-					}
-
-					return true;
-				}
-			});			
-			
+            if (theCachedMap == null) {
+                theCachedMap = cacheAccessibles(theObj.getClass(), aRes);
+            }
 			Set<URI> aUsedProps = new HashSet<URI>();
 
 			for (URI aProp : aProps) {
-				AccessibleObject aAccess = aAccessMap.get(aProp);
+				AccessibleObject aAccess = theCachedMap.get(aProp);
 
 				if (aAccess == null && RDF.TYPE.equals(aProp)) {
 					// TODO: the following block should be entirely removed (leaving continue only)
@@ -558,6 +531,48 @@ public final class RdfGenerator {
 		}
 	}
 
+    public static Map<URI, AccessibleObject> cacheAccessibles( Class theClass, final Resource aRes ) {
+        final Map<URI, AccessibleObject> aAccessMap = new HashMap<URI, AccessibleObject>();
+
+        Collection<Field> aFields = getAnnotatedFields( theClass );
+        Collection<Method> aMethods = getAnnotatedSetters( theClass, true );
+
+
+        Iterables2.each(aFields, new Predicate<Field>() {
+            public boolean apply(final Field theField) {
+                if (theField.getAnnotation(RdfProperty.class) != null) {
+                    URI theURI = FACTORY.createURI(PrefixMapping.GLOBAL.uri(theField.getAnnotation(RdfProperty.class).value()));
+                    aAccessMap.put( theURI, theField );
+                }
+                else {
+                    String aBase = "urn:empire:clark-parsia:";
+                    if (aRes instanceof URI) {
+                        aBase = ((URI)aRes).getNamespace();
+                    }
+
+                    aAccessMap.put(FACTORY.createURI(aBase + theField.getName()),
+                                   theField);
+                }
+
+                return true;
+            }
+        });
+
+        Iterables2.each(aMethods, new Predicate<Method>() {
+            public boolean apply(final Method theMethod) {
+                RdfProperty aAnnotation = BeanReflectUtil.getAnnotation(theMethod, RdfProperty.class);
+                if (aAnnotation != null) {
+                    URI theURI = FACTORY.createURI( PrefixMapping.GLOBAL.uri( aAnnotation.value() ) );
+                    aAccessMap.put( theURI, theMethod );
+                }
+
+                return true;
+            }
+        });
+
+        ACCESSORS_BY_CLASS.put( theClass, aAccessMap );
+        return aAccessMap;
+    }
 
 	/**
 	 * Return the RdfClass annotation on the object.
@@ -845,7 +860,6 @@ public final class RdfGenerator {
 
 	/**
 	 * Javassist {@link MethodHandler} implementation for method proxying.
-	 * @param <T> the proxy class type
 	 */
 	private static class CollectionProxyHandler implements MethodHandler {
 
@@ -1135,7 +1149,7 @@ public final class RdfGenerator {
 			}
 		}
 
-		if (!BeanReflectUtil.hasAnnotation(aClass, RdfsClass.class)) {
+		if (!BeanReflectUtil.hasAnnotation(aClass, RdfsClass.class) || aClass.isInterface()) {
 			// k, so either the parameter of the collection or the declared type of the field does
 			// not map to an instance/bean type.  this is most likely an error, but lets try and find
 			// the rdf:type of the field, and see if we can map that to a class in the path and we'll
@@ -1158,6 +1172,20 @@ public final class RdfGenerator {
                 }
             }
 		}
+
+        if ( aClass.isInterface() ) {
+            if ( BeanReflectUtil.hasAnnotation( aClass, RdfsClass.class) ) {
+                URI aType = FACTORY.createURI( ((RdfsClass) aClass.getAnnotation( RdfsClass.class )).value() );
+                for (Class aTypeClass : TYPE_TO_CLASS.get(aType)) {
+                    if ((BeanReflectUtil.hasAnnotation(aTypeClass, RdfsClass.class)) &&
+                        (aClass.isAssignableFrom(aTypeClass))) {
+                        // lets try this one
+                        aClass = aTypeClass;
+                        return aClass;
+                    }
+                }
+            }
+        }
 
 		return aClass;
 	}

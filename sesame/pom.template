@@ -6,7 +6,7 @@ ${ivy.pom.header}
 	<parent>
 		<groupId>com.clarkparsia.empire</groupId>
 		<artifactId>Empire-parent</artifactId>
-		<version>0.8.4</version>
+		<version>0.8.6</version>
 	</parent>
 
   <modelVersion>4.0.0</modelVersion>

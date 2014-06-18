@@ -17,7 +17,7 @@
 	</publications>
 
 	<dependencies defaultconf="compile;default;test">
-		<dependency org="com.clarkparsia.empire" name="empire" rev="0.8.5"/>
+		<dependency org="com.clarkparsia.empire" name="empire" rev="0.8.6"/>
 
 		<dependency org="junit" name="junit" rev="4.8.2" conf="test->default"/>
 

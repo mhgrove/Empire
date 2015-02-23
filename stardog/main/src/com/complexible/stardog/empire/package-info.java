@@ -13,11 +13,16 @@
  * limitations under the License.
  */
 
-dependencies {
-	compile project(":core")
-	compile project(path: ":core", configuration: "testRuntime")
+/**
+ * <p>Bindings for using Stardog as a {@link com.clarkparsia.empire.ds.DataSource} for the Empire library</p>
+ *
+ * @author  Michael Grove
+ * @author  Evren Sirin
+ * @author  Hector Perez Urbina
+ * @since   0.9.0
+ * @version 0.9.
+ *
+ * @see <a href="https://github.com/mhgrove/Empire>Empire</a>
+ */
 
-	compile "org.apache.jena:jena-arq:2.10.0"
-	compile "org.apache.jena:jena-core:2.10.0"
-	compile "org.apache.jena:jena-tdb:0.10.1"
-}
+package com.complexible.stardog.empire;

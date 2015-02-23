@@ -13,11 +13,27 @@
  * limitations under the License.
  */
 
-dependencies {
-	compile project(":core")
-	compile project(path: ":core", configuration: "testRuntime")
+package com.complexible.stardog.empire;
 
-	compile "org.apache.jena:jena-arq:2.10.0"
-	compile "org.apache.jena:jena-core:2.10.0"
-	compile "org.apache.jena:jena-tdb:0.10.1"
+import com.clarkparsia.empire.ds.DataSourceFactory;
+import com.clarkparsia.empire.util.EmpireModule;
+import com.google.inject.AbstractModule;
+import com.google.inject.multibindings.Multibinder;
+
+/**
+ * <p>Guice module for the Stardog Empire plugin.</p>
+ *
+ * @author  Evren Sirin
+ * @since   0.9.0
+ * @version 0.9.0
+ */
+public class StardogEmpireModule extends AbstractModule implements EmpireModule {
+
+	/**
+	 * @inheritDoc
+	 */
+	protected void configure() {
+		Multibinder.newSetBinder(binder(), DataSourceFactory.class)
+				.addBinding().to(StardogEmpireDataSourceFactory.class);
+	}
 }

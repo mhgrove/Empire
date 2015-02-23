@@ -15,6 +15,7 @@
 
 package com.clarkparsia.empire.codegen;
 
+import com.clarkparsia.empire.util.Repositories2;
 import com.complexible.common.collect.Iterables2;
 import com.complexible.common.collect.Iterators2;
 import com.complexible.common.openrdf.model.Statements;
@@ -438,7 +439,7 @@ public final class BeanGenerator {
 	public static void generateSourceFiles(String thePackageName, URL theOntology, RDFFormat theFormat, File theDirToSave) throws Exception {
 		NAMES_TO_COUNT.clear();
 
-		Repository aRepository = Repositories.createInMemoryRepo();
+		Repository aRepository = Repositories2.createInMemoryRepo();
 
 		Repositories.add(aRepository, theOntology.openStream(), theFormat);
 

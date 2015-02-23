@@ -1,0 +1,3 @@
+stardogRepo=url/to/repo
+artifactoryUsername=user
+artifactoryPassword=secret

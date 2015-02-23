@@ -20,6 +20,7 @@ import com.clarkparsia.empire.ds.DataSource;
 import com.clarkparsia.empire.ds.DataSourceException;
 import com.clarkparsia.empire.ds.Alias;
 
+import com.clarkparsia.empire.util.Repositories2;
 import com.complexible.common.openrdf.repository.Repositories;
 import com.google.common.base.Splitter;
 import org.openrdf.repository.Repository;
@@ -51,7 +52,7 @@ public final class MutableTestDataSourceFactory implements DataSourceFactory {
 			return mSourceCache.get(theMap.get("files"));
 		}
 
-		Repository aRepo = Repositories.createInMemoryRepo();
+		Repository aRepo = Repositories2.createInMemoryRepo();
 
 		if (theMap.containsKey("files")) {
 			for (String aFile : Splitter.on(",").omitEmptyStrings().trimResults().split(theMap.get("files").toString())) {

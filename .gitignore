@@ -1,12 +1,11 @@
 .DS_Store
-core/lib
-jena/lib
-sesame/lib
 build
-dist
 out
-settings/ivy-cache
-settings/repo
 *.iml
+*.iws
+*.ipr
 .idea
 target
+
+gradle.properties
+.gradle

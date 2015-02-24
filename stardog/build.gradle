@@ -1,0 +1,53 @@
+/*
+ * Copyright (c) 2009-2015 Clark & Parsia, LLC. <http://www.clarkparsia.com>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+dependencies {
+	compile project(":core")
+
+	// client api modules
+	compile "com.complexible.stardog.reasoning:stardog-reasoning-api:${stardogVersion}"
+	compile "com.complexible.stardog.icv:stardog-icv-api:${stardogVersion}"
+	compile "com.complexible.stardog.icv:stardog-icv-api_snarl:${stardogVersion}"
+	compile "com.complexible.stardog.search:stardog-search-api:${stardogVersion}"
+	compile "com.complexible.stardog.jena:stardog-jena:${stardogVersion}"
+	compile "com.complexible.stardog.repair:stardog-repair:${stardogVersion}"
+	compile "com.complexible.stardog.versioning:stardog-versioning-api:${stardogVersion}"
+	compile "com.complexible.stardog.sesame:stardog-sesame-core:${stardogVersion}"
+
+	testCompile project(path: ":core", configuration: "testRuntime")
+
+	// server core modules
+	testCompile "com.complexible.stardog.core:stardog:${stardogVersion}"
+	testCompile "com.complexible.stardog.security:stardog-core-security:${stardogVersion}"
+	testCompile "com.complexible.stardog.logging:stardog-logging:${stardogVersion}"
+
+	// server snarl modules
+	testCompile "com.complexible.stardog.protocols.snarl:stardog-protocols-snarl-server:${stardogVersion}"
+
+	// client snarl modules
+	testCompile "com.complexible.stardog.protocols.snarl:stardog-protocols-snarl-client:${stardogVersion}"
+}
+
+test {
+	workingDir = projectDir
+	minHeapSize = "2g"
+	maxHeapSize = "2g"
+//	debug = true // for attaching the IDE to the gradle cli
+
+	jvmArgs '-XX:MaxPermSize=256m', '-enableassertions'
+	if (project.hasProperty("stardogHome")) {
+		jvmArgs "-Dstardog.home=${stardogHome}"
+	}
+}

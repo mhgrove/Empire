@@ -13,27 +13,27 @@
  * limitations under the License.
  */
 
-package com.clarkparsia.empire.sesame;
+package com.complexible.stardog.empire;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.Multibinder;
 import com.clarkparsia.empire.ds.DataSourceFactory;
 import com.clarkparsia.empire.util.EmpireModule;
+import com.google.inject.AbstractModule;
+import com.google.inject.multibindings.Multibinder;
 
 /**
- * <p>Guice module for the Sesame 2.x plugin.</p>
+ * <p>Guice module for the Stardog Empire plugin.</p>
  *
- * @author  Michael Grove
- * @since   0.6
- * @version 0.6.1
+ * @author  Evren Sirin
+ * @since   0.9.0
+ * @version 0.9.0
  */
-public class OpenRdfEmpireModule extends AbstractModule implements EmpireModule {
+public class StardogEmpireModule extends AbstractModule implements EmpireModule {
 
 	/**
 	 * @inheritDoc
 	 */
 	protected void configure() {
 		Multibinder.newSetBinder(binder(), DataSourceFactory.class)
-				.addBinding().to(RepositoryDataSourceFactory.class);
+				.addBinding().to(StardogEmpireDataSourceFactory.class);
 	}
 }

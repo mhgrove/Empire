@@ -1,0 +1,167 @@
+/*
+ * Copyright (c) 2009-2010 Clark & Parsia, LLC. <http://www.clarkparsia.com>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+ if (!project.hasProperty('stardogRepo')) {
+	throw new InvalidUserDataException("Url to Stardog repository is not defined." +
+									   " Set up the property 'stardogRepo' in gradle.properties.")
+}
+
+apply plugin: 'java'
+apply plugin: 'idea'
+
+task wrapper(type: Wrapper) {
+	gradleVersion = '2.0'
+	distributionUrl = "http://services.gradle.org/distributions/gradle-${gradleVersion}-all.zip"
+}
+
+ext {
+	stardogVersion		= "3.0"
+	projectVersion		= "0.9.0"
+	projectDescription	= "JPA implementation for RDF"
+	projectUrl			= "https://github.com/mhgrove/Empire"
+}
+
+allprojects {
+	group = "com.clarkparsia.empire"
+	version = projectVersion
+	sourceCompatibility = '1.6'
+	targetCompatibility = '1.6'
+
+	repositories {
+		mavenCentral()
+		maven {
+			url stardogRepo
+			// todo: remove this once we go live
+			credentials {
+				username artifactoryUsername
+				password artifactoryPassword
+			}
+		}
+	}
+
+
+}
+
+subprojects {
+	apply plugin: "java"
+	apply plugin: "maven"
+
+	dependencies {
+		compile 'org.slf4j:slf4j-api:1.7.7'
+		compile 'org.slf4j:slf4j-jdk14:1.7.7'
+
+		testCompile 'junit:junit:4.8.2'
+	}
+
+	configurations {
+		// ignore 
+		compile.dependencies.all { dep ->
+			if (dep instanceof ExternalModuleDependency
+				&& (dep.group == 'org.openrdf.sesame' || dep.group == 'com.complexible.common')) {
+				dep.exclude group: "junit"
+			}
+		}
+	}
+
+	sourceSets {
+		main {
+			java {
+				srcDir 'main/src'
+			}
+			resources {
+				srcDir 'main/resources'
+			}
+		}
+		test {
+			java {
+				srcDir 'test/src'
+			}
+			resources {
+				srcDir 'test/resources'
+			}
+		}
+	}
+
+	// create a 'tests' conf for importing test classes from other sub-projects
+	task testJar(type: Jar, dependsOn: testClasses) {
+		classifier = 'tests'
+		from sourceSets.test.output
+	}
+
+	artifacts {
+		testRuntime testJar // include the tests of other subprojects
+	}
+
+	if (project.hasProperty('publishUrl')
+		&& project.hasProperty('artifactoryUser')
+		&& project.hasProperty('artifactoryPassword')) {
+
+		// this task is just so artifactory picks up the pom changes
+		task('uploadMvn', type: Upload) {
+			configuration = configurations.archives
+			repositories {
+				mavenDeployer {
+					repository(url: publishUrl)
+					pom.project {
+						name = archivesBaseName
+						packaging = 'jar'
+						description projectDescription
+						url  projectUrl
+					}
+
+					//mess with the generated pom to remove test dependencies from published artifacts
+					pom.withXml { XmlProvider xmlProvider ->
+						def xml = xmlProvider.asString()
+						def pomXml = new XmlParser().parse(new ByteArrayInputStream(xml.toString().bytes))
+
+						pomXml.dependencies.dependency.each { dep ->
+							if (dep.scope.text() != 'compile') {
+								def parent = dep.parent()
+								parent.remove(dep)
+							}
+						}
+
+						def newXml = new StringWriter()
+						def printer = new XmlNodePrinter(new PrintWriter(newXml))
+						printer.preserveWhitespace = true
+						printer.print(pomXml)
+						xml.setLength(0)
+						xml.append(newXml.toString())
+					}
+
+				}
+			}
+		}
+	}
+}
+
+evaluationDependsOnChildren()
+
+subprojects {
+	task javadocs(type: Javadoc) {
+		source sourceSets.main.allJava
+		classpath = configurations.compile
+		destinationDir = file("${rootProject.buildDir}/javadocs/${project.name}")
+		configure(options) {
+			windowTitle "${project.archivesBaseName}-${project.version} API"
+			docTitle "${project.archivesBaseName}-${project.version}"
+			bottom "Copyright &#169; 2010-2015 Complexible. All Rights Reserved."
+			links "http://docs.oracle.com/javase/6/docs/api/",
+				  "http://docs.guava-libraries.googlecode.com/git-history/v17.0/javadoc/"
+		}
+	}
+}
+
+

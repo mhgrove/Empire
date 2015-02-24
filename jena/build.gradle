@@ -13,27 +13,11 @@
  * limitations under the License.
  */
 
-package com.clarkparsia.empire.sesame;
+dependencies {
+	compile project(":core")
+	compile project(path: ":core", configuration: "testRuntime")
 
-import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.Multibinder;
-import com.clarkparsia.empire.ds.DataSourceFactory;
-import com.clarkparsia.empire.util.EmpireModule;
-
-/**
- * <p>Guice module for the Sesame 2.x plugin.</p>
- *
- * @author  Michael Grove
- * @since   0.6
- * @version 0.6.1
- */
-public class OpenRdfEmpireModule extends AbstractModule implements EmpireModule {
-
-	/**
-	 * @inheritDoc
-	 */
-	protected void configure() {
-		Multibinder.newSetBinder(binder(), DataSourceFactory.class)
-				.addBinding().to(RepositoryDataSourceFactory.class);
-	}
+	compile "org.apache.jena:jena-arq:2.10.0"
+	compile "org.apache.jena:jena-core:2.10.0"
+	compile "org.apache.jena:jena-tdb:0.10.1"
 }

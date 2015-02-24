@@ -3,8 +3,10 @@ Change Log
 
 Empire 0.9 (TBD)
 =======================
+	* ADDED:    Gradle build out
+	* ADDED:    Open sourced Stardog bindings
 	* FIXED:    Resolved perm-gen leak (issue #86)
-	* MODIFIED: Upgraded to Sesame 2.7.12, Guava 17, CP Utils 3.1.1 & CP OpenRDF Utils 2.0.4
+	* MODIFIED: Upgraded to Sesame 2.7.14, Guava 18, CP Utils 4.0 & CP OpenRDF Utils 3.0
 
 Empire 0.8 (2013-09-30)
 =======================

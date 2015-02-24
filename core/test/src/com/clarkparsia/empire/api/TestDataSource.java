@@ -16,6 +16,7 @@
 package com.clarkparsia.empire.api;
 
 import com.clarkparsia.empire.ds.impl.AbstractResultSet;
+import com.clarkparsia.empire.util.Repositories2;
 import com.complexible.common.openrdf.model.Graphs;
 import com.complexible.common.openrdf.repository.Repositories;
 import com.complexible.common.openrdf.util.AdunaIterations;
@@ -58,7 +59,7 @@ public class TestDataSource extends AbstractDataSource implements DataSource {
 	}
 
 	public TestDataSource(Graph theGraph) {
-		mRepo = Repositories.createInMemoryRepo();
+		mRepo = Repositories2.createInMemoryRepo();
 
 		try {
 			Repositories.add(mRepo, theGraph);

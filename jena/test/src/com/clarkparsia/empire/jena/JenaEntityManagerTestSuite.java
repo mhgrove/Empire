@@ -15,8 +15,6 @@
 
 package com.clarkparsia.empire.jena;
 
-import java.io.File;
-
 import com.clarkparsia.empire.ds.DataSourceFactory;
 import com.clarkparsia.empire.EntityManagerTestSuite;
 import com.clarkparsia.empire.util.TestUtil;

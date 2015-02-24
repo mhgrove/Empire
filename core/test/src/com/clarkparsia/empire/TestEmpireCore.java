@@ -15,8 +15,6 @@
 
 package com.clarkparsia.empire;
 
-import java.io.File;
-
 import com.clarkparsia.empire.codegen.CodegenTests;
 
 import com.clarkparsia.empire.lazyload.TestLazyCollectionLoad;

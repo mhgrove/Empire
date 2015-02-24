@@ -15,9 +15,6 @@
 
 package com.clarkparsia.empire.sesame;
 
-import java.io.File;
-import java.net.URL;
-
 import com.clarkparsia.empire.Empire;
 import com.clarkparsia.empire.util.DefaultEmpireModule;
 

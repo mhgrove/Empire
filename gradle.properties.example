@@ -1,0 +1,4 @@
+stardogRepo=url/to/repo
+stardogHome=path/to/$STARDOG_HOME
+artifactoryUsername=user
+artifactoryPassword=secret

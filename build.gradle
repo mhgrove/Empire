@@ -13,10 +13,6 @@
  * limitations under the License.
  */
 
- if (!project.hasProperty('stardogRepo')) {
-	throw new InvalidUserDataException("Url to Stardog repository is not defined." +
-									   " Set up the property 'stardogRepo' in gradle.properties.")
-}
 
 apply plugin: 'java'
 apply plugin: 'idea'
@@ -42,12 +38,7 @@ allprojects {
 	repositories {
 		mavenCentral()
 		maven {
-			url stardogRepo
-			// todo: remove this once we go live
-			credentials {
-				username artifactoryUsername
-				password artifactoryPassword
-			}
+			url "http://maven.stardog.com"
 		}
 	}
 

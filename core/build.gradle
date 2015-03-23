@@ -22,7 +22,7 @@ dependencies {
     
     compile "com.complexible.common:cp-common-utils:4.0"
 
-	compile "com.complexible.common:cp-openrdf-utils:3.0"
+	compile "com.complexible.common:cp-openrdf-utils:3.0.1"
 
 	compile "commons-dbcp:commons-dbcp:1.3"
 

@@ -1,7 +1,7 @@
 Change Log
 ==========
 
-Empire 0.9 (TBD)
+Empire 0.9 (2015-03-25)
 =======================
 	* ADDED:    Gradle build out
 	* ADDED:    Open sourced Stardog bindings

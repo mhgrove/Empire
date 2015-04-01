@@ -134,7 +134,7 @@ public final class EmpireUtil {
 	 * @return true if it has a named graph specified, false otherwise
 	 */
 	public static boolean hasNamedGraphSpecified(Object theObj) {
-		NamedGraph aAnnotation = theObj.getClass().getAnnotation(NamedGraph.class);
+		NamedGraph aAnnotation = BeanReflectUtil.getAnnotation(theObj.getClass(), NamedGraph.class);
 
 		return aAnnotation != null &&
 			   (aAnnotation.type() == NamedGraph.NamedGraphType.Instance || (aAnnotation.type() == NamedGraph.NamedGraphType.Static
@@ -153,7 +153,7 @@ public final class EmpireUtil {
 			return null;
 		}
 
-		NamedGraph aAnnotation = theObj.getClass().getAnnotation(NamedGraph.class);
+		NamedGraph aAnnotation = BeanReflectUtil.getAnnotation(theObj.getClass(), NamedGraph.class);
 
 		if (aAnnotation.type() == NamedGraph.NamedGraphType.Instance) {
 			SupportsRdfId aId = asSupportsRdfId(theObj);

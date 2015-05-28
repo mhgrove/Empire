@@ -167,7 +167,7 @@ public final class EmpireUtil {
 			}
 		}
 		else {
-			return URI.create(aAnnotation.value());
+			return URI.create(PrefixMapping.GLOBAL.uri(aAnnotation.value()));
 		}
 	}
 

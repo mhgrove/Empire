@@ -197,7 +197,7 @@ public final class InstanceGenerator {
 
 		Class<T> aResult = null;
 		try {
-			aResult = (Class<T>) aClass.toClass();
+			aResult = (Class<T>) aClass.toClass(theInterface.getClassLoader(), theInterface.getProtectionDomain());
 		}
 		catch (CannotCompileException e) {
 			throw e;

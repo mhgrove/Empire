@@ -322,7 +322,7 @@ public final class InstanceGenerator {
 						}
 					}
 
-					attr.setAnnotation(theAnnotation);
+					attr.addAnnotation(theAnnotation);
 				}
 				theMethod.getMethodInfo().addAttribute(attr);
 			}

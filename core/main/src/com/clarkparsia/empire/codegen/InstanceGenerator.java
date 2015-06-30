@@ -309,9 +309,7 @@ public final class InstanceGenerator {
 			if (annotationsAttribute != null) {
 				ConstPool cp = theClass.getClassFile().getConstPool();
 				AnnotationsAttribute attr = new AnnotationsAttribute(cp, AnnotationsAttribute.visibleTag);
-				Annotation[] annos = new Annotation[annotationsAttribute.getAnnotations().length];
 
-				int i = 0;
 				for (Object obj : annotationsAttribute.getAnnotations()) {
 
 					Annotation a = (Annotation) obj;
@@ -324,10 +322,8 @@ public final class InstanceGenerator {
 						}
 					}
 
-					annos[i] = theAnnotation;
-					i++;
+					attr.addAnnotation(theAnnotation);
 				}
-				attr.setAnnotations(annos);
 				theMethod.getMethodInfo().addAttribute(attr);
 			}
 		}

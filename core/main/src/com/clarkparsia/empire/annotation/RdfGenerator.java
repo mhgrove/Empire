@@ -1425,7 +1425,7 @@ public final class RdfGenerator {
 
 	@SuppressWarnings("unchecked")
 	private static <T> T getProxyOrDbObject(Object theAccessor, Class<T> theClass, Object theKey, DataSource theSource) throws Exception {
-		if (BeanReflectUtil.isFetchTypeLazy(theAccessor, theClass)) {
+		if (BeanReflectUtil.isFetchTypeLazy(theAccessor)) {
 			Proxy<T> aProxy = new Proxy<T>(theClass, asPrimaryKey(theKey), theSource);
 
 			ProxyFactory aFactory = new ProxyFactory();

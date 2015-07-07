@@ -753,7 +753,7 @@ public final class BeanReflectUtil {
 	 * @param theAccessor the accessor
 	 * @return true if the accessor is marked with {@link FetchType#LAZY}, false otherwise.
 	 */
-	public static boolean isFetchTypeLazy(Object theAccessor, Class theClass) {
+	public static boolean isFetchTypeLazy(Object theAccessor) {
 		FetchType aFetchType = null;
 
 		if (theAccessor instanceof AccessibleObject) {
@@ -771,7 +771,7 @@ public final class BeanReflectUtil {
 					for (String prefix : new String[]{"get", "is"}) {
 						String aGetterName = aMethod.getName().replaceFirst("set", prefix);
 						try {
-							aObject = (AccessibleObject)(theClass.getMethod(aGetterName));
+							aObject = (AccessibleObject)(aMethod.getDeclaringClass().getMethod(aGetterName));
 							break;
 						}
 						catch (NoSuchMethodException e) {

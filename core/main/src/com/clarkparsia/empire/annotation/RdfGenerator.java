@@ -1433,7 +1433,7 @@ public final class RdfGenerator {
 				aFactory.setSuperclass(theClass);
 				aFactory.setInterfaces(ObjectArrays.concat(theClass.getInterfaces(), EmpireGenerated.class));
 			} else {
-				:aFactory.setInterfaces(ObjectArrays.concat(theClass, ObjectArrays.concat(theClass.getInterfaces(), EmpireGenerated.class)));
+				aFactory.setInterfaces(ObjectArrays.concat(theClass, ObjectArrays.concat(theClass.getInterfaces(), EmpireGenerated.class)));
 			}
 
 			aFactory.setFilter(METHOD_FILTER);

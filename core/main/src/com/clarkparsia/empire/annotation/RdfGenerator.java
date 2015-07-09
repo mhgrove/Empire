@@ -1430,10 +1430,10 @@ public final class RdfGenerator {
 
 			ProxyFactory aFactory = new ProxyFactory();
 			if (!theClass.isInterface()) {
-	            aFactory.setSuperclass(theClass);
-			    aFactory.setInterfaces(ObjectArrays.concat(theClass.getInterfaces(), EmpireGenerated.class));
+				aFactory.setSuperclass(theClass);
+				aFactory.setInterfaces(ObjectArrays.concat(theClass.getInterfaces(), EmpireGenerated.class));
 			} else {
-			    aFactory.setInterfaces(ObjectArrays.concat(theClass, ObjectArrays.concat(theClass.getInterfaces(), EmpireGenerated.class)));
+				:aFactory.setInterfaces(ObjectArrays.concat(theClass, ObjectArrays.concat(theClass.getInterfaces(), EmpireGenerated.class)));
 			}
 
 			aFactory.setFilter(METHOD_FILTER);

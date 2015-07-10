@@ -759,6 +759,28 @@ public final class BeanReflectUtil {
 		if (theAccessor instanceof AccessibleObject) {
 			AccessibleObject aObject = (AccessibleObject) theAccessor;
 
+			if (aObject instanceof Method) {
+
+				Method aMethod = (Method)aObject;
+				// if we got a setter, actually we should check that the corresponding
+				// *getter* was annotated with one of the JPA "relationship" annotations
+				if (aMethod.getName().startsWith("set")
+					&& (aMethod.getGenericReturnType().equals(Void.class) || aMethod.getGenericReturnType().toString().equals("void")
+					&& aMethod.getParameterTypes().length == 1)) {
+
+					for (String prefix : new String[]{"get", "is"}) {
+						String aGetterName = aMethod.getName().replaceFirst("set", prefix);
+						try {
+							aObject = (AccessibleObject)(aMethod.getDeclaringClass().getMethod(aGetterName));
+							break;
+						}
+						catch (NoSuchMethodException e) {
+							// let it go
+						}
+					}
+				}
+			}
+
 			if (aObject.getAnnotation(OneToMany.class) != null) {
 				aFetchType = aObject.getAnnotation(OneToMany.class).fetch();
 			}

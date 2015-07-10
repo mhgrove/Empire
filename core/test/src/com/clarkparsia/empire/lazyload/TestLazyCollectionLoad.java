@@ -215,16 +215,16 @@ public class TestLazyCollectionLoad {
     }
     
     /*
-     * Construct data used by testLazyLoadInterfaceProxy
+     * Construct data used by Child & Parent tests
      */
-    private static Child newChildWithParent(URI childUri, URI parentUri, EntityManager m) throws InstantiationException, IllegalAccessException, Exception {
+    private static void newChildWithParent(URI childUri, URI parentUri, EntityManager m) throws InstantiationException, IllegalAccessException, Exception {
         Child child = InstanceGenerator.generateInstanceClass(Child.class).newInstance();
         Parent parent = InstanceGenerator.generateInstanceClass(Parent.class).newInstance();
         child.setRdfId(new SupportsRdfId.URIKey(childUri));
         parent.setRdfId(new SupportsRdfId.URIKey(parentUri));
         child.setIsChildOf(Lists.newArrayList(parent));
         parent.setIsParentOf(Lists.newArrayList(child));
-        m.persist(child); // cascade=CascadeType.PERSIST is set
-        return child;
+        m.persist(parent);
+        m.persist(child);
     }
 }

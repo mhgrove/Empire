@@ -224,7 +224,6 @@ public class TestLazyCollectionLoad {
         parent.setRdfId(new SupportsRdfId.URIKey(parentUri));
         child.setIsChildOf(Lists.newArrayList(parent));
         parent.setIsParentOf(Lists.newArrayList(child));
-        m.persist(parent);
-        m.persist(child);
+        m.persist(parent); // CascadeType.PERSIST is set so child & parent saved
     }
 }

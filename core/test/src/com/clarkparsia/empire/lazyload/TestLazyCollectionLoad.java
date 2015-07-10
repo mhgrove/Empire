@@ -128,6 +128,55 @@ public class TestLazyCollectionLoad {
 		assertEvent3(aIter.next());
     }
 
+    /**
+     * Test that annotating just the getter with '@OneToMany(fetch=FetchType.LAZY)'
+     * will result in a lazy fetch (issue #106). As currently implemented, this is 
+     * testing that BeanReflectUtil#isFetchTypeLazy returns true to 
+     * RdfGenerator#getProxyOrDbObject so that that returns a proxy object.
+     * 
+     * @throws Exception test error
+     */
+    @Test
+    public void testLazyLoadGetterAnnotation() throws Exception {
+        
+        EntityManagerFactory f = Persistence.createEntityManagerFactory("test-data-source2");
+        final EntityManager aEntityManager = f.createEntityManager();
+        
+        URI aChildUri = new URI("http://example.org/c1");
+        URI aParentUri = new URI("http://example.org/p1");
+        newChildWithParent(aChildUri, aParentUri, aEntityManager);
+         // Child has just the getter annotated with:
+         // @OneToMany(fetch=FetchType.LAZY)
+        Child aChild = aEntityManager.find(Child.class, aChildUri);
+        Object itsParent = aChild.getIsChildOf().get(0);
+        assertTrue("Expected a javassist.util.proxy.Proxy object indicating a lazy load", 
+                itsParent instanceof javassist.util.proxy.ProxyObject);        
+    }
+    
+    /**
+     * Test that the proxy returned for a lazily-fetched interface-valued property
+     * has the expected class hierarchy (Issue #107)
+     * 
+     * @throws Exception test error
+     */
+    @Test
+    public void testLazyLoadInterfaceProxyHierarchy() throws Exception {
+        
+        EntityManagerFactory f = Persistence.createEntityManagerFactory("test-data-source2");
+        final EntityManager aEntityManager = f.createEntityManager();
+        
+        URI aChildUri = new URI("http://example.org/c2");
+        URI aParentUri = new URI("http://example.org/p2");
+        newChildWithParent(aChildUri, aParentUri, aEntityManager);
+        Child aChild = aEntityManager.find(Child.class, aChildUri);
+        Object itsParent = aChild.getIsChildOf().get(0);
+        // we require instanceof Proxy also because if isChildOf is not correctly lazily-loaded then
+        // what we get back will be instanceof Parent. If using TestNG we could make this test 
+        // dependent on testLazyLoadGetterAnnotation
+        assertTrue("Expected a javassist.util.proxy.Proxy object with Parent as an interface", 
+                itsParent instanceof javassist.util.proxy.ProxyObject && itsParent instanceof Parent);        
+    }
+    
 	private void assertEvent1(final Event theEvent) {
 		assertEquals(Status.Complete, theEvent.getStatus());
 		assertEquals("Event #1", theEvent.getParameters());
@@ -165,55 +214,6 @@ public class TestLazyCollectionLoad {
         return b;
     }
     
-    /**
-     * Test that annotating just the getter with '@OneToMany(fetch=FetchType.LAZY)'
-     * will result in a lazy fetch (issue #106). As currently implemented, this is 
-     * testing that BeanReflectUtil#isFetchTypeLazy returns true to 
-     * RdfGenerator#getProxyOrDbObject so that that returns a proxy object.
-     * 
-     * @throws Exception test error
-     */
-    @Test
-    public void testLazyLoadGetterAnnotation() throws Exception {
-        
-        EntityManagerFactory f = Persistence.createEntityManagerFactory("test-data-source2");
-        final EntityManager aEntityManager = f.createEntityManager();
-        
-        URI aChildUri = new URI("http://example.org/c1");
-        URI aParentUri = new URI("http://example.org/p1");
-        newChildWithParent(aChildUri, aParentUri, aEntityManager);
-         // Child has just the getter annotated with:
-         // @OneToMany(fetch=FetchType.LAZY,cascade=CascadeType.PERSIST)
-        Child aChild = aEntityManager.find(Child.class, aChildUri);
-        Object itsParent = aChild.getIsChildOf().get(0);
-        assertTrue("Expected a javassist.util.proxy.Proxy object indicating a lazy load", 
-                itsParent instanceof javassist.util.proxy.ProxyObject);        
-    }
-    
-    /**
-     * Test that the proxy returned for a lazily-fetched interface-valued property
-     * has the expected class hierarchy. 
-     * 
-     * @throws Exception test error
-     */
-    @Test
-    public void testLazyLoadInterfaceProxyHierarchy() throws Exception {
-        
-        EntityManagerFactory f = Persistence.createEntityManagerFactory("test-data-source2");
-        final EntityManager aEntityManager = f.createEntityManager();
-        
-        URI aChildUri = new URI("http://example.org/c2");
-        URI aParentUri = new URI("http://example.org/p2");
-        newChildWithParent(aChildUri, aParentUri, aEntityManager);
-        Child aChild = aEntityManager.find(Child.class, aChildUri);
-        Object itsParent = aChild.getIsChildOf().get(0);
-        // we require instanceof Proxy also because if isChildOf is not correctly lazily-loaded then
-        // what we get back will be instanceof Parent. If using TestNG we could make this test 
-        // dependent on testLazyLoadGetterAnnotation
-        assertTrue("Expected a javassist.util.proxy.Proxy object with Parent as an interface", 
-                itsParent instanceof javassist.util.proxy.ProxyObject && itsParent instanceof Parent);        
-    }
-    
     /*
      * Construct data used by Child & Parent tests
      */
@@ -224,6 +224,7 @@ public class TestLazyCollectionLoad {
         parent.setRdfId(new SupportsRdfId.URIKey(parentUri));
         child.setIsChildOf(Lists.newArrayList(parent));
         parent.setIsParentOf(Lists.newArrayList(child));
-        m.persist(parent); // CascadeType.PERSIST is set so child & parent saved
+        m.persist(child);
+        m.persist(parent);
     }
 }

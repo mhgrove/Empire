@@ -913,6 +913,7 @@ public final class EntityManagerImpl implements EntityManager {
 		catch (Exception e) {
 			LOGGER.error("There was an error during entity lifecycle notification for annotation: " +
 						 theLifecycleAnnotation + " on object: " + theObj +".", e);
+			throw new PersistenceException(e.getCause());
 		}
 
 		for (Object aListener : getEntityListeners(theObj)) {
@@ -927,6 +928,7 @@ public final class EntityManagerImpl implements EntityManager {
 			catch (Exception e) {
 				LOGGER.error("There was an error during lifecycle notification for annotation: " +
 							 theLifecycleAnnotation + " on object: " + theObj + ".", e);
+				throw new PersistenceException(e.getCause());
 			}
 		}
 	}

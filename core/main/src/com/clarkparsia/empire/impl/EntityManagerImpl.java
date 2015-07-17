@@ -67,7 +67,7 @@ import java.lang.reflect.AccessibleObject;
 
 import java.util.Map;
 import java.util.Collection;
-import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.HashSet;
 import java.util.Collections;
 import java.util.WeakHashMap;
@@ -948,7 +948,7 @@ public final class EntityManagerImpl implements EntityManager {
 			
 			if (aEntityListeners != null) {
 				// if there are entity listeners, lets create them
-				aListeners = new ArrayList<Object>();
+				aListeners = new LinkedHashSet<Object>();
 				for (Class<?> aClass : aEntityListeners.value()) {
 					try {
 						aListeners.add(Empire.get().instance(aClass));

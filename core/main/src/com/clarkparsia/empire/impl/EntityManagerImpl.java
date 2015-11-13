@@ -35,6 +35,7 @@ import com.clarkparsia.empire.annotation.AnnotationChecker;
 
 import com.complexible.common.openrdf.model.Models2;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import org.openrdf.model.Model;
@@ -383,6 +384,12 @@ public final class EntityManagerImpl implements EntityManager {
 		catch (DataSourceException ex) {
 			throw new PersistenceException(ex);
 		}
+		catch (RuntimeException e) {
+			if (mTransaction != null) {
+				mTransaction.setRollbackOnly();
+			}
+			throw e;
+		}
 	}
 
 	private MutableDataSource getDataSource() {
@@ -478,6 +485,13 @@ public final class EntityManagerImpl implements EntityManager {
 		}
 		catch (InvalidRdfException ex) {
 			throw new IllegalStateException(ex);
+		}
+		catch (RuntimeException e) {
+			if (mTransaction != null) {
+				mTransaction.setRollbackOnly();
+			}
+
+			throw e;
 		}
 	}
 
@@ -629,6 +643,12 @@ public final class EntityManagerImpl implements EntityManager {
 		}
 		catch (DataSourceException ex) {
 			throw new PersistenceException(ex);
+		}
+		catch (RuntimeException e) {
+			if (mTransaction != null) {
+				mTransaction.setRollbackOnly();
+			}
+			throw e;
 		}
 	}
 
@@ -904,6 +924,8 @@ public final class EntityManagerImpl implements EntityManager {
 
 		Collection<Method> aMethods = getAnnotatedMethods(theObj.getClass(), theLifecycleAnnotation);
 
+		Throwable aError = null;
+
 		// Entity methods take no arguments...
 		try {
 			for (Method aMethod : aMethods) {
@@ -911,9 +933,11 @@ public final class EntityManagerImpl implements EntityManager {
 			}
 		}
 		catch (Exception e) {
-			LOGGER.error("There was an error during entity lifecycle notification for annotation: " +
+			LOGGER.info("There was an error during entity lifecycle notification for annotation: " +
 						 theLifecycleAnnotation + " on object: " + theObj +".", e);
-			throw new PersistenceException(e.getCause());
+
+			Throwables.propagateIfInstanceOf(e, RuntimeException.class);
+			throw new PersistenceException(e);
 		}
 
 		for (Object aListener : getEntityListeners(theObj)) {
@@ -926,9 +950,11 @@ public final class EntityManagerImpl implements EntityManager {
 				}
 			}
 			catch (Exception e) {
-				LOGGER.error("There was an error during lifecycle notification for annotation: " +
+				LOGGER.info("There was an error during lifecycle notification for annotation: " +
 							 theLifecycleAnnotation + " on object: " + theObj + ".", e);
-				throw new PersistenceException(e.getCause());
+
+				Throwables.propagateIfInstanceOf(e, RuntimeException.class);
+				throw new PersistenceException(e);
 			}
 		}
 	}

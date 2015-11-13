@@ -31,6 +31,7 @@ import java.util.List;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.EntityExistsException;
+import javax.persistence.EntityListeners;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.FetchType;
@@ -39,11 +40,14 @@ import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import javax.persistence.PersistenceException;
+import javax.persistence.PreRemove;
 import javax.persistence.Query;
 
 import com.clarkparsia.empire.annotation.RdfGenerator;
 import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.RdfsClass;
+import com.clarkparsia.empire.annotation.SupportsRdfIdImpl;
 import com.clarkparsia.empire.codegen.InstanceGenerator;
 
 import com.clarkparsia.empire.ds.DataSource;
@@ -951,6 +955,47 @@ public abstract class EntityManagerTestSuite {
 	@Test @Ignore
 	public void testTransactionSupport() {
 		// TODO: implement test
+	}
+
+	@Test
+	public void testLifeCycleExceptions() throws Exception {
+		EntityManager aManager = createEntityManager();
+
+		ExceptionInLifecycle aBean = new ExceptionInLifecycle();
+
+		aManager.persist(aBean);
+
+		try {
+			aManager.remove(aBean);
+			fail("Should not have removed bean");
+		}
+		catch (PersistenceException theE) {
+			// expected
+		}
+	}
+
+	public static class RemoveProhibitor {
+		@PreRemove
+		public void prohibit(Object o) {
+			throw new PersistenceException(o.getClass().getName() + " instances may not be removed");
+		}
+	}
+
+	@Entity
+	@EntityListeners({RemoveProhibitor.class})
+	@RdfsClass("urn:Foo")
+	private static final class ExceptionInLifecycle implements SupportsRdfId {
+		private final SupportsRdfIdImpl mId = new SupportsRdfIdImpl();
+
+		@Override
+		public RdfKey getRdfId() {
+			return mId.getRdfId();
+		}
+
+		@Override
+		public void setRdfId(final RdfKey theId) {
+			mId.setRdfId(theId);
+		}
 	}
 
 	@Test

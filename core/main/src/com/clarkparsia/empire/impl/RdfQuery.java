@@ -15,11 +15,11 @@
 
 package com.clarkparsia.empire.impl;
 
-import org.openrdf.model.Graph;
-import org.openrdf.model.URI;
+import org.openrdf.model.Model;
+import org.openrdf.model.IRI;
 import org.openrdf.model.Value;
 import org.openrdf.model.vocabulary.XMLSchema;
-import org.openrdf.model.impl.ValueFactoryImpl;
+import org.openrdf.model.impl.SimpleValueFactory;
 import org.openrdf.query.BindingSet;
 
 import com.clarkparsia.empire.ds.DataSource;
@@ -62,7 +62,7 @@ import java.util.regex.Pattern;
  *
  * @author	Michael Grove
  * @since 	0.1
- * @version 0.7
+ * @version 1.0
  */
 public final class RdfQuery implements Query {
 	/**
@@ -116,12 +116,12 @@ public final class RdfQuery implements Query {
 	 * Map of parameter index (not string index, their numbered index, eg the first parameter (1), the second (2))
 	 * to the value of that parameter
 	 */
-	private Map<Integer, Value> mIndexedParameters = new HashMap<Integer, Value>();
+	private Map<Integer, Value> mIndexedParameters = new HashMap<>();
 
 	/**
 	 * Map of parameter names to their values
 	 */
-	private Map<String, Value> mNamedParameters = new HashMap<String, Value>();
+	private Map<String, Value> mNamedParameters = new HashMap<>();
 
 	/**
 	 * The current limit of the query, or -1 for no limit
@@ -146,7 +146,7 @@ public final class RdfQuery implements Query {
 	/**
 	 * The map of asserted query hints.
 	 */
-	private Map<String, Object> mHints = new HashMap<String, Object>();
+	private Map<String, Object> mHints = new HashMap<>();
 
 	/**
 	 * The dialect of the query represented by this query object.
@@ -318,7 +318,7 @@ public final class RdfQuery implements Query {
 	 * @return the resulting RDF graph
 	 * @throws QueryException if there is an error while querying
 	 */
-	public Graph executeDescribe() throws QueryException {
+	public Model executeDescribe() throws QueryException {
 		return getSource().describe(query());
 	}
 
@@ -345,7 +345,7 @@ public final class RdfQuery implements Query {
 	 * @return the result graph
 	 * @throws QueryException if there is an error while querying
 	 */
-	public Graph executeConstruct() throws QueryException {
+	public Model executeConstruct() throws QueryException {
 		return getSource().graphQuery(query());
 	}
 
@@ -358,60 +358,57 @@ public final class RdfQuery implements Query {
 
 		try {
 			if (isConstruct()) {
-				Graph aGraph = getSource().graphQuery(query());
+				Model aGraph = getSource().graphQuery(query());
 				aList.add(aGraph);
 			}
 			else {
-				ResultSet aResults = getSource().selectQuery(query());
 
-                try {
-                    if (getBeanClass() != null) {
-                        // for now, by convention, for this to work like the JPQL stuff where you do something like
-                        // "from Product pr join pr.poc as p where p.id = ?" and expect to get a list of Product instances
-                        // back as the result set, you *MUST* have a var in the projection called 'result' which is
-                        // the URI of the things you want to get back; when you don't do this, we prefix your partial query
-                        // with this string
-                        while (aResults.hasNext()) {
+				try (ResultSet aResults = getSource().selectQuery(query())) {
+					if (getBeanClass() != null) {
+						// for now, by convention, for this to work like the JPQL stuff where you do something like
+						// "from Product pr join pr.poc as p where p.id = ?" and expect to get a list of Product instances
+						// back as the result set, you *MUST* have a var in the projection called 'result' which is
+						// the URI of the things you want to get back; when you don't do this, we prefix your partial query
+						// with this string
+						while (aResults.hasNext()) {
 							BindingSet aBS = aResults.next();
 
-                            Object aObj;
+							Object aObj;
 
-                            String aVarName = getProjectionVarName();
+							String aVarName = getProjectionVarName();
 
-                            if (aBS.getValue(aVarName) instanceof URI && AnnotationChecker.isValid(getBeanClass())) {
-                                if (EmpireOptions.ENABLE_QUERY_RESULT_PROXY) {
-                                    aObj = new Proxy(getBeanClass(), asPrimaryKey(aBS.getValue(aVarName)), getSource());
-                                }
-                                else {
-                                    aObj = RdfGenerator.fromRdf(getBeanClass(),
-                                                                asPrimaryKey(aBS.getValue(aVarName)),
-                                                                getSource());
-                                }
-                            }
-                            else {
-                                aObj = new RdfGenerator.ValueToObject(getSource(), null,
-                                                                      getBeanClass(), null).apply(aBS.getValue(aVarName));
-                            }
+							if (aBS.getValue(aVarName) instanceof IRI && AnnotationChecker.isValid(getBeanClass())) {
+								if (EmpireOptions.ENABLE_QUERY_RESULT_PROXY) {
+									aObj = new Proxy(getBeanClass(), asPrimaryKey(aBS.getValue(aVarName)), getSource());
+								}
+								else {
+									aObj = RdfGenerator.fromRdf(getBeanClass(),
+									                            asPrimaryKey(aBS.getValue(aVarName)),
+									                            getSource());
+								}
+							}
+							else {
+								aObj = new RdfGenerator.ValueToObject(getSource(), null,
+								                                      getBeanClass(), null).apply(aBS.getValue(aVarName));
+							}
 
-                            // if the object could not be created, or it was and its not the bean class type, or not a proxy
-                            // for something of the bean class type, then we could not bind the value in the result set
-                            // which is an error.
-                            if (aObj == null
-                                || !(getBeanClass().isInstance(aObj) || (aObj instanceof Proxy && getBeanClass().isAssignableFrom(((Proxy)aObj).getProxyClass())))) {
-                                throw new PersistenceException("Cannot bind query result to bean: " + getBeanClass());
-                            }
-                            else {
-                                aList.add(aObj);
-                            }
-                        }
-                    }
-                    else {
-                        aList.addAll(Lists.newArrayList(aResults));
-                    }
-                }
-                finally {
-                    aResults.close();
-                }
+							// if the object could not be created, or it was and its not the bean class type, or not a proxy
+							// for something of the bean class type, then we could not bind the value in the result set
+							// which is an error.
+							if (aObj == null
+							    || !(getBeanClass().isInstance(aObj) || (aObj instanceof Proxy && getBeanClass().isAssignableFrom(((Proxy) aObj)
+								                                                                                                      .getProxyClass())))) {
+								throw new PersistenceException("Cannot bind query result to bean: " + getBeanClass());
+							}
+							else {
+								aList.add(aObj);
+							}
+						}
+					}
+					else {
+						aList.addAll(Lists.newArrayList(aResults));
+					}
+				}
 			}
 		}
 		catch (Exception e) {
@@ -579,13 +576,13 @@ public final class RdfQuery implements Query {
 
 		switch (theTemporalType) {
 			case DATE:
-				aValue = ValueFactoryImpl.getInstance().createLiteral(Dates.date(theDate.getTime()), XMLSchema.DATE);
+				aValue = SimpleValueFactory.getInstance().createLiteral(Dates.date(theDate.getTime()), XMLSchema.DATE);
 				break;
 			case TIME:
-				aValue = ValueFactoryImpl.getInstance().createLiteral(Dates.datetime(theDate.getTime()), XMLSchema.TIME);
+				aValue = SimpleValueFactory.getInstance().createLiteral(Dates.datetime(theDate.getTime()), XMLSchema.TIME);
 				break;
 			case TIMESTAMP:
-				aValue = ValueFactoryImpl.getInstance().createLiteral("" + theDate.getTime().getTime(), XMLSchema.TIME);
+				aValue = SimpleValueFactory.getInstance().createLiteral("" + theDate.getTime().getTime(), XMLSchema.TIME);
 				break;
 		}
 
@@ -653,7 +650,7 @@ public final class RdfQuery implements Query {
 		}
 
 		int aIndex = 1;
-		while (aBuffer.indexOf(VARIABLE_TOKEN) != -1) {
+		while (aBuffer.contains(VARIABLE_TOKEN)) {
 			boolean containsParam = Pattern.compile(VT_RE).matcher(aBuffer).find();
 			if (mIndexedParameters.get(aIndex) != null && containsParam) {
 				aBuffer = aBuffer.replaceFirst(VT_RE, mQueryDialect.asQueryString(mIndexedParameters.get(aIndex++)));
@@ -670,7 +667,7 @@ public final class RdfQuery implements Query {
 		// using this instead of replaceAll -- which keeps giving group does not exist errors.  I think my regex must
 		// be subtly (is that a word?) wrong and I'm just not seeing it.  This works, for now.
 
-		StringBuffer aQueryBuffer = new StringBuffer();
+		StringBuilder aQueryBuffer = new StringBuilder();
 
 		Matcher m = Pattern.compile(VT_RE+theVariable).matcher(theQuery);
 
@@ -728,9 +725,8 @@ public final class RdfQuery implements Query {
 		if (containsLimit) {
 			String aLimitGrabRegex = "limit(\\s)*[0-9]+";
 			Matcher m = Pattern.compile(aLimitGrabRegex).matcher(getQueryString());
-			m.find();
 
-			if (getMaxResults() == -1) {
+			if (m.find() && getMaxResults() == -1) {
 				setMaxResults(Integer.parseInt(m.group(0).split(" ")[1]));
 			}
 
@@ -740,9 +736,8 @@ public final class RdfQuery implements Query {
 		if (containsOffset) {
 			String aOffsetGrabRegex = "offset(\\s)*[0-9]+";
 			Matcher m = Pattern.compile(aOffsetGrabRegex).matcher(getQueryString());
-			m.find();
 
-			if (getFirstResult() == -1) {
+			if (m.find() && getFirstResult() == -1) {
 				setFirstResult(Integer.parseInt(m.group(0).split(" ")[1]));
 			}
 			
@@ -765,7 +760,7 @@ public final class RdfQuery implements Query {
             aQuery.insert(0, mQueryDialect.patternKeyword());
         }
 
-        StringBuffer aStart = new StringBuffer();
+        StringBuilder aStart = new StringBuilder();
 		if (!startsWithKeyword(getQueryString())) {
 			aStart.insert(0, isConstruct() ? "construct " : "select ").append(isDistinct() ? " distinct " : "").append(" ");
 			
@@ -800,7 +795,7 @@ public final class RdfQuery implements Query {
 	 * @return the query w/ unused variables replaced w/ the appropriate equivalents.
 	 */
 	private String replaceUnusedVariableTokens(String theQuery) {
-		StringBuffer aQueryBuffer = new StringBuffer();
+		StringBuilder aQueryBuffer = new StringBuilder();
 
 		Matcher m = Pattern.compile(NAMED_VAR_REGEX).matcher(theQuery);
 

@@ -17,7 +17,7 @@ package com.clarkparsia.empire.api.nasa;
 
 import com.complexible.common.openrdf.vocabulary.Vocabulary;
 
-import org.openrdf.model.URI;
+import org.openrdf.model.IRI;
 
 /**
  * <p></p>
@@ -39,7 +39,7 @@ public class SpaceVocab extends Vocabulary {
         return INSTANCE;
     }
 
-    public final URI mass = term("mass");
-    public final URI agency = term("agency");
-    public final URI alternateName = term("alternateName");
+    public final IRI mass = term("mass");
+    public final IRI agency = term("agency");
+    public final IRI alternateName = term("alternateName");
 }

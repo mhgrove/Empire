@@ -15,7 +15,7 @@
 
 package com.clarkparsia.empire;
 
-import com.complexible.common.openrdf.model.Graphs;
+import com.complexible.common.openrdf.model.Models2;
 import com.google.common.collect.Sets;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -27,10 +27,8 @@ import static org.junit.Assert.fail;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-import org.openrdf.model.impl.GraphImpl;
-import org.openrdf.model.impl.ValueFactoryImpl;
-
-import org.openrdf.model.Graph;
+import org.openrdf.model.Model;
+import org.openrdf.model.impl.SimpleValueFactory;
 
 import org.openrdf.model.util.GraphUtil;
 import org.openrdf.model.vocabulary.RDFS;
@@ -59,7 +57,6 @@ import java.util.List;
 
 import com.complexible.common.openrdf.vocabulary.FOAF;
 import com.complexible.common.openrdf.vocabulary.DC;
-import com.complexible.common.openrdf.model.ExtGraph;
 import com.complexible.common.base.Dates;
 import com.complexible.common.util.PrefixMapping;
 import com.google.common.collect.Lists;
@@ -155,17 +152,17 @@ public class TestRdfConvert {
 		aPerson.setMBox("mailto:bob@example.org");
 
 		try {
-			ExtGraph aGraph = Graphs.extend(RdfGenerator.asRdf(aPerson));
+			Model aGraph = RdfGenerator.asRdf(aPerson);
 
-			org.openrdf.model.URI aPersonURI = aGraph.getValueFactory().createURI(aPerson.getRdfId().toString());
+			org.openrdf.model.IRI aPersonURI = SimpleValueFactory.getInstance().createIRI(aPerson.getRdfId().toString());
 
 			assertEquals(aGraph.size(), 2);
 
 			// the statements should assert that the person is of type foaf:TestPerson
-			assertTrue(Sets.newHashSet(aGraph.getTypes(aPersonURI)).contains(FOAF.ontology().Person));
+			assertTrue(Sets.newHashSet(Models2.getTypes(aGraph, aPersonURI)).contains(FOAF.ontology().Person));
 
 			// and that the mbox is correct
-			assertEquals(Graphs.getLiteral(aGraph, aPersonURI, FOAF.ontology().mbox).get().getLabel(), aPerson.getMBox());
+			assertEquals(Models2.getLiteral(aGraph, aPersonURI, FOAF.ontology().mbox).get().getLabel(), aPerson.getMBox());
 
 			// now lets try with some more properties
 
@@ -181,38 +178,38 @@ public class TestRdfConvert {
 
 			aPerson.setWeblogURI(URI.create("http://example.org"));
 
-			aGraph = Graphs.extend(RdfGenerator.asRdf(aPerson));
+			aGraph = RdfGenerator.asRdf(aPerson);
 
-			assertEquals((Float) Float.parseFloat(aGraph.getLiteral(aPersonURI, TestVocab.ontology().weight).get().getLabel()),
+			assertEquals((Float) Float.parseFloat(Models2.getLiteral(aGraph, aPersonURI, TestVocab.ontology().weight).get().getLabel()),
 						 aPerson.getWeight());
 
 			// this tests if "inferring" from an annotated getter works
-			assertEquals(Boolean.valueOf(aGraph.getLiteral(aPersonURI, TestVocab.ontology().likesVideoGames).get().getLabel()),
+			assertEquals(Boolean.valueOf(Models2.getLiteral(aGraph, aPersonURI, TestVocab.ontology().likesVideoGames).get().getLabel()),
 						 aPerson.isLikesVideoGames());
 
 			// and this tests if 'inferring" from an annotated setter works
 			// also checking that it properly used the other namespace
-			assertEquals(aGraph.getLiteral(aPersonURI, DC.ontology().title).get().getLabel(),
+			assertEquals(Models2.getLiteral(aGraph, aPersonURI, DC.ontology().title).get().getLabel(),
 						 aPerson.getTitle());
 
 			assertEquals(URI.create(GraphUtil.getUniqueObject(aGraph, aPersonURI, DC.ontology().publisher).stringValue()),
 						 aPerson.getWeblogURI());
 
-			assertEquals(aGraph.getLiteral(aPersonURI, FOAF.ontology().firstName).get().getLabel(),
+			assertEquals(Models2.getLiteral(aGraph, aPersonURI, FOAF.ontology().firstName).get().getLabel(),
 						 aPerson.getFirstName());
 
-			assertEquals(aGraph.getLiteral(aPersonURI, FOAF.ontology().surname).get().getLabel(),
+			assertEquals(Models2.getLiteral(aGraph, aPersonURI, FOAF.ontology().surname).get().getLabel(),
 						 aPerson.getLastName());
 
-			assertEquals(aGraph.getLiteral(aPersonURI, RDFS.LABEL).get().getLabel(),
+			assertEquals(Models2.getLiteral(aGraph, aPersonURI, RDFS.LABEL).get().getLabel(),
 						 aPerson.getLabel());
 
 			List aKnows = Lists.newArrayList(GraphUtil.getObjects(aGraph, aPersonURI, FOAF.ontology().knows));
 
 			assertEquals(aKnows.size(), 2);
 
-			assertTrue(aKnows.contains(aGraph.getValueFactory().createURI(aJane.getRdfId().toString())));
-			assertTrue(aKnows.contains(aGraph.getValueFactory().createURI(aJoe.getRdfId().toString())));
+			assertTrue(aKnows.contains(SimpleValueFactory.getInstance().createIRI(aJane.getRdfId().toString())));
+			assertTrue(aKnows.contains(SimpleValueFactory.getInstance().createIRI(aJoe.getRdfId().toString())));
 		}
 		catch (InvalidRdfException e) {
 			e.printStackTrace();
@@ -245,10 +242,10 @@ public class TestRdfConvert {
 		aBob.getKnows().add(aJane);
 
 		try {
-			Graph aGraph = RdfGenerator.asRdf(aBob);
+			Model aGraph = RdfGenerator.asRdf(aBob);
 
 			// this is the set of data that would normally be in the database
-			Graph aSourceGraph = new GraphImpl();
+			Model aSourceGraph = Models2.newModel();
 			aSourceGraph.addAll(aGraph);
 			aSourceGraph.addAll(RdfGenerator.asRdf(aJoe));
 			aSourceGraph.addAll(RdfGenerator.asRdf(aJane));
@@ -263,7 +260,7 @@ public class TestRdfConvert {
 			aGraph = RdfGenerator.asRdf(aBob);
 
 			// this is the set of data that would normally be in the database
-			aSourceGraph = new GraphImpl();
+			aSourceGraph = Models2.newModel();
 			aSourceGraph.addAll(aGraph);
 			aSourceGraph.addAll(RdfGenerator.asRdf(aJoe));
 			aSourceGraph.addAll(RdfGenerator.asRdf(aJane));
@@ -326,9 +323,9 @@ public class TestRdfConvert {
             klasses.add( MyRootClass.class );
             RdfGenerator.init( klasses );
 
-            Graph aGraph = RdfGenerator.asRdf( root );
+	        Model aGraph = RdfGenerator.asRdf( root );
 
-            Graph aSourceGraph = new GraphImpl();
+	        Model aSourceGraph = Models2.newModel();
             aSourceGraph.addAll(aGraph);
 
             MyRootClass aRoot = RdfGenerator.fromRdf(MyRootClass.class, "urn:id:00", new TestDataSource(aSourceGraph));
@@ -348,14 +345,14 @@ public class TestRdfConvert {
 		aObj.baz = "baz";
 
 		try {
-			ExtGraph aGraph = Graphs.extend(RdfGenerator.asRdf(aObj));
+			Model aGraph = RdfGenerator.asRdf(aObj);
 
 			// we should have the normal field
-			assertTrue(aGraph.contains(null, ValueFactoryImpl.getInstance().createURI("urn:foo"), null));
+			assertTrue(aGraph.contains(null, SimpleValueFactory.getInstance().createIRI("urn:foo"), null));
 
 			// but neither of the transient ones
-			assertFalse(aGraph.contains(null, ValueFactoryImpl.getInstance().createURI("urn:bar"), null));
-			assertFalse(aGraph.contains(null, ValueFactoryImpl.getInstance().createURI("urn:baz"), null));
+			assertFalse(aGraph.contains(null, SimpleValueFactory.getInstance().createIRI("urn:bar"), null));
+			assertFalse(aGraph.contains(null, SimpleValueFactory.getInstance().createIRI("urn:baz"), null));
 		}
 		catch (InvalidRdfException e) {
 			e.printStackTrace();
@@ -431,8 +428,8 @@ public class TestRdfConvert {
 
     public abstract static class EmpireImpl implements SupportsRdfId, EmpireGenerated {
         private RdfKey key;
-        private Graph allTriples;
-        private Graph instanceTriples;
+        private Model allTriples;
+        private Model instanceTriples;
 
         public EmpireImpl( URIKey uriKey ) {
             this.key = uriKey;
@@ -449,22 +446,22 @@ public class TestRdfConvert {
         }
 
         @Override
-        public Graph getAllTriples() {
+        public Model getAllTriples() {
             return allTriples;
         }
 
         @Override
-        public void setAllTriples( Graph aGraph ) {
+        public void setAllTriples( Model aGraph ) {
             this.allTriples = aGraph;
         }
 
         @Override
-        public Graph getInstanceTriples() {
+        public Model getInstanceTriples() {
             return instanceTriples;
         }
 
         @Override
-        public void setInstanceTriples( Graph aGraph ) {
+        public void setInstanceTriples( Model aGraph ) {
             this.instanceTriples = aGraph;
         }
 

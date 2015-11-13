@@ -15,46 +15,34 @@
 
 package com.clarkparsia.empire.codegen;
 
+import com.clarkparsia.empire.util.EmpireUtil;
 import com.clarkparsia.empire.util.Repositories2;
-import com.complexible.common.collect.Iterables2;
-import com.complexible.common.collect.Iterators2;
 import com.complexible.common.openrdf.model.Statements;
 import com.complexible.common.openrdf.repository.Repositories;
-import com.google.common.collect.Iterables;
+import info.aduna.iteration.Iterations;
 import org.openrdf.model.Resource;
-import org.openrdf.model.URI;
+import org.openrdf.model.IRI;
 import org.openrdf.model.Statement;
-import org.openrdf.model.Value;
 import org.openrdf.model.Literal;
 import org.openrdf.model.BNode;
+import org.openrdf.model.impl.SimpleValueFactory;
 import org.openrdf.model.vocabulary.OWL;
 import org.openrdf.model.vocabulary.XMLSchema;
 import org.openrdf.model.vocabulary.RDFS;
 import org.openrdf.model.vocabulary.RDF;
 
-import org.openrdf.model.impl.ValueFactoryImpl;
 
 import org.openrdf.query.QueryLanguage;
 import org.openrdf.repository.Repository;
 import org.openrdf.rio.RDFFormat;
 
-import org.openrdf.query.BindingSet;
 import org.openrdf.query.TupleQueryResult;
 
 import com.complexible.common.openrdf.util.AdunaIterations;
 
-import com.complexible.common.collect.MultiIterator;
-
-import com.complexible.common.net.NetUtils;
-import com.complexible.common.base.Functions2;
-import com.google.common.base.Predicate;
 import com.google.common.base.Charsets;
-import com.google.common.base.Function;
-import com.google.common.base.Functions;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.Sets;
-import com.google.common.collect.Iterators;
 import com.google.common.io.Files;
+import org.openrdf.rio.Rio;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,6 +57,8 @@ import java.io.File;
 import java.io.IOException;
 
 import java.net.URL;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * <p>Generate a set of Java beans which are compatible with Empire from a given RDF schema, OWL ontology, or blob
@@ -76,7 +66,7 @@ import java.net.URL;
  *
  * @author	Michael Grove
  * @since	0.5.1
- * @version	0.7.3
+ * @version	1.0
  */
 public final class BeanGenerator {
 	/**
@@ -87,37 +77,37 @@ public final class BeanGenerator {
 	/**
 	 * String URI constant for the owl:Thing conccept
 	 */
-	private static final URI OWL_THING = ValueFactoryImpl.getInstance().createURI(OWL.NAMESPACE + "Thing");
+	private static final IRI OWL_THING = SimpleValueFactory.getInstance().createIRI(OWL.NAMESPACE + "Thing");
 
 	/**
 	 * The list of xsd datatypes which map to Integer
 	 */
-	private static final List<URI> integerTypes = Arrays.asList(XMLSchema.INT, XMLSchema.INTEGER, XMLSchema.POSITIVE_INTEGER,
+	private static final List<IRI> integerTypes = Arrays.asList(XMLSchema.INT, XMLSchema.INTEGER, XMLSchema.POSITIVE_INTEGER,
 														   XMLSchema.NEGATIVE_INTEGER, XMLSchema.NON_NEGATIVE_INTEGER,
 														   XMLSchema.NON_POSITIVE_INTEGER, XMLSchema.UNSIGNED_INT);
 
 	/**
 	 * The list of xsd datatypes which map to Long
 	 */
-	private static final List<URI> longTypes = Arrays.asList(XMLSchema.LONG, XMLSchema.UNSIGNED_LONG);
+	private static final List<IRI> longTypes = Arrays.asList(XMLSchema.LONG, XMLSchema.UNSIGNED_LONG);
 
 	/**
 	 * The list of xsd datatypes which map to Float
 	 */
-	private static final List<URI> floatTypes = Arrays.asList(XMLSchema.FLOAT, XMLSchema.DECIMAL);
+	private static final List<IRI> floatTypes = Arrays.asList(XMLSchema.FLOAT, XMLSchema.DECIMAL);
 
 	/**
 	 * The list of xsd datatypes which map to Short
 	 */
-	private static final List<URI> shortTypes = Arrays.asList(XMLSchema.SHORT, XMLSchema.UNSIGNED_SHORT);
+	private static final List<IRI> shortTypes = Arrays.asList(XMLSchema.SHORT, XMLSchema.UNSIGNED_SHORT);
 
 	/**
 	 * The list of xsd datatypes which map to Byte
 	 */
-	private static final List<URI> byteTypes = Arrays.asList(XMLSchema.BYTE, XMLSchema.UNSIGNED_BYTE);
+	private static final List<IRI> byteTypes = Arrays.asList(XMLSchema.BYTE, XMLSchema.UNSIGNED_BYTE);
 
-	private static final Map<Resource, String> NAMES = new HashMap<Resource, String>();
-	private static final Map<String, Integer> NAMES_TO_COUNT = new HashMap<String, Integer>();
+	private static final Map<Resource, String> NAMES = new HashMap<>();
+	private static final Map<String, Integer> NAMES_TO_COUNT = new HashMap<>();
 
 	/**
 	 * NO instances
@@ -134,7 +124,7 @@ public final class BeanGenerator {
 	 * @return a string of the source code of the equivalent Java bean
 	 * @throws Exception if there is an error while converting
 	 */
-	private static String toSource(final String thePackageName, final Repository theGraph, final Resource theClass, final Map<Resource, Collection<URI>> theMap) throws Exception {
+	private static String toSource(final String thePackageName, final Repository theGraph, final Resource theClass, final Map<Resource, Collection<IRI>> theMap) throws Exception {
 		StringBuffer aSrc = new StringBuffer();
 
 		aSrc.append("package ").append(thePackageName).append(";\n\n");
@@ -146,49 +136,31 @@ public final class BeanGenerator {
 
 		// TODO: more imports? less?
 
-		Iterable<Resource> aSupers = Iterables2.present(Iterables.transform(AdunaIterations.iterable(Repositories.getStatements(theGraph, theClass, RDFS.SUBCLASSOF, null)),
-		                                                                    Statements.objectAsResource()));
+		Stream<Resource> aSupers = Iterations.stream(Repositories.getStatements(theGraph, theClass, RDFS.SUBCLASSOF, null))
+		                                     .map(Statement::getObject)
+		                                     .filter(theValue -> theValue instanceof Resource)
+		                                     .map(theValue -> (Resource) theValue);
 
 		aSrc.append("@Entity\n");
 		aSrc.append("@RdfsClass(\"").append(theClass).append("\")\n");
 		aSrc.append("public interface ").append(className(theClass));
 
-		aSupers = Collections2.filter(Sets.newHashSet(aSupers), new Predicate<Resource>() {
-			public boolean apply(final Resource theValue) {
-				return theValue != null &&
-					   !theValue.toString().startsWith(OWL.NAMESPACE)
-					   && !theValue.toString().startsWith(RDFS.NAMESPACE)
-					   && !theValue.toString().startsWith(RDF.NAMESPACE);
-			}
-		});
+		aSupers = aSupers.filter(theValue -> theValue != null
+		                                     && !theValue.toString().startsWith(OWL.NAMESPACE)
+		                                     && !theValue.toString().startsWith(RDFS.NAMESPACE)
+		                                     && !theValue.toString().startsWith(RDF.NAMESPACE));
 
 		boolean aNeedsComma = false;
-		aSrc.append(" extends");
 
-		if (aSupers.iterator().hasNext()) {
-			for (Resource aSuper : aSupers) {
-				if (aNeedsComma) {
-					aSrc.append(",");
-				}
-				else {
-					aNeedsComma = true;
-				}
-
-				aSrc.append(" ").append(className(aSuper));
-			}
-		}
-
-		if (aNeedsComma) {
-			aSrc.append(",");
-		}
-
-		aSrc.append(" SupportsRdfId");
+		aSrc.append(Stream.concat(Stream.of("SupportsRdfId"),
+		                          aSupers.map(BeanGenerator::className))
+		                  .collect(Collectors.joining(", ", "extends ", "")));
 
 		aSrc.append(" { \n\n");
 
-		Collection<URI> aProps = props(theClass, theMap);
+		Collection<IRI> aProps = props(theClass, theMap);
 
-		for (URI aProp : aProps) {
+		for (IRI aProp : aProps) {
 			aSrc.append("@RdfProperty(\"").append(aProp).append("\")\n");
 			aSrc.append("public ").append(functionType(theGraph, aProp)).append(" get").append(functionName(aProp)).append("();\n");
 			aSrc.append("public void set").append(functionName(aProp)).append("(").append(functionType(theGraph, aProp)).append(" theValue);\n\n");
@@ -206,17 +178,17 @@ public final class BeanGenerator {
 	 * @return the String representation of the property type
 	 * @throws Exception if there is an error querying the data
 	 */
-	private static String functionType(final Repository theRepo, final URI theProp) throws Exception {
+	private static String functionType(final Repository theRepo, final IRI theProp) throws Exception {
 		String aType;
 
-		Resource aRangeRes = Statements.objectAsResource().apply(AdunaIterations.singleResult(Repositories.getStatements(theRepo, theProp, RDFS.RANGE, null)).orNull()).orNull();
+		Resource aRangeRes = Statements.objectAsResource().apply(AdunaIterations.singleResult(Repositories.getStatements(theRepo, theProp, RDFS.RANGE, null)).orElse(null)).orElse(null);
 
 		if (aRangeRes instanceof BNode) {
 			// we can't handle bnodes very well, so we're just going to assume Object
 			return "Object";
 		}
 
-		URI aRange = (URI) aRangeRes;
+		IRI aRange = (IRI) aRangeRes;
 
 		if (aRange == null) {
 			// no explicit range, try to infer it...
@@ -224,7 +196,7 @@ public final class BeanGenerator {
 				TupleQueryResult aResults = Repositories.selectQuery(theRepo, QueryLanguage.SERQL, "select distinct r from {s} <"+theProp+"> {o}, {o} rdf:type {r}");
 
 				if (aResults.hasNext()) {
-					URI aTempRange = (URI) aResults.next().getValue("r");
+					IRI aTempRange = (IRI) aResults.next().getValue("r");
 					if (!aResults.hasNext()) {
 						aRange = aTempRange;
 					}
@@ -242,7 +214,7 @@ public final class BeanGenerator {
 					aResults = Repositories.selectQuery(theRepo, QueryLanguage.SERQL, "select distinct datatype(o) as dt from {s} <"+theProp+"> {o} where isLiteral(o)");
 
 					if (aResults.hasNext()) {
-						URI aTempRange = null;
+						IRI aTempRange = null;
 						while (aTempRange == null && aResults.hasNext()) {
 							Literal aLit = (Literal) aResults.next().getValue("o");
 							if (aLit != null){
@@ -322,7 +294,7 @@ public final class BeanGenerator {
 	 * @return true if the property has a collection as it's value, false if it's just a single valued property
 	 * @throws Exception if there is an error querying the data
 	 */
-	private static boolean isCollection(final Repository theRepo, final URI theProp) throws Exception {
+	private static boolean isCollection(final Repository theRepo, final IRI theProp) throws Exception {
 		// TODO: this is not fool proof.
 
 		String aCardQuery = "select distinct ?card where {\n" +
@@ -331,7 +303,8 @@ public final class BeanGenerator {
 					   "?s ?cardProp ?card.\n" +
 					   "FILTER (?cardProp = owl:cardinality || ?cardProp = owl:minCardinality || ?cardProp = owl:maxCardinality)\n" +
 					   "}";
-			TupleQueryResult aResults = Repositories.selectQuery(theRepo, QueryLanguage.SPARQL ,aCardQuery);
+
+		TupleQueryResult aResults = Repositories.selectQuery(theRepo, QueryLanguage.SPARQL ,aCardQuery);
 		if (aResults.hasNext()) {
 			Literal aCard = (Literal) aResults.next().getValue("card") ;
 
@@ -347,16 +320,9 @@ public final class BeanGenerator {
 
 		try {
 			aResults = Repositories.selectQuery(theRepo, QueryLanguage.SPARQL, "select distinct ?s where  { ?s <"+theProp+"> ?o}");
-			for (BindingSet aBinding : AdunaIterations.iterable(aResults)) {
-
-				Collection aCollection = Sets.newHashSet(Iterators2.present(Iterators.transform(AdunaIterations.iterator(Repositories.getStatements(theRepo, (Resource) aBinding.getValue("s"), theProp, null)),
-				                                                                                Statements.objectOptional())));
-				if (aCollection.size() > 1) {
-					return true;
-				}
-			}
-
-			return false;
+			return Iterations.stream(aResults)
+			                 .flatMap(theBinding -> Iterations.stream(Repositories.getStatements(theRepo, (Resource) theBinding.getValue("s"), theProp, null)).map(Statement::getObject))
+			                 .findFirst().isPresent();
 		}
 		finally {
 			aResults.close();
@@ -368,7 +334,7 @@ public final class BeanGenerator {
 	 * @param theProp the rdf:Property
 	 * @return the name of the Java property/function name
 	 */
-	private static String functionName(final URI theProp) {
+	private static String functionName(final IRI theProp) {
 		return className(theProp);
 	}
 
@@ -379,8 +345,8 @@ public final class BeanGenerator {
 	 * @param theMap the map of resources to properties
 	 * @return a collection of the proeprties associated with the class
 	 */
-	private static Collection<URI> props(final Resource theRes, final Map<Resource, Collection<URI>> theMap) {
-		Collection<URI> aProps = new HashSet<URI>();
+	private static Collection<IRI> props(final Resource theRes, final Map<Resource, Collection<IRI>> theMap) {
+		Collection<IRI> aProps = new HashSet<>();
 
 		if (theMap.containsKey(theRes)) {
 			aProps.addAll(theMap.get(theRes));
@@ -401,8 +367,8 @@ public final class BeanGenerator {
 
 		String aLabel;
 
-		if (theClass instanceof URI) {
-			aLabel = ((URI) theClass).getLocalName();
+		if (theClass instanceof IRI) {
+			aLabel = ((IRI) theClass).getLocalName();
 		}
 		else {
 			aLabel = theClass.stringValue();
@@ -443,45 +409,42 @@ public final class BeanGenerator {
 
 		Repositories.add(aRepository, theOntology.openStream(), theFormat);
 
-		Collection<Resource> aClasses = Sets.newHashSet(Iterators.transform(new MultiIterator<Statement>(AdunaIterations.iterator(Repositories.getStatements(aRepository, null, RDF.TYPE, RDFS.CLASS)),
-																										 AdunaIterations.iterator(Repositories.getStatements(aRepository, null, RDF.TYPE, OWL.CLASS))),
-																			new StatementToSubject()));
+		Collection<Resource> aClasses = Stream.concat(Iterations.stream(Repositories.getStatements(aRepository, null, RDF.TYPE, RDFS.CLASS)),
+		                                              Iterations.stream(Repositories.getStatements(aRepository, null, RDF.TYPE, OWL.CLASS)))
+		                                      .map(Statement::getSubject)
+		                                      .filter(theRes -> theRes instanceof IRI)
+		                                      .collect(Collectors.toSet());
 
-		aClasses = Collections2.filter(aClasses, new Predicate<Resource>() { public boolean apply(Resource theRes) { return theRes instanceof URI; } });
-
-		Collection<Resource> aIndClasses = Sets.newHashSet(Iterators.transform(AdunaIterations.iterator(Repositories.getStatements(aRepository, null, RDF.TYPE, null)),
-		                                                                       Functions.compose(Functions2.<Value, Resource>cast(Resource.class),
-		                                                                                         new StatementToObject())));
-
+		Collection<Resource> aIndClasses = Iterations.stream(Repositories.getStatements(aRepository, null, RDF.TYPE, null))
+		                                             .map(Statement::getObject)
+		                                             .filter(theValue -> theValue instanceof Resource)
+		                                             .map(theValue -> (Resource) theValue)
+		                                             .collect(Collectors.toSet());
 		aClasses.addAll(aIndClasses);
 
-		aClasses = Collections2.filter(aClasses, new Predicate<Resource>() {
-			public boolean apply(final Resource theValue) {
-				return !theValue.stringValue().startsWith(RDFS.NAMESPACE)
-					   && !theValue.stringValue().startsWith(RDF.NAMESPACE)
-					   && !theValue.stringValue().startsWith(OWL.NAMESPACE);
-			}
-		});
+		aClasses = aClasses.stream().filter(theValue ->
+			                                    !theValue.stringValue().startsWith(RDFS.NAMESPACE)
+			                                    && !theValue.stringValue().startsWith(RDF.NAMESPACE)
+			                                    && !theValue.stringValue().startsWith(OWL.NAMESPACE))
+		                   .collect(Collectors.toSet());
 
-		Map<Resource, Collection<URI>> aMap = new HashMap<Resource, Collection<URI>>();
+		Map<Resource, Collection<IRI>> aMap = new HashMap<>();
 
 		for (Resource aClass : aClasses) {
 			if (aClass instanceof BNode) { continue; }
-			Collection<URI> aProps = Sets.newHashSet(Iterators.transform(AdunaIterations.iterator(Repositories.getStatements(aRepository, null, RDFS.DOMAIN, aClass)),
-			                                                             Functions.compose(Functions2.<Resource, URI>cast(URI.class),
-			                                                                               new StatementToSubject())));
+			Collection<IRI> aProps = Iterations.stream(Repositories.getStatements(aRepository, null, RDFS.DOMAIN, aClass))
+			                                   .map(Statement::getObject)
+			                                   .filter(theObj -> theObj instanceof IRI)
+			                                   .map(theObj -> (IRI) theObj)
+			                                   .collect(Collectors.toSet());
 
 			// infer properties based on usage in actual instance data
-			for (BindingSet aBinding : AdunaIterations.iterable(Repositories.selectQuery(aRepository, QueryLanguage.SPARQL, "select distinct ?p where { ?s rdf:type <" + aClass + ">. ?s ?p ?o }"))) {
-				aProps.add( (URI) aBinding.getValue("p"));
-			}
-
-			// don't include rdf:type as a property
-			aProps = Collections2.filter(aProps, new Predicate<URI>() {
-				public boolean apply(final URI theValue) {
-					return !RDF.TYPE.equals(theValue);
-				}
-			});
+			Iterations.stream(Repositories.selectQuery(aRepository, QueryLanguage.SPARQL, "select distinct ?p where { ?s rdf:type <" + aClass + ">. ?s ?p ?o }"))
+			          .map(theBindingSet -> theBindingSet.getValue("p"))
+			          .filter(theValue -> !RDF.TYPE.equals(theValue))
+			          .filter(theObj -> theObj instanceof IRI)
+			          .map(theObj -> (IRI) theObj)
+			          .forEach(aProps::add);
 
 			aMap.put(aClass, aProps);
 		}
@@ -514,34 +477,22 @@ public final class BeanGenerator {
 //		generateSourceFiles("com.clarkparsia.empire.codegen.test", new File("test/data/nasa.nt").toURI().toURL(), RDFFormat.NTRIPLES, aOut);
 
 		if (args.length < 4) {
-			System.err.println("Must provide four arguments to the program, the package name, ontology URL, rdf format of the ontology (rdf/xml|turtle|ntriples), and the output directory for the source code.\n");
+			System.err.println("Must provide three arguments to the program, the package name, ontology URL, and the output directory for the source code.\n");
 			System.err.println("For example:\n");
-			System.err.println("\tBeanGenerator my.package.domain /usr/local/files/myontology.ttl turtle /usr/local/code/src/my/package/domain");
+			System.err.println("\tBeanGenerator my.package.domain /usr/local/files/myontology.ttl /usr/local/code/src/my/package/domain");
 
 			return;
 		}
 
 		URL aURL;
 
-		if (NetUtils.isURL(args[1])) {
+		if (EmpireUtil.isURI(args[1])) {
 			aURL = new URL(args[1]);
 		}
 		else {
 			aURL = new File(args[1]).toURI().toURL();
 		}
 
-		generateSourceFiles(args[0], aURL, RDFFormat.valueOf(args[2]), new File(args[3]));
-	}
-
-	private static class StatementToObject implements Function<Statement, Value> {
-		public Value apply(final Statement theIn) {
-			return theIn.getObject();
-		}
-	}
-
-	private static class StatementToSubject implements Function<Statement, Resource> {
-		public Resource apply(final Statement theIn) {
-			return theIn.getSubject();
-		}
+		generateSourceFiles(args[0], aURL, Rio.getParserFormatForFileName(args[1]).orElse(null), new File(args[2]));
 	}
 }

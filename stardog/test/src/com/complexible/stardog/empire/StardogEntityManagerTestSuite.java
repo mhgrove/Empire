@@ -53,9 +53,9 @@ public class StardogEntityManagerTestSuite extends EntityManagerTestSuite {
 	public static void beforeClass() {
 
 		try {
-			 SERVER = Stardog .buildServer()
-									 .bind(SNARLProtocolConstants.EMBEDDED_ADDRESS)
-									 .start();
+			SERVER = Stardog.buildServer()
+			                .bind(SNARLProtocolConstants.EMBEDDED_ADDRESS)
+			                .start();
 
 			StardogEmpireAnnotationProvider.setAnnotatedClasses(NamedQuery.class, Arrays.<Class<?>>asList(MissionRole.class, Spacecraft.class));
 
@@ -80,18 +80,13 @@ public class StardogEntityManagerTestSuite extends EntityManagerTestSuite {
 	@Before
 	public void before() {
 		try {
-			AdminConnection aAdminConnection = AdminConnectionConfiguration.toEmbeddedServer()
-																		   .credentials("admin", "admin")
-																		   .connect();
-
-			try {
+			try (AdminConnection aAdminConnection = AdminConnectionConfiguration.toEmbeddedServer()
+			                                                                    .credentials("admin", "admin")
+			                                                                    .connect()) {
 				if (aAdminConnection.list().contains(DB)) {
 					aAdminConnection.drop(DB);
 				}
 				aAdminConnection.createMemory(DB);
-			}
-			finally {
-				aAdminConnection.close();
 			}
 		}
 		catch (Exception e) {

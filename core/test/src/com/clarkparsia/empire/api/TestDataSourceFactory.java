@@ -19,20 +19,20 @@ import com.clarkparsia.empire.ds.Alias;
 import com.clarkparsia.empire.ds.DataSourceFactory;
 import com.clarkparsia.empire.ds.DataSource;
 import com.clarkparsia.empire.ds.DataSourceException;
+import com.complexible.common.openrdf.model.ModelIO;
+import com.complexible.common.openrdf.model.Models2;
+import org.openrdf.model.Model;
 
 import java.util.Map;
 
 import java.io.File;
-
-import com.complexible.common.openrdf.model.ExtGraph;
-import com.complexible.common.openrdf.model.Graphs;
 
 /**
  * <p>DataSourceFactory implementation to create a DataSource used for testing</p>
  *
  * @author  Michael Grove
  * @since   0.1
- * @version 0.6.3
+ * @version 1.0
  */
 @Alias("test")
 public final class TestDataSourceFactory implements DataSourceFactory {
@@ -50,12 +50,12 @@ public final class TestDataSourceFactory implements DataSourceFactory {
 	 */
     @Override
 	public DataSource create(final Map<String, Object> theMap) throws DataSourceException {
-		ExtGraph aGraph = Graphs.extend(Graphs.newGraph());
+		Model aGraph = Models2.newModel();
 
 		if (theMap.containsKey("files")) {
 			for (String aFile : theMap.get("files").toString().split(",")) {
 				try {
-					aGraph.read(new File(aFile.trim()));
+					aGraph = ModelIO.read(new File(aFile.trim()).toPath());
 				}
 				catch (Exception e) {
 					throw new DataSourceException(e);

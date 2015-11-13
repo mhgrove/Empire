@@ -7,8 +7,7 @@ import com.clarkparsia.empire.impl.RdfQueryFactory;
 
 import com.clarkparsia.empire.impl.sparql.SPARQLDialect;
 
-import com.complexible.common.openrdf.model.GraphIO;
-import com.complexible.common.openrdf.util.AdunaIterations;
+import com.complexible.common.openrdf.model.ModelIO;
 
 import com.complexible.common.web.ParameterList;
 import com.complexible.common.web.Request;
@@ -23,8 +22,8 @@ import java.net.URL;
 
 import java.io.IOException;
 
-import org.openrdf.model.Graph;
-
+import info.aduna.iteration.Iterations;
+import org.openrdf.model.Model;
 import org.openrdf.rio.RDFFormat;
 import org.openrdf.rio.RDFParseException;
 
@@ -41,7 +40,7 @@ import org.openrdf.query.resultio.UnsupportedQueryResultFormatException;
  *
  * @author  Michael Grove
  * @since   0.6.5
- * @version 0.7
+ * @version 1.0
  */
 public class SparqlEndpointDataSource extends AbstractDataSource {
 
@@ -130,9 +129,11 @@ public class SparqlEndpointDataSource extends AbstractDataSource {
 	public ResultSet selectQuery(final String theQuery) throws QueryException {
 		assertConnected();
 
-		return new AbstractResultSet(AdunaIterations.iterator(executeSPARQLQuery(theQuery, TupleQueryResult.class))) {
+		final TupleQueryResult aTupleQueryResult = executeSPARQLQuery(theQuery, TupleQueryResult.class);
+
+		return new AbstractResultSet(Iterations.stream(aTupleQueryResult).iterator()) {
 			public void close() {
-				// no-op
+				aTupleQueryResult.close();
 			}
 		};
 	}
@@ -220,24 +221,24 @@ public class SparqlEndpointDataSource extends AbstractDataSource {
 	}
 
 	private Boolean parseBooleanResult(Response theResponse) throws QueryResultParseException, UnsupportedQueryResultFormatException, IOException {
-		return QueryResultIO.parse(theResponse.getContent(), BooleanQueryResultFormat.SPARQL);
+		return QueryResultIO.parseBoolean(theResponse.getContent(), BooleanQueryResultFormat.SPARQL);
 	}
 	
 	private TupleQueryResult parseTupleResult(Response theResponse) throws QueryResultParseException, TupleQueryResultHandlerException, UnsupportedQueryResultFormatException, IOException {
-		return QueryResultIO.parse(theResponse.getContent(), TupleQueryResultFormat.SPARQL);
+		return QueryResultIO.parseTuple(theResponse.getContent(), TupleQueryResultFormat.SPARQL);
 	}
 	
 	/**
 	 * @inheritDoc
 	 */
-	public Graph describe(final String theQuery) throws QueryException {
+	public Model describe(final String theQuery) throws QueryException {
 		return graphQuery(theQuery);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
-	public Graph graphQuery(final String theQuery) throws QueryException {
+	public Model graphQuery(final String theQuery) throws QueryException {
 		assertConnected();
 
 		HttpResource aRes = new HttpResourceImpl(mURL);
@@ -268,7 +269,7 @@ public class SparqlEndpointDataSource extends AbstractDataSource {
 			}
 			else {
 				try {
-					return GraphIO.readGraph(aResponse.getContent(), RDFFormat.TURTLE);
+					return ModelIO.read(aResponse.getContent(), RDFFormat.TURTLE);
 				}
 				catch (RDFParseException e) {
 					throw new QueryException("Error while parsing rdf/xml-formatted query results", e);

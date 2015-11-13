@@ -15,14 +15,14 @@
 
 package com.clarkparsia.empire.ds;
 
-import org.openrdf.model.Graph;
+import org.openrdf.model.Model;
 
 /**
  * <p>Interface for a {@link MutableDataSource} which supports operations on named graphs.</p>
  *
- * @author Michael Grove
- * @since 0.1
- * @version 0.7
+ * @author  Michael Grove
+ * @since   0.1
+ * @version 1.0
  * @see MutableDataSource
  */
 public interface SupportsNamedGraphs extends MutableDataSource {
@@ -32,7 +32,7 @@ public interface SupportsNamedGraphs extends MutableDataSource {
 	 * @param theGraph the graph of triples to add
 	 * @throws DataSourceException thrown if there is an error while adding the triples
 	 */
-	public void add(java.net.URI theGraphURI, Graph theGraph) throws DataSourceException;
+	public void add(java.net.URI theGraphURI, Model theGraph) throws DataSourceException;
 
 	/**
 	 * Delete the named graph
@@ -47,5 +47,5 @@ public interface SupportsNamedGraphs extends MutableDataSource {
 	 * @param theGraph the graph of the triples to remove
 	 * @throws DataSourceException thrown if there is an error while deleting the triples from the named graph
 	 */
-	public void remove(java.net.URI theGraphURI, Graph theGraph) throws DataSourceException;
+	public void remove(java.net.URI theGraphURI, Model theGraph) throws DataSourceException;
 }

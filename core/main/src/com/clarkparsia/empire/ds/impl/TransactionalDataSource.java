@@ -15,8 +15,8 @@
 
 package com.clarkparsia.empire.ds.impl;
 
-import com.complexible.common.openrdf.model.Graphs;
-import org.openrdf.model.Graph;
+import com.complexible.common.openrdf.model.Models2;
+import org.openrdf.model.Model;
 import org.openrdf.model.Statement;
 
 import com.clarkparsia.empire.ds.DataSource;
@@ -42,7 +42,7 @@ import java.util.ListIterator;
  *
  * @author	Michael Grove
  * @since	0.1
- * @version 0.7
+ * @version 1.0
  */
 public class TransactionalDataSource implements DataSource, MutableDataSource, SupportsTransactions {
 
@@ -136,7 +136,7 @@ public class TransactionalDataSource implements DataSource, MutableDataSource, S
 	/**
 	 * @inheritDoc
 	 */
-	public void add(final Graph theGraph) throws DataSourceException {
+	public void add(final Model theGraph) throws DataSourceException {
 		if (isInTransaction()) {
 			mTransactionOps.add(new TransactionOp(nonExistingTriples(theGraph), true));
 		}
@@ -147,7 +147,7 @@ public class TransactionalDataSource implements DataSource, MutableDataSource, S
 	/**
 	 * @inheritDoc
 	 */
-	public void remove(final Graph theGraph) throws DataSourceException {
+	public void remove(final Model theGraph) throws DataSourceException {
 		if (isInTransaction()) {
 			mTransactionOps.add(new TransactionOp(existingTriples(theGraph), false));
 		}
@@ -186,14 +186,14 @@ public class TransactionalDataSource implements DataSource, MutableDataSource, S
 	/**
 	 * @inheritDoc
 	 */
-	public Graph graphQuery(final String theQuery) throws QueryException {
+	public Model graphQuery(final String theQuery) throws QueryException {
 		return mDataSource.graphQuery(theQuery);
 	}
 
 	/**
 	 * @inheritDoc
 	 */
-	public Graph describe(final String theQuery) throws QueryException {
+	public Model describe(final String theQuery) throws QueryException {
 		return mDataSource.describe(theQuery);
 	}
 
@@ -246,8 +246,8 @@ public class TransactionalDataSource implements DataSource, MutableDataSource, S
 	 * @return a graph that contains only triples that do not exist in the data source
 	 * @throws DataSourceException if querying the data source causes an error
 	 */
-	private Graph nonExistingTriples(Graph theData) throws DataSourceException {
-		Graph aResult = Graphs.newGraph();
+	private Model nonExistingTriples(Model theData) throws DataSourceException {
+		Model aResult = Models2.newModel();
 		
 		// TODO: is there a more efficient way to check that than triple-by-triple? 
 		// (for remote data sources this will cause one request for triple ...)
@@ -269,8 +269,8 @@ public class TransactionalDataSource implements DataSource, MutableDataSource, S
 	 * @return a graph that contains only triples that already exist in the data source
 	 * @throws DataSourceException if querying the data source causes an error
 	 */
-	private Graph existingTriples(Graph theData) throws DataSourceException {
-		Graph aResult = Graphs.newGraph();
+	private Model existingTriples(Model theData) throws DataSourceException {
+		Model aResult = Models2.newModel();
 
 		// TODO: is there a more efficient way to check that than triple-by-triple? 
 		// (for remote data sources this will cause one request for triple ...)
@@ -314,14 +314,14 @@ public class TransactionalDataSource implements DataSource, MutableDataSource, S
 		 * already there before -- a rollback must not remove such triples. Similarly, a user can request removal
 		 * of triples that did not exist in the triple store -- a rollback must not add such triples.
 		 */
-		private Graph mData;
+		private Model mData;
 		
 		/**
 		 * Information whether triples were added (true) or removed (false).
 		 */
 		private boolean mAdded;
 		
-		TransactionOp(Graph theData, boolean theAdded) {
+		TransactionOp(Model theData, boolean theAdded) {
 			this.mData = theData;
 			this.mAdded = theAdded;
 		}
@@ -331,7 +331,7 @@ public class TransactionalDataSource implements DataSource, MutableDataSource, S
 		 * 
 		 * @return graph containing the data that was actually added/deleted
 		 */
-		public Graph getData() {
+		public Model getData() {
 			return mData;
 		}
 		

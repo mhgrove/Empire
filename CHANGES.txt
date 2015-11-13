@@ -5,6 +5,7 @@ Empire 1.0 (2015-11-18)
 =======================
     * MODIFIED: Java 8
 	* MODIFIED: Upgraded to Guice4, Sesame 4.0, Stardog 4.0, CP Utils 5.0 & CP OpenRDF Utils 4.0.1
+	* FIXED: re-throw lifecycle exceptions from callbacks instead of only logging them (issue #110)
 	* REMOVED: apt-based utilities (issue #64)
 
 Empire 0.9 (2015-03-25)

@@ -17,11 +17,12 @@ package com.clarkparsia.empire.api;
 
 import com.clarkparsia.empire.ds.impl.AbstractResultSet;
 import com.clarkparsia.empire.util.Repositories2;
-import com.complexible.common.openrdf.model.Graphs;
+import com.complexible.common.openrdf.model.Models2;
 import com.complexible.common.openrdf.repository.Repositories;
-import com.complexible.common.openrdf.util.AdunaIterations;
+import info.aduna.iteration.Iterations;
 import org.openrdf.model.Graph;
 
+import org.openrdf.model.Model;
 import org.openrdf.query.MalformedQueryException;
 import org.openrdf.query.QueryEvaluationException;
 import org.openrdf.query.QueryLanguage;
@@ -50,7 +51,7 @@ public class TestDataSource extends AbstractDataSource implements DataSource {
 	private final Repository mRepo;
 
 	public TestDataSource() {
-		this(Graphs.newGraph());
+		this(Models2.newModel());
 	}
 
 	public TestDataSource(final Repository theRepository) {
@@ -93,10 +94,10 @@ public class TestDataSource extends AbstractDataSource implements DataSource {
 	public ResultSet selectQuery(final String theQuery) throws QueryException {
 		try {
             final TupleQueryResult aTupleQueryResult = Repositories.selectQuery(mRepo, QueryLanguage.SERQL, theQuery);
-            return new AbstractResultSet(AdunaIterations.iterator(aTupleQueryResult)) {
+            return new AbstractResultSet(Iterations.stream(aTupleQueryResult).iterator()) {
                 @Override
                 public void close() {
-                    // no-op
+                    aTupleQueryResult.close();
                 }
             };
 		}
@@ -114,9 +115,9 @@ public class TestDataSource extends AbstractDataSource implements DataSource {
 	/**
 	 * @inheritDoc
 	 */
-	public Graph graphQuery(final String theQuery) throws QueryException {
+	public Model graphQuery(final String theQuery) throws QueryException {
 		try {
-			return Graphs.newGraph(Repositories.constructQuery(mRepo, QueryLanguage.SERQL, theQuery));
+			return Models2.newModel(Repositories.constructQuery(mRepo, QueryLanguage.SERQL, theQuery));
 		}
 		catch (MalformedQueryException e) {
 			throw new QueryException("Unsupported or invalid SeRQL query.", e);
@@ -139,7 +140,7 @@ public class TestDataSource extends AbstractDataSource implements DataSource {
 	/**
 	 * @inheritDoc
 	 */
-	public Graph describe(final String theQuery) throws QueryException {
+	public Model describe(final String theQuery) throws QueryException {
 		throw new UnsupportedOperationException("SeRQL does not support DESCRIBE queries");
 	}
 }

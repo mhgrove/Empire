@@ -15,20 +15,19 @@
 
 package com.clarkparsia.empire.ds;
 
-import org.openrdf.model.Graph;
-
 import java.net.ConnectException;
 
 import com.clarkparsia.empire.QueryFactory;
+import org.openrdf.model.Model;
 
 /**
  * <p>Simple interface to an RDF datasource providing a set of methods to query the underyling data and a factory
  * for generating queries in the query language supported by the data source.  Roughly analogous to
  * {@link javax.sql.DataSource}.</p>
  *
- * @author Michael Grove
- * @since 0.1
- * @version 0.7
+ * @author  Michael Grove
+ * @since   0.1
+ * @version 1.0
  */
 public interface DataSource {
 
@@ -66,7 +65,7 @@ public interface DataSource {
 	 * @throws QueryException thrown if there was an error performing the query or there was an error parsing the query
 	 * @throws IllegalStateException thrown if the connection to the data source is not open.
 	 */
-	public Graph graphQuery(String theQuery) throws QueryException;
+	public Model graphQuery(String theQuery) throws QueryException;
 
 	/**
 	 * Return a {@link QueryFactory} for creating executable {@link javax.persistence.Query} instances against this data source
@@ -88,5 +87,5 @@ public interface DataSource {
 	 * @return the result of the describe
 	 * @throws QueryException if there is an error while evaluation the query
 	 */
-	public Graph describe(String theQuery) throws QueryException;
+	public Model describe(String theQuery) throws QueryException;
 }

@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 apply plugin: 'java'
 apply plugin: 'idea'
 
@@ -23,8 +22,8 @@ task wrapper(type: Wrapper) {
 }
 
 ext {
-	stardogVersion		= "3.0"
-	projectVersion		= "0.9.0"
+	stardogVersion		= "4.0"
+	projectVersion		= "1.0"
 	projectDescription	= "JPA implementation for RDF"
 	projectUrl			= "https://github.com/mhgrove/Empire"
 }
@@ -32,8 +31,8 @@ ext {
 allprojects {
 	group = "com.clarkparsia.empire"
 	version = projectVersion
-	sourceCompatibility = '1.6'
-	targetCompatibility = '1.6'
+	sourceCompatibility = '1.8'
+	targetCompatibility = '1.8'
 
 	repositories {
 		mavenCentral()
@@ -41,8 +40,6 @@ allprojects {
 			url "http://maven.stardog.com"
 		}
 	}
-
-
 }
 
 subprojects {
@@ -149,8 +146,8 @@ subprojects {
 			windowTitle "${project.archivesBaseName}-${project.version} API"
 			docTitle "${project.archivesBaseName}-${project.version}"
 			bottom "Copyright &#169; 2010-2015 Complexible. All Rights Reserved."
-			links "http://docs.oracle.com/javase/6/docs/api/",
-				  "http://docs.guava-libraries.googlecode.com/git-history/v17.0/javadoc/"
+			links "http://docs.oracle.com/javase/8/docs/api/",
+				  "http://docs.guava-libraries.googlecode.com/git-history/v18.0/javadoc/"
 		}
 	}
 }

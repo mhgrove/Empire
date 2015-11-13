@@ -20,19 +20,19 @@ import com.clarkparsia.empire.ds.DataSource;
 import com.clarkparsia.empire.ds.DataSourceException;
 import org.openrdf.model.Statement;
 import org.openrdf.model.Resource;
-import org.openrdf.model.URI;
+import org.openrdf.model.IRI;
 import org.openrdf.model.Value;
-import org.openrdf.model.Graph;
+import org.openrdf.model.Model;
 
 import javax.persistence.Query;
 
 /**
  * <p>Wraps a general {@link DataSource}, implementing getStatements using SPARQL queries.</p>
  *
- * @author Pedro Oliveira
- * @author Michael Grove
- * @since 0.7
- * @version 0.7
+ * @author  Pedro Oliveira
+ * @author  Michael Grove
+ * @since   0.7
+ * @version 1.0
  */
 public class TripleSourceAdapter extends DelegatingDataSource implements TripleSource {
 	private static final String SUBJECT_FILTER = "FILTER (?s = ??ss)";
@@ -48,7 +48,7 @@ public class TripleSourceAdapter extends DelegatingDataSource implements TripleS
 	/**
 	 * @inheritDoc
 	 */
-	public Iterable<Statement> getStatements(Resource theSubject, URI thePredicate, Value theObject) throws DataSourceException {
+	public Iterable<Statement> getStatements(Resource theSubject, IRI thePredicate, Value theObject) throws DataSourceException {
 		// Subject and object restrictions are implemented as filters, because some implementations can have problems
 		// dealing with bnodes
 
@@ -78,13 +78,13 @@ public class TripleSourceAdapter extends DelegatingDataSource implements TripleS
 			aQuery.setParameter("oo", theObject);
 		}
 
-		return (Graph) aQuery.getSingleResult();
+		return (Model) aQuery.getSingleResult();
 	}
 	
 	/**
 	 * @inheritDoc
 	 */
-	public Iterable<Statement> getStatements(Resource theSubject, URI thePredicate, Value theObject, Resource theContext) throws DataSourceException {
+	public Iterable<Statement> getStatements(Resource theSubject, IRI thePredicate, Value theObject, Resource theContext) throws DataSourceException {
 		if (theContext == null) {
 			// if context is null, this means any context should match -- we can forward request to getStatements() without context
 			return getStatements(theSubject, thePredicate, theObject);
@@ -121,7 +121,7 @@ public class TripleSourceAdapter extends DelegatingDataSource implements TripleS
 		
 		aQuery.setParameter("g", theContext);
 
-		return (Graph) aQuery.getSingleResult();
+		return (Model) aQuery.getSingleResult();
 	}
 
 }

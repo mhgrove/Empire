@@ -15,19 +15,21 @@
 
 package com.clarkparsia.empire.annotation;
 
-import com.complexible.common.openrdf.model.Graphs;
-import com.google.common.base.Optional;
+import com.complexible.common.openrdf.model.Models2;
+import com.complexible.common.openrdf.util.ModelBuilder;
+import com.google.common.collect.Maps;
 import com.google.common.collect.ObjectArrays;
+import com.google.common.collect.Sets;
 import org.openrdf.model.BNode;
+import org.openrdf.model.IRI;
 import org.openrdf.model.Literal;
+import org.openrdf.model.Model;
 import org.openrdf.model.Resource;
 import org.openrdf.model.Value;
-import org.openrdf.model.URI;
 import org.openrdf.model.ValueFactory;
 import org.openrdf.model.Statement;
-import org.openrdf.model.Graph;
 
-import org.openrdf.model.util.GraphUtil;
+import org.openrdf.model.impl.SimpleValueFactory;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.XMLSchema;
 import org.openrdf.model.vocabulary.RDFS;
@@ -38,8 +40,8 @@ import java.util.Arrays;
 
 import java.util.Date;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
 import java.util.List;
 
 import java.lang.reflect.Field;
@@ -50,14 +52,13 @@ import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Modifier;
 
 import java.util.Map;
-import java.util.Set;
-import java.util.Iterator;
 import java.util.Locale;
 import java.util.ArrayList;
 
 import java.net.URISyntaxException;
-
-import org.openrdf.model.impl.ValueFactoryImpl;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import com.clarkparsia.empire.ds.DataSource;
 import com.clarkparsia.empire.ds.DataSourceException;
@@ -82,20 +83,16 @@ import static com.clarkparsia.empire.util.BeanReflectUtil.get;
 import com.clarkparsia.empire.util.BeanReflectUtil;
 import com.clarkparsia.empire.util.EmpireUtil;
 import static com.clarkparsia.empire.util.EmpireUtil.asPrimaryKey;
+import static com.clarkparsia.empire.util.EmpireUtil.isURI;
+
 import com.complexible.common.openrdf.util.ResourceBuilder;
-import com.complexible.common.openrdf.util.GraphBuilder;
 import com.complexible.common.util.PrefixMapping;
 import com.complexible.common.base.Strings2;
 import com.complexible.common.base.Dates;
-import com.complexible.common.net.NetUtils;
-import com.complexible.common.collect.Iterables2;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
 import com.google.inject.ProvisionException;
 import com.google.inject.ConfigurationException;
 
@@ -134,14 +131,14 @@ import sun.reflect.generics.reflectiveObjects.WildcardTypeImpl;
  *
  * @author	Michael Grove
  * @since	0.1
- * @version 0.7.3
+ * @version 1.0
  */
 public final class RdfGenerator {
 
 	/**
 	 * Global ValueFactory to use for converting Java values into sesame objects for serialization to RDF
 	 */
-	private static final ValueFactory FACTORY = new ValueFactoryImpl();
+	private static final ValueFactory FACTORY = SimpleValueFactory.getInstance();
 
 	private static final ContainsResourceValues CONTAINS_RESOURCES = new ContainsResourceValues();
 
@@ -155,20 +152,20 @@ public final class RdfGenerator {
 	/**
 	 * Map from rdf:type URI's to the Java class which corresponds to that resource.
 	 */
-	private final static Multimap<URI, Class> TYPE_TO_CLASS = HashMultimap.create();
+	private final static Multimap<IRI, Class> TYPE_TO_CLASS = HashMultimap.create();
 
 	/**
 	 * Map to keep a record of what instances are currently being created in order to prevent cycles.  Keys are the
 	 * identifiers of the instances and the values are the instances
 	 */
-	public final static Map<Object, Object> OBJECT_M = new HashMap<Object, Object>();
+	public final static Map<Object, Object> OBJECT_M = Maps.newHashMap();
 
-	private final static Set<Class<?>> REGISTERED_FOR_NS = new HashSet<Class<?>>();
+	private final static Set<Class<?>> REGISTERED_FOR_NS = Sets.newHashSet();
 
     /**
      * Cache the AccessibleObjects to avoid repeated inspections
      */
-    private final static Map<Class<?>,Map<URI,AccessibleObject>> ACCESSORS_BY_CLASS = new HashMap<Class<?>, Map<URI, AccessibleObject>>();
+    private final static Map<Class<?>,Map<IRI,AccessibleObject>> ACCESSORS_BY_CLASS = Maps.newHashMap();
 
 	/**
 	 * Initialize some parameters in the RdfGenerator.  This caches namespace and type mapping information locally
@@ -182,7 +179,7 @@ public final class RdfGenerator {
 			if (aAnnotation != null) {
 				addNamespaces(aClass);
 
-				TYPE_TO_CLASS.put(FACTORY.createURI(PrefixMapping.GLOBAL.uri(aAnnotation.value())), aClass);
+				TYPE_TO_CLASS.put(FACTORY.createIRI(PrefixMapping.GLOBAL.uri(aAnnotation.value())), aClass);
 			}
 		}
 	}
@@ -235,10 +232,7 @@ public final class RdfGenerator {
 		try {
 			aObj = Empire.get().instance(theClass);
 		}
-		catch (ConfigurationException ex) {
-			aObj = null;
-		}
-		catch (ProvisionException ex) {
+		catch (ConfigurationException | ProvisionException ex) {
 			aObj = null;
 		}
 
@@ -292,8 +286,6 @@ public final class RdfGenerator {
 			LOGGER.debug("Has rdfId {} ms", (System.currentTimeMillis()-start ));
 		}
 
-		start = System.currentTimeMillis();
-		
 		Class<T> aNewClass = determineClass(theClass, aObj, theSource);
 		
 		if (!aNewClass.equals(aObj.getClass())) {
@@ -319,8 +311,7 @@ public final class RdfGenerator {
 	@SuppressWarnings("unchecked")
     private static <T> Class<T> determineClass(Class<T> theOrigClass, T theObj, DataSource theSource) throws InvalidRdfException, DataSourceException {
 		Class aResult = theOrigClass;
-		final SupportsRdfId aTmpSupportsRdfId = asSupportsRdfId(theObj);
-	 
+
 //		ExtGraph aGraph = new ExtGraph(DataSourceUtil.describe(theSource, theObj));
 		final Collection<Value> aTypes = DataSourceUtil.getValues(theSource, EmpireUtil.asResource(EmpireUtil.asSupportsRdfId(theObj)), RDF.TYPE);
 		
@@ -333,13 +324,13 @@ public final class RdfGenerator {
 		// some of the Java classes may belong to the same class hierarchy, whereas others can have no common
 		// super class (other than java.lang.Object)
 		for (Value aValue : aTypes) {
-			if (!(aValue instanceof URI)) {
+			if (!(aValue instanceof IRI)) {
 				// there is no URI in the object position of rdf:type
 				// ignore that data
 				continue;
 			}
 			
-			URI aType = (URI) aValue;
+			IRI aType = (IRI) aValue;
 						
 			for (Class aCandidateClass : TYPE_TO_CLASS.get(aType)) {
 				if (aCandidateClass.equals(aResult)) {
@@ -397,23 +388,18 @@ public final class RdfGenerator {
 
 			OBJECT_M.put(theKeyObj, theObj);
 
-			Graph aGraph = DataSourceUtil.describe(theSource, theObj);
+			Model aGraph = DataSourceUtil.describe(theSource, theObj);
 
 			if (aGraph.size() == 0) {
 				return theObj;
 			}
 
 			final Resource aTmpRes = EmpireUtil.asResource(aTmpSupportsRdfId);
-			Set<URI> aProps = new HashSet<URI>();
-			
-			Iterator<Statement> sIter = aGraph.match(aTmpRes, null, null);
+			Set<IRI> aProps = Sets.newHashSet();
 
-			while (sIter.hasNext()) {
-				Statement aStmt = sIter.next();
-				aProps.add(aStmt.getPredicate());
-			}
-			
-			
+			aGraph.filter(aTmpRes, null, null).stream()
+			      .map(Statement::getPredicate).forEach(aProps::add);
+
 			final SupportsRdfId aSupportsRdfId = asSupportsRdfId(theObj);
 			
 			final EmpireGenerated aEmpireGenerated = asEmpireGenerated(theObj);
@@ -425,14 +411,14 @@ public final class RdfGenerator {
 
 			addNamespaces(theObj.getClass());
 
-			Map<URI, AccessibleObject> theCachedMap = ACCESSORS_BY_CLASS.get(theObj.getClass());
+			Map<IRI, AccessibleObject> theCachedMap = ACCESSORS_BY_CLASS.get(theObj.getClass());
 
             if (theCachedMap == null) {
                 theCachedMap = cacheAccessibles(theObj.getClass(), aRes);
             }
-			Set<URI> aUsedProps = new HashSet<URI>();
+			Set<IRI> aUsedProps = Sets.newHashSet();
 
-			for (URI aProp : aProps) {
+			for (IRI aProp : aProps) {
 				AccessibleObject aAccess = theCachedMap.get(aProp);
 
 				if (aAccess == null && RDF.TYPE.equals(aProp)) {
@@ -474,7 +460,7 @@ public final class RdfGenerator {
 				
 				ToObjectFunction aFunc = new ToObjectFunction(theSource, aRes, aAccess, aProp);
 
-				Object aValue = aFunc.apply(GraphUtil.getObjects(aGraph, aRes, aProp));
+				Object aValue = aFunc.apply(aGraph.filter(aRes, aProp, null).stream().map(Statement::getObject).collect(Collectors.toSet()));
 
 				boolean aOldAccess = aAccess.isAccessible();
 
@@ -482,12 +468,8 @@ public final class RdfGenerator {
 					setAccessible(aAccess, true);					
 					set(aAccess, theObj, aValue);				
 				}				
-				catch (InvocationTargetException e) {
+				catch (InvocationTargetException | IllegalAccessException e) {
 					// oh crap
-					throw new InvalidRdfException(e);
-				}
-				catch (IllegalAccessException e) {
-					// this should not happen since we toggle the accessibility of the field, but we'll re-throw regardless
 					throw new InvalidRdfException(e);
 				}
 				catch (IllegalArgumentException e) {
@@ -510,17 +492,13 @@ public final class RdfGenerator {
 					setAccessible(aAccess, aOldAccess);
 				}
 			}
-			
-			sIter = aGraph.match(aTmpRes, null, null);
-			Graph aInstanceTriples = Graphs.newGraph();
 
-			while (sIter.hasNext()) {
-				Statement aStmt = sIter.next();
-				
-				if (aUsedProps.contains(aStmt.getPredicate())) {
-					aInstanceTriples.add(aStmt);
-				}								
-			}
+			Model aInstanceTriples = Models2.newModel();
+
+			aGraph.filter(aTmpRes, null, null)
+			      .stream()
+			      .filter(theStmt -> aUsedProps.contains(theStmt.getPredicate()))
+			      .forEach(aInstanceTriples::add);
 			
 			aEmpireGenerated.setInstanceTriples(aInstanceTriples);
 
@@ -531,44 +509,35 @@ public final class RdfGenerator {
 		}
 	}
 
-    public static Map<URI, AccessibleObject> cacheAccessibles( Class theClass, final Resource aRes ) {
-        final Map<URI, AccessibleObject> aAccessMap = new HashMap<URI, AccessibleObject>();
+    public static Map<IRI, AccessibleObject> cacheAccessibles( Class theClass, final Resource aRes ) {
+        final Map<IRI, AccessibleObject> aAccessMap = Maps.newHashMap();
 
         Collection<Field> aFields = getAnnotatedFields( theClass );
         Collection<Method> aMethods = getAnnotatedSetters( theClass, true );
 
-
-        Iterables2.each(aFields, new Predicate<Field>() {
-            public boolean apply(final Field theField) {
+	    aFields.forEach(theField -> {
                 if (theField.getAnnotation(RdfProperty.class) != null) {
-                    URI theURI = FACTORY.createURI(PrefixMapping.GLOBAL.uri(theField.getAnnotation(RdfProperty.class).value()));
+                    IRI theURI = FACTORY.createIRI(PrefixMapping.GLOBAL.uri(theField.getAnnotation(RdfProperty.class).value()));
                     aAccessMap.put( theURI, theField );
                 }
                 else {
                     String aBase = "urn:empire:clark-parsia:";
-                    if (aRes instanceof URI) {
-                        aBase = ((URI)aRes).getNamespace();
+                    if (aRes instanceof IRI) {
+                        aBase = ((IRI)aRes).getNamespace();
                     }
 
-                    aAccessMap.put(FACTORY.createURI(aBase + theField.getName()),
+                    aAccessMap.put(FACTORY.createIRI(aBase + theField.getName()),
                                    theField);
                 }
+            });
 
-                return true;
-            }
-        });
-
-        Iterables2.each(aMethods, new Predicate<Method>() {
-            public boolean apply(final Method theMethod) {
+        aMethods.forEach(theMethod -> {
                 RdfProperty aAnnotation = BeanReflectUtil.getAnnotation(theMethod, RdfProperty.class);
                 if (aAnnotation != null) {
-                    URI theURI = FACTORY.createURI( PrefixMapping.GLOBAL.uri( aAnnotation.value() ) );
+                    IRI theURI = FACTORY.createIRI( PrefixMapping.GLOBAL.uri( aAnnotation.value() ) );
                     aAccessMap.put( theURI, theMethod );
                 }
-
-                return true;
-            }
-        });
+            });
 
         ACCESSORS_BY_CLASS.put( theClass, aAccessMap );
         return aAccessMap;
@@ -640,7 +609,7 @@ public final class RdfGenerator {
 		String aValue = hash(Strings2.getRandomString(10));
 		String aNS = RdfId.DEFAULT;
 
-		URI aURI = FACTORY.createURI(aNS + aValue);
+		IRI aURI = FACTORY.createIRI(aNS + aValue);
 
 		if (aIdField != null && !aIdField.getAnnotation(RdfId.class).namespace().equals("")) {
 			aNS = aIdField.getAnnotation(RdfId.class).namespace();
@@ -659,19 +628,19 @@ public final class RdfGenerator {
 
 				aValue = Strings2.urlEncode(aValObj.toString());
 
-				if (aValObj instanceof java.net.URI || NetUtils.isURI(aValObj.toString())) {
+				if (isURI(aValObj)) {
 					try {
-						aURI = FACTORY.createURI(aValObj.toString());
+						aURI = FACTORY.createIRI(aValObj.toString());
 					}
 					catch (IllegalArgumentException e) {
 						// sometimes sesame disagrees w/ Java about what a valid URI is.  so we'll have to try
 						// and construct a URI from the possible fragment
-						aURI = FACTORY.createURI(aNS + aValue);
+						aURI = FACTORY.createIRI(aNS + aValue);
 					}
 				}
 				else {
 					//aValue = hash(aValObj);
-					aURI = FACTORY.createURI(aNS + aValue);
+					aURI = FACTORY.createIRI(aNS + aValue);
 				}
 			}
 			catch (IllegalAccessException ex) {
@@ -721,7 +690,7 @@ public final class RdfGenerator {
 	 * @return the object represented as RDF triples
 	 * @throws InvalidRdfException thrown if the object cannot be transformed into RDF.
 	 */
-	public static Graph asRdf(final Object theObj) throws InvalidRdfException {
+	public static Model asRdf(final Object theObj) throws InvalidRdfException {
 		if (theObj == null) {
 			return null;
 		}
@@ -753,14 +722,14 @@ public final class RdfGenerator {
 
 		addNamespaces(aObj.getClass());
 
-		GraphBuilder aBuilder = new GraphBuilder();
+		ModelBuilder aBuilder = new ModelBuilder();
 
-		Collection<AccessibleObject> aAccessors = new HashSet<AccessibleObject>();
+		Collection<AccessibleObject> aAccessors = Sets.newHashSet();
 		aAccessors.addAll(getAnnotatedFields(aObj.getClass()));
 		aAccessors.addAll(getAnnotatedGetters(aObj.getClass(), true));
 
 		try {
-			ResourceBuilder aRes = aBuilder.instance(aBuilder.getValueFactory().createURI(PrefixMapping.GLOBAL.uri(aClass.value())),
+			ResourceBuilder aRes = aBuilder.instance(aBuilder.getValueFactory().createIRI(PrefixMapping.GLOBAL.uri(aClass.value())),
 													 aSubj);
 
 			for (AccessibleObject aAccess : aAccessors) {
@@ -780,13 +749,13 @@ public final class RdfGenerator {
 
 				RdfProperty aPropertyAnnotation = BeanReflectUtil.getAnnotation(aAccess, RdfProperty.class);
 				String aBase = "urn:empire:clark-parsia:";
-				if (aRes instanceof URI) {
-					aBase = ((URI)aRes).getNamespace();
+				if (aRes instanceof IRI) {
+					aBase = ((IRI)aRes).getNamespace();
 				}
 
-				URI aProperty = aPropertyAnnotation != null
-								? aBuilder.getValueFactory().createURI(PrefixMapping.GLOBAL.uri(aPropertyAnnotation.value()))
-								: (aAccess instanceof Field ? aBuilder.getValueFactory().createURI(aBase + ((Field)aAccess).getName()) : null);
+				IRI aProperty = aPropertyAnnotation != null
+								? aBuilder.getValueFactory().createIRI(PrefixMapping.GLOBAL.uri(aPropertyAnnotation.value()))
+								: (aAccess instanceof Field ? aBuilder.getValueFactory().createIRI(aBase + ((Field)aAccess).getName()) : null);
 
 				boolean aOldAccess = aAccess.isAccessible();
 				setAccessible(aAccess, true);
@@ -802,7 +771,7 @@ public final class RdfGenerator {
 					@SuppressWarnings("unchecked")
 					List<Value> aValueList = asList(aAccess, (Collection<?>) Collection.class.cast(aValue));
 
-					if (aValueList.isEmpty()) {
+					if (aValueList.isEmpty() || aPropertyAnnotation == null) {
 						continue;
 					}
 
@@ -820,17 +789,14 @@ public final class RdfGenerator {
 				}
 			}
 		}
-		catch (IllegalAccessException e) {
-			throw new InvalidRdfException(e);
-		}
-		catch (RuntimeException e) {
+		catch (IllegalAccessException | RuntimeException e) {
 			throw new InvalidRdfException(e);
 		}
 		catch (InvocationTargetException e) {
 			throw new InvalidRdfException("Cannot invoke method", e);
 		}
 
-		return aBuilder.graph();
+		return aBuilder.model();
 	}
 
 	/**
@@ -842,7 +808,7 @@ public final class RdfGenerator {
 	 */
 	private static List<Value> asList(AccessibleObject theAccess, Collection<?> theCollection) throws InvalidRdfException {
 		try {
-			return Lists.newArrayList(Collections2.transform(theCollection, new AsValueFunction(theAccess)));
+			return theCollection.stream().map(new AsValueFunction(theAccess)).collect(Collectors.toList());
 		}
 		catch (RuntimeException e) {
 			throw new InvalidRdfException(e.getMessage());
@@ -948,7 +914,7 @@ public final class RdfGenerator {
 		 */
 		private AccessibleObject mField;
 
-		public ToObjectFunction(final DataSource theSource, Resource theResource, final AccessibleObject theField, final URI theProp) {
+		public ToObjectFunction(final DataSource theSource, Resource theResource, final AccessibleObject theField, final IRI theProp) {
 			valueToObject = new ValueToObject(theSource, theResource, theField, theProp);
 
 			mField = theField;
@@ -1017,15 +983,15 @@ public final class RdfGenerator {
 			 * else if lang aware
 			 */
 
-			Collection<Value> aList = new HashSet<Value>(theList);
+			Collection<Value> aList = Sets.newHashSet(theList);
 
-			if (!Iterables2.find(aList, CONTAINS_RESOURCES)) {
+			if (!aList.stream().anyMatch(CONTAINS_RESOURCES)) {
 				if (!EmpireOptions.ENABLE_LANG_AWARE) {
-					Collection<Value> aLangFiltered = Collections2.filter(aList, new Predicate<Value>() { public boolean apply(final Value theValue) { return ((Literal)theValue).getLanguage() == null; }});
+					Collection<Value> aLangFiltered = aList.stream().filter(theValue -> ((Literal)theValue).getLanguage() == null).collect(Collectors.toList());
 
 					if (aLangFiltered.isEmpty()) {
 						LANG_FILTER.setLangCode(getLanguageForLocale());
-						aLangFiltered = Collections2.filter(aList, LANG_FILTER);
+						aLangFiltered = aList.stream().filter(LANG_FILTER).collect(Collectors.toList());
 					}
 
 					if (!aLangFiltered.isEmpty()) {
@@ -1034,26 +1000,9 @@ public final class RdfGenerator {
 				}
 				else {
 					LANG_FILTER.setLangCode(mField.getAnnotation(RdfProperty.class).language());
-					aList = Collections2.filter(aList, LANG_FILTER);
+					aList = aList.stream().filter(LANG_FILTER).collect(Collectors.toList());
 				}
 			}
-
-//			aList = filter(aList, new Predicate<Value>() {
-//				public boolean accept(final Value theValue) {
-//					if (theValue instanceof Resource
-//						|| !EmpireOptions.ENABLE_LANG_AWARE
-//						|| (EmpireOptions.ENABLE_LANG_AWARE
-//							&& theValue instanceof Literal
-//							&& !mField.getAnnotation(RdfProperty.class).language().equals(""))
-//							&& mField.getAnnotation(RdfProperty.class).language().equals(((Literal)theValue).getLanguage())) {
-//						return true;
-//					}
-//					else {
-//						return false;
-//					}
-//				}
-//			});
-
 
 			if (aList.isEmpty()) {
 				// yes, we checked for emptiness to begin the method, but we might have done some filtering based on the
@@ -1160,8 +1109,8 @@ public final class RdfGenerator {
 
             // k, so now we know the type, if we can match the type to a class then we're in business
             for (Resource aType : aTypes) {
-                if (aType instanceof URI) {
-                    for (Class aTypeClass : TYPE_TO_CLASS.get( (URI) aType)) {
+                if (aType instanceof IRI) {
+                    for (Class aTypeClass : TYPE_TO_CLASS.get( (IRI) aType)) {
                         if ((BeanReflectUtil.hasAnnotation(aTypeClass, RdfsClass.class)) &&
                             (aClass.isAssignableFrom(aTypeClass))) {
                             // lets try this one
@@ -1175,7 +1124,7 @@ public final class RdfGenerator {
 
         if ( aClass.isInterface() ) {
             if ( BeanReflectUtil.hasAnnotation( aClass, RdfsClass.class) ) {
-                URI aType = FACTORY.createURI( ((RdfsClass) aClass.getAnnotation( RdfsClass.class )).value() );
+                IRI aType = FACTORY.createIRI( ((RdfsClass) aClass.getAnnotation( RdfsClass.class )).value() );
                 for (Class aTypeClass : TYPE_TO_CLASS.get(aType)) {
                     if ((BeanReflectUtil.hasAnnotation(aTypeClass, RdfsClass.class)) &&
                         (aClass.isAssignableFrom(aTypeClass))) {
@@ -1191,20 +1140,20 @@ public final class RdfGenerator {
 	}
 
 	public static class ValueToObject implements Function<Value, Object> {
-		static final List<URI> integerTypes = Arrays.asList(XMLSchema.INT, XMLSchema.INTEGER, XMLSchema.POSITIVE_INTEGER,
+		static final List<IRI> integerTypes = Arrays.asList(XMLSchema.INT, XMLSchema.INTEGER, XMLSchema.POSITIVE_INTEGER,
 													  XMLSchema.NEGATIVE_INTEGER, XMLSchema.NON_NEGATIVE_INTEGER,
 													  XMLSchema.NON_POSITIVE_INTEGER, XMLSchema.UNSIGNED_INT);
-		static final List<URI> longTypes = Arrays.asList(XMLSchema.LONG, XMLSchema.UNSIGNED_LONG);
-		static final List<URI> floatTypes = Arrays.asList(XMLSchema.FLOAT, XMLSchema.DECIMAL);
-		static final List<URI> shortTypes = Arrays.asList(XMLSchema.SHORT, XMLSchema.UNSIGNED_SHORT);
-		static final List<URI> byteTypes = Arrays.asList(XMLSchema.BYTE, XMLSchema.UNSIGNED_BYTE);
+		static final List<IRI> longTypes = Arrays.asList(XMLSchema.LONG, XMLSchema.UNSIGNED_LONG);
+		static final List<IRI> floatTypes = Arrays.asList(XMLSchema.FLOAT, XMLSchema.DECIMAL);
+		static final List<IRI> shortTypes = Arrays.asList(XMLSchema.SHORT, XMLSchema.UNSIGNED_SHORT);
+		static final List<IRI> byteTypes = Arrays.asList(XMLSchema.BYTE, XMLSchema.UNSIGNED_BYTE);
 
-		private URI mProperty;
+		private IRI mProperty;
 		private Object mAccessor;
 		private DataSource mSource;
 		private Resource mResource;
 
-		public ValueToObject(final DataSource theSource, Resource theResource, final Object theAccessor, final URI theProp) {
+		public ValueToObject(final DataSource theSource, Resource theResource, final Object theAccessor, final IRI theProp) {
 			mResource = theResource;
 			mSource = theSource;
 			mAccessor = theAccessor;
@@ -1218,7 +1167,7 @@ public final class RdfGenerator {
 
 			if (theValue instanceof Literal) {
 				Literal aLit = (Literal) theValue;
-				URI aDatatype = aLit.getDatatype() != null ? aLit.getDatatype() : null;
+				IRI aDatatype = aLit.getDatatype() != null ? aLit.getDatatype() : null;
 				if (aDatatype == null || XMLSchema.STRING.equals(aDatatype) || RDFS.LITERAL.equals(aDatatype)) {
 					return aLit.getLabel();
 				}
@@ -1294,11 +1243,11 @@ public final class RdfGenerator {
 					try {
 						String aQuery = getBNodeConstructQuery(mSource, mResource, mProperty);
 						
-						Graph aGraph = mSource.graphQuery(aQuery);
+						Model aGraph = mSource.graphQuery(aQuery);
 
-						Optional<Resource> aPossibleListHead = Graphs.getResource(aGraph, mResource, mProperty);
+						Optional<Resource> aPossibleListHead = Models2.getResource(aGraph, mResource, mProperty);
 						
-						if (aPossibleListHead.isPresent() && Graphs.isList(aGraph, aPossibleListHead.get())) {
+						if (aPossibleListHead.isPresent() && Models2.isList(aGraph, aPossibleListHead.get())) {
 							List<Value> aList;
 
 							// getting the list is only safe the the query dialect supports stable bnode ids in the query language.
@@ -1311,7 +1260,7 @@ public final class RdfGenerator {
 								}
 							}
 							else {
-								aList = new ArrayList<Value>(GraphUtil.getObjects(aGraph, mResource, mProperty));
+								aList = new ArrayList<>(aGraph.filter(mResource, mProperty, null).objects());
 							}
 
 							//return new ToObjectFunction(mSource, null, (AccessibleObject) mAccessor, null).apply(aList);
@@ -1355,8 +1304,8 @@ public final class RdfGenerator {
 					}
 				}
 			}
-			else if (theValue instanceof URI) {
-				URI aURI = (URI) theValue;
+			else if (theValue instanceof IRI) {
+				IRI aURI = (IRI) theValue;
 				try {
 					// we need to figure out what type of bean this instance maps to.
 					Class<?> aClass = BeanReflectUtil.classFrom(mAccessor);
@@ -1417,11 +1366,7 @@ public final class RdfGenerator {
         return aList;
 	}
 
-	private static final MethodFilter METHOD_FILTER = new MethodFilter() {
-		public boolean isHandled(final Method theMethod) {
-			return !theMethod.getName().equals("finalize");
-		}
-	};
+	private static final MethodFilter METHOD_FILTER = theMethod -> !theMethod.getName().equals("finalize");
 
 	@SuppressWarnings("unchecked")
 	private static <T> T getProxyOrDbObject(Object theAccessor, Class<T> theClass, Object theKey, DataSource theSource) throws Exception {
@@ -1480,7 +1425,7 @@ public final class RdfGenerator {
 		}
 	}
 	
-	private static String getBNodeConstructQuery(DataSource theSource, Resource theRes, URI theProperty) {
+	private static String getBNodeConstructQuery(DataSource theSource, Resource theRes, IRI theProperty) {
 		Dialect aDialect = theSource.getQueryFactory().getDialect();
 
 		String aSerqlQuery = "construct * from {" + aDialect.asQueryString(theRes) + "} <" + theProperty.toString() + "> {o}, {o} po {oo}";
@@ -1520,22 +1465,22 @@ public final class RdfGenerator {
                 return FACTORY.createLiteral(theIn.toString());
             }
 			else if (Boolean.class.isInstance(theIn)) {
-				return FACTORY.createLiteral(Boolean.class.cast(theIn).booleanValue());
+				return FACTORY.createLiteral(Boolean.class.cast(theIn));
 			}
 			else if (Integer.class.isInstance(theIn)) {
-				return FACTORY.createLiteral(Integer.class.cast(theIn).intValue());
+				return FACTORY.createLiteral(Integer.class.cast(theIn));
 			}
 			else if (Long.class.isInstance(theIn)) {
-				return FACTORY.createLiteral(Long.class.cast(theIn).longValue());
+				return FACTORY.createLiteral(Long.class.cast(theIn));
 			}
 			else if (Short.class.isInstance(theIn)) {
-				return FACTORY.createLiteral(Short.class.cast(theIn).shortValue());
+				return FACTORY.createLiteral(Short.class.cast(theIn));
 			}
 			else if (Double.class.isInstance(theIn)) {
-				return FACTORY.createLiteral(Double.class.cast(theIn).doubleValue());
+				return FACTORY.createLiteral(Double.class.cast(theIn));
 			}
 			else if (Float.class.isInstance(theIn)) {
-				return FACTORY.createLiteral(Float.class.cast(theIn).floatValue());
+				return FACTORY.createLiteral(Float.class.cast(theIn));
 			}
 			else if (Date.class.isInstance(theIn)) {
 				return FACTORY.createLiteral(Dates.datetime(Date.class.cast(theIn)), XMLSchema.DATETIME);
@@ -1556,7 +1501,7 @@ public final class RdfGenerator {
 					return FACTORY.createLiteral(theIn.toString(), XMLSchema.ANYURI);
 				}
 				else {
-                	return FACTORY.createURI(theIn.toString());
+                	return FACTORY.createIRI(theIn.toString());
 				}
 			}
 			else if (Value.class.isAssignableFrom(theIn.getClass())) {
@@ -1586,7 +1531,7 @@ public final class RdfGenerator {
 	}
 
 	private static class ContainsResourceValues implements Predicate<Value> {
-		public boolean apply(final Value theValue) {
+		public boolean test(final Value theValue) {
 			return theValue instanceof Resource;
 		}
 	}
@@ -1602,7 +1547,7 @@ public final class RdfGenerator {
 			mLangCode = theLangCode;
 		}
 
-		public boolean apply(final Value theValue) {
+		public boolean test(final Value theValue) {
 			return theValue instanceof Literal && mLangCode.equals(((Literal)theValue).getLanguage());
 		}
 	}

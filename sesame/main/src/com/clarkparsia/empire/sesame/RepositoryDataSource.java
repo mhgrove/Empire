@@ -29,10 +29,11 @@ import com.clarkparsia.empire.impl.sparql.SPARQLDialect;
 
 import com.clarkparsia.empire.impl.serql.SerqlDialect;
 
-import com.complexible.common.openrdf.util.AdunaIterations;
-import com.complexible.common.openrdf.util.GraphBuildingRDFHandler;
+import com.complexible.common.openrdf.util.ModelBuildingRDFHandler;
 
-import org.openrdf.model.Graph;
+import info.aduna.iteration.Iterations;
+import org.openrdf.model.IRI;
+import org.openrdf.model.Model;
 import org.openrdf.model.Resource;
 import org.openrdf.model.Statement;
 import org.openrdf.model.Value;
@@ -58,7 +59,7 @@ import java.net.URI;
  *
  * @author 	Michael Grove
  * @since 	0.6
- * @version 0.7
+ * @version 1.0
  */
 public final class RepositoryDataSource extends AbstractDataSource implements MutableDataSource, TripleSource, SupportsNamedGraphs, SupportsTransactions {
 
@@ -121,7 +122,7 @@ public final class RepositoryDataSource extends AbstractDataSource implements Mu
 	 * @inheritDoc
 	 */
     @Override
-	public void add(final Graph theGraph) throws DataSourceException {
+	public void add(final Model theGraph) throws DataSourceException {
 		assertConnected();
 
 		try {
@@ -138,7 +139,7 @@ public final class RepositoryDataSource extends AbstractDataSource implements Mu
 	 * @inheritDoc
 	 */
     @Override
-	public void remove(final Graph theGraph) throws DataSourceException {
+	public void remove(final Model theGraph) throws DataSourceException {
 		assertConnected();
 
 		try {
@@ -226,15 +227,15 @@ public final class RepositoryDataSource extends AbstractDataSource implements Mu
 	 * @inheritDoc
 	 */
     @Override
-	public Graph graphQuery(final String theQuery) throws QueryException {
+	public Model graphQuery(final String theQuery) throws QueryException {
 		assertConnected();
 
-		GraphBuildingRDFHandler aHandler = new GraphBuildingRDFHandler();
+	    ModelBuildingRDFHandler aHandler = new ModelBuildingRDFHandler();
 
 		try {
 			GraphQuery aQuery = mConnection.prepareGraphQuery(mQueryLang, theQuery);
 			aQuery.evaluate(aHandler);			
-			return aHandler.getGraph();		
+			return aHandler.getModel();
 		}
 		catch (Exception e) {
 			throw new QueryException(e);
@@ -258,7 +259,7 @@ public final class RepositoryDataSource extends AbstractDataSource implements Mu
 	 * @inheritDoc
 	 */
     @Override
-	public Graph describe(final String theQuery) throws QueryException {
+	public Model describe(final String theQuery) throws QueryException {
 		return graphQuery(theQuery);
 	}
 
@@ -266,11 +267,11 @@ public final class RepositoryDataSource extends AbstractDataSource implements Mu
 	 * @inheritDoc
 	 */
     @Override
-	public void add(final URI theGraphURI, final Graph theGraph) throws DataSourceException {
+	public void add(final URI theGraphURI, final Model theGraph) throws DataSourceException {
 		assertConnected();
 
 		try {
-			mConnection.add(theGraph, mConnection.getValueFactory().createURI(theGraphURI.toString()));
+			mConnection.add(theGraph, mConnection.getValueFactory().createIRI(theGraphURI.toString()));
 		}
 		catch (RepositoryException e) {
 			throw new DataSourceException(e);
@@ -285,7 +286,7 @@ public final class RepositoryDataSource extends AbstractDataSource implements Mu
 		assertConnected();
 
 		try {
-			Resource aContext = mConnection.getValueFactory().createURI(theGraphURI.toString());
+			Resource aContext = mConnection.getValueFactory().createIRI(theGraphURI.toString());
 
 			mConnection.remove(mConnection.getStatements(null, null, null, true, aContext), aContext);
 		}
@@ -298,11 +299,11 @@ public final class RepositoryDataSource extends AbstractDataSource implements Mu
 	 * @inheritDoc
 	 */
     @Override
-	public void remove(final URI theGraphURI, final Graph theGraph) throws DataSourceException {
+	public void remove(final URI theGraphURI, final Model theGraph) throws DataSourceException {
 		assertConnected();
 
 		try {
-			mConnection.remove(theGraph, mConnection.getValueFactory().createURI(theGraphURI.toString()));
+			mConnection.remove(theGraph, mConnection.getValueFactory().createIRI(theGraphURI.toString()));
 		}
 		catch (RepositoryException e) {
 			throw new DataSourceException(e);
@@ -358,10 +359,10 @@ public final class RepositoryDataSource extends AbstractDataSource implements Mu
 	 * @inheritDoc
 	 */
     @Override
-    public Iterable<Statement> getStatements(Resource theSubject, org.openrdf.model.URI thePredicate, Value theObject) 
+    public Iterable<Statement> getStatements(Resource theSubject, IRI thePredicate, Value theObject)
     		throws DataSourceException {
     	try {
-			return AdunaIterations.iterable(mConnection.getStatements(theSubject, thePredicate, theObject, true));
+			return () -> Iterations.stream(mConnection.getStatements(theSubject, thePredicate, theObject, true)).iterator();
 		}
 		catch (RepositoryException e) {
 			throw new DataSourceException(e);
@@ -372,7 +373,7 @@ public final class RepositoryDataSource extends AbstractDataSource implements Mu
 	 * @inheritDoc
 	 */
     @Override
-    public Iterable<Statement> getStatements(Resource theSubject, org.openrdf.model.URI thePredicate, Value theObject, Resource theContext) 
+    public Iterable<Statement> getStatements(Resource theSubject, IRI thePredicate, Value theObject, Resource theContext)
     		throws DataSourceException {
     	if (theContext == null) {
     		// if context is null, this means any context should match -- we can forward request to getStatements() without context
@@ -380,7 +381,7 @@ public final class RepositoryDataSource extends AbstractDataSource implements Mu
     	}
     	
     	try {
-			return AdunaIterations.iterable(mConnection.getStatements(theSubject, thePredicate, theObject, true, theContext));
+			return () -> Iterations.stream(mConnection.getStatements(theSubject, thePredicate, theObject, true, theContext)).iterator();
 		}
 		catch (RepositoryException e) {
 			throw new DataSourceException(e);

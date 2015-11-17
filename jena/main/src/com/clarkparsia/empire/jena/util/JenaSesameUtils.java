@@ -18,15 +18,11 @@ package com.clarkparsia.empire.jena.util;
 import com.complexible.common.openrdf.model.Models2;
 import org.openrdf.model.IRI;
 import org.openrdf.model.impl.SimpleValueFactory;
-import org.openrdf.model.impl.ValueFactoryImpl;
-import org.openrdf.model.impl.GraphImpl;
 import org.openrdf.model.impl.StatementImpl;
 
-import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.ValueFactory;
 import org.openrdf.model.BNode;
-import org.openrdf.model.Graph;
 
 import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.RDFNode;
@@ -181,7 +177,7 @@ public class JenaSesameUtils {
 		if (theLiteral == null) {
 			return null;
 		}
-		else if (theLiteral.getLanguage() != null) {
+		else if (theLiteral.getLanguage().isPresent()) {
 			return mInternalModel.createLiteral(theLiteral.getLabel(),
 												theLiteral.getLanguage().get());
 		}

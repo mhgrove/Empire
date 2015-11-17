@@ -16,6 +16,7 @@
 package com.clarkparsia.empire.codegen;
 
 import java.io.File;
+import java.lang.annotation.Annotation;
 import java.net.URI;
 import java.util.Collections;
 
@@ -25,10 +26,10 @@ import javax.persistence.Persistence;
 
 import com.clarkparsia.empire.Empire;
 import com.clarkparsia.empire.SupportsRdfId;
-
 import com.clarkparsia.empire.api.TestInterface;
 import com.clarkparsia.empire.util.TestModule;
 import com.clarkparsia.empire.util.TestUtil;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -149,6 +150,14 @@ public class CodegenTests {
 		IFoo aFoo = InstanceGenerator.generateInstanceClass(FooImpl.class).newInstance();
 
 		assertTrue(aFoo.isDereferenced());
+	}
+	
+	@Test
+	public void testMultipleMethodAnnotationInheritance() throws Exception {
+	    // issue #105
+	    PersonWithMultipleMethodAnnotations p = InstanceGenerator.generateInstanceClass(PersonWithMultipleMethodAnnotations.class).newInstance();
+	    Annotation[] annos = p.getClass().getDeclaredMethod("getHasContact").getAnnotations();
+	    assertEquals(2, annos.length);
 	}
 
 	public interface NoSupportsTestInterface {

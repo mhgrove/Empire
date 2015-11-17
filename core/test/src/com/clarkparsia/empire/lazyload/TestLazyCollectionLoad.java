@@ -16,28 +16,35 @@
 package com.clarkparsia.empire.lazyload;
 
 import java.io.File;
+import java.net.URI;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.persistence.CascadeType;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.FetchType;
+import javax.persistence.OneToMany;
 import javax.persistence.Persistence;
 
 import com.clarkparsia.empire.Empire;
+import com.clarkparsia.empire.SupportsRdfId;
+import com.clarkparsia.empire.SupportsRdfId.RdfKey;
 import com.clarkparsia.empire.annotation.RdfGenerator;
-
+import com.clarkparsia.empire.codegen.InstanceGenerator;
 import com.clarkparsia.empire.lazyload.Event.Status;
-
 import com.clarkparsia.empire.util.TestModule;
 import com.clarkparsia.empire.util.TestUtil;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class TestLazyCollectionLoad {
 
@@ -48,7 +55,7 @@ public class TestLazyCollectionLoad {
         TestUtil.setConfigSystemProperty( "test.empire.config.properties" );
 		Empire.init(new TestModule());
 
-        RdfGenerator.init(Sets.<Class<?>>newHashSet(BusinessObjectImpl.class, EventImpl.class));
+        RdfGenerator.init(Sets.<Class<?>>newHashSet(BusinessObjectImpl.class, EventImpl.class, Child.class, Parent.class));
 	}
 
 	/**
@@ -121,6 +128,55 @@ public class TestLazyCollectionLoad {
 		assertEvent3(aIter.next());
     }
 
+    /**
+     * Test that annotating just the getter with '@OneToMany(fetch=FetchType.LAZY)'
+     * will result in a lazy fetch (issue #106). As currently implemented, this is 
+     * testing that BeanReflectUtil#isFetchTypeLazy returns true to 
+     * RdfGenerator#getProxyOrDbObject so that that returns a proxy object.
+     * 
+     * @throws Exception test error
+     */
+    @Test
+    public void testLazyLoadGetterAnnotation() throws Exception {
+        
+        EntityManagerFactory f = Persistence.createEntityManagerFactory("test-data-source2");
+        final EntityManager aEntityManager = f.createEntityManager();
+        
+        URI aChildUri = new URI("http://example.org/c1");
+        URI aParentUri = new URI("http://example.org/p1");
+        newChildWithParent(aChildUri, aParentUri, aEntityManager);
+         // Child has just the getter annotated with:
+         // @OneToMany(fetch=FetchType.LAZY)
+        Child aChild = aEntityManager.find(Child.class, aChildUri);
+        Object itsParent = aChild.getIsChildOf().get(0);
+        assertTrue("Expected a javassist.util.proxy.Proxy object indicating a lazy load", 
+                itsParent instanceof javassist.util.proxy.ProxyObject);        
+    }
+    
+    /**
+     * Test that the proxy returned for a lazily-fetched interface-valued property
+     * has the expected class hierarchy (Issue #107)
+     * 
+     * @throws Exception test error
+     */
+    @Test
+    public void testLazyLoadInterfaceProxyHierarchy() throws Exception {
+        
+        EntityManagerFactory f = Persistence.createEntityManagerFactory("test-data-source2");
+        final EntityManager aEntityManager = f.createEntityManager();
+        
+        URI aChildUri = new URI("http://example.org/c2");
+        URI aParentUri = new URI("http://example.org/p2");
+        newChildWithParent(aChildUri, aParentUri, aEntityManager);
+        Child aChild = aEntityManager.find(Child.class, aChildUri);
+        Object itsParent = aChild.getIsChildOf().get(0);
+        // we require instanceof Proxy also because if isChildOf is not correctly lazily-loaded then
+        // what we get back will be instanceof Parent. If using TestNG we could make this test 
+        // dependent on testLazyLoadGetterAnnotation
+        assertTrue("Expected a javassist.util.proxy.Proxy object with Parent as an interface", 
+                itsParent instanceof javassist.util.proxy.ProxyObject && itsParent instanceof Parent);        
+    }
+    
 	private void assertEvent1(final Event theEvent) {
 		assertEquals(Status.Complete, theEvent.getStatus());
 		assertEquals("Event #1", theEvent.getParameters());
@@ -156,5 +212,19 @@ public class TestLazyCollectionLoad {
             m.flush();
         }
         return b;
+    }
+    
+    /*
+     * Construct data used by Child & Parent tests
+     */
+    private static void newChildWithParent(URI childUri, URI parentUri, EntityManager m) throws InstantiationException, IllegalAccessException, Exception {
+        Child child = InstanceGenerator.generateInstanceClass(Child.class).newInstance();
+        Parent parent = InstanceGenerator.generateInstanceClass(Parent.class).newInstance();
+        child.setRdfId(new SupportsRdfId.URIKey(childUri));
+        parent.setRdfId(new SupportsRdfId.URIKey(parentUri));
+        child.setIsChildOf(Lists.newArrayList(parent));
+        parent.setIsParentOf(Lists.newArrayList(child));
+        m.persist(child);
+        m.persist(parent);
     }
 }

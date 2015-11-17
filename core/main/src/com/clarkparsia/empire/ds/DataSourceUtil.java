@@ -15,7 +15,6 @@
 
 package com.clarkparsia.empire.ds;
 
-import com.complexible.common.base.Functions2;
 import com.clarkparsia.empire.ds.impl.TripleSourceAdapter;
 import com.clarkparsia.empire.Dialect;
 import com.clarkparsia.empire.Empire;
@@ -23,25 +22,21 @@ import com.clarkparsia.empire.util.EmpireUtil;
 import com.clarkparsia.empire.impl.serql.SerqlDialect;
 import com.clarkparsia.empire.impl.sparql.ARQSPARQLDialect;
 
-import com.complexible.common.openrdf.model.Graphs;
-import com.google.common.collect.Collections2;
+import com.complexible.common.openrdf.model.Models2;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
-import com.google.common.base.Function;
 
+import org.openrdf.model.Model;
 import org.openrdf.model.Resource;
-import org.openrdf.model.Graph;
 import org.openrdf.model.Value;
 import org.openrdf.model.BNode;
 import org.openrdf.model.vocabulary.RDF;
-
-import org.openrdf.query.BindingSet;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.stream.Collectors;
 
 /**
  * <p>Collection of utility methods for working with Empire DataSources</p>
@@ -49,7 +44,7 @@ import java.util.Collections;
  * @author	Michael Grove
  *
  * @since	0.7
- * @version	0.7.1
+ * @version	1.0
  *
  * @see DataSource
  * @see TripleSource
@@ -95,11 +90,11 @@ public final class DataSourceUtil {
 	 * @return all the statements about the given object
 	 * @throws QueryException if there is an error while querying for the graph
 	 */
-	public static Graph describe(DataSource theSource, Object theObj) throws QueryException {
+	public static Model describe(DataSource theSource, Object theObj) throws QueryException {
 		String aNG = null;
 
 		if (EmpireUtil.asSupportsRdfId(theObj).getRdfId() == null) {
-			return Graphs.newGraph();
+			return Models2.newModel();
 		}
 
 		if (theSource instanceof SupportsNamedGraphs && EmpireUtil.hasNamedGraphSpecified(theObj)) {
@@ -117,7 +112,7 @@ public final class DataSourceUtil {
 		// bnode instabilty in queries will just yield either a parse error or incorrect query results because the bnode
 		// will get treated as a variable, and it will just grab the entire database, which is not what we want
 		if (aResource instanceof BNode && !(aDialect instanceof ARQSPARQLDialect)) {
-			return Graphs.newGraph();
+			return Models2.newModel();
 		}
 
 		// TODO: if source supports describe queries, use that.
@@ -131,7 +126,7 @@ public final class DataSourceUtil {
 						 (aNG == null ? "from\n" : "from context <" + aNG + ">\n") +
 						 "{s} p {o} where s = " + aDialect.asQueryString(aResource) + "";
 
-		Graph aGraph;
+		Model aGraph;
 
 		if (theSource.getQueryFactory().getDialect() instanceof SerqlDialect) {
 			aGraph = theSource.graphQuery(aSeRQL);
@@ -188,7 +183,7 @@ public final class DataSourceUtil {
 		}
 
 		try {
-			return aResults.hasNext();
+			return aResults.stream().findFirst().isPresent();
 		}
 		finally {
 			aResults.close();
@@ -222,7 +217,7 @@ public final class DataSourceUtil {
 				return Collections.emptySet();
 			}
 			else {
-				return Iterables.transform(aTypes, Functions2.cast(Resource.class));
+				return aTypes.stream().map(aType -> (Resource) aType).collect(Collectors.toList());
 			}
 		}
 		catch (DataSourceException e) {
@@ -240,7 +235,7 @@ public final class DataSourceUtil {
 	 * @return a collection of all the values of the property on the given resource
 	 * @throws com.clarkparsia.empire.ds.DataSourceException if there is an error while querying the data source.
 	 */
-	public static Collection<Value> getValues(final DataSource theSource, final Resource theSubject, final org.openrdf.model.URI thePredicate) throws DataSourceException {
+	public static Collection<Value> getValues(final DataSource theSource, final Resource theSubject, final org.openrdf.model.IRI thePredicate) throws DataSourceException {
 		final String aSPARQLQuery = "select ?obj\n" +
 									"where {\n" +
 									theSource.getQueryFactory().getDialect().asQueryString(theSubject) + " <" + thePredicate.stringValue() + "> ?obj.  }";
@@ -259,11 +254,8 @@ public final class DataSourceUtil {
 				aResults = theSource.selectQuery(aSPARQLQuery);
 			}
 
-			return Collections2.transform(Sets.newHashSet(aResults), new Function<BindingSet, Value>() {
-					public Value apply(final BindingSet theIn) {
-						return theIn.getValue("obj");
-					}
-			});
+			return aResults.stream().map(theIn -> theIn.getValue("obj"))
+			               .collect(Collectors.toSet());
 		}
 		catch (Exception e) {
 			throw new DataSourceException(e);
@@ -283,7 +275,7 @@ public final class DataSourceUtil {
 	 * @return the first value of the resource
 	 * @throws com.clarkparsia.empire.ds.DataSourceException if there is an error while querying the data source.
 	 */
-	public static Value getValue(final DataSource theSource, final Resource theSubject, final org.openrdf.model.URI thePredicate) throws DataSourceException {
+	public static Value getValue(final DataSource theSource, final Resource theSubject, final org.openrdf.model.IRI thePredicate) throws DataSourceException {
 		Collection<Value> aValues = getValues(theSource, theSubject, thePredicate);
 		if (aValues.isEmpty()) {
 			return null;

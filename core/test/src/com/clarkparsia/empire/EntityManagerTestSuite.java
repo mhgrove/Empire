@@ -31,6 +31,7 @@ import java.util.List;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.EntityExistsException;
+import javax.persistence.EntityListeners;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.FetchType;
@@ -39,11 +40,14 @@ import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import javax.persistence.PersistenceException;
+import javax.persistence.PreRemove;
 import javax.persistence.Query;
 
 import com.clarkparsia.empire.annotation.RdfGenerator;
 import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.RdfsClass;
+import com.clarkparsia.empire.annotation.SupportsRdfIdImpl;
 import com.clarkparsia.empire.codegen.InstanceGenerator;
 
 import com.clarkparsia.empire.ds.DataSource;
@@ -68,8 +72,8 @@ import com.clarkparsia.empire.typing.AnotherB;
 import com.clarkparsia.empire.typing.B;
 
 import com.clarkparsia.empire.util.TestUtil;
-import com.complexible.common.openrdf.model.GraphIO;
-import com.complexible.common.openrdf.model.Graphs;
+import com.complexible.common.openrdf.model.ModelIO;
+import com.complexible.common.openrdf.model.Models2;
 
 import com.google.common.collect.Lists;
 
@@ -82,7 +86,7 @@ import org.junit.Test;
 
 import org.openrdf.model.Graph;
 import org.openrdf.model.Statement;
-import org.openrdf.model.impl.ValueFactoryImpl;
+import org.openrdf.model.impl.SimpleValueFactory;
 import org.openrdf.model.vocabulary.RDF;
 
 import org.openrdf.rio.RDFParseException;
@@ -101,7 +105,7 @@ import static org.junit.Assume.assumeTrue;
  * 
  * @author Michael Grove
  * @since	0.7.1
- * @version 0.7.1
+ * @version 1.0
  */
 public abstract class EntityManagerTestSuite {
 
@@ -220,12 +224,12 @@ public abstract class EntityManagerTestSuite {
                 ((SupportsTransactions) ts).begin();
             }
 
-			ts.add(Graphs.newGraph(ValueFactoryImpl.getInstance().createStatement(ValueFactoryImpl.getInstance().createURI("urn:two"),
+			ts.add(Models2.newModel(SimpleValueFactory.getInstance().createStatement(SimpleValueFactory.getInstance().createIRI("urn:two"),
 																				  RDF.TYPE,
-																				  ValueFactoryImpl.getInstance().createBNode()),
-								   ValueFactoryImpl.getInstance().createStatement(ValueFactoryImpl.getInstance().createURI("urn:one"),
-																				  ValueFactoryImpl.getInstance().createURI("http://empire.clarkparsia.com/hasMoreTwos"),
-																				  ValueFactoryImpl.getInstance().createURI("urn:two"))));
+																				  SimpleValueFactory.getInstance().createBNode()),
+			                       SimpleValueFactory.getInstance().createStatement(SimpleValueFactory.getInstance().createIRI("urn:one"),
+								                                                  SimpleValueFactory.getInstance().createIRI("http://empire.clarkparsia.com/hasMoreTwos"),
+								                                                  SimpleValueFactory.getInstance().createIRI("urn:two"))));
 
             if (ts instanceof SupportsTransactions) {
                 ((SupportsTransactions) ts).commit();
@@ -289,10 +293,10 @@ public abstract class EntityManagerTestSuite {
 
 		em.merge(aObj);
 
-		Graph aGraph = Graphs.newGraph(aSource.getStatements(null, null, null));
+		Graph aGraph = Models2.newModel(aSource.getStatements(null, null, null));
 
 		assertEquals(3, aGraph.size());
-		assertEquals(1, Lists.newArrayList(aGraph.match(null, ValueFactoryImpl.getInstance().createURI("urn:label"), null)).size());
+		assertEquals(1, Lists.newArrayList(aGraph.match(null, SimpleValueFactory.getInstance().createIRI("urn:label"), null)).size());
 
 		em.remove(aObj);
 
@@ -301,19 +305,19 @@ public abstract class EntityManagerTestSuite {
 
 		em.persist(pe);
 
-		aGraph = Graphs.newGraph(aSource.getStatements(null, null, null));
+		aGraph = Models2.newModel(aSource.getStatements(null, null, null));
 
 		assertEquals(5, aGraph.size());
-		assertEquals(1, Lists.newArrayList(aGraph.match(null, ValueFactoryImpl.getInstance().createURI("urn:label"), null)).size());
+		assertEquals(1, Lists.newArrayList(aGraph.match(null, SimpleValueFactory.getInstance().createIRI("urn:label"), null)).size());
 
 		aObj.setLabel("foobarbaz");
 
 		em.merge(pe);
 
-		aGraph = Graphs.newGraph(aSource.getStatements(null, null, null));
+		aGraph = Models2.newModel(aSource.getStatements(null, null, null));
 
 		assertEquals(5, aGraph.size());
-		assertEquals(1, Lists.newArrayList(aGraph.match(null, ValueFactoryImpl.getInstance().createURI("urn:label"), null)).size());
+		assertEquals(1, Lists.newArrayList(aGraph.match(null, SimpleValueFactory.getInstance().createIRI("urn:label"), null)).size());
 	}
 
 
@@ -342,10 +346,10 @@ public abstract class EntityManagerTestSuite {
 
 		em.merge(aObj);
 
-		Graph aGraph = Graphs.newGraph(aSource.getStatements(null, null, null));
+		Graph aGraph = Models2.newModel(aSource.getStatements(null, null, null));
 
 		assertEquals(3, aGraph.size());
-		assertEquals(1, Lists.newArrayList(aGraph.match(null, ValueFactoryImpl.getInstance().createURI("urn:label"), null)).size());
+		assertEquals(1, Lists.newArrayList(aGraph.match(null, SimpleValueFactory.getInstance().createIRI("urn:label"), null)).size());
 
 		em.remove(aObj);
 
@@ -356,19 +360,19 @@ public abstract class EntityManagerTestSuite {
 
 		em.refresh(pe);
 
-		aGraph = Graphs.newGraph(aSource.getStatements(null, null, null));
+		aGraph = Models2.newModel(aSource.getStatements(null, null, null));
 
 		assertEquals(5, aGraph.size());
-		assertEquals(1, Lists.newArrayList(aGraph.match(null, ValueFactoryImpl.getInstance().createURI("urn:label"), null)).size());
+		assertEquals(1, Lists.newArrayList(aGraph.match(null, SimpleValueFactory.getInstance().createIRI("urn:label"), null)).size());
 
 		aObj.setLabel("foobarbaz");
 
 		em.merge(pe);
 
-		aGraph = Graphs.newGraph(aSource.getStatements(null, null, null));
+		aGraph = Models2.newModel(aSource.getStatements(null, null, null));
 
 		assertEquals(5, aGraph.size());
-		assertEquals(1, Lists.newArrayList(aGraph.match(null, ValueFactoryImpl.getInstance().createURI("urn:label"), null)).size());
+		assertEquals(1, Lists.newArrayList(aGraph.match(null, SimpleValueFactory.getInstance().createIRI("urn:label"), null)).size());
 	}
 
 	/**
@@ -954,6 +958,47 @@ public abstract class EntityManagerTestSuite {
 	}
 
 	@Test
+	public void testLifeCycleExceptions() throws Exception {
+		EntityManager aManager = createEntityManager();
+
+		ExceptionInLifecycle aBean = new ExceptionInLifecycle();
+
+		aManager.persist(aBean);
+
+		try {
+			aManager.remove(aBean);
+			fail("Should not have removed bean");
+		}
+		catch (PersistenceException theE) {
+			// expected
+		}
+	}
+
+	public static class RemoveProhibitor {
+		@PreRemove
+		public void prohibit(Object o) {
+			throw new PersistenceException(o.getClass().getName() + " instances may not be removed");
+		}
+	}
+
+	@Entity
+	@EntityListeners({RemoveProhibitor.class})
+	@RdfsClass("urn:Foo")
+	private static final class ExceptionInLifecycle implements SupportsRdfId {
+		private final SupportsRdfIdImpl mId = new SupportsRdfIdImpl();
+
+		@Override
+		public RdfKey getRdfId() {
+			return mId.getRdfId();
+		}
+
+		@Override
+		public void setRdfId(final RdfKey theId) {
+			mId.setRdfId(theId);
+		}
+	}
+
+	@Test
 	public void testPreAndPostHooks() throws Exception {
 		EntityManager aManager = createEntityManager();
 
@@ -1085,7 +1130,7 @@ public abstract class EntityManagerTestSuite {
 
 		// creating a value object here because our dataset doesnt type any literals, so the automatic typing of a
 		// plain string, or double or whatever (string in this case) will not return results, so we have to do it the long way.
-		aQuery.setParameter(1, ValueFactoryImpl.getInstance().createLiteral("U.S.S.R"));
+		aQuery.setParameter(1, SimpleValueFactory.getInstance().createLiteral("U.S.S.R"));
 
 		aResults = aQuery.getResultList();
 
@@ -1102,7 +1147,7 @@ public abstract class EntityManagerTestSuite {
 			// this is what we'd expect
 		}
 
-		aQuery.setParameter(1, ValueFactoryImpl.getInstance().createLiteral("zjlkdiouasdfuoi"));
+		aQuery.setParameter(1, SimpleValueFactory.getInstance().createLiteral("zjlkdiouasdfuoi"));
 
 		try {
 			aQuery.getSingleResult();
@@ -1115,8 +1160,8 @@ public abstract class EntityManagerTestSuite {
 		aQuery = aManager.createNativeQuery(TEST_PARAM_QUERY,
 											Spacecraft.class);
 
-		aQuery.setParameter(1, ValueFactoryImpl.getInstance().createLiteral("U.S.S.R"));
-		aQuery.setParameter("altName", ValueFactoryImpl.getInstance().createLiteral("00001"));
+		aQuery.setParameter(1, SimpleValueFactory.getInstance().createLiteral("U.S.S.R"));
+		aQuery.setParameter("altName", SimpleValueFactory.getInstance().createLiteral("00001"));
 
 		Object aObj = aQuery.getSingleResult();
 
@@ -1482,7 +1527,7 @@ public abstract class EntityManagerTestSuite {
 			((SupportsTransactions)theSource).begin();
 		}
 
-		theSource.add(GraphIO.readGraph(theFile));
+		theSource.add(ModelIO.read(theFile.toPath()));
 
 		if (theSource instanceof SupportsTransactions) {
 			((SupportsTransactions)theSource).commit();

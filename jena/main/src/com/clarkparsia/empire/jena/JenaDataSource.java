@@ -35,9 +35,7 @@ import com.clarkparsia.empire.jena.util.JenaSesameUtils;
 
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Sets;
-import com.google.common.base.Function;
 
-import org.openrdf.model.Graph;
 import org.openrdf.model.Resource;
 import org.openrdf.model.Statement;
 import org.openrdf.model.Value;
@@ -45,10 +43,10 @@ import org.openrdf.model.Value;
 /**
  * <p>Implementation of the Empire DataSource API backed by a Jena Model</p>
  *
- * @author Michael Grove
- * @author uoccou
- * @since 0.1
- * @version 0.7.1
+ * @author  Michael Grove
+ * @author  uoccou
+ * @since   0.1
+ * @version 1.0
  */
 public class JenaDataSource extends AbstractDataSource implements MutableDataSource, TripleSource {
 
@@ -101,7 +99,7 @@ public class JenaDataSource extends AbstractDataSource implements MutableDataSou
 	/**
 	 * @inheritDoc
 	 */
-	public Graph graphQuery(final String theQuery) throws QueryException {
+	public org.openrdf.model.Model graphQuery(final String theQuery) throws QueryException {
 		assertConnected();
 
 		QueryExecution aQueryExec = query(theQuery);
@@ -133,7 +131,7 @@ public class JenaDataSource extends AbstractDataSource implements MutableDataSou
 	/**
 	 * @inheritDoc
 	 */
-	public Graph describe(final String theQuery) throws QueryException {
+	public org.openrdf.model.Model describe(final String theQuery) throws QueryException {
 		assertConnected();
 
 		QueryExecution aQueryExec = query(theQuery);
@@ -158,7 +156,7 @@ public class JenaDataSource extends AbstractDataSource implements MutableDataSou
 	/**
 	 * @inheritDoc
 	 */
-	public void add(final Graph theGraph) throws DataSourceException {
+	public void add(final org.openrdf.model.Model theGraph) throws DataSourceException {
 		assertConnected();
 
 		mModel.add(JenaSesameUtils.asJenaModel(theGraph));
@@ -167,7 +165,7 @@ public class JenaDataSource extends AbstractDataSource implements MutableDataSou
 	/**
 	 * @inheritDoc
 	 */
-	public void remove(final Graph theGraph) throws DataSourceException {
+	public void remove(final org.openrdf.model.Model theGraph) throws DataSourceException {
 		assertConnected();
 
 		mModel.remove(JenaSesameUtils.asJenaModel(theGraph));
@@ -188,20 +186,16 @@ public class JenaDataSource extends AbstractDataSource implements MutableDataSou
 	/**
 	 * @inheritDoc
 	 */
-    public Iterable<Statement> getStatements(Resource subject, org.openrdf.model.URI predicate, Value object) throws DataSourceException {
+    public Iterable<Statement> getStatements(Resource subject, org.openrdf.model.IRI predicate, Value object) throws DataSourceException {
 
 		final StmtIterator aStmts = mModel.listStatements(JenaSesameUtils.asJenaResource(subject), JenaSesameUtils
 		                .asJenaURI(predicate), JenaSesameUtils.asJenaNode(object));
 
 		return Sets.newHashSet(Iterators.transform(aStmts,
-												   new Function<com.hp.hpl.jena.rdf.model.Statement, Statement>() {
-													   public Statement apply(com.hp.hpl.jena.rdf.model.Statement theStatement) {
-														   return JenaSesameUtils.asSesameStatement(theStatement);
-													   }
-												   }));
+		                                           JenaSesameUtils::asSesameStatement));
 	}
     
-    public Iterable<Statement> getStatements(Resource subject, org.openrdf.model.URI predicate, Value object, Resource theContext) throws DataSourceException {
+    public Iterable<Statement> getStatements(Resource subject, org.openrdf.model.IRI predicate, Value object, Resource theContext) throws DataSourceException {
     	// Jena models do not support contexts -- so we just forward the request to the regular getStatements() method
     	return getStatements(subject, predicate, object);
     }

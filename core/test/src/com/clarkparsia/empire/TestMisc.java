@@ -26,9 +26,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import org.openrdf.model.Resource;
 import org.openrdf.model.BNode;
-import org.openrdf.model.Graph;
+import org.openrdf.model.Model;
+import org.openrdf.model.impl.SimpleValueFactory;
 import org.openrdf.model.util.GraphUtil;
-import org.openrdf.model.impl.ValueFactoryImpl;
 import com.clarkparsia.empire.api.BaseTestClass;
 import com.clarkparsia.empire.util.EmpireUtil;
 import com.clarkparsia.empire.annotation.SupportsRdfIdImpl;
@@ -51,7 +51,7 @@ import java.util.Collections;
  *
  * @author	Michael Grove
  * @since	0.6.4
- * @version 0.7
+ * @version 1.0
  */
 public class TestMisc {
 	// TODO: could use some more SPI tests
@@ -107,7 +107,7 @@ public class TestMisc {
 		assertTrue(aKey instanceof SupportsRdfId.URIKey);
 		assertEquals(aKey.value(), new URL("http://example.org").toURI());
 
-		BNode aAnon = ValueFactoryImpl.getInstance().createBNode("foobar");
+		BNode aAnon = SimpleValueFactory.getInstance().createBNode("foobar");
 		aKey = EmpireUtil.asPrimaryKey(aAnon);
 		assertTrue(aKey instanceof SupportsRdfId.BNodeKey);
 		assertEquals(aKey.value(), "foobar");
@@ -117,9 +117,9 @@ public class TestMisc {
 	public void testTimesTwo() throws InvalidRdfException {
 		TestDoubleImpl obj = new TestDoubleImpl();
 
-		Graph g = RdfGenerator.asRdf(obj);
+		Model g = RdfGenerator.asRdf(obj);
 
-		int aResult = GraphUtil.getObjects(g, EmpireUtil.asResource(obj), ValueFactoryImpl.getInstance().createURI(PrefixMapping.GLOBAL.uri("test:foo"))).size();
+		int aResult = GraphUtil.getObjects(g, EmpireUtil.asResource(obj), SimpleValueFactory.getInstance().createIRI(PrefixMapping.GLOBAL.uri("test:foo"))).size();
 
 		assertEquals(1, aResult);
 	}

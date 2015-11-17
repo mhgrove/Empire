@@ -30,6 +30,7 @@ import java.util.Date;
 import java.net.URI;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.HashMultiset;
 
 /**
  * <p>Class used for testing</p>
@@ -200,7 +201,7 @@ public class TestPerson extends BaseTestClass {
 		if (getFirstName() != null ? !getFirstName().equals(aPerson.getFirstName()) : aPerson.getFirstName() != null) {
 			return false;
 		}
-		if (getKnows() != null ? !getKnows().equals(aPerson.getKnows()) : aPerson.getKnows() != null) {
+		if (getKnows() != null ? !HashMultiset.create(getKnows()).equals(HashMultiset.create(aPerson.getKnows())) : aPerson.getKnows() != null) {
 			return false;
 		}
 		if (getLastName() != null ? !getLastName().equals(aPerson.getLastName()) : aPerson.getLastName() != null) {

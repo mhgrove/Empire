@@ -15,7 +15,7 @@
 
 package com.clarkparsia.empire.api;
 
-import org.openrdf.model.URI;
+import org.openrdf.model.IRI;
 import com.complexible.common.openrdf.vocabulary.Vocabulary;
 
 /**
@@ -34,6 +34,6 @@ public class TestVocab extends Vocabulary {
         return VOCAB;
     }
 
-    public final URI weight = term("weight");
-	public final URI likesVideoGames = term("likesVideoGames");
+    public final IRI weight = term("weight");
+	public final IRI likesVideoGames = term("likesVideoGames");
 }

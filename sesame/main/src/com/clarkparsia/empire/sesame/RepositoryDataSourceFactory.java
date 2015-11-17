@@ -21,8 +21,7 @@ import com.clarkparsia.empire.ds.DataSource;
 import com.clarkparsia.empire.ds.DataSourceException;
 import com.clarkparsia.empire.ds.Alias;
 
-import com.complexible.common.net.NetUtils;
-
+import java.net.MalformedURLException;
 import java.util.Map;
 import java.io.File;
 import java.io.FileInputStream;
@@ -95,11 +94,11 @@ public final class RepositoryDataSourceFactory implements DataSourceFactory, Rep
                         aConn.begin();
 
                         for (String aFile : Splitter.on(',').omitEmptyStrings().trimResults().split(aFiles.toString())) {
-                            RDFParser aParser = Rio.createParser(Rio.getParserFormatForFileName(aFile));
+                            RDFParser aParser = Rio.createParser(Rio.getParserFormatForFileName(aFile).orElse(null));
 
                             aParser.setRDFHandler(new RDFInserter(aConn));
 
-                            if (NetUtils.isURL(aFile)) {
+                            if (isURL(aFile)) {
                                 aParser.parse(new java.net.URL(aFile).openStream(), "");
                             }
                             else {
@@ -133,6 +132,16 @@ public final class RepositoryDataSourceFactory implements DataSourceFactory, Rep
 		}
 		catch (RepositoryException e) {
 			throw new DataSourceException(e);
+		}
+	}
+
+	private static boolean isURL(final String theURL) {
+		try {
+			new java.net.URL(theURL);
+			return true;
+		}
+		catch (MalformedURLException theE) {
+			return false;
 		}
 	}
 }

@@ -30,6 +30,7 @@ import org.openrdf.model.ValueFactory;
 import org.openrdf.model.Statement;
 
 import org.openrdf.model.impl.SimpleValueFactory;
+import org.openrdf.model.util.Literals;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.XMLSchema;
 import org.openrdf.model.vocabulary.RDFS;
@@ -987,7 +988,7 @@ public final class RdfGenerator {
 
 			if (!aList.stream().anyMatch(CONTAINS_RESOURCES)) {
 				if (!EmpireOptions.ENABLE_LANG_AWARE) {
-					Collection<Value> aLangFiltered = aList.stream().filter(theValue -> ((Literal)theValue).getLanguage() == null).collect(Collectors.toList());
+					Collection<Value> aLangFiltered = aList.stream().filter(theLit -> !Literals.isLanguageLiteral((Literal) theLit)).collect(Collectors.toList());
 
 					if (aLangFiltered.isEmpty()) {
 						LANG_FILTER.setLangCode(getLanguageForLocale());

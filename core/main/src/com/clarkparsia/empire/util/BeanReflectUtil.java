@@ -703,18 +703,18 @@ public final class BeanReflectUtil {
 			// if the above failed, that means the type of the field is something like List, or Set, which is not
 			// directly instantiable.  If it's a known type, we'll hand instantiate something here.
 			if (List.class.isAssignableFrom(theValueType)) {
-				return new ArrayList<Object>();
+				return new ArrayList<>();
 			}
 			else if (Set.class.isAssignableFrom(theValueType)) {
 				if (SortedSet.class.isAssignableFrom(theValueType)) {
-					return new TreeSet<Object>();
+					return new TreeSet<>();
 				}
 				else {
-					return new LinkedHashSet<Object>();
+					return new LinkedHashSet<>();
 				}
 			}
 			else if (Collection.class.equals(theValueType)) {
-				return new LinkedHashSet<Object>();
+				return new LinkedHashSet<>();
 			}
 			else {
 				// last option is Map, but i dunno what the hell to do in that case, it doesn't map to our use here.

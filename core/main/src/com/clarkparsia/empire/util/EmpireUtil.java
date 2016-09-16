@@ -28,7 +28,6 @@ import com.clarkparsia.empire.impl.serql.SerqlDialect;
 import com.clarkparsia.empire.impl.sparql.SPARQLDialect;
 
 import com.complexible.common.util.PrefixMapping;
-import com.complexible.common.net.NetUtils;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceException;
@@ -36,9 +35,8 @@ import javax.persistence.PersistenceException;
 import org.openrdf.model.Resource;
 import org.openrdf.model.BNode;
 
+import org.openrdf.model.impl.SimpleValueFactory;
 import org.openrdf.model.vocabulary.RDF;
-
-import org.openrdf.model.impl.ValueFactoryImpl;
 
 import org.openrdf.query.parser.ParsedTupleQuery;
 import org.openrdf.queryrender.builder.QueryBuilder;
@@ -61,7 +59,7 @@ import java.util.ArrayList;
  * @author  Michael Grove
  * 
  * @since   0.6.1
- * @version 0.7
+ * @version 1.0
  */
 public final class EmpireUtil {
 	/**
@@ -87,19 +85,19 @@ public final class EmpireUtil {
 			return null;
 		}
 		else if (theSupport.getRdfId() instanceof SupportsRdfId.URIKey) {
-			return ValueFactoryImpl.getInstance().createURI( ((SupportsRdfId.URIKey) theSupport.getRdfId()).value().toASCIIString() );
+			return SimpleValueFactory.getInstance().createIRI(((SupportsRdfId.URIKey) theSupport.getRdfId()).value().toASCIIString() );
 		}
 		else if (theSupport.getRdfId() instanceof SupportsRdfId.BNodeKey) {
-			return ValueFactoryImpl.getInstance().createBNode( ((SupportsRdfId.BNodeKey) theSupport.getRdfId()).value() );
+			return SimpleValueFactory.getInstance().createBNode( ((SupportsRdfId.BNodeKey) theSupport.getRdfId()).value() );
 		}
 		else {
 			String aValue = theSupport.getRdfId().toString();
 
-			if (NetUtils.isURI(aValue)) {
-				return ValueFactoryImpl.getInstance().createURI(aValue);
+			if (isURI(aValue)) {
+				return SimpleValueFactory.getInstance().createIRI(aValue);
 			}
 			else {
-				return ValueFactoryImpl.getInstance().createBNode(aValue);
+				return SimpleValueFactory.getInstance().createBNode(aValue);
 			}
 		}
 	}
@@ -187,7 +185,7 @@ public final class EmpireUtil {
 		else {
 			String aValue = theSupport.getRdfId().toString();
 
-			if (NetUtils.isURI(aValue)) {
+			if (isURI(aValue)) {
 				return URI.create(aValue);
 			}
 		}
@@ -203,7 +201,7 @@ public final class EmpireUtil {
 	 * @return the list of all objects of the given type in the EntityManager
 	 */
 	public static <T> List<T> all(EntityManager theManager, Class<T> theClass) {
-		List<T> aList = new ArrayList<T>();
+		List<T> aList = new ArrayList<>();
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("Starting read all");
@@ -235,14 +233,12 @@ public final class EmpireUtil {
 		RdfGenerator.addNamespaces(theClass);
 
 		QueryBuilder<ParsedTupleQuery> aQuery = QueryBuilderFactory.select("result").distinct()
-				.group().atom("result", RDF.TYPE, ValueFactoryImpl.getInstance().createURI(PrefixMapping.GLOBAL.uri(aClass.value()))).closeGroup();
+				.group().atom("result", RDF.TYPE, SimpleValueFactory.getInstance().createIRI(PrefixMapping.GLOBAL.uri(aClass.value()))).closeGroup();
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("Created query in {} ms ", (System.currentTimeMillis() - start));
 		}
 
-		start = System.currentTimeMillis();
-		
 		String aQueryStr = null;
 
 		try {
@@ -317,14 +313,14 @@ public final class EmpireUtil {
 			else if (theObj instanceof URL) {
 				return new SupportsRdfId.URIKey(((URL) theObj).toURI());
 			}
-			else if (theObj instanceof org.openrdf.model.URI) {
-				return new SupportsRdfId.URIKey( URI.create( ((org.openrdf.model.URI) theObj).stringValue()) );
+			else if (theObj instanceof org.openrdf.model.IRI) {
+				return new SupportsRdfId.URIKey( URI.create( ((org.openrdf.model.IRI) theObj).stringValue()) );
 			}
 			else if (theObj instanceof org.openrdf.model.BNode) {
 				return new SupportsRdfId.BNodeKey( ((BNode) theObj).getID() );
 			}
 			else {
-				if (NetUtils.isURI(theObj.toString())) {
+				if (isURI(theObj.toString())) {
 					return new SupportsRdfId.URIKey(new URI(theObj.toString()));
 				}
 				else {
@@ -340,6 +336,20 @@ public final class EmpireUtil {
 		}
 		catch (URISyntaxException e) {
 			throw new IllegalArgumentException(theObj + " is not a valid primary key, it is not a URI.", e);
+		}
+	}
+
+	public static boolean isURI(final Object theObj) {
+		if (theObj instanceof java.net.URI || theObj instanceof java.net.URL) {
+			return true;
+		}
+
+		try {
+			java.net.URI.create(theObj.toString());
+			return true;
+		}
+		catch (Exception theE) {
+			return false;
 		}
 	}
 }

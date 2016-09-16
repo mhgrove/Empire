@@ -15,15 +15,15 @@
 
 package com.clarkparsia.empire.ds;
 
-import org.openrdf.model.Graph;
+import org.openrdf.model.Model;
 
 /**
  * <p>Interface for a {@link com.clarkparsia.empire.ds.DataSource} which can be mutated, that is, it supports
  * add and remove operations.</p>
  *
- * @author Michael Grove
- * @since 0.1
- * @version 0.7
+ * @author  Michael Grove
+ * @since   0.1
+ * @version 1.0
  */
 public interface MutableDataSource extends DataSource {
 	/**
@@ -31,12 +31,12 @@ public interface MutableDataSource extends DataSource {
 	 * @param theGraph the graph to add
 	 * @throws DataSourceException thrown if there is an error while adding the triples
 	 */
-	public void add(Graph theGraph) throws DataSourceException;
+	public void add(Model theGraph) throws DataSourceException;
 
 	/**
 	 * Remove the triples in the graph from the data source
 	 * @param theGraph the graph to remove
 	 * @throws com.clarkparsia.empire.ds.DataSourceException thrown if there is an error while removing the triples
 	 */
-	public void remove(Graph theGraph) throws DataSourceException;
+	public void remove(Model theGraph) throws DataSourceException;
 }

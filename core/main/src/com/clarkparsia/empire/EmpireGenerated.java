@@ -15,7 +15,7 @@
 
 package com.clarkparsia.empire;
 
-import org.openrdf.model.Graph;
+import org.openrdf.model.Model;
 
 /**
  * Interface implemented by all generated beans that track which RDF statements were used to describe the particular instance
@@ -30,18 +30,18 @@ public interface EmpireGenerated {
 	 * 
 	 * @return the graph
 	 */
-	public Graph getAllTriples();
+	public Model getAllTriples();
 	
-	public void setAllTriples(Graph aGraph);
+	public void setAllTriples(Model aGraph);
 	
 	/**
 	 * Gets the graph containing the RDF statements for that instance that were used to populate this bean.
 	 * 
 	 * @return the graph
 	 */
-	public Graph getInstanceTriples();
+	public Model getInstanceTriples();
 	
-	public void setInstanceTriples(Graph aGraph);
+	public void setInstanceTriples(Model aGraph);
 	
 	/**
 	 * Returns the original class/interface that was extended by Empire

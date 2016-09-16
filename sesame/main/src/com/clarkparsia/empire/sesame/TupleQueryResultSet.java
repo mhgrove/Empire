@@ -19,6 +19,7 @@ import com.clarkparsia.empire.ds.impl.AbstractResultSet;
 
 import com.complexible.common.openrdf.util.AdunaIterations;
 
+import info.aduna.iteration.Iterations;
 import org.openrdf.query.TupleQueryResult;
 
 import org.openrdf.query.QueryEvaluationException;
@@ -29,13 +30,13 @@ import org.openrdf.query.QueryEvaluationException;
  *
  * @author  Michael Grove
  * @since   0.6
- * @version 0.6
+ * @version 1.0
  */
 public final class TupleQueryResultSet extends AbstractResultSet {
 	private final TupleQueryResult mResults;
 
 	public TupleQueryResultSet(final TupleQueryResult theResults) {
-		super(AdunaIterations.iterator(theResults));
+		super(Iterations.stream(theResults).iterator());
 
 		mResults = theResults;
 	}

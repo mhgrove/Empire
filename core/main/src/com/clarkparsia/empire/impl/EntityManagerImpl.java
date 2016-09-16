@@ -33,12 +33,12 @@ import com.clarkparsia.empire.annotation.RdfGenerator;
 import com.clarkparsia.empire.annotation.RdfsClass;
 import com.clarkparsia.empire.annotation.AnnotationChecker;
 
-import com.complexible.common.openrdf.model.Graphs;
+import com.complexible.common.openrdf.model.Models2;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import org.openrdf.model.Graph;
-import org.openrdf.model.impl.GraphImpl;
+import org.openrdf.model.Model;
 
 import javax.persistence.EntityExistsException;
 import javax.persistence.EntityManager;
@@ -74,6 +74,7 @@ import java.util.WeakHashMap;
 import java.util.Set;
 
 import java.net.URI;
+import java.util.function.Predicate;
 
 import static com.clarkparsia.empire.util.BeanReflectUtil.getAnnotatedFields;
 import static com.clarkparsia.empire.util.BeanReflectUtil.getAnnotatedGetters;
@@ -86,7 +87,6 @@ import static com.clarkparsia.empire.util.BeanReflectUtil.getAnnotatedMethods;
 import com.clarkparsia.empire.util.EmpireUtil;
 import com.clarkparsia.empire.util.BeanReflectUtil;
 
-import com.google.common.base.Predicate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -96,7 +96,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author	Michael Grove
  * @since	0.1
- * @version	0.7
+ * @version	1.0
  *
  * @see EntityManager
  * @see com.clarkparsia.empire.ds.DataSource
@@ -125,7 +125,7 @@ public final class EntityManagerImpl implements EntityManager {
 	/**
 	 * The Entity Listeners for our managed entities.
 	 */
-	private Map<Object, Collection<Object>> mManagedEntityListeners = new WeakHashMap<Object, Collection<Object>>();
+	private Map<Object, Collection<Object>> mManagedEntityListeners = new WeakHashMap<>();
 
 	/**
 	 * The current collapsed view of a DataSourceOperation which is a merged set of adds & removes to the DataSource.
@@ -136,7 +136,7 @@ public final class EntityManagerImpl implements EntityManager {
 	/**
 	 * The list of things which are ready to be cascaded.  They are tracked in this list to help prevent infinite loops
 	 */
-	private Collection<Object> mCascadePending = new HashSet<Object>();
+	private Collection<Object> mCascadePending = new HashSet<>();
 
 	/**
 	 * Create a new EntityManagerImpl
@@ -201,7 +201,7 @@ public final class EntityManagerImpl implements EntityManager {
 
 		Object aDbObj = find(theObj.getClass(), EmpireUtil.asSupportsRdfId(theObj).getRdfId());
 
-        Collection<AccessibleObject> aAccessors = new HashSet<AccessibleObject>();
+        Collection<AccessibleObject> aAccessors = Sets.newHashSet();
 
         aAccessors.addAll(getAnnotatedFields(aDbObj.getClass()));
         aAccessors.addAll(getAnnotatedGetters(aDbObj.getClass(), true));
@@ -361,7 +361,7 @@ public final class EntityManagerImpl implements EntityManager {
 
 			DataSourceOperation aOp = new DataSourceOperation();
 
-			Graph aData = RdfGenerator.asRdf(theObj);
+			Model aData = RdfGenerator.asRdf(theObj);
 
 			if (doesSupportNamedGraphs() && EmpireUtil.hasNamedGraphSpecified(theObj)) {
 				aOp.add(EmpireUtil.getNamedGraph(theObj), aData);
@@ -384,6 +384,12 @@ public final class EntityManagerImpl implements EntityManager {
 		catch (DataSourceException ex) {
 			throw new PersistenceException(ex);
 		}
+		catch (RuntimeException e) {
+			if (mTransaction != null) {
+				mTransaction.setRollbackOnly();
+			}
+			throw e;
+		}
 	}
 
 	private MutableDataSource getDataSource() {
@@ -405,7 +411,7 @@ public final class EntityManagerImpl implements EntityManager {
 	public <T> T merge(final T theT) {
 		assertStateOk(theT);
 
-		Graph aExistingData = null;
+		Model aExistingData = null;
 		
 		if (theT instanceof EmpireGenerated) {
 			aExistingData = ((EmpireGenerated) theT).getInstanceTriples();
@@ -427,7 +433,7 @@ public final class EntityManagerImpl implements EntityManager {
 						aExistingData = ((EmpireGenerated) aDbObj).getInstanceTriples();
 					}
 					else {
-						aExistingData = new GraphImpl();
+						aExistingData = Models2.newModel();
 					}
 				}
 				else {
@@ -439,14 +445,14 @@ public final class EntityManagerImpl implements EntityManager {
 			}
 			catch (IllegalArgumentException e) {
 				// when everything else fails, just assume that existing data was indeed empty ...
-				aExistingData = new GraphImpl();
+				aExistingData = Models2.newModel();
 			}
 		}
 
 		try {
 			preUpdate(theT);
 
-			Graph aData = RdfGenerator.asRdf(theT);
+			Model aData = RdfGenerator.asRdf(theT);
 
 			boolean isTopOperation = (mOp == null);
 
@@ -480,6 +486,13 @@ public final class EntityManagerImpl implements EntityManager {
 		catch (InvalidRdfException ex) {
 			throw new IllegalStateException(ex);
 		}
+		catch (RuntimeException e) {
+			if (mTransaction != null) {
+				mTransaction.setRollbackOnly();
+			}
+
+			throw e;
+		}
 	}
 
 	private void joinCurrentDataSourceOperation(final DataSourceOperation theOp) {
@@ -500,13 +513,13 @@ public final class EntityManagerImpl implements EntityManager {
 			mCascadePending.add(theT);
 		}
 
-		Collection<AccessibleObject> aAccessors = new HashSet<AccessibleObject>();
+		Collection<AccessibleObject> aAccessors = Sets.newHashSet();
 		
 		aAccessors.addAll(getAnnotatedFields(theT.getClass()));
 		aAccessors.addAll(getAnnotatedGetters(theT.getClass(), true));
 
 		for (AccessibleObject aObj : aAccessors) {
-			if (theCascadeTest.apply(aObj)) {
+			if (theCascadeTest.test(aObj)) {
 				try {
 					Object aAccessorValue = BeanReflectUtil.safeGet(aObj, theT);
 
@@ -514,7 +527,7 @@ public final class EntityManagerImpl implements EntityManager {
 						continue;
 					}
 
-					theAction.apply(aAccessorValue);
+					theAction.test(aAccessorValue);
 				}
 				catch (Exception e) {
 					throw new PersistenceException(e);
@@ -550,19 +563,19 @@ public final class EntityManagerImpl implements EntityManager {
 	}
 
 	private class IsMergeCascade extends CascadeTest {
-		public boolean apply(final AccessibleObject theValue) {
+		public boolean test(final AccessibleObject theValue) {
 			return BeanReflectUtil.isMergeCascade(theValue);
 		}
 	}
 
 	private class IsRemoveCascade extends CascadeTest {
-		public boolean apply(final AccessibleObject theValue) {
+		public boolean test(final AccessibleObject theValue) {
 			return BeanReflectUtil.isRemoveCascade(theValue);
 		}
 	}
 
 	private class IsPersistCascade extends CascadeTest {
-		public boolean apply(final AccessibleObject theValue) {
+		public boolean test(final AccessibleObject theValue) {
 			return BeanReflectUtil.isPersistCascade(theValue);
 		}
 	}
@@ -573,7 +586,7 @@ public final class EntityManagerImpl implements EntityManager {
 	private abstract class CascadeAction implements Predicate<Object> {
 		public abstract void cascade(Object theObj);
 
-		public final boolean apply(Object theObj) {
+		public final boolean test(Object theObj) {
 			// is it an error if you specify a cascade type for something that cannot be
 			// cascaded?  such as strings, or a non Entity instance?
 			if (Collection.class.isAssignableFrom(theObj.getClass())) {
@@ -595,7 +608,7 @@ public final class EntityManagerImpl implements EntityManager {
 	public void remove(final Object theObj) {
 		assertStateOk(theObj);
 
-		Graph aData = assertContainsAndDescribe(theObj);
+		Model aData = assertContainsAndDescribe(theObj);
 
 		try {
 			preRemove(theObj);
@@ -630,6 +643,12 @@ public final class EntityManagerImpl implements EntityManager {
 		}
 		catch (DataSourceException ex) {
 			throw new PersistenceException(ex);
+		}
+		catch (RuntimeException e) {
+			if (mTransaction != null) {
+				mTransaction.setRollbackOnly();
+			}
+			throw e;
 		}
 	}
 
@@ -700,11 +719,11 @@ public final class EntityManagerImpl implements EntityManager {
 	 * @return The graph describing the resource
 	 * @throws IllegalArgumentException thrown if the object does not exist in the database
 	 */
-	private Graph assertContainsAndDescribe(Object theObj) {
+	private Model assertContainsAndDescribe(Object theObj) {
 		assertStateOk(theObj);
 
 		try {
-			Graph aGraph = DataSourceUtil.describe(getDataSource(), theObj);
+			Model aGraph = DataSourceUtil.describe(getDataSource(), theObj);
 
 			if (aGraph.isEmpty()) {
 				throw new IllegalArgumentException("Entity does not exist: " + theObj);
@@ -905,6 +924,8 @@ public final class EntityManagerImpl implements EntityManager {
 
 		Collection<Method> aMethods = getAnnotatedMethods(theObj.getClass(), theLifecycleAnnotation);
 
+		Throwable aError = null;
+
 		// Entity methods take no arguments...
 		try {
 			for (Method aMethod : aMethods) {
@@ -912,9 +933,11 @@ public final class EntityManagerImpl implements EntityManager {
 			}
 		}
 		catch (Exception e) {
-			LOGGER.error("There was an error during entity lifecycle notification for annotation: " +
+			LOGGER.info("There was an error during entity lifecycle notification for annotation: " +
 						 theLifecycleAnnotation + " on object: " + theObj +".", e);
-			throw new PersistenceException(e.getCause());
+
+			Throwables.propagateIfInstanceOf(e, PersistenceException.class);
+			throw new PersistenceException(e);
 		}
 
 		for (Object aListener : getEntityListeners(theObj)) {
@@ -927,9 +950,11 @@ public final class EntityManagerImpl implements EntityManager {
 				}
 			}
 			catch (Exception e) {
-				LOGGER.error("There was an error during lifecycle notification for annotation: " +
+				LOGGER.info("There was an error during lifecycle notification for annotation: " +
 							 theLifecycleAnnotation + " on object: " + theObj + ".", e);
-				throw new PersistenceException(e.getCause());
+
+				Throwables.propagateIfInstanceOf(e, PersistenceException.class);
+				throw new PersistenceException(e);
 			}
 		}
 	}
@@ -948,7 +973,7 @@ public final class EntityManagerImpl implements EntityManager {
 			
 			if (aEntityListeners != null) {
 				// if there are entity listeners, lets create them
-				aListeners = new LinkedHashSet<Object>();
+				aListeners = new LinkedHashSet<>();
 				for (Class<?> aClass : aEntityListeners.value()) {
 					try {
 						aListeners.add(Empire.get().instance(aClass));
@@ -980,8 +1005,8 @@ public final class EntityManagerImpl implements EntityManager {
 		// HashMap's used here rather than the more generic Map interface because we allow null keys (no specified
 		// named graph) which HashMap allows, while generically Map makes no guarantees about this, so we're explicit here.
 
-		private final Map<java.net.URI, Graph> mAdd;
-		private final Map<java.net.URI, Graph> mRemove;
+		private final Map<java.net.URI, Model> mAdd;
+		private final Map<java.net.URI, Model> mRemove;
 
 		private final Set<Object> mVerifyAdd = Sets.newHashSet();
 		private final Set<Object> mVerifyRemove = Sets.newHashSet();
@@ -1079,7 +1104,7 @@ public final class EntityManagerImpl implements EntityManager {
 		 * Add this graph to the set of data to be added when this operation is executed
 		 * @param theGraph the graph to be added
 		 */
-		public void add(final Graph theGraph) {
+		public void add(final Model theGraph) {
 			add(null, theGraph);
 		}
 
@@ -1088,11 +1113,11 @@ public final class EntityManagerImpl implements EntityManager {
 		 * @param theGraphURI the named graph the data should be added to
 		 * @param theGraph the data to add
 		 */
-		public void add(final java.net.URI theGraphURI, final Graph theGraph) {
-			Graph aGraph = mAdd.get(theGraphURI);
+		public void add(final java.net.URI theGraphURI, final Model theGraph) {
+			Model aGraph = mAdd.get(theGraphURI);
 
 			if (aGraph == null) {
-				aGraph = Graphs.newGraph();
+				aGraph = Models2.newModel();
 			}
 
 			aGraph.addAll(theGraph);
@@ -1104,7 +1129,7 @@ public final class EntityManagerImpl implements EntityManager {
 		 * Add this graph to the set of data to be removed when this operation is executed
 		 * @param theGraph the graph to be removed
 		 */
-		public void remove(final Graph theGraph) {
+		public void remove(final Model theGraph) {
 			remove(null, theGraph);
 		}
 
@@ -1113,11 +1138,11 @@ public final class EntityManagerImpl implements EntityManager {
 		 * @param theGraphURI the named graph the data should be removed from
 		 * @param theGraph the data to remove
 		 */
-		public void remove(final java.net.URI theGraphURI, final Graph theGraph) {
-			Graph aGraph = mRemove.get(theGraphURI);
+		public void remove(final java.net.URI theGraphURI, final Model theGraph) {
+			Model aGraph = mRemove.get(theGraphURI);
 
 			if (aGraph == null) {
-				aGraph = Graphs.newGraph();
+				aGraph = Models2.newModel();
 			}
 
 			aGraph.addAll(theGraph);
@@ -1130,11 +1155,11 @@ public final class EntityManagerImpl implements EntityManager {
 		 * @param theOp the operation to merge
 		 */
 		public void merge(final DataSourceOperation theOp) {
-			for (Map.Entry<URI, Graph> aEntry : theOp.mRemove.entrySet()) {
+			for (Map.Entry<URI, Model> aEntry : theOp.mRemove.entrySet()) {
 				remove(aEntry.getKey(), aEntry.getValue());
 			}
 
-			for (Map.Entry<URI, Graph> aEntry : theOp.mAdd.entrySet()) {
+			for (Map.Entry<URI, Model> aEntry : theOp.mAdd.entrySet()) {
 				add(aEntry.getKey(), aEntry.getValue());
 			}
 

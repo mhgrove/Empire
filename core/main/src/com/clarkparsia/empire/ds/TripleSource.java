@@ -17,7 +17,7 @@ package com.clarkparsia.empire.ds;
 
 import org.openrdf.model.Resource;
 import org.openrdf.model.Statement;
-import org.openrdf.model.URI;
+import org.openrdf.model.IRI;
 import org.openrdf.model.Value;
 
 /**
@@ -30,8 +30,8 @@ import org.openrdf.model.Value;
  * @author Pedro Oliveira
  * @author Michael Grove
  *
- * @since 0.7
- * @version 0.7
+ * @since   0.7
+ * @version 1.0
  */
 public interface TripleSource extends DataSource {
 
@@ -45,7 +45,7 @@ public interface TripleSource extends DataSource {
 	 * @throws DataSourceException
 	 *             thrown if there is an error while getting the statements
 	 */
-	public Iterable<Statement> getStatements(Resource theSubject, URI thePredicate, Value theObject) throws DataSourceException;
+	public Iterable<Statement> getStatements(Resource theSubject, IRI thePredicate, Value theObject) throws DataSourceException;
 	
 	/**
 	 * Returns all the statements with the given subject, predicate, object and context. Null parameters represent wildcards.
@@ -58,5 +58,5 @@ public interface TripleSource extends DataSource {
 	 * @throws DataSourceException
 	 * 				throws if there is an error while getting the statements
 	 */
-	public Iterable<Statement> getStatements(Resource theSubject, URI thePredicate, Value theObject, Resource theContext) throws DataSourceException;
+	public Iterable<Statement> getStatements(Resource theSubject, IRI thePredicate, Value theObject, Resource theContext) throws DataSourceException;
 }

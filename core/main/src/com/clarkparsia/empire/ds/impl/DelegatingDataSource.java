@@ -22,14 +22,14 @@ import com.clarkparsia.empire.QueryFactory;
 
 import java.net.ConnectException;
 
-import org.openrdf.model.Graph;
+import org.openrdf.model.Model;
 
 /**
  * <p>Implementation of the {@link DataSource} interface that just delegates all calls to the underlying DataSource.</p>
  *
- * @author Michael Grove
- * @version 0.7
- * @since 0.7
+ * @author  Michael Grove
+ * @since   0.7
+ * @version 1.0
  */
 public class DelegatingDataSource implements DataSource {
 
@@ -85,7 +85,7 @@ public class DelegatingDataSource implements DataSource {
 	/**
 	 * @inheritDoc
 	 */
-	public Graph graphQuery(final String theQuery) throws QueryException {
+	public Model graphQuery(final String theQuery) throws QueryException {
 		return mDelegate.graphQuery(theQuery);
 	}
 
@@ -106,7 +106,7 @@ public class DelegatingDataSource implements DataSource {
 	/**
 	 * @inheritDoc
 	 */
-	public Graph describe(final String theQuery) throws QueryException {
+	public Model describe(final String theQuery) throws QueryException {
 		return mDelegate.describe(theQuery);
 	}
 }

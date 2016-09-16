@@ -16,6 +16,10 @@
 package com.clarkparsia.empire.ds;
 
 import java.util.Iterator;
+import java.util.Spliterator;
+import java.util.Spliterators;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import org.openrdf.query.BindingSet;
 
@@ -32,10 +36,15 @@ import org.openrdf.query.BindingSet;
  * @since   0.1
  * @version 0.7
  */
-public interface ResultSet extends Iterator<BindingSet> {
+public interface ResultSet extends Iterator<BindingSet>, AutoCloseable {
 
 	/**
 	 * Close this result set and release any resources it holds.
 	 */
+	@Override
 	public void close();
+
+	public default Stream<BindingSet> stream() {
+		return StreamSupport.stream(Spliterators.spliterator(this, Spliterator.SIZED, Spliterator.IMMUTABLE | Spliterator.ORDERED), false);
+	}
 }

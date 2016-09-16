@@ -25,14 +25,14 @@ import com.clarkparsia.empire.ds.SupportsTransactions;
 import com.clarkparsia.empire.ds.impl.AbstractDataSource;
 import com.clarkparsia.empire.impl.RdfQueryFactory;
 import com.clarkparsia.empire.impl.sparql.SPARQLDialect;
-import com.complexible.common.openrdf.model.Graphs;
+import com.complexible.common.openrdf.model.Models2;
 import com.complexible.common.openrdf.util.AdunaIterations;
+import org.openrdf.model.Model;
 import org.openrdf.query.GraphQueryResult;
 import org.openrdf.query.TupleQueryResult;
 import com.complexible.stardog.StardogException;
 import com.complexible.stardog.api.Connection;
 import com.complexible.stardog.api.ConnectionConfiguration;
-import org.openrdf.model.Graph;
 import org.openrdf.query.BindingSet;
 import org.openrdf.query.QueryEvaluationException;
 
@@ -136,19 +136,16 @@ public class StardogEmpireDataSource extends AbstractDataSource implements Mutab
 	 * @inheritDoc
 	 */
 	@Override
-	public Graph graphQuery(final String theQuery) throws QueryException {
+	public Model graphQuery(final String theQuery) throws QueryException {
 		assertConnected();
 
 		GraphQueryResult aResult = null;
 
 		try {
 			aResult = mConnection.graph(theQuery).execute();
-			return Graphs.newGraph(aResult);
+			return Models2.newModel(aResult);
 		}
-		catch (QueryEvaluationException e) {
-			throw new QueryException(e);
-		}
-		catch (StardogException e) {
+		catch (QueryEvaluationException | StardogException e) {
 			throw new QueryException(e);
 		}
 		finally {
@@ -183,7 +180,7 @@ public class StardogEmpireDataSource extends AbstractDataSource implements Mutab
 	 * @inheritDoc
 	 */
 	@Override
-	public Graph describe(final String theQuery) throws QueryException {
+	public Model describe(final String theQuery) throws QueryException {
 		return graphQuery(theQuery);
 	}
 
@@ -191,7 +188,7 @@ public class StardogEmpireDataSource extends AbstractDataSource implements Mutab
 	 * @inheritDoc
 	 */
 	@Override
-	public void add(final Graph theGraph) throws DataSourceException {
+	public void add(final Model theGraph) throws DataSourceException {
 		assertConnected();
 		try {
 			mConnection.add().graph(theGraph);
@@ -205,7 +202,7 @@ public class StardogEmpireDataSource extends AbstractDataSource implements Mutab
 	 * @inheritDoc
 	 */
 	@Override
-	public void remove(final Graph theGraph) throws DataSourceException {
+	public void remove(final Model theGraph) throws DataSourceException {
 		assertConnected();
 		try {
 			mConnection.remove().graph(theGraph);

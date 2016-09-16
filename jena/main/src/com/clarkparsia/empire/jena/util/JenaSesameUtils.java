@@ -15,15 +15,14 @@
 
 package com.clarkparsia.empire.jena.util;
 
-import org.openrdf.model.impl.ValueFactoryImpl;
-import org.openrdf.model.impl.GraphImpl;
+import com.complexible.common.openrdf.model.Models2;
+import org.openrdf.model.IRI;
+import org.openrdf.model.impl.SimpleValueFactory;
 import org.openrdf.model.impl.StatementImpl;
 
-import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.ValueFactory;
 import org.openrdf.model.BNode;
-import org.openrdf.model.Graph;
 
 import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.RDFNode;
@@ -38,7 +37,9 @@ import com.hp.hpl.jena.rdf.model.StmtIterator;
 /**
  * <p>Utility functions for converting between the Jena and Sesame API's</p>
  *
- * @author Michael Grove
+ * @author  Michael Grove
+ * @since   0.1
+ * @version 1.0
  */
 public class JenaSesameUtils {
 
@@ -50,7 +51,7 @@ public class JenaSesameUtils {
 	/**
 	 * Sesame value factory for creating instances of Sesame API objects
 	 */
-	private static final ValueFactory FACTORY = new ValueFactoryImpl();
+	private static final ValueFactory FACTORY = SimpleValueFactory.getInstance();
 
 	/**
 	 * Convert the given Jena Resource into a Sesame Resource
@@ -74,12 +75,12 @@ public class JenaSesameUtils {
 	 * @param theProperty the Jena Property to convert
 	 * @return the Jena property as a Sesame Instance
 	 */
-	public static org.openrdf.model.URI asSesameURI(Property theProperty) {
+	public static org.openrdf.model.IRI asSesameURI(Property theProperty) {
 		if (theProperty == null) {
 			return null;
 		}
 		else {
-			return FACTORY.createURI(theProperty.getURI());
+			return FACTORY.createIRI(theProperty.getURI());
 		}
 	}
 
@@ -98,7 +99,7 @@ public class JenaSesameUtils {
 		}
 		else if (theLiteral.getDatatypeURI() != null) {
 			return FACTORY.createLiteral(theLiteral.getLexicalForm(),
-										 FACTORY.createURI(theLiteral.getDatatypeURI()));
+										 FACTORY.createIRI(theLiteral.getDatatypeURI()));
 		}
 		else {
 			return FACTORY.createLiteral(theLiteral.getLexicalForm());
@@ -131,8 +132,8 @@ public class JenaSesameUtils {
 		if (theRes == null) {
 			return null;
 		}
-		else if (theRes instanceof URI) {
-			return asJenaURI( (URI) theRes);
+		else if (theRes instanceof IRI) {
+			return asJenaURI( (IRI) theRes);
 		}
 		else {
 			return mInternalModel.createResource(new AnonId(((BNode) theRes).getID()));
@@ -158,7 +159,7 @@ public class JenaSesameUtils {
 	 * @param theURI the sesame URI
 	 * @return the URI as a Jena property
 	 */
-	public static Property asJenaURI(URI theURI) {
+	public static Property asJenaURI(final IRI theURI) {
 		if (theURI == null) {
 			return null;
 		}
@@ -176,9 +177,9 @@ public class JenaSesameUtils {
 		if (theLiteral == null) {
 			return null;
 		}
-		else if (theLiteral.getLanguage() != null) {
+		else if (theLiteral.getLanguage().isPresent()) {
 			return mInternalModel.createLiteral(theLiteral.getLabel(),
-												theLiteral.getLanguage());
+												theLiteral.getLanguage().get());
 		}
 		else if (theLiteral.getDatatype() != null) {
 			return mInternalModel.createTypedLiteral(theLiteral.getLabel(),
@@ -194,7 +195,7 @@ public class JenaSesameUtils {
 	 * @param theGraph the Graph to convert
 	 * @return the set of statements in the Sesame Graph converted and saved in a Jena Model
 	 */
-	public static Model asJenaModel(Graph theGraph) {
+	public static Model asJenaModel(org.openrdf.model.Model theGraph) {
 		Model aModel = ModelFactory.createDefaultModel();
 
 		for (final org.openrdf.model.Statement aStmt : theGraph) {
@@ -209,8 +210,8 @@ public class JenaSesameUtils {
 	 * @param theModel the model to convert
 	 * @return the set of statements in the Jena model saved in a sesame Graph
 	 */
-	public static Graph asSesameGraph(Model theModel) {
-		Graph aGraph = new GraphImpl();
+	public static org.openrdf.model.Model asSesameGraph(Model theModel) {
+		org.openrdf.model.Model aGraph = Models2.newModel();
 
 		StmtIterator sIter = theModel.listStatements();
 		while (sIter.hasNext()) {

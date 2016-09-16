@@ -4,7 +4,7 @@ import com.clarkparsia.empire.ds.MutableDataSource;
 import com.clarkparsia.empire.ds.DataSourceException;
 
 import com.complexible.common.openrdf.repository.Repositories;
-import org.openrdf.model.Graph;
+import org.openrdf.model.Model;
 import org.openrdf.repository.Repository;
 
 /**
@@ -18,7 +18,7 @@ public class MutableTestDataSource extends TestDataSource implements MutableData
         super();
 	}
 
-	public MutableTestDataSource(final Graph theGraph) {
+	public MutableTestDataSource(final Model theGraph) {
 		super(theGraph);
 	}
 
@@ -30,7 +30,7 @@ public class MutableTestDataSource extends TestDataSource implements MutableData
 	 * @inheritDoc
 	 */
 	@Override
-	public void add(final Graph theGraph) throws DataSourceException {
+	public void add(final Model theGraph) throws DataSourceException {
 		try {
 			Repositories.add(getRepository(), theGraph);
 		}
@@ -43,7 +43,7 @@ public class MutableTestDataSource extends TestDataSource implements MutableData
 	 * @inheritDoc
 	 */
 	@Override
-	public void remove(final Graph theGraph) throws DataSourceException {
+	public void remove(final Model theGraph) throws DataSourceException {
 		try {
 			Repositories.remove(getRepository(), theGraph);
 		}

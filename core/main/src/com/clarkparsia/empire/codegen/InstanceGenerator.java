@@ -16,7 +16,6 @@
 package com.clarkparsia.empire.codegen;
 
 import com.google.common.collect.Sets;
-import com.google.common.base.Predicate;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtNewConstructor;
@@ -40,15 +39,14 @@ import java.util.Collection;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
-
-import org.openrdf.model.Graph;
+import java.util.function.Predicate;
 
 import com.clarkparsia.empire.EmpireGenerated;
 import com.clarkparsia.empire.SupportsRdfId;
 import com.clarkparsia.empire.EmpireOptions;
 import com.clarkparsia.empire.util.BeanReflectUtil;
-import com.complexible.common.collect.Iterables2;
 
+import org.openrdf.model.Model;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl;
@@ -59,7 +57,7 @@ import sun.reflect.generics.reflectiveObjects.WildcardTypeImpl;
  *
  * @author	Michael Grove
  * @since	0.5.1
- * @version 0.7.3
+ * @version 1.0
  */
 public final class InstanceGenerator {
 	private static final Logger LOGGER = LoggerFactory.getLogger(BeanGenerator.class);
@@ -70,6 +68,7 @@ public final class InstanceGenerator {
 	 * No instances
 	 */
 	private InstanceGenerator() {
+		throw new AssertionError();
 	}
 
 	/**
@@ -135,17 +134,14 @@ public final class InstanceGenerator {
 		CtField aInterfaceField = new CtField(aPool.get(Class.class.getName()), "mInterfaceClass", aClass);
 		aClass.addField(aInterfaceField, CtField.Initializer.byExpr(theInterface.getName() + ".class;"));
 		
-		CtField aAllTriplesField = new CtField(aPool.get(Graph.class.getName()), "mAllTriples", aClass);
-		aClass.addField(aAllTriplesField, CtField.Initializer.byExpr("new com.complexible.common.openrdf.model.SetGraph();"));
+		CtField aAllTriplesField = new CtField(aPool.get(Model.class.getName()), "mAllTriples", aClass);
+		aClass.addField(aAllTriplesField, CtField.Initializer.byExpr("com.complexible.common.openrdf.model.Models2.newModel();"));
 		
-		CtField aInstanceTriplesField = new CtField(aPool.get(Graph.class.getName()), "mInstanceTriples", aClass);
-		aClass.addField(aInstanceTriplesField, CtField.Initializer.byExpr("new com.complexible.common.openrdf.model.SetGraph();"));
+		CtField aInstanceTriplesField = new CtField(aPool.get(Model.class.getName()), "mInstanceTriples", aClass);
+		aClass.addField(aInstanceTriplesField, CtField.Initializer.byExpr("com.complexible.common.openrdf.model.Models2.newModel();"));
 		
 		aClass.addConstructor(CtNewConstructor.defaultConstructor(aClass));
 		
-		generateMethods(theInterface, aPool, aClass);
-		generateMethodsForSuperInterfaces(theInterface, aPool, aClass);
-
 		CtField aIdField = new CtField(aPool.get(SupportsRdfId.class.getName()), "supportsId", aClass);
 		aClass.addField(aIdField, CtField.Initializer.byExpr("new com.clarkparsia.empire.annotation.SupportsRdfIdImpl();"));		
 		
@@ -157,21 +153,23 @@ public final class InstanceGenerator {
 			aClass.addMethod(CtNewMethod.make("public void setRdfId(com.clarkparsia.empire.SupportsRdfId.RdfKey theURI) { supportsId.setRdfId(theURI); } ", aClass));
 		}		
 		
+		generateMethods(theInterface, aPool, aClass);
+		generateMethodsForSuperInterfaces(theInterface, aPool, aClass);
 		
 		if (!hasMethod(aClass, "getAllTriples")) {
-			aClass.addMethod(CtNewMethod.make("public org.openrdf.model.Graph getAllTriples() { return mAllTriples; } ", aClass));
+			aClass.addMethod(CtNewMethod.make("public org.openrdf.model.Model getAllTriples() { return mAllTriples; } ", aClass));
 		}
 		
 		if (!hasMethod(aClass, "setAllTriples")) {
-			aClass.addMethod(CtNewMethod.make("public void setAllTriples(org.openrdf.model.Graph theGraph) { mAllTriples = theGraph; } ", aClass));
+			aClass.addMethod(CtNewMethod.make("public void setAllTriples(org.openrdf.model.Model theGraph) { mAllTriples = theGraph; } ", aClass));
 		}
 		
 		if (!hasMethod(aClass, "getInstanceTriples")) {
-			aClass.addMethod(CtNewMethod.make("public org.openrdf.model.Graph getInstanceTriples() { return mInstanceTriples; } ", aClass));
+			aClass.addMethod(CtNewMethod.make("public org.openrdf.model.Model getInstanceTriples() { return mInstanceTriples; } ", aClass));
 		}
 
 		if (!hasMethod(aClass, "setInstanceTriples")) {
-			aClass.addMethod(CtNewMethod.make("public void setInstanceTriples(org.openrdf.model.Graph theGraph) { mInstanceTriples = theGraph; } ", aClass));
+			aClass.addMethod(CtNewMethod.make("public void setInstanceTriples(org.openrdf.model.Model theGraph) { mInstanceTriples = theGraph; } ", aClass));
 		}		
 		
 		if (!hasMethod(aClass, "getInterfaceClass")) {
@@ -507,7 +505,7 @@ public final class InstanceGenerator {
 			// class changed to isAssignableFrom so we get the expected behavior.
 			FINDER.method = aMethod;
 
-			if (Iterables2.find(processedMethods, FINDER)) {
+			if (processedMethods.stream().filter(FINDER).findAny().isPresent()) {
 				continue;
 			}
 
@@ -599,7 +597,8 @@ public final class InstanceGenerator {
 	private static class FinderPredicate implements Predicate<Method> {
 		Method method;
 
-		public boolean apply(final Method theValue) {
+		@Override
+		public boolean test(final Method theValue) {
 			return overrideEquals(theValue, method);
 		}
 	}

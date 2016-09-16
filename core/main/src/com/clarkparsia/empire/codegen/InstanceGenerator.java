@@ -142,9 +142,6 @@ public final class InstanceGenerator {
 		
 		aClass.addConstructor(CtNewConstructor.defaultConstructor(aClass));
 		
-		generateMethods(theInterface, aPool, aClass);
-		generateMethodsForSuperInterfaces(theInterface, aPool, aClass);
-
 		CtField aIdField = new CtField(aPool.get(SupportsRdfId.class.getName()), "supportsId", aClass);
 		aClass.addField(aIdField, CtField.Initializer.byExpr("new com.clarkparsia.empire.annotation.SupportsRdfIdImpl();"));		
 		
@@ -156,6 +153,8 @@ public final class InstanceGenerator {
 			aClass.addMethod(CtNewMethod.make("public void setRdfId(com.clarkparsia.empire.SupportsRdfId.RdfKey theURI) { supportsId.setRdfId(theURI); } ", aClass));
 		}		
 		
+		generateMethods(theInterface, aPool, aClass);
+		generateMethodsForSuperInterfaces(theInterface, aPool, aClass);
 		
 		if (!hasMethod(aClass, "getAllTriples")) {
 			aClass.addMethod(CtNewMethod.make("public org.openrdf.model.Model getAllTriples() { return mAllTriples; } ", aClass));

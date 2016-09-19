@@ -159,6 +159,19 @@ public class CodegenTests {
 	    Annotation[] annos = p.getClass().getDeclaredMethod("getHasContact").getAnnotations();
 	    assertEquals(2, annos.length);
 	}
+	
+	@Test(expected=IllegalStateException.class)
+	public void testInstGenRdfIdSetter() throws Exception {
+		/*
+		 * We want the generated instance to disallow rdfId being modified after it is set
+		 * https://github.com/mhgrove/Empire/pull/115
+		 */
+		TestInterface aInt = InstanceGenerator.generateInstanceClass(TestInterface.class).newInstance();
+		SupportsRdfId.RdfKey aKey = new SupportsRdfId.URIKey(URI.create("urn:id"));
+		SupportsRdfId.RdfKey aKey2 = new SupportsRdfId.URIKey(URI.create("urn:id2"));
+		aInt.setRdfId(aKey);
+		aInt.setRdfId(aKey2);
+	}
 
 	public interface NoSupportsTestInterface {
 		public String getBar();

@@ -22,7 +22,7 @@ task wrapper(type: Wrapper) {
 }
 
 ext {
-	stardogVersion		= "4.0"
+	stardogVersion		= "5.0.3"
 	projectVersion		= "1.0"
 	projectDescription	= "JPA implementation for RDF"
 	projectUrl			= "https://github.com/mhgrove/Empire"

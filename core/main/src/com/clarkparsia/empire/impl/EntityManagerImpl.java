@@ -936,7 +936,7 @@ public final class EntityManagerImpl implements EntityManager {
 			LOGGER.info("There was an error during entity lifecycle notification for annotation: " +
 						 theLifecycleAnnotation + " on object: " + theObj +".", e);
 
-			Throwables.propagateIfInstanceOf(e, RuntimeException.class);
+			Throwables.propagateIfInstanceOf(e, PersistenceException.class);
 			throw new PersistenceException(e);
 		}
 
@@ -953,7 +953,7 @@ public final class EntityManagerImpl implements EntityManager {
 				LOGGER.info("There was an error during lifecycle notification for annotation: " +
 							 theLifecycleAnnotation + " on object: " + theObj + ".", e);
 
-				Throwables.propagateIfInstanceOf(e, RuntimeException.class);
+				Throwables.propagateIfInstanceOf(e, PersistenceException.class);
 				throw new PersistenceException(e);
 			}
 		}
@@ -973,7 +973,7 @@ public final class EntityManagerImpl implements EntityManager {
 			
 			if (aEntityListeners != null) {
 				// if there are entity listeners, lets create them
-				aListeners = Sets.newHashSet();
+				aListeners = new LinkedHashSet<>();
 				for (Class<?> aClass : aEntityListeners.value()) {
 					try {
 						aListeners.add(Empire.get().instance(aClass));

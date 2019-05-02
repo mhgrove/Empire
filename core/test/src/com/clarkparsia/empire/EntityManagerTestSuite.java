@@ -388,9 +388,9 @@ public abstract class EntityManagerTestSuite {
 		insertData((MutableDataSource) aManager.getDelegate(), new File(DATA_FILE));
 
 		// this is not a bullet proof proxy detection, but it should prove whether or not proxying is correctly
-		// inserted into the chain of events.
+		// inserted into the chain of events. The _$$_jvst format is valid for javassist:3.20.0-GA.
 
-		String javaAssistMarker = "$$_javassist";
+		String javaAssistMarker = "_$$_jvst";
 
 		String aLaunchURI = "http://nasa.dataincubator.org/launch/SATURNSA1";
 

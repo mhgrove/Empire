@@ -22,6 +22,7 @@ import javax.persistence.NamedQuery;
 
 import com.complexible.stardog.Stardog;
 import com.complexible.stardog.api.admin.AdminConnection;
+import com.complexible.stardog.api.ConnectionConfiguration;
 import com.complexible.stardog.api.admin.AdminConnectionConfiguration;
 import com.google.common.base.Throwables;
 import org.junit.AfterClass;
@@ -80,7 +81,7 @@ public class StardogEntityManagerTestSuite extends EntityManagerTestSuite {
 				if (aAdminConnection.list().contains(DB)) {
 					aAdminConnection.drop(DB);
 				}
-				aAdminConnection.createMemory(DB);
+				aAdminConnection.newDatabase(DB).create();
 			}
 		}
 		catch (Exception e) {
@@ -93,9 +94,8 @@ public class StardogEntityManagerTestSuite extends EntityManagerTestSuite {
 		return new StardogEmpireDataSourceFactory() {
 			@Override
 			public StardogEmpireDataSource create(Map<String, Object> theMap) throws DataSourceException {
-				theMap.put(StardogEmpireFactoryKeys.URL, "snarl://local/mem;username=admin;password=admin");
-				theMap.put(StardogEmpireFactoryKeys.AUTO_COMMIT, "true");
-				return super.create(theMap);
+				ConnectionConfiguration connConf = ConnectionConfiguration.to(DB).credentials("admin", "admin");
+				return new StardogEmpireDataSource(connConf);
 			}
 		};
 	}

@@ -17,11 +17,10 @@ dependencies {
 	// make sure to have the $JAVA_HOME env variable declared in your system
 	compile files("${System.properties['java.home']}/../lib/tools.jar")
 
-	compile "org.javassist:javassist:3.17.1-GA"
-    compile "org.ow2.spec.ee:ow2-jpa-1.0-spec:1.0.12"
-    
-    compile "com.complexible.common:cp-common-utils:5.0"
+	compile "org.javassist:javassist:3.20.0-GA"
+	compile "org.ow2.spec.ee:ow2-jpa-1.0-spec:1.0.12"
 
+	compile "com.complexible.stardog.utils:stardog-utils-common:${stardogVersion}"
 	compile "com.complexible.common:cp-openrdf-utils:4.0.1"
 
 	compile "commons-dbcp:commons-dbcp:1.3"
@@ -55,6 +54,6 @@ test {
 //	debug = true // for attaching the IDE to the gradle cli
 
 	// set JVM arguments for the test JVM(s)
-	jvmArgs '-XX:MaxPermSize=256m', '-enableassertions'
+	jvmArgs '-enableassertions'
 	include"**/TestEmpireCore.class"
 }

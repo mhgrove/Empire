@@ -15,7 +15,8 @@
 
 dependencies {
 	compile project(":core")
-	compile project(path: ":core", configuration: "testRuntime")
+	//compile project(path: ":core", configuration: "testRuntime")
+	testCompile project(":core").sourceSets.test.output
 
 	compile "org.apache.jena:jena-arq:2.10.0"
 	compile "org.apache.jena:jena-core:2.10.0"

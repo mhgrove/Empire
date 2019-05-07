@@ -25,9 +25,7 @@ dependencies {
 	compile "com.complexible.stardog.versioning:stardog-versioning-api:${stardogVersion}"
 	compile "com.complexible.stardog.sesame:stardog-sesame-core:${stardogVersion}"
 
-	testCompile(project(path: ":core", configuration: 'testRuntime')) {
-		exclude module: 'cp-common-utils:5.0'
-	}
+	testCompile project(path: ":core", configuration: "testRuntime")
 
 	// server core modules
 	testCompile "com.complexible.stardog:server:${stardogVersion}"

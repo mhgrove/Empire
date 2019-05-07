@@ -16,6 +16,8 @@
 package com.complexible.stardog.empire;
 
 import java.net.ConnectException;
+import java.util.HashSet;
+import java.util.Set;
 
 import com.clarkparsia.empire.ds.DataSourceException;
 import com.clarkparsia.empire.ds.MutableDataSource;
@@ -33,6 +35,9 @@ import org.openrdf.query.TupleQueryResult;
 import com.complexible.stardog.StardogException;
 import com.complexible.stardog.api.Connection;
 import com.complexible.stardog.api.ConnectionConfiguration;
+import com.complexible.stardog.sesame.SesameToStark;
+import com.complexible.stardog.sesame.StarkToSesame;
+import com.stardog.stark.Statement;
 import org.openrdf.query.BindingSet;
 import org.openrdf.query.QueryEvaluationException;
 
@@ -94,7 +99,8 @@ public class StardogEmpireDataSource extends AbstractDataSource implements Mutab
 		assertConnected();
 
 		try {
-			final TupleQueryResult aResults = mConnection.select(theQuery).execute();
+			// impedance mismatching stark <=> sesame
+			final TupleQueryResult aResults = StarkToSesame.toResult(mConnection.select(theQuery).execute());
 			return new ResultSet() {
 				@Override
 				public void close() {
@@ -142,7 +148,8 @@ public class StardogEmpireDataSource extends AbstractDataSource implements Mutab
 		GraphQueryResult aResult = null;
 
 		try {
-			aResult = mConnection.graph(theQuery).execute();
+			// impedance mismatching stark <=> sesame
+			aResult = StarkToSesame.toResult(mConnection.graph(theQuery).execute());
 			return Models2.newModel(aResult);
 		}
 		catch (QueryEvaluationException | StardogException e) {
@@ -190,8 +197,13 @@ public class StardogEmpireDataSource extends AbstractDataSource implements Mutab
 	@Override
 	public void add(final Model theGraph) throws DataSourceException {
 		assertConnected();
+		// impedance mismatching stark <=> sesame
+		Set<Statement> statements = new HashSet<Statement>();
+		for (org.openrdf.model.Statement st: theGraph) {
+			statements.add(SesameToStark.toStatement(st));
+		}
 		try {
-			mConnection.add().graph(theGraph);
+			mConnection.add().graph(statements);
 		}
 		catch (StardogException e) {
 			throw new DataSourceException(e);
@@ -204,8 +216,13 @@ public class StardogEmpireDataSource extends AbstractDataSource implements Mutab
 	@Override
 	public void remove(final Model theGraph) throws DataSourceException {
 		assertConnected();
+		// impedance mismatching stark <=> sesame
+		Set<Statement> statements = new HashSet<Statement>();
+		for (org.openrdf.model.Statement st: theGraph) {
+			statements.add(SesameToStark.toStatement(st));
+		}
 		try {
-			mConnection.remove().graph(theGraph);
+			mConnection.remove().graph(statements);
 		}
 		catch (StardogException e) {
 			throw new DataSourceException(e);

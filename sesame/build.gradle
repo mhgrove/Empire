@@ -23,6 +23,6 @@ test {
 //	debug = true // for attaching the IDE to the gradle cli
 
 	// set JVM arguments for the test JVM(s)
-	jvmArgs '-XX:MaxPermSize=256m', '-enableassertions'
+	jvmArgs '-enableassertions'
 	include"**/SesameTestSuite.class"
 }

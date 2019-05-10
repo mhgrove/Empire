@@ -16,19 +16,20 @@
 apply plugin: 'java'
 apply plugin: 'idea'
 
-task wrapper(type: Wrapper) {
-	gradleVersion = '2.0'
+wrapper {
+	gradleVersion = '5.4.1'
 	distributionUrl = "http://services.gradle.org/distributions/gradle-${gradleVersion}-all.zip"
 }
 
 ext {
-	stardogVersion		= "4.0"
+	stardogVersion		= "6.1.3"
 	projectVersion		= "1.0"
 	projectDescription	= "JPA implementation for RDF"
-	projectUrl			= "https://github.com/mhgrove/Empire"
+	projectUrl		= "https://github.com/mhgrove/Empire"
 }
 
 allprojects {
+        apply plugin: 'eclipse'
 	group = "com.clarkparsia.empire"
 	version = projectVersion
 	sourceCompatibility = '1.8'

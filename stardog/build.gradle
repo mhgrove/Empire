@@ -28,15 +28,12 @@ dependencies {
 	testCompile project(path: ":core", configuration: "testRuntime")
 
 	// server core modules
-	testCompile "com.complexible.stardog.core:stardog:${stardogVersion}"
-	testCompile "com.complexible.stardog.security:stardog-core-security:${stardogVersion}"
-	testCompile "com.complexible.stardog.logging:stardog-logging:${stardogVersion}"
+	testCompile "com.complexible.stardog:server:${stardogVersion}"
 
-	// server snarl modules
-	testCompile "com.complexible.stardog.protocols.snarl:stardog-protocols-snarl-server:${stardogVersion}"
+	// client core modules
+	testCompile "com.complexible.stardog:client-embedded:${stardogVersion}"
+	testCompile "com.complexible.stardog:client-http:${stardogVersion}"
 
-	// client snarl modules
-	testCompile "com.complexible.stardog.protocols.snarl:stardog-protocols-snarl-client:${stardogVersion}"
 }
 
 test {
@@ -45,7 +42,7 @@ test {
 	maxHeapSize = "2g"
 //	debug = true // for attaching the IDE to the gradle cli
 
-	jvmArgs '-XX:MaxPermSize=256m', '-enableassertions'
+	jvmArgs '-enableassertions'
 	if (project.hasProperty("stardogHome")) {
 		jvmArgs "-Dstardog.home=${stardogHome}"
 	}

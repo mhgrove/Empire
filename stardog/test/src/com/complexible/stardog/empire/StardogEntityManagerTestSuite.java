@@ -20,11 +20,10 @@ import java.util.Map;
 
 import javax.persistence.NamedQuery;
 
-import com.complexible.common.protocols.server.Server;
 import com.complexible.stardog.Stardog;
 import com.complexible.stardog.api.admin.AdminConnection;
+import com.complexible.stardog.api.ConnectionConfiguration;
 import com.complexible.stardog.api.admin.AdminConnectionConfiguration;
-import com.complexible.stardog.protocols.snarl.SNARLProtocolConstants;
 import com.google.common.base.Throwables;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -47,16 +46,12 @@ import com.clarkparsia.empire.ds.DataSourceFactory;
  * @since   0.9.0
  */
 public class StardogEntityManagerTestSuite extends EntityManagerTestSuite {
-	private static Server SERVER;
+	private static Stardog aStardog = Stardog.builder().create();
 	private final static String DB = "mem";
 	@BeforeClass
 	public static void beforeClass() {
 
 		try {
-			SERVER = Stardog.buildServer()
-			                .bind(SNARLProtocolConstants.EMBEDDED_ADDRESS)
-			                .start();
-
 			StardogEmpireAnnotationProvider.setAnnotatedClasses(NamedQuery.class, Arrays.<Class<?>>asList(MissionRole.class, Spacecraft.class));
 
 			EmpireConfiguration config = new EmpireConfiguration();
@@ -74,7 +69,7 @@ public class StardogEntityManagerTestSuite extends EntityManagerTestSuite {
 	
 	@AfterClass
 	public static void afterClass() {
-		SERVER.stop();
+		aStardog.shutdown();
 	}
 	
 	@Before
@@ -86,7 +81,7 @@ public class StardogEntityManagerTestSuite extends EntityManagerTestSuite {
 				if (aAdminConnection.list().contains(DB)) {
 					aAdminConnection.drop(DB);
 				}
-				aAdminConnection.createMemory(DB);
+				aAdminConnection.newDatabase(DB).create();
 			}
 		}
 		catch (Exception e) {
@@ -99,9 +94,8 @@ public class StardogEntityManagerTestSuite extends EntityManagerTestSuite {
 		return new StardogEmpireDataSourceFactory() {
 			@Override
 			public StardogEmpireDataSource create(Map<String, Object> theMap) throws DataSourceException {
-				theMap.put(StardogEmpireFactoryKeys.URL, "snarl://local/mem;username=admin;password=admin");
-				theMap.put(StardogEmpireFactoryKeys.AUTO_COMMIT, "true");
-				return super.create(theMap);
+				ConnectionConfiguration connConf = ConnectionConfiguration.to(DB).credentials("admin", "admin");
+				return new StardogEmpireDataSource(connConf);
 			}
 		};
 	}

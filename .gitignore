@@ -9,3 +9,8 @@ target
 
 gradle.properties
 .gradle
+
+.classpath
+.project
+.settings
+bin
